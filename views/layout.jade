@@ -1,0 +1,44 @@
+doctype html
+html
+  include header.jade
+  
+  body
+    .navbar.navbar-inverse.navbar-fixed-top
+      .container
+        .navbar-header
+          button.navbar-toggle(type='button', data-toggle='collapse', data-target='.navbar-collapse')
+            span.icon-bar
+            span.icon-bar
+            span.icon-bar
+          a.navbar-brand(href='/') OVID - Online Vaccine & Immunzation Database 
+        .navbar-collapse.collapse
+          ul.nav.navbar-nav
+            if session.authenticated
+              li.active
+                a(href='/user/show/<%= session.User.id %>')
+            if (session.authenticated && session.User && session.User.access && session.User.access == 'Admin')
+              li
+                a(href='/user') User Administration
+              li
+                a(href='#') Placeholder2
+          div.navbar-right
+            if (session.authenticated)
+              a.btn.btn-default.navbar-btn.navbar-right(href='/session/destroy') sign-out
+            if (!session.authenticated) 
+              form.navbar-form.navbar-right(action='/login')
+                div.form-group
+                  input.form-control(type='text', placeholder='Email', name='email')
+                div.form-group
+                  input.form-control(type='password', placeholder='Password', name='password')
+                button.btn.btn-success(type='submit') Sign in
+                input(type='hidden', name='token', value='<%= token %>')
+    
+    script(type='text/javascript').
+      window.SAILS_LOCALS = { _csrf: "#{_csrf}"};
+
+    block content
+
+  footer(style="width:100%; background-color:lightgray;")
+    // position: fixed; bottom: 0px;
+    include footer.jade
+

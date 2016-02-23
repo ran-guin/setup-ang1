@@ -1,0 +1,86 @@
+- var v0 = 'none';
+- var v1 = 'block';
+if openSearch
+  - v0 = 'block';
+  - v1 = 'none';
+- var iClass = 'Item';
+if page && page.item_Class
+  - iClass = page.item_Class
+
+div#showSS(style='display:#{v1}')
+  hr(style='border-width:thick; border-color:black;')
+  i.fa.fa-search
+  span &nbsp;
+  button.btn.btn-primary.btn-xs(onclick="document.getElementById('smartSearch').style.display='block'; document.getElementById('showSS').style.display='none';") search / add #{iClass}(s) 
+div#smartSearch(style='display:#{v0}')
+  hr(style='border-width:thick; border-color:black;')
+  div#insideSS(style='padding:10px') 
+    button#hideSS(onclick="document.getElementById('smartSearch').style.display='none'; document.getElementById('showSS').style.display='block';") x
+
+    form#addItemForm()
+          if search_title
+            h4 #{page.search_title}
+          div#addMessage
+
+          table.table.table-bordered.table-hover
+            thead
+              tr.active.alert-success
+                if (page && page.add_to_scope)
+                  th &nbsp;
+
+                th(ng-repeat="col in SearchOn")
+                  div(ng-if="col.label")
+                    span {{col.label}}
+                  div(ng-if="!col.label")
+                    span {{col.field}}
+              tr#inputRow
+                if (page && page.add_to_scope) 
+                  td 
+                    button.btn.btn-success(ng-click="addItem()") Add
+                td(ng-repeat="col in SearchOn")
+                    input.form-control(id = '{{col.id}}', placeholder = '{{col.placeholder}}', name = '{{col.label}}' type = 'text' data-autocomplete='{{col.autocomplete}}')
+          
+          div.alert.alert-danger(ng-if="debugMode")
+            h5 Hidden:
+            table.table.table-bordered.table-hover
+              thead
+                tr.active.alert-success
+                  th(ng-repeat="col in Hidden")
+                    div(ng-if="col.label")
+                      span {{col.label}}
+                    div(ng-if="!col.label")
+                      span {{col.field}}
+                tr#inputRow
+                  td(ng-repeat="col in Hidden")
+                    input.form-control(id = '{{col.id}}', placeholder = '{{col.placeholder}}', type = '{{col.type}}' data-autocomplete='{{col.autocomplete}}')
+          
+          div(ng-if="!debugMode")
+            div(ng-repeat="col in Hidden")
+                input.form-control(type='hidden' id = '{{col.id}}')
+
+          p &nbsp
+
+          input#autocomplete-options(
+            type='hidden' 
+            json="{{ac_options}}"
+            )
+
+          div#message
+
+  hr(style='border-width:thick; border-color:black;')
+
+  table(width='100%')
+    tr        
+      td
+        b Administrative Debug Options: &nbsp;
+        a(href="#")
+          button.btn.btn-danger(type='button', ng-click="dumpScope()") Dump Scope
+        span &nbsp;
+        a(href="#")
+          button.btn.btn-danger(type='button', ng-click="dumpLocalScope()") Dump Local Scope
+        span &nbsp;
+        a(href="#")
+          button.btn.btn-danger(type='button', ng-click="toggleDebugMode()") Debug Mode
+        span &nbsp;
+        a(href="#")
+          button.btn.btn-danger(type='button', ng-click="clearScope()") Clear

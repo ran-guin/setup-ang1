@@ -1,0 +1,29 @@
+/**
+* Barcode.js
+*
+* @description :: TODO: You might write a short summary of how this model works and what it represents here.
+* @docs        :: http://sailsjs.org/#!documentation/models
+*/
+
+module.exports = {
+
+  tableName : 'Barcode', 
+  
+  attributes: {
+    
+    name: { type: 'string' },
+
+    xpos: { type: 'integer' },
+
+    ypos: { type: 'integer' },
+
+    size : { type: 'integer' }, 
+
+    format : {
+    	type: "enum",
+    	enum: ['code128', 'data Matrix'],
+    	defaultsTo: 'code128'
+    }
+  }
+};
+

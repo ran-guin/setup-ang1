@@ -1,0 +1,75 @@
+extends ./../layout
+block content
+ div(style="margin-top:50px") 
+  div.alert.alert-info Home Page
+
+  .container
+    div(ng-app="myApp")
+
+      - var url = session.url
+      - var config = {User: User, clinic: clinic, patient: patient, schedule : schedule, protectionMap : protectionMap, appointment:appointment, treatments:treatments, token:token };
+      - var init = "initialize(" + JSON.stringify(config) + ")";
+
+      div(ng-controller="Nto1Controller")
+        div(ng-controller="CommonController")
+          div(ng-controller="UserController" ng-init="#{init}")
+
+          div#topMessage
+
+          if User
+            <!-- Nav tabs -->
+            ul.nav.nav-tabs(role="tablist")
+              li(role="presentation")
+                a(href="#profile" aria-controls="profile" role="tab" data-toggle="tab") Profile
+              li.active(role="presentation")
+                a(href="#Protection" aria-controls="Protection" role="tab" data-toggle="tab") Protection
+              li(role="presentation")
+                a(href="#required" aria-controls="required" role="tab" data-toggle="tab") Required
+              li(role="presentation")
+                a(href="#travel" aria-controls="travel" role="tab" data-toggle="tab") Travel
+            <!-- Tab panes -->
+            div.tab-content
+              div.tab-pane#profile(role="tabpanel")
+                p &nbsp;
+
+                h4 Residential Region: {{ patient.region.name }}
+
+                h3 Patient Profile:
+                table.table
+                  tr
+                      td Name:
+                      td {{ patient.firstName }} {{ patient.lastName }}
+                  tr 
+                      td Email:
+                      td {{ patient.email }}
+                  tr
+                      td Birthdate:
+                      td {{ patient.birthdate }}
+                  tr
+                      td Gender:
+                      td {{ patient.gender }}
+                  tr
+                      td {{ patient.identifierType }}:
+                      td {{ patient.identifier }}
+                  tr
+                      td Notes:
+                      td {{ patient.notes }}
+
+              div.tab-pane.active#Protection(role="tabpanel")
+                p &nbsp;
+                h3 Current Protection:
+                include Current_Immunization.jade
+
+              div.tab-pane#required(role="tabpanel")
+                include Pending_Immunization.jade
+
+              div.tab-pane#travel(role="tabpanel")
+                include Travel_Immunization.jade
+
+          if ! User
+            h3 no User defined... 
+
+            div.alert.alert-danger #{JSON.stringify(User)}
+          include ./../debugDump.jade
+
+

@@ -1,0 +1,22 @@
+table.table
+  tr
+    td(colspan=4) 
+      h4 Active Protection 
+  tr.active
+    td &nbsp;
+    td Vaccine
+    td Taken
+    td Protects Against
+    td Expires
+  tr.success(ng-repeat="applied in treatments")
+    td 
+      span(ng-if="applied.expiry < nextMonth")
+        i.fa.fa-exclamation-triangle(style='color:red')
+    td( style="vertical-align:middle") {{ applied.vaccine.name }}
+    td {{ applied.applied | date:'MMM d, yyyy' }}
+    td
+      table 
+        tr(ng-repeat = "protect in protectionMap.Diseases[applied.vaccine.name]")
+          td {{ protect }}
+    td( style="vertical-align:middle") 
+      b {{ applied.expiry | date:'MMM d, yyyy' }}

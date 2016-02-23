@@ -1,0 +1,162 @@
+extends ./../layout
+block content
+ div(style="margin-top:50px") 
+  div.alert.alert-info Appointment Home Page
+  - var debugMode = 1
+  .container(style='width:90%')
+    div(ng-app="myApp")
+      - var url = url
+      - var config = {User: User, patient: patient, clinic: clinic, treatments: treatments, appointment: appointment, schedule: schedule, protectionMap: protectionMap, token: token};
+      - var init = "initialize(" + JSON.stringify(config) + ")";
+
+      div(ng-controller="Nto1Controller")
+        div(ng-controller="CommonController")
+          div(ng-controller="AppointmentController" ng-init="#{init}" ngcloak)
+
+            div#topMessage
+
+            form#Queue(ng-submit="queue()")
+              table(width='100%')
+                tr
+                  td.col-md-4
+                    table
+                      tr
+                        td(colspan=2) 
+                          code {{ timestamp }}
+                      tr
+                        td 
+                          b(data-toggle="tooltip" title="Currently logged in user") User: {{ user.name }}         
+
+                  td.col-md-4
+                    table
+                      tr
+                        td(colspan=2) 
+                          u Clinic: &nbsp;
+                      tr
+                        td 
+                          b {{ clinic.name }} [ {{ clinic.id }} ]
+                      tr
+                        td {{ clinic.address }}
+
+              hr(style="border-width:thick; border-color:black")
+
+              table(width='100%')
+                tr
+                  td.col-md-4
+                    table
+                      tr
+                        td
+                          b Patient: 
+                        td
+                          b {{ patient.firstName }} {{ patient.lastName }} [{{ patient.gender }}]
+                      tr
+                        td
+                          b Birthdate: 
+                        td 
+                          b {{ patient.birthdate | date : 'MMM d, yyyy'}} [ {{ patient.ageYrs }} yr old ]
+
+                      tr
+                        td(colspan=2)
+                          div(ng-if="patient.id")
+                            include ./../user/Current_Immunization.jade
+                          
+                  td.col-md-4(align='right')
+                    div(ng-if="patient.id")
+                      include ./../user/Pending_Immunization.jade
+                    div(ng-if="patient.id")
+                      include ./../user/Travel_Immunization.jade
+
+                    div(ng-if="!patient.id")
+                      // should never get here .... 
+                      table.table(ng-init="loadQueue()")
+                        tr
+                          td 
+                            u 
+                              b Queued Patients
+                        tr(ng-repeat="qp in queued")
+                          td
+                            a.btn.btn-primary(href="/appointment/home/{{qp.appointment_id}}", ng-click="loadPatient(qp.id)") {{qp.name}} [ {{ qp.age }} yr old {{ qp.gender }}]
+
+              hr(style='border-width:thick; border-color:black;')
+
+              h3 {{include.treatment.length}} Immunization(s) Scheduled:
+
+              div(ng-if="include.treatment.length")
+                table.table
+                  tr.active
+                    td &nbsp;
+                    td Status
+                    td Vaccine
+                    td Disease
+                    td Past Reactions
+                    td Side Effects
+                    td Contraindications
+                    td History
+                  tr(ng-repeat="q in include.treatment")
+                    td
+                      button.btn.btn-danger.btn-xs(type='button' value="Delete" ng-click="deleteItem('treatment', $index)") X
+                      span &nbsp;
+                      span(ng-if="q.status != 'Applied'")
+                        button.btn.btn-success.btn-xs(type='button' data-toggle='modal' data-target='#editImmunizationModal' ng-click="activateIndex($index)") Apply            
+                      span(ng-if="q.status == 'Applied'")
+                        button.btn.btn-warning.btn-xs(type='button' data-toggle='modal' data-target='#editImmunizationModal' ng-click="activateIndex($index)") Edit            
+                        i.glyphicon.glyphicon-ok.navbar-right
+                    td {{ q.status }}
+                    td {{ q.vaccine.name }} 
+                    td {{ q.disease.name }}
+                    td {{ q.ReactionHistory }}
+                    td {{ q.known_side_effect }}
+                    td {{ q.Contraindications }}
+                    td 
+                      a.btn.btn-warning.btn-xs(
+
+                        )  
+                        i.fa.fa-info-circle &nbsp; 
+                      
+
+            - var clearSearch = "document.getElementById('smartSearch').style.display='none'; document.getElementById('showSS').style.display='block';";
+            hr(style='border-width:thick; border-color:black;')
+            div#insideScan(style='padding:10px') 
+
+              form#scanForm()
+                div.input-group
+                  span.input-group-addon 
+                    //button.btn.btn-xs.btn-danger#hideSS(onclick="document.getElementById('smartScan').style.display='none'; document.getElementById('showScan').style.display='block';") x
+                    i.fa.fa-barcode
+                    span &nbsp;
+                    button.btn.btn-primary.btn-xs(type='button' ng-click="addBarcodedVaccine()") Add Vaccine(s) &nbsp;
+                  
+                  input.form-control(type='text' ng-model='scanned_barcode' placeholder='-- Scan Vaccine Barcode(s) Here --')
+
+            include ./../Nto1/smartSearch.jade
+            div 
+              div.modal.fade#editImmunizationModal
+                div.modal-dialog
+                  div.modal-content
+                    div.modal-header
+                      button.close(type="button" class="close" data-dismiss="modal" aria-label="Close")
+                        span(aria-hidden="true") &times;
+                      h4.modal-title Apply Immunization
+                    div.modal-body
+                      include editImmunization.jade
+                      hr
+                      div#insideModal
+                    div.modal-footer
+                      button.btn.btn-default(type="button button-danger" data-dismiss="modal") Close
+                      div.modal.fade#editImmunizationModal
+
+              div.modal.fade#viewHistoryModal  
+                div.modal-dialog
+                  div.modal-content
+                    div.modal-header
+                      button.close(type="button" class="close" data-dismiss="modal" aria-label="Close")
+                        span(aria-hidden="true") &times;
+                      h4.modal-title Patient History
+                    div.modal-body
+                      include history.jade
+                      hr
+                      div#insideModal
+                    div.modal-footer
+                      button.btn.btn-default(type="button button-danger" data-dismiss="modal") close
+            include ./../debugDump
+ 

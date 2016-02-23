@@ -1,0 +1,32 @@
+div
+  div
+    - var preload = "loadStaff()";
+    form#manageStaffForm(name='newItemForm' ng-init='#{preload}')
+        table.table.table-bordered.table-hover
+          thead
+            tr.active
+              th &nbsp;
+              th Staff
+              th Role
+              th Status
+            tr(ng-repeat='staff in clinic.staff')
+              td
+                span(ng-if="staff.dutyStatus != 'On Duty'")
+                  button.btn.btn-primary.btn-xs(type='button' ng-click="changeDuty($index,'On Duty')") Place on Duty
+                span(ng-if="staff.dutyStatus == 'On Duty'")
+                  button.btn.btn-danger.btn-xs(type='button' ng-click="changeDuty($index,'Off Duty')") Take off Duty          
+              td 
+                span(ng-if="staff.dutyStatus != 'On Duty'")
+                  span {{staff.alias}} &nbsp;
+                span(ng-if="staff.dutyStatus == 'On Duty'") 
+                  i.fa.fa-check-circle-o.fa-lg
+                  b &nbsp; {{staff.alias}} 
+
+              td {{staff.role}} 
+              td {{ staff.dutyStatus }}
+        hr
+
+        button.btn.btn-success(type='button' ng-click="newStaff()" ng-disabled="newItemForm.$invalid") Register Additional Staff
+        p
+  hr
+  div#internalMessage

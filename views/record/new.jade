@@ -1,0 +1,82 @@
+extends ./../layout
+block content
+  container
+    form.form-signin(action='/clinic/save', method='POST')
+        h2 #{action} #{table} record
+
+        - var debug = 0;
+
+        hr
+        table.table
+            thead
+                tr
+                    th.alert.alert-info Field
+                    th.alert.alert-info Value
+                    th.alert.alert-info &nbsp;
+            each field,i in fields
+                
+                - var fld = field['Field'];
+                - var Ftype = field['Type'];
+                - var Atype = Ftype;
+                - var Aoptions = [];
+
+                if recordModel && recordModel.attributes  && recordModel.attributes[fld] 
+                    if recordModel.attributes[fld]['type']
+                        if recordModel.attributes[fld]['enum']
+                            - Atype = 'enum';
+                            - Aoptions = recordModel.attributes[fld]['enum']; 
+                    else if recordModel.attributes[fld]['collection']
+                        - Atype = 'list link';
+                    else if recordModel.attributes[fld]['model']
+                        - Atype = 'lookup';
+                    
+
+                //if recordModel && recordModel.attributes && recordModel.attributes[fld] && recordModel.attributes[fld]['enum']
+                    - Atype = enum;
+                    - Aoptions = recordModel.attributes[fld]['enum']; 
+                 
+                // Special handling for appending records 
+                if action == 'Add' && fld == 'id'
+                    tr
+                        td id
+                        td (skip)
+                else if action == 'Add' && fld == 'createdAt'
+                    tr
+                        td created
+                        td 
+                            input.form-control(type='date' value='2015-08-21' default='2015-08-01')
+                else
+                    tr 
+                        // Determine ng-type ... 
+                        - var ngType = 'text'
+                        if Atype.match(/^int/) || Atype.match(/^float/)
+                            - ngType = 'number'
+
+                        td 
+                            b #{fld} 
+
+                        if Atype === 'datetime'
+                            td 
+                                input.form-control(datepicker-popup='yyyy-MM-dd' ng-model=fld close-text='close') 
+                                // datepicker-options="dateOptions" ng-required=1)
+                        else if Atype === 'enum'
+                            td
+                                b pick from #{JSON.stringify(Aoptions)}
+                        else if Atype === 'lookup'
+                            td
+                                b lookup table ... 
+                        else 
+                            td
+                                input.form-control(ng-model=fld type=ngType)
+
+                if debug && recordModel && recordModel.attributes  && recordModel.attributes[fld]
+                    tr
+                        td(colspan=2)
+                            b #{JSON.stringify(recordModel.attributes[fld])} ... type: #{Atype} (#{ngType})
+
+
+        b #{_csrf}
+        hr
+        button.btn.btn-lg.btn-primary.btn-block(type='submit') Add
+        input.form-control(type='text' value="#{_csrf}")
+

@@ -1,0 +1,27 @@
+extends ./../layout
+block content
+  container
+    form
+        h2 Data Record... 
+
+        - var debug = 0;
+        hr
+        table.table
+            thead
+                tr
+                    th.alert.alert-info Field
+                    th.alert.alert-info Value
+                    th.alert.alert-info &nbsp;
+                tr
+                    td(colspan=3)
+                        b #{JSON.stringify(recordData)}
+                tr
+                    td(colspan=3)
+                        b #{JSON.stringify(history)}
+
+//                each field,i in recordData 
+//                    tr
+  //                      td #{i}
+    //                    td #{field}
+        hr
+

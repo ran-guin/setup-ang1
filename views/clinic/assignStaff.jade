@@ -1,0 +1,42 @@
+div
+  div
+    - var preload = "loadStaff()";
+    form#assignStaffForm(name='assignStaffForm' ng-init='#{preload}')
+        table.table.table-bordered.table-hover
+          thead
+            tr.active
+              th &nbsp;
+              th Staff
+              th Position
+              th Status
+              th Assigned
+            tr(ng-repeat='Vstaff in clinic.staff' ng-if="Vstaff.role != 'Desk Staff'")
+              td
+                  //div(ng-if="Vstaff.role != 'Desk Staff' ")
+                  span(ng-if="Vstaff.assignedTo && Vstaff.assignedTo == activeAppointment")
+                    button.btn.btn-danger.btn-xs(type='button' ng-click="deassignStaff($index, Vstaff.id)") de-assign 
+                  span(ng-if= "Vstaff.assignedTo != activeAppointment && Vstaff.dutyStatus == 'On Duty'")
+                    button.btn.btn-success.btn-xs(type='button' ng-click="assignStaff($index, Vstaff.id)") assign
+              td 
+                    b {{ Vstaff.alias }} [ {{ Vstaff.id }} ]
+              td 
+                    b {{ Vstaff.role }}
+              td
+                    span(ng-if="Vstaff.assignedTo && Vstaff.assignedTo == activeAppointment")
+                      p.text-info Assigned
+                    span(ng-if="!Vstaff.assignedTo && Vstaff.assignedTo != activeAppointment && Vstaff.dutyStatus == 'On Duty'")
+                      p.text-success {{ Vstaff.dutyStatus }}
+                    span(ng-if="!Vstaff.assignedTo && Vstaff.assignedTo != activeAppointment && Vstaff.dutyStatus != 'On Duty'")
+                      p.text-warning {{ Vstaff.dutyStatus }}
+                    span(ng-if="Vstaff.assignedTo && Vstaff.assignedTo != activeAppointment")
+                      p.text-danger  Busy         
+              td
+                div(ng-if="Vstaff.assignedTo")
+                  a.btn.btn-primary.btn-xs(href="/appointment/home/{{Vstaff.assignedTo}}") 
+                    b 
+                      i.fa.fa-arrow-right
+              td 
+                b {{Vstaff.schedule}}
+        p
+  hr
+  

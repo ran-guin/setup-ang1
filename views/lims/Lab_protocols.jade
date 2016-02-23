@@ -1,0 +1,16 @@
+extends ./../core/publicLayout
+block content
+
+  .default-page
+  .header
+    h1(id="main-title" class="container") Custom Title 
+  div.container
+    
+    h3 List of Protocols:
+      each protocol,i in protocols
+        - id = protocol.id;
+        - name = protocol.name;
+        li 
+          a(href="/Lab_protocol/#{id}") #{name}
+
+      

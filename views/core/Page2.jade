@@ -1,0 +1,16 @@
+extends publicLayout
+block content
+
+  .default-page
+  .header
+    h1(id="main-title" class="container") Custom Title 
+  .div(class="main container clearfix")
+      ul.getting-started
+          li.clearfix
+            .step
+              h3 Page 2
+              p page 2 description ... 
+      // If link section to the right include line below (and adjust Links.jade file as required) //
+      include Links
+
+

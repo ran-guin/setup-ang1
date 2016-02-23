@@ -1,0 +1,41 @@
+div
+  div
+    form#editForm(name='editForm' ng-submit="applyVaccine()")
+        table.table.table-bordered.table-hover
+          thead
+            tr.active
+              th Field
+              th Value
+            tr.active
+              td Vaccine
+              td  {{ items[activeIndex].Vaccine}}
+            tr.active
+              td Contraindications
+              td  {{ items[activeIndex].Contraindications}}
+            tr.active
+              td Known Side Effects
+              td {{ items[activeIndex].known_side_effect }}
+            tr
+              td Lot #
+              td 
+                input.form-control(ng-required=1 type='text' placeholder='-- Lot # --' ng-model="editLot" )
+            tr
+              td Route
+              td 
+                - var preload = "loadLookup('" + url + "/lookup/route', 'route','editRoute')"; 
+                div(ng-dropdown-multiselect="" options="Lookup.editRoute.options" selected-model="editRoute", ng-click="syncLookup('editRoute','editRoute_ID','editRoute_Name',activeIndex)" extra-settings="MenuSettings" ng-init="#{preload}")
+            tr
+              td Site
+              td 
+                - var preload = "loadLookup('" + url + "/lookup/site', 'site','editImmunization_Site')"; 
+                div(ng-dropdown-multiselect="" options="Lookup.editImmunization_Site.options" selected-model="editImmunization_Site", ng-click="syncLookup('editImmunization_Site','editImmunization_Site_ID','editImmunization_Site_Name',activeIndex)" extra-settings="MenuSettings" ng-init="#{preload}")
+            tr
+              td Reaction Comments
+              td 
+                input.form-control(type='text' placeholder='-- Reaction Comments --' ng-model="editReaction_Comments" )
+
+        button.btn-primary(type='submit' ng-click="applyVaccine()" ng-disabled="editForm.$invalid" data-dismiss='modal') Save Vaccination Record
+        p &nbsp;
+        button.btn-warning.btn-xs(type='button' ng-click="alert('not yet implemented'); applyVaccine()") View Publication Links
+  hr
+  div#internalMessage

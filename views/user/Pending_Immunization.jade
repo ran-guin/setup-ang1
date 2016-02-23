@@ -1,0 +1,50 @@
+- var init =  "loadRecommendations(" + JSON.stringify(schedule) + "); ";
+if patient && patient.id 
+  - init = init + " loadTravel(" + patient.id + ")"; 
+table.table(ng-init="#{init}")
+  tr
+    td(colspan=2)
+      h4 Pending Immunization(s): 
+    td(colspan=3) [ Region = {{ patient.region.name }} ]
+  tr.active(ng-if="schedule.length")
+    th Disease
+    th Vaccine
+    th Recommendation
+    th Status
+    th Load {{ context }}
+  tr.active.warning(ng-if="! schedule.length")
+    td(colspan=5)
+      b No Standard Immunizations Pending
+
+  tr.danger(ng-repeat="need in schedule")
+      td {{ need.disease.name }}
+      td 
+        span(ng-if="need.vaccine.name == undefined")
+          span choose one...
+        span(ng-if="need.vaccine.name ")
+          span {{ need.vaccine.name }}
+      td {{ need.recommendation }}
+      td &nbsp;
+      td
+        a.btn.btn-primary.btn-xs(
+          tabindex="0"
+          data-trigger='focus'
+          data-toggle='popover'
+          data-html="true"
+          data-placement='left' 
+          ng-click="loadScheduledVaccinations(need.disease)" 
+          title="Load Scheduled Vaccinations" 
+          data-content="This would dynamically load suggested vaccinations by retrieving via API all pending suggested vaccinations based on:<UL><LI>vaccination history</LI><LI>patient age</LI><LI>location</LI><LI>scheduled travel itinerary</LI></UL><P><B>Vaccines added below for Example Only</B></P>"
+          ) 
+          i.fa.fa-question-circle
+  tr
+    td(colspan=5)
+      div(ng-if="! schedule.length")
+        b Nothing pending
+  tr
+    td &nbsp;
+    td(colspan=2)
+
+    td &nbsp;
+
+

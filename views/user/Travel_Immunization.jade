@@ -1,0 +1,47 @@
+- var init =  "loadRecommendations(" + JSON.stringify(schedule) + "); ";
+if patient && patient.id 
+  - init = init + " loadTravel(" + patient.id + ")"; 
+table.table(ng-init="#{init}")
+  tr
+    td &nbsp;
+    td(colspan=2) 
+      h4 Travel Requirements: 
+       a.btn.btn-success.btn-xs(ng-click="addTravel()" onclick="alert('Add modal to Manage travel plans')") +
+  tr.active
+    td &nbsp;
+    th Region
+    td Start
+    td Finish
+    th Disease
+    th Recommendation
+    th Status
+    th Load
+  tr.warning(ng-repeat="itin in travel")
+    td
+      span(ng-if="itin.start < nextMonth") 
+        i.fa.fa-exclamation-triangle(style='color:red')
+    td 
+      b {{itin.region.name}} &nbsp; 
+    td {{itin.start  | date : 'MMM d, yyyy'}}
+    td {{itin.finish  | date : 'MMM d, yyyy'}}
+    td 
+      span(ng-if="itin && itin.recommendations && itin.recommendations.disease") 
+        b {{ itin.recommendations.disease.name}}
+    td 
+      span(ng-if="itin && itin.recommendations") 
+        b {{ itin.recommendations.recommendation}}
+
+    td 
+      button.btn.btn-danger.btn-xs(ng-click="deleteTravel($index)") x
+    td
+      a.btn.btn-primary.btn-xs(
+        tabindex="0"
+        data-trigger='focus'
+        data-toggle='popover'
+        data-html="true"
+        data-placement='left' 
+        ng-click="loadScheduledVaccinations(need.disease)" 
+        title="Load Scheduled Vaccinations" 
+        data-content="This would dynamically load suggested vaccinations by retrieving via API all pending suggested vaccinations based on:<UL><LI>vaccination history</LI><LI>patient age</LI><LI>location</LI><LI>scheduled travel itinerary</LI></UL><P><B>Vaccines added below for Example Only</B></P>"
+        ) 
+        i.fa.fa-question-circle

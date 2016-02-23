@@ -1,0 +1,62 @@
+extends layout
+block content
+ div(ng-app="SignupModule" ng-controller="SignupController" ng-cloak) 
+  .container.form-signin
+    // SIGNUP FORM
+    form#sign-up-form(ng-submit='submitSignupForm()', name='signup')
+      h2.form-signin-heading Create an account
+      .row
+        // N A M E
+        //
+          checking whether the form "signup" with the "name" property is both $invalid AND $dirty.  If it is
+          insert the "has-error" class on the input field (i.e. insert a red border around the input field)
+        .control-group.form-group.col-md-12(ng-class="{'has-error':signup.name.$invalid &&\
+        signup.name.$dirty}")
+          label Your full name
+          // For this input field make it required, and have a max length of 25
+          input.form-control(type='text', placeholder='e.g. Nikola Tesla', name='name', ng-model='signupForm.name', ng-maxlength='50', required='')
+          //
+            Also, if signup.name.$dirty is true, show the message depending upon the particular properties truthiness (e.g. required
+            and/or maxlength)
+          span.help-block.has-error(ng-if='signup.name.$dirty')
+            span(ng-show='signup.name.$error.required') Name is required.
+            span(ng-show='signup.name.$error.maxlength') The name cannot be more than 50 characters.
+        // T I T L E
+        .control-group.form-group.col-md-12(ng-class="{'has-error':signup.title.$invalid &&\
+        signup.title.$dirty}")
+          label Your title
+          input.form-control(type='text', placeholder='e.g. Genius', name='title', ng-model='signupForm.title', ng-maxlength='50', required='')
+          span.help-block.has-error(ng-if='signup.title.$dirty')
+            span(ng-show='signup.title.$error.required') Title is required.
+            span(ng-show='signup.title.$error.maxlength') The name cannot be more than 50 characters.
+        // E M A I L
+        .control-group.form-group.col-md-12(ng-class="{'has-error':signup.email.$invalid &&\
+        signup.email.$dirty}")
+          label Your email address
+          input.form-control(type='email', placeholder='nikola@tesla.com', name='email', ng-model='signupForm.email', required='')
+          span.help-block.has-error(ng-if='signup.email.$dirty')
+            span(ng-show='signup.email.$error.required') Email address is required.
+            span(ng-show='signup.email.$error.email') Not a valid email address.
+        // P A S S W O R D
+        .control-group.form-group.col-md-6(ng-class="{'has-error':signup.password.$invalid &&\
+        signup.password.$dirty}")
+          label Choose a password
+          // Added the compareTo directive that compares the passowrds
+          input#password.form-control(type='password', placeholder='at least 6 characters', name='password', ng-model='signupForm.password', required='', ng-minlength='6', compare-to='signupForm.confirmPassword')
+          span.help-block.has-error(ng-if='signup.password.$dirty')
+            span(ng-show='signup.password.$error.required') Password is required.
+            span(ng-show='signup.password.$error.minlength') Password must be at least 6 characters.
+        // C O N F I R M  P A S S W O R D
+        .control-group.form-group.col-md-6
+          label Re-enter your password
+          input.form-control(type='password', placeholder='one more time', name='confirmation', ng-model='signupForm.confirmPassword', required='')
+          span.help-block.has-error(ng-if='signup.confirmation.$dirty')
+            span(ng-show='signup.password.$error.compareTo') Password must match.
+            span(ng-show='signup.confirmation.$error.required') Confirmation password is required.
+      br
+      // Disable signup button until the form has no errors
+      button.btn.btn-primary.btn-lg.btn-block(type='submit', ng-disabled='signup.$invalid')
+        span(ng-show='!signupForm.loading') Create Account
+        span.overlord-loading-spinner.fa.fa-spinner(ng-show='signupForm.loading')
+        span(ng-show='signupForm.loading') Preparing your new account...
+      input(type='hidden', name='_csrf', value='#{ _csrf }')

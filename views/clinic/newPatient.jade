@@ -1,0 +1,38 @@
+div(ng-repeat="item in items")
+  div
+    form#newItemForm(ng-submit="newItem(#{Table})")
+        table.table.table-bordered.table-hover
+          thead
+            tr.active
+              th Field
+              th Value
+            tr
+              td Name
+              td 
+                input.form-control#new_Item_Name(type='text' placeholder='-- Name --' ng-model='itemName' mandatory=1 data-autocomplete="field:Item_Name; options_element:newOptions;")
+            tr
+              td Category
+              td 
+            tr
+              td Catalog
+              td 
+                input.form-control#new_Item_Catalog(type='text' placeholder='-- Catalog --' ng-model='itemCatalog' data-autocomplete="field:Item_Catalog; options_element:newOptions;" )
+            tr
+              td Cost Estimate
+              td 
+                input.form-control#new_Item_Cost(type='text' placeholder='-- Cost Estimage --' ng-model='itemCost' )
+           tr
+              td Vendor 
+              td
+                 input.form-control#Vendor(type='text' mandatory=1 placeholder='-- Vendor --' ng-model='itemVendor' data-autocomplete="field:Vendor_Name; onSuccess:<div class='alert alert-success'>Valid Vendor Found</div><P>Click on Id to select; onEmpty:<div class='alert alert-danger'>Vendor not Found</div><P>please contact Admin to add new Vendor; options_element:newOptions; set:Vendor_ID,Vendor; show:Vendor_ID,Vendor; target:Vendor; query:SELECT DISTINCT Vendor_ID,Vendor_Name AS Vendor FROM Vendor")
+           tr
+              td Description
+              td 
+                textarea.form-control#new_Item_Description(rows=5 placeholder='--Item Description --' ng-model='itemDescription' )
+
+        button.btn.btn-success(value="Add Item", onclick="return validateAngularForm('newItemForm')") Add Item(s)
+        p
+        input#newOptions(type='hidden' url="#{url}:#{port}/api/q" dataKey='data' displayBlock='internalMessage' onSuccess="Similar Item Found<P><div class='alert alert-danger'>Please do not create a new Item if this is the same thing</div>" onEmpty="<div class='alert alert-success'>No Similar Items Found - (Okay)</div>" query="SELECT DISTINCT Item_Name,Item_Catalog FROM Item" show="Item_Name,Item_Catalog")
+        input#Vendor_ID(type='hidden' ng-model='itemVendorId')
+  hr
+  div#internalMessage

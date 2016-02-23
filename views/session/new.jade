@@ -1,0 +1,20 @@
+extends ./../emptyLayout
+block content
+  container
+    form.form-signin(action='/session/create', method='POST')
+      h2.form-signin-heading Please sign in...
+      if session && session.flash && session.flash.err
+        ul.alert.alert-danger
+          each error in session.flash.err
+            - var extra = JSON.stringify(error)
+            li #{error['message']} : #{extra}
+      p &nbsp;
+      p &nbsp;
+      input.form-control(type='text' placeholder="Email Address" name='email')
+      p &nbsp;
+      input.form-control(type='password' placeholder="Password" name='password')
+      p &nbsp;
+      button.btn.btn-lg.btn-primary.btn-block(type='submit') Sign In
+      input.form-control(type='hidden' value="#{_csrf}")
+      hr
+      b #{_csrf}
