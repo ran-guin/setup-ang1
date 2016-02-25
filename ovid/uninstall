@@ -1,0 +1,5 @@
+mv ./../api/models/ovid ./models/
+mv ./../api/controllers/ovid ./controllers/
+mv ./../views/ovid ./views/
+
+ 

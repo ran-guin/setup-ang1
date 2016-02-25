@@ -87,6 +87,8 @@ module.exports.routes = {
   *                                                                          *
   ***************************************************************************/
   
+  'GET /xfer' : 'ContainerController.transfer',
+
   // Custom Pages 
 
   'GET /demo/protocol': 'DemoController.protocol',

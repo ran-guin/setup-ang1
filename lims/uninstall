@@ -1,0 +1,5 @@
+mv ./../api/models/lims ./models/
+mv ./../api/controllers/lims ./controllers/
+mv ./../views/lims ./views/
+
+ 
