@@ -41,7 +41,8 @@ module.exports.routes = {
   // JSON API
   ////////////////////////////////////////////////////////////
   
-  '/': { view: 'core/home' },
+  '/': 'DemoController.home',
+
   '/public' : { view: 'core/public'},
   '/contact' : { view: 'core/ContactUs'},
 
@@ -102,8 +103,8 @@ module.exports.routes = {
 
 
   '/Lab_protocol/:id' : 'Lab_protocolController.view',
-  '/Lab_protocol/test/:id' : 'Lab_protocolController.test',
-
+  '/Lab_protocol/demo/:id' : 'Lab_protocolController.demo',
+  '/Lab_protocol/list' : 'Lab_protocolController.list',
 
   'POST /scan-barcode' : 'BarcodeController.scan',
 

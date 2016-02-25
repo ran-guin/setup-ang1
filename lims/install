@@ -1,0 +1,5 @@
+cp -R ./models/lims ../api/models/
+cp -R ./controllers/lims ../api/controllers/
+cp -R ./views/lims ../views/
+
+ 

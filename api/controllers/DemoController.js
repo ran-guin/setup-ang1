@@ -16,6 +16,13 @@ module.exports = {
         res.send({"DEMO" : "OKAY"});
     },
     
+    home : function (req, res) {
+
+        // Customize where demo runs go 
+        res.render('lims/home', { 'demo1' : 'protocol', 'demo2' : 'protocolAdmin' });
+
+    },
+
     patient : function (req, res) {
         console.log("Run Patient Demo");
      

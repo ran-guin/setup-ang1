@@ -5,34 +5,92 @@
 * @docs        :: http://sailsjs.org/#!documentation/models
 */
 
+var _ = require('underscore-node');
+var Q = require('q');
 module.exports = {
 
-  tableName: 'Lab_Protocol',
+	tableName: 'Lab_Protocol',
 
-  attributes: {
-	Lab_Protocol_Name : { type : 'string' },
+	attributes: {
+		Lab_Protocol_Name : { type : 'string' },
 
-	FK_Employee__ID : { model : 'Employee' },
+		FK_Employee__ID : { model : 'Employee' },
 
-	Lab_Protocol_Status : { 
-		type: 'enum',
-		enum : ['Active','Archived','Under Development'],
+		Lab_Protocol_Status : { 
+			type: 'enum',
+			enum : ['Active','Archived','Under Development'],
+		},
+
+		Lab_Protocol_Description : { type : 'string'},
+		Lab_Protocol_ID : { type : 'integer' },
+		Lab_Protocol_VersionDate : { type : 'date' },
+		Max_Tracking_Size : {
+			type : 'enum',
+			enum : ['384','96','1'],
+			defaultsTo: '1'
+		},
+
+		Repeatable : {
+			type: 'enum',
+			enum: ['Yes','No'],
+			defaultsTo: 'Yes',
+		},
 	},
 
-	Lab_Protocol_Description : { type : 'string'},
-	Lab_Protocol_ID : { type : 'integer' },
-	Lab_Protocol_VersionDate : { type : 'date' },
-	Max_Tracking_Size : {
-		type : 'enum',
-		enum : ['384','96','1'],
-		defaultsTo: '1'
+  
+	'load_Attributes' : function (input, cb) {
+
+		var Plate_attributes = [];
+		var Prep_attributes = [];
+
+		console.log("Input: " + JSON.stringify(input));
+		for (j=0; j<input.length; j++) {
+			var att1 = input[j].replace('Plate_Attribute=','');
+			var att2 = input[j].replace('Prep_Attribute=','');
+			if (att1 != input[j]) { Plate_attributes.push(att1) }
+			else if (att2 != input[j]) { Prep_attributes.push(att2) }
+
+			// console.log("Plate Atts: " + JSON.stringify(Plate_attributes));
+			// console.log("Prep Atts: " + JSON.stringify(Prep_attributes));
+		}
+
+		return cb(null, { 'Plate' : Plate_attributes, 'Prep' : Prep_attributes });
+
 	},
 
-	Repeatable : {
-		type: 'enum',
-		enum: ['Yes','No'],
-		defaultsTo: 'Yes',
+	'input_list' : function (query_result) {
+
+		var deferred = Q.defer();
+
+		var Input = [];
+		var Attributes = [];
+
+		var inputArray = [];
+		var Plate_attributes = [];
+		var Prep_attributes = [];
+
+		var deferred = Q.defer();
+
+		var list = [];
+		for (i=0; i<query_result.length; i++) {
+			var input = query_result[i]['Input'].split(':');
+		
+			for (j=0; j<input.length; j++) {
+				var att1 = input[j].replace('Plate_Attribute=','');
+				var att2 = input[j].replace('Prep_Attribute=','');
+				if (att1 != input[j]) { Plate_attributes.push(att1) }
+				else if (att2 != input[j]) { Prep_attributes.push(att2) }
+			}
+
+			list = _.union(list, input);
+		}
+
+		console.log("Union: " + JSON.stringify(list));
+
+		// return cb(null, { 'input' : list, 'attributes' : { 'Plate' : Plate_attributes, 'Prep' : Prep_attributes }} );
+
+		deferred.resolve({ 'input' : list, 'attributes' : { 'Plate' : Plate_attributes, 'Prep' : Prep_attributes }});
+		return deferred.promise;
 	},
-  }
 };
 

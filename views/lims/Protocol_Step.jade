@@ -1,0 +1,132 @@
+extends ./../core/publicLayout
+block content
+
+  .header
+    h1(id="main-title" class="container") Custom Title 
+  
+  div.container
+
+    - var config = { steps : Steps };
+    - var init = "initialize(" + JSON.stringify(config) + ")";
+
+    - flds = input; // ['FK_Equipment__ID', 'FK_Solution__ID', 'Solution_Qty', 'Solution_Qty_Units', 'Transfer_Qty', 'Transfer_Qty_Units', 'Thaw_Time', 'Prep_Comments'];
+    - units = { 'Solution_Qty' : 'Solution_Qty_Units', 'Transfer_Qty' : 'Transfer_Qty_Units'};
+    - aliases = { 'FK_Equipment__ID' : 'Equip', 'FK_Solution__ID' : 'Sol' }
+    //    - attributes = {'Thaw_Time' : 'integer' }
+
+    div(ng-app='myApp')
+      
+      div(ng-controller="CommonController")
+        div(ng-controller='ProtocolController' ng-init="#{init}" ngcloak)
+          
+          h3 {{Step.Protocol_Step_Name}}
+
+          h4(style="color:red") {{ Step.Protocol_Step_Message }} [ {{stepNumber}} / {{steps}}]
+          h5 4 x Matrix Data Tubes
+
+          h5 Details: {{ Step }}
+          h5 Input: {{ input }}
+
+          h5 Fields: #{ JSON.stringify(flds) }
+          h5 Attributes: #{JSON.stringify(attributes)}
+
+          hr
+           
+          form.form-horizontal(role="form" method='post' action="/completed-step")
+            button.btn.primary(type='button' ng-click="back()" ng-disabled='stepNumber > steps') BACK
+            span &nbsp;
+            button.btn.btn-primary(type='button' ng-click="forward()" ng-disabled="stepNumber >= steps") FWD
+
+            h3 Context: {{ context }}
+
+            div.form-group
+              label.col-sm-2.control-label(for='name')
+                i.fa.fa-help()
+              div.col-sm-10
+                input.form-control(type='text' id='Protocol_Step_Name' value='{{Step.Protocol_Step_Name}}' disabled) 
+
+            - prompted = {};
+            - options = ['ml', 'ul', 'nl', 'pl'];
+
+            each fld,i in flds
+              - alias = aliases[fld] || fld;
+
+              div(ng-if="Show['#{fld}']")
+                div.form-group
+                  if attributes[fld]
+                    - fType = attributes[fld];
+
+                  if fld == 'Split'
+                    label.col-sm-2.control-label(for='#{fld}') Split x:
+                    div.col-sm-10
+                      input(type='text' ng-model="Split") 
+                    - prompted[fld] = 1;
+
+                  else if fld == 'FK_Solution__ID'
+                    label.col-sm-2.control-label(for='#{fld}') Sol/Reagent:
+                    div.col-sm-4
+                      input.form-control(type='text', placeholder = "-- Scan --" id = '#{fld}') 
+                    div.col-sm-3
+                      input.form-control(type='text', placeholder = " -- Qty --" id='Solution_Qty') 
+                    div.col-sm-3
+                      // *** Generate Dropdown for ENUM Values *** //
+                      div.dropdown
+                          button.btn.btn-default.dropdown-toggle(type='button' data-toggle='dropdown' id = 'Solution_Qty_Units') Units &nbsp;
+                              span.caret
+                          ul.dropdown-menu
+                              each opt,j in options
+                                  li 
+                                      a(href='#') #{j} : #{opt}
+
+                    - prompted[fld]=1;
+                    - prompted['Solution_Qty']=1;
+                    - prompted['Solution_Qty_Units']=1;
+
+                  else if units[fld] && ! prompted[fld]
+                    // non special fields with units (eg attributes with units...)
+                    - prompted[fld] = 1;
+
+                    label.col-sm-2.control-label(for='#{fld}') #{alias}:
+                    div.col-sm-8
+                      input.form-control(type='integer', placeholder = "-- Scan " + alias + '--' id='#{fld}')
+                    - fld = units[fld];
+                    - prompted[fld] = 1;
+                    div.col-sm-2
+                      // *** Generate Dropdown for Units *** //
+                      div.dropdown
+                          button.btn.btn-default.dropdown-toggle(type='button' data-toggle='dropdown') Units &nbsp;
+                              span.caret
+                          ul.dropdown-menu
+                              each opt,j in options
+                                  li 
+                                      a(href='#' return=false) #{opt}
+                  else if ! prompted[fld]
+                    // non special fields without units 
+                    div
+                      label.col-sm-2.control-label(for='#{fld}') #{alias}
+                      div.col-sm-10
+                        input.form-control(type='#{fType}', placeholder = "Enter " + alias id='#{fld}' ng-model='#{fld}')
+ 
+
+            hr
+            div.form-group
+              div.col-sm-2 &nbsp;
+              div.col-sm-3
+                button.btn.btn-success(type='submit') Completed Step
+              div.col-sm-2
+                button.btn.btn-warning(type='submit') Skip Step
+              div.col-sm-2
+                button.btn.btn-danger(type='submit') Failed Step
+              div.col-sm-3
+                button.btn.btn-primary(type='submit') Repeat Previous Step
+
+            hr
+            
+            input(type='hidden' id='ids' value='2,4,6,8')
+            input(type='hidden' id='target-format' value='3')
+            input(type='hidden' id='target-wells' value='A01,B01,C01,D01')
+            input(type='hidden' id='source-wells' value='')
+
+
+
+         
