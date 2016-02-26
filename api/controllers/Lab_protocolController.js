@@ -7,6 +7,10 @@
 
 module.exports = {
 
+	'test2' : function (req, res) {
+		res.send('yup');
+	},
+
 	'view' : function (req, res) {
 		var id = req.param('id');
 
@@ -149,7 +153,11 @@ module.exports = {
 		return res.render('lims/Protocol_Step', {steps: [ {'Protocol_Step_Name' : 'next', 'Protocol_Step_Message' : 'hello'} ]});
 	},
 
+	'create' : function (req, res) { 
+		console.log('new protocol generator');
 
+		res.render('lims/New_Lab_Protocol');
+	}
 
 };
 
