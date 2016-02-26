@@ -1,5 +1,4 @@
-mv ./../api/models/lims ./models/
-mv ./../api/controllers/lims ./controllers/
-mv ./../views/lims ./views/
-
+export PLUGIN='lims'
+rm -fR ../views/$PLUGIN/*.js;
+rm -fR /assets/images/$PLUGIN;
  
