@@ -58,7 +58,8 @@ module.exports.routes = {
 
   // Home page 
   'GET /home': 'MainController.showMainPage',
-
+  'GET /dash': 'UserController.dashboard',
+  
   // Default User pages 
   'GET /user/dashboard/:id': 'UserController.dashboard',
   'GET /user/:id': 'UserController.dashboard',
@@ -71,10 +72,10 @@ module.exports.routes = {
   'GET /homepage': { view: 'core/homepage' },
 
   /* Generic Record control options */
-  'GET /record/add/:table': 'RecordController.new',
-  'POST /record/add/:table': 'RecordController.add',
-  'GET /record/edit/:table': 'RecordController.edit',
-  'POST /record/edit/:table': 'RecordController.update',
+  'GET /record/add/:model': 'RecordController.new',
+  'POST /record/add/:model': 'RecordController.add',
+  'GET /record/edit/:model': 'RecordController.edit',
+  'POST /record/edit/:model': 'RecordController.update',
 
   'GET /lookup/:table' : 'RecordController.lookup',
 
@@ -102,6 +103,7 @@ module.exports.routes = {
   'GET /demo/appointment': 'DemoController.appointment',
 
 
+  '/Lab_protocol/new' : 'Lab_protocolController.create',
   '/Lab_protocol/:id' : 'Lab_protocolController.view',
   '/Lab_protocol/demo/:id' : 'Lab_protocolController.demo',
   '/Lab_protocol/list' : 'Lab_protocolController.list',
