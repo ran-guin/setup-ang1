@@ -1,0 +1,22 @@
+extends publicLayout
+block content
+  div.container(style="width:300px")
+    form.form-signin(action='/login', method='POST')
+
+      if session && session.flash && session.flash.err
+        ul.alert.alert-danger
+          each error in session.flash.err
+            - var extra = JSON.stringify(error)
+            li #{error['message']} : #{extra}
+      p &nbsp;
+      p &nbsp;
+      input.form-control(type='text' placeholder="Email Address" name='email')
+      p &nbsp;
+      input.form-control(type='password' placeholder="Password" name='password')
+      p &nbsp;
+      button.btn.btn-lg.btn-success.btn-block(type='submit') Sign In
+      
+      hr
+    
+    a(href="/signup")
+      button.btn.btn-lg.btn-danger.btn-block(type='submit') Register

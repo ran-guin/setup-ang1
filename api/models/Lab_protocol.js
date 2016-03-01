@@ -24,19 +24,35 @@ module.exports = {
 		Lab_Protocol_Description : { type : 'string'},
 		Lab_Protocol_ID : { type : 'integer' },
 		Lab_Protocol_VersionDate : { type : 'date' },
+/*
 		Max_Tracking_Size : {
 			type : 'enum',
 			enum : ['384','96','1'],
-			defaultsTo: '1'
+			defaultsTo: '1',
+			required: true,
 		},
 
 		Repeatable : {
 			type: 'enum',
 			enum: ['Yes','No'],
 			defaultsTo: 'Yes',
+			required: false,
 		},
+*/
 	},
-
+	
+	validation_messages: {
+	    Lab_Protocol_Name: {
+	      required: 'You must supply a valid name for the placement. If you do not have a specific name, make up one.',
+	      minLength: 'The name must be more than one character long.'
+	    },
+	    Max_Tracking_Size: {
+	        required: 'You must supply a width value in pixels.'
+	    },
+	    Repeatable: {
+	        required: 'You must supply a height value in pixels.'
+	    },
+	  },
   
 	'load_Attributes' : function (input, cb) {
 

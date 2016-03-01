@@ -56,7 +56,13 @@ module.exports.policies = {
 //      '*' : "sessionAuth"
   },
   
-'*' : true,
+  'lab_protocol' : {
+      'list' : true,
+      'create' :  true, // ['tokenAuthorized']
+      'save' : true,
+  },
+
+  '*' : true,
 
 //  '*': ['tokenAuthorized'],
 

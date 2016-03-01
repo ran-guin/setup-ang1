@@ -1,0 +1,67 @@
+extends ./../core/privateLayout
+block content
+  div.container
+    h2 #{action} '#{table}' Record
+
+    - var debug = 0;
+    div.container()
+        div.container(ng-controller="FancyForm" style="background-color:#db9")
+            p &nbsp;
+            form.form-horizontal(role='form' action='/record/save', method='POST')
+
+                    each field,i in fields
+                        - var fld = field['Field'];
+                        - var type = field['Type'];
+                        - var options = field['Options'];
+                        - var defaultTo = field['Default'] || '';
+
+                        if type != 'Hidden'
+
+                            // Special handling for appending records
+
+                            div.form-group
+                                label.col-md-2.control-label(for='#{fld}') #{fld} (#{type})
+                                div.col-sm-10 
+
+                                    if action == 'Add' && fld == 'id'
+                                        input.col-md-10.form-control(id='#{fld}' type='text' value='' placeholder='- (id) -' disabled)
+                                    else if action == 'Add' && fld == 'createdAt'
+                                        input.col-md-10.form-control(id='#{fld}' type='date' value='' default='#{defaultTo}')
+                                    else 
+                                        // Determine ng-type ... 
+                                        - var ngType = 'text'
+                                        if type.match(/^int/) || type.match(/^float/)
+                                            - ngType = 'number'
+
+                                        if type === 'datetime'
+                                            input.col-md-10.form-control(id='#{fld}' uib-datepicker-popup='yyyy-MM-dd' ng-model=fld close-text='close' default='#{defaultTo}') 
+                                            // datepicker-options="dateOptions" ng-required=1)
+                                    
+                                        else if type === 'enum'
+                                            // *** Generate Dropdown for ENUM Values *** //
+                                            div.dropdown
+                                                button.btn.btn-default.dropdown-toggle(type='button' data-toggle='dropdown') #{fld} &nbsp;
+                                                    span.caret
+                                                ul.dropdown-menu
+                                                    each opt,j in options
+                                                        li 
+                                                            a(href='#' onclick='return false') #{j} : #{opt}
+                                       
+                                        else if type === 'lookup'
+                                            b lookup table ... 
+                                        
+                                        else 
+                                            input.col-md-10.form-control(id='#{fld}' ng-model=fld type=ngType default='#{defaultTo}')
+
+                b #{_csrf}
+        hr
+        div.col-md-2
+        div.col-md-10
+            button.btn.btn-lg.btn-primary(type='submit') Add
+
+        input.form-control(type='hidden' value="#{_csrf}")
+        hr
+
+        div(style="display:inline-block; min-height:290px;")
+            uib-datepicker(ng-model="dt" min-date="minDate" show-weeks="true" class="well well-sm" custom-class="getDayClass(date, mode)")
+
