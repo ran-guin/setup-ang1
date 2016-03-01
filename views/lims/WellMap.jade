@@ -1,0 +1,58 @@
+extends ./../core/publicLayout
+block content
+
+  .header
+    h1(id="main-title" class="container") Well Map 
+
+    - Rows = []; // ['A', 'B','C', 'D', 'E', 'F', 'G', 'H'];
+    - Cols = []; // [1,2,3,4,5,6,7,8,9,10,11,12];
+
+    - Rows = rows || ['A','B'];
+    - Cols = cols || [1,2,3];
+    - plates = targets || [''];
+
+
+  - var bmap = {};   // need to initialize to hash so that it reads input as hash 
+  - plateMap = Map ;
+
+  - config = JSON.stringify({ map : plateMap, rows : Rows, cols : Cols, targets: plates });
+
+  div.container
+    div(ng-app='myApp')
+      div(ng-controller='WellController', ng-init="initialize('#{config}')")
+        button(type='button' ng-click="initialize('#{config}')") Re-initialize
+        hr
+        #{config}
+        hr
+
+        h2 Context: {{ context }}
+        h3 Source List:
+        h4 #{targets.length} Target Plates/Tubes
+
+        - var i = 0;
+        each plate in targets
+          table.table.table-bordered
+            tr
+              th &nbsp;
+              each col in Cols
+                th(style='background-color:#aaa') 
+                  b #{col}
+            each row in Rows
+              tr
+                td(style='background-color:#aaa') 
+                  b #{row}
+                each col in Cols
+                  td 
+                    - index = plate + ':' + row + col
+                      if plateMap[index]
+                        b #{plateMap[index]} 
+                      else 
+                        b 0
+      hr
+      #{rows}
+      hr
+      #{cols}
+      hr
+      #{JSON.stringify(plateMap)}
+ 
+      
