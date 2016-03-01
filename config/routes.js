@@ -59,7 +59,7 @@ module.exports.routes = {
   // Home page 
   'GET /home': 'MainController.showMainPage',
   'GET /dash': 'UserController.dashboard',
-  
+
   // Default User pages 
   'GET /user/dashboard/:id': 'UserController.dashboard',
   'GET /user/:id': 'UserController.dashboard',
@@ -103,8 +103,9 @@ module.exports.routes = {
   'GET /demo/appointment': 'DemoController.appointment',
 
 
-  '/Lab_protocol/new' : 'Lab_protocolController.create',
-  '/Lab_protocol/:id' : 'Lab_protocolController.view',
+  'GET /Lab_protocol/new' : 'Lab_protocolController.define',
+  '/Lab_protocol/save' : 'Lab_protocolController.save',
+  '/Lab_protocol/view/:id' : 'Lab_protocolController.view',
   '/Lab_protocol/demo/:id' : 'Lab_protocolController.demo',
   '/Lab_protocol/list' : 'Lab_protocolController.list',
 
