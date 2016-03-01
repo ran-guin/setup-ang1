@@ -6,7 +6,9 @@ block content
     h1(id="main-title" class="container") Custom Title 
   div.container
     
-    h3 List of Protocols:
+    a(href="/Lab_protocol/new")
+      Add New Protocol
+    h3 List of Current Protocols:
       each protocol,i in protocols
         - id = protocol.id;
         - name = protocol.name;
