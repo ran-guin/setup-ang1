@@ -2,7 +2,7 @@ extends ./../core/publicLayout
 block content
 
   .header
-    h1(id="main-title" class="container") Custom Title 
+    h1(id="main-title" class="container") BC Generations
   
   div.container
 
@@ -19,31 +19,21 @@ block content
       div(ng-controller="CommonController")
         div(ng-controller='ProtocolController' ng-init="#{init}" ngcloak)
           
-          h3 {{Step.Protocol_Step_Name}}
+          h5 Active: 4 x Matrix Data Tubes
+            div.navbar.navbar-right {{user}} {{ timestamp }}
+          hr
+
+          h3 {{Step.Protocol_Step_Name}} &nbsp;
+            span(ng-show="Step.Protocol_Step_Instructions")
+              a(href='#' onclick="return false;" data-toggle="popover" data-trigger="focus" title="Instructions" data-content="{{Step.Protocol_Step_Instructions}}")
+                i.fa.fa-question-circle
+              span &nbsp;
 
           h4(style="color:red") {{ Step.Protocol_Step_Message }} [ {{stepNumber}} / {{steps}}]
-          h5 4 x Matrix Data Tubes
-
-          h5 Details: {{ Step }}
-          h5 Input: {{ input }}
-
-          h5 Fields: #{ JSON.stringify(flds) }
-          h5 Attributes: #{JSON.stringify(attributes)}
 
           hr
            
           form.form-horizontal(role="form" method='post' action="/completed-step")
-            button.btn.primary(type='button' ng-click="back()" ng-disabled='stepNumber > steps') BACK
-            span &nbsp;
-            button.btn.btn-primary(type='button' ng-click="forward()" ng-disabled="stepNumber >= steps") FWD
-
-            h3 Context: {{ context }}
-
-            div.form-group
-              label.col-sm-2.control-label(for='name')
-                i.fa.fa-help()
-              div.col-sm-10
-                input.form-control(type='text' id='Protocol_Step_Name' value='{{Step.Protocol_Step_Name}}' disabled) 
 
             - prompted = {};
             - options = ['ml', 'ul', 'nl', 'pl'];
@@ -126,6 +116,20 @@ block content
             input(type='hidden' id='target-format' value='3')
             input(type='hidden' id='target-wells' value='A01,B01,C01,D01')
             input(type='hidden' id='source-wells' value='')
+
+
+          h3(ng-show="debug || 1") Debugging 
+
+            button.btn.primary(type='button' ng-click="back()" ng-disabled='stepNumber > steps') BACK
+            span &nbsp;
+            button.btn.btn-primary(type='button' ng-click="forward()" ng-disabled="stepNumber >= steps") FWD
+
+            h5 Details: {{ Step }}
+            h5 Input: {{ input }}
+
+            h5 Fields: #{ JSON.stringify(flds) }
+            h5 Attributes: #{JSON.stringify(attributes)}
+
 
 
 
