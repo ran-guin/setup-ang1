@@ -5,6 +5,8 @@
  * @help        :: See http://sailsjs.org/#!/documentation/concepts/Controllers
  */
 
+var bodyParser = require('body-parser');
+
 module.exports = {
 
 	'test2' : function (req, res) {
@@ -153,10 +155,57 @@ module.exports = {
 		return res.render('lims/Protocol_Step', {steps: [ {'Protocol_Step_Name' : 'next', 'Protocol_Step_Message' : 'hello'} ]});
 	},
 
-	'create' : function (req, res) { 
+	'define' : function (req, res) { 
 		console.log('new protocol generator');
 
 		res.render('lims/New_Lab_Protocol');
+	},
+
+	'save' : function (req, res) {
+		console.log('saving lab protocol');
+
+
+		var Steps = req.body.Steps;
+		var Name = req.body.Lab_Protocol_Name;
+		console.log("BODY: " + JSON.stringify(req.body));
+		console.log("Save: " +  Name);
+
+		// var S2 = req.query.Steps;
+	//	console.log("s2: " + S2);
+
+		var FKey = 'FK_Lab_Protocol__ID';   // CUSTOM
+
+		Lab_protocol.create({ Lab_Protocol_Name : Name })
+		.exec( function (err, result) {
+			if (err) {
+				console.log("ERR: " + err);
+				res.send(400, "Error " + err);
+			}
+			else {
+				var id = result.id;
+				console.log("ID=" + id);
+				console.log(JSON.stringify(result));
+				for (var i=0; i<Steps.length; i++) {
+					Steps[i][FKey] = id;
+					console.log("Create step " + i + " : " + JSON.stringify(Steps[i]))
+				}
+
+				Protocol_step.create( Steps )
+				.exec( function (Serr, Sresults) {
+					if (Serr) { 
+						console.log("error creating protocol step(s): " + Serr)
+						res.send(400, "Error saving steps: " + Serr);
+					}
+					else {
+						console.log("Created " + Steps.length + " protocol steps");
+						console.log(JSON.stringify(Sresults));
+						res.send( { Protocol: result, Protocol_Steps: Sresults });
+					}
+				});
+
+			}
+		});
+
 	}
 
 };
