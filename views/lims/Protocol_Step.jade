@@ -33,15 +33,20 @@ block content
 
           hr
            
-          form.form-horizontal(role="form" method='post' action="/completed-step")
+          form.form-horizontal(role="form" data-toggle="validator" method='post' action="/completed-step")
 
             - prompted = {};
             - options = ['ml', 'ul', 'nl', 'pl'];
 
-            each fld,i in flds
+            each field,i in flds
+              - fld = field.replace('*','');
               - alias = aliases[fld] || fld;
+              - fType = 'text';
 
-              div(ng-if="Show['#{fld}']")
+              if (fld != field)
+                - alias = alias + '*';
+
+              div(ng-if="Show['#{field}']")
                 div.form-group
                   if attributes[fld]
                     - fType = attributes[fld];
@@ -92,10 +97,18 @@ block content
                                       a(href='#' return=false) #{opt}
                   else if ! prompted[fld]
                     // non special fields without units 
-                    div
+                    div.form-group
                       label.col-sm-2.control-label(for='#{fld}') #{alias}
                       div.col-sm-10
-                        input.form-control(type='#{fType}', placeholder = "Enter " + alias id='#{fld}' ng-model='#{fld}')
+                        if (fld == field)
+                          input.form-control(type='#{fType}', pattern=".*" maxlength="15" placeholder = "Enter " + alias id='#{fld}' ng-model='#{fld}')
+                        else 
+                           input.form-control(type='#{fType}', required pattern="^[_A-z0-9]{1,}$" maxlength="15" placeholder = "Enter " + alias id='#{fld}' ng-model='#{fld}')
+                         
+                        div.help-block.with-errors
+                  else 
+                    b skip {{fld}}
+
  
 
             hr
@@ -109,6 +122,8 @@ block content
                 button.btn.btn-danger(type='submit') Failed Step
               div.col-sm-3
                 button.btn.btn-primary(type='submit') Repeat Previous Step
+              div.col-sm-12
+                div.help-block.with-errors
 
             hr
             
@@ -126,11 +141,11 @@ block content
 
             h5 Details: {{ Step }}
             h5 Input: {{ input }}
-
+            h5 Show: {{ Show }}
             h5 Fields: #{ JSON.stringify(flds) }
             h5 Attributes: #{JSON.stringify(attributes)}
-
-
+          hr
+ 
 
 
          
