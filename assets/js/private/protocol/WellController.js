@@ -11,26 +11,62 @@ function wellController ($scope, $rootScope, $http, $q) {
     var map = {};
     
     $scope.map = {};
-    $scope.ids = [];
-    
+    $scope.sources = [];
+
+ 
+
     $scope.initialize = function initialize(config) {
         var Config = {};
         if (config) { Config = JSON.parse(config) }
 
+        $scope.sources = Config['sources'] || [];
+        $scope.target  = Config['target'] || {};
+        $scope.options = Config['options'];
+
         $scope.map = Config['map'] || {}; 
-        $scope.ids = Config['ids'] || [];
         $scope.target_rows = Config['target_rows'] || ['A','B','C'];
         $scope.target_cols = Config['target_cols'] || [1,2,3,4,5,6];
+
+        // $scope.plates=['pla1','pla2','pla3'];
+        // $scope.rows = [['A','B'], ['C','D'], ['E','F']];
+        // $scope.wells = [];
 
         $scope.fill_by = Config['fill_by'] || 'row';
         $scope.split   = Config['splitX'] || 1;
         $scope.batch   = Config['batch'] || 1;    // applicable only for splitting with parallel mode (if N wells pipetted together)
         $scope.mode    = Config['mode'] || 'serial';  // serial or parallel...appliable only for split (eg A1, A1, A2, A2... or A1, A2... A1, A2...)
+    
+        console.log("INIT Map");
+
+        var newMap = new wellMapper();
+
+        newMap.colourMap();
+        newMap.from($scope.sources);
+
+        $scope.source_rows = newMap.source_rows;
+        $scope.source_cols = newMap.source_cols;
+        
+        // console.log(newMap.source_rows + " x " newMap.source_cols);
+
+        console.log( JSON.stringify(newMap) );
+
+        $scope.colourMap = newMap.Map;
+        $scope.colours   = newMap.colours;
+        $scope.rgbList = newMap.rgbList;
+
+        console.log("cols: " + JSON.stringify(newMap.colours));
+
+        console.log("MAP: " + JSON.stringify($scope.colourMap));
+        console.log("colours: " + JSON.stringify($scope.colours));
+        console.log("rgb: " + JSON.stringify($scope.rgbList));
+
+        console.log("Source Map: " + JSON.stringify(newMap.distribute()));
+
     }
 
     $scope.distribute = function distribute() {
 
-        var ids = $scope.ids;
+        var sources = $scope.sources;
 
         //var target_format_id = transfer_parameters['target_format_id'];
         //var prep_id = transfer_parameters['prep_id'];
@@ -58,15 +94,21 @@ function wellController ($scope, $rootScope, $http, $q) {
         var preserve_x = 8;
 
         var map = {};
+        var Target = [];
+        var Colour = [];
 
         var target_index = 0;
+        var targets = ['T0:']; // CUSTOM TEST
+
         var target_position = x_min + y_min.toString();
-        var targets = ['PLA0']; // CUSTOM TEST
 
-        array.push(targets[target_index], target_position);  // store mul plate record... 
-        rearray.push([ids[i], Container.position(ids[i]), targets[target_index], target_position]);
+        //array.push(targets[target_index], target_position);  // store mul plate record... 
+        //rearray.push([sources[i], Container.position(sources[i]), targets[target_index], target_position]);
 
-        for (var i=0; i<ids.length; i++) {
+        Target[target_index] = {};
+        Target[target_index][target_position] = sources[0];
+
+        for (var i=1; i<sources.length; i++) {
 
             if (fill_by == 'row') {
                 y++;
@@ -79,6 +121,7 @@ function wellController ($scope, $rootScope, $http, $q) {
                         target_index++;       // next plate ... 
                     }
                     else {
+                        console.log("x = " + x + " : " + x_min);
                         x = String.fromCharCode(x.charCodeAt(0) + 1);
                     }
                 }
@@ -89,7 +132,7 @@ function wellController ($scope, $rootScope, $http, $q) {
                     if (y >= y_max) {
                         y=y_min;
                         target_index++;       // next plate ... 
-                        targets.push('PLA' + target_index );
+                        targets.push('T' + target_index );
                     }
                     else {
                         y++;
@@ -102,14 +145,22 @@ function wellController ($scope, $rootScope, $http, $q) {
             }
 
             var target_position = x + y.toString();
-            console.log(target_position);
             
-            array.push(targets[target_index], target_position);  // store mul plate record... 
+            if (! Target[target_index]) { Target[target_index] = {} }
+            if (! Colour[target_index]) { Colour[target_index] = {} }
+
+            Target[target_index][target_position] = sources[i];
+            Colour[target_index][target_position] = $scope.rgbList[i];
+
+            $scope.Target = Target;
+            $scope.Colour = Colour;
+
+            //array.push(targets[target_index], target_position);  // store mul plate record... 
 
             var index = targets[target_index] + ':' + target_position;
-            map[index] = ids[i];
+            map[index] = sources[i];
 
-            rearray.push([ids[i], Container.position(ids[i]), targets[target_index], target_position]);
+            //rearray.push([sources[i], Container.position(sources[i]), targets[target_index], target_position]);
         }
 
         $scope.targets = targets;
