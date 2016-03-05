@@ -21,15 +21,16 @@ module.exports = {
 		var prep_id = req.body.prep_id;
 		var target_cols = req.body.target_cols;
 		var target_rows = req.body.target_rows;
+
 		// TEST 
-		ids = [];
+		var sources = [];
 		for (var i=1; i<=300; i++) {
-			ids.push(i )+ 300;
+			sources.push( { id : i+200, position : 'A1'  });
 		} // test
 
 		if (size == target_size) {
 			// Standard direct transfer 
-			Container.standard_transfer( ids, target_format )
+			Container.standard_transfer( sources, target_format )
 			.then ( function (barcodes) {
 				Barcode.generate(barcodes);
 				return res.send('Transfer Success'); 
@@ -39,7 +40,10 @@ module.exports = {
 			});
 		}
 		else {
-			var params = { id: ids, target_format_id: target_format, prep_id : prep_id, target_size: target_size, target_cols : target_cols, target_rows : target_rows}; // TEST
+			if (1) { return res.render('lims/WellMap', { sources: sources, target: { wells: 96, max_row: 'A', max_col: 12 }, options : { split: 1 }}) }
+
+			/*
+			var params = { id: sources, target_format_id: target_format, prep_id : prep_id, target_size: target_size, target_cols : target_cols, target_rows : target_rows}; // TEST
 			// Track transfer as rearray (track individual well movement)
 
 			console.log('test rearray transfer');
@@ -52,11 +56,12 @@ module.exports = {
 				var targets = data.targets;
 
 				console.log("rows: " + JSON.stringify(rows));
-				return res.render('lims/WellMap', { Map : map, rows: rows, cols: cols, targets : targets}); 
+				return res.render('lims/WellMap', { sources: sources, Map : map, rows: rows, cols: cols, targets : targets}); 
 			})
 			.catch ( function (err) {
 				return res.send('Rearray Error');
-			});		
+			});
+			*/		
 		}
 	}
 };
