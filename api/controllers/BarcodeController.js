@@ -42,11 +42,36 @@ module.exports = {
 				var name = result[i]['Lab_Protocol_Name'];
 				var id   = result[i]['Lab_Protocol_ID'];
 				
-				console.log('include ' + name);
+				//console.log('include ' + name);
 				List.push({id : id, name: name});
 		}
 
-		return res.render('lims/Lab_protocols', { protocols : List} );
+
+		// test data only 
+		var Samples = [];
+		sampleList = [];
+		var offset = 0;
+		var ids = [];
+		var rows = ['A','B','C','D','E','F','G','H'];
+		for (row = 0; row < rows.length; row++) {
+			for (var i = 0; i< 12; i++) {
+				var sample = { id : 300 + i + offset, container_format : '96-well Beckman', position : rows[row] + i.toString(), sample_type : 'Blood'}
+				Samples.push(sample);
+				sampleList.push(300+i);
+
+				ids.push(300+i+offset);
+			}
+			offset = offset + 12;
+		}
+		// end of test data... 
+
+		var target_formats = [
+			{ id : 1, name : '96-well Beckman Coulter'}, 
+			{ id : 2, name : 'Data Matrix Tube'}, 
+			{ id : 3, name : 'Epindorf Tube'}
+		];
+
+		return res.render('lims/Container', { ids: ids.join(','), protocols : List, samples: Samples , target_formats : target_formats } );
 		// return res.send();
 
 	    });
