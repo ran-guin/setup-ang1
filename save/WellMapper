@@ -1,0 +1,79 @@
+var colourMap = function colourMap(N, shades) {
+
+    if (!N) { N = 8 }            // Number of colours
+    if (!shades} { shades = 12 } // Number of shades
+
+
+        var list = [];
+        
+        var colourList = ['red','purple','blue','teal','green','yellow','organge','brown', 'grey'];
+        var hex = ['00','1a','33','4d','66','80','99','b3','cc','e6','ff'];  // domain of rgb values to use 
+
+        // define array of starting points for rgb values (eg N -> hex[N] for each colour)
+        var reds = [7, 5, 0, 0, 0, 7, 6, 2, 1];
+        var greens = [0, 0, 0, 5, 4, 7, 1, 1, 1];
+        var blues = [0, 5, 5, 5, 0, 0, 2, 0, 1];
+
+        var Map = {};    
+        var rgbList = [];
+        var colours = [];
+
+        for (var c=0; c<N; c++) {
+            Map[colours[c]] = [];
+            colours.push(colourList[c]);
+
+            var red = reds[c];
+            var green = greens[c];
+            var blue = blues[c];
+
+            for (var i=1; i<=shades; i++) {
+
+               if (red >= 10) { 
+
+                    if (blue < red) { blue++ }
+                    if (green < red) { green++ }
+
+                    red = 10;
+                    
+                    if (blue > 10) { blue = 10 }
+                    if (green > 10) { green = 10 }
+                }
+                else if (green >= 10) { 
+
+                    if (blue < green) { blue++ }
+                    red++;
+
+                    green = 10;
+                    
+                    if (blue > 10) { blue = 10 }
+                }          
+                else if (blue >= 10) { 
+                    blue = 10;
+                    green++;
+                    red++;
+                }           
+                else if (red) {
+                    if (green == red) { green++ }
+                    if (blue == red) { blue++ }
+                    red++;
+                }
+                else if (green) {
+                    if (red == green) { red++ }
+                    if (blue == green) { blue++ }
+                    green++
+                }
+                else if (blue) {
+                    if (red == blue) { red++ }
+                    if (green == blue) { green++ }
+                    blue++
+                }       
+
+                var rgb = hex[red] + hex[green] + hex[blue];
+
+                Map[colours[c]].push(rgb);
+                rgbList.push[rgb];
+            }
+        }
+
+        return { Map : Map, list : rgbList, colours : colours }
+    }
