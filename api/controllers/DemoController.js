@@ -19,7 +19,7 @@ module.exports = {
     home : function (req, res) {
 
         // Customize where demo runs go 
-        res.render('lims/home', { 'demo1' : 'protocol', 'demo2' : 'protocolAdmin' });
+        res.render('customize/public_home', { 'demo1' : 'protocol', 'demo2' : 'protocolAdmin' });
 
     },
 

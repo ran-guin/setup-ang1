@@ -118,15 +118,24 @@ module.exports = {
 
 	lookup: function (req, res) {
 		var table = req.param('table');
-		console.log('generate ' + table + ' lookup');
+		var fields = req.param('fields') || 'id:name';
 
-		var fields = "id, name as label";
-		Record.query("Select " + fields + " from " + table, function (err, result) {
+		console.log('generate ' + table + ' lookup');
+		console.log("using: " + fields);
+
+		var extract = fields.split(':');
+
+		if (extract.length == 1) { extract[1] = extract[0] }
+
+		var select = extract[0] + ' as id, ' + extract[1] + ' as label';
+		console.log("Select: " + select);
+		Record.query("Select " + select + " from " + table, function (err, result) {
 			if (err) {
 				return res.negotiate(err);
 			}
 			console.log("Lookup: " + JSON.stringify(result));
-			return res.send(result);
+			//return res.send(result);
+			return res.render('core/lookup', { table : table, data : result });
 		});
 	}
 	

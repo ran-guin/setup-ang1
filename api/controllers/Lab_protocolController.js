@@ -5,7 +5,14 @@
  * @help        :: See http://sailsjs.org/#!/documentation/concepts/Controllers
  */
 
+var express = require('express');
+var app = express();
 var bodyParser = require('body-parser');
+
+app.use( bodyParser.json() );       // to support JSON-encoded bodies
+app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
+  extended: true
+})); 
 
 module.exports = {
 
@@ -82,77 +89,101 @@ module.exports = {
 
 	},
 
-	'demo' : function (req, res) {
+	/** return view **/
+	'run' : function (req, res) {
 		var id = req.param('id');
 		var demo = req.param('demo');
+		var containers = req.body.Plate_ID || 'nothing';
 
-		console.log('demo: ' + demo);
-		demo = 1; 
+		console.log("BODY: " + JSON.stringify(req.body));
 
-		console.log("view Lab Protocol " + id);
-		
-		var q = "SELECT * FROM Protocol_Step where FK_Lab_Protocol__ID = " + id;
+		var protocol = req.body['Lab_Protocol-id'];
+		console.log("protocol: " + protocol);
 
-	    Record.query(q, function (err, result) {
-	    	if (err) {
+		var q = "SELECT * FROM Protocol_Step where FK_Lab_Protocol__ID = " + protocol;
 
-	    		console.log("ASYNC Error in q post request: " + err);
-	            console.log("Q: " + q);
-	 //           res.status(500).send("Error generating Request Page");
+		Record.query(q, function (err, result) {
+		    if (err) {
 
-				return res.negotiate(err);
-     		}
+		        console.log("ASYNC Error in q post request: " + err);
+		        console.log("Q: " + q);
+		        return res.negotiate(err);
+		    }
 
-			if (!result) {
-				console.log('no results');
-				return res.send('');
-			}
+		    if (!result) {
+		        console.log('no results');
+		        return res.send('');
+		    }
 
-			var Options = [];
-		
+		    /*
+		    var Options = [];
+		    for (var i=0; i<result.length; i++) {
+		        Lab_protocol.load_Attributes(result[i]['Input'].split(':'), function (err, atts) {
+		            if (err) { return res.send("Error loading attributes") }
 
-			Lab_protocol.input_list(result)
-			.then ( function( input_list ) {
-				console.log("GOT " + JSON.stringify(input_list));
+		            console.log("Attributes: " + JSON.stringify(atts));
+		            if (atts['Plate'].length > 0) {
+		                for (var i=0; i< atts['Plate'].length; i++) {
+		                    Attribute.options('Plate', atts['Plate'][i], function (err, opts) {
+		                        if (err) { return res.send("Error generating Plate attribute options") }
 
-				var plate_atts = input_list.attributes.Plate;
-				var prep_atts  = input_list.attributes.Prep;
-				console.log("plate atts:" + JSON.stringify(plate_atts));
-				console.log("prep atts:" + JSON.stringify(plate_atts));
+		                        console.log('Options: ' + JSON.stringify(opts) );
+		                        Options.push(opts);
+		                    });
+		                }
+		            }
 
-				return res.render('lims/Protocol_Step', { Steps : result, input : input_list.input, attributes : input_list.attributes } );
+		        });
 
-			});
-/*
-			for (var i=0; i<result.length; i++) {
-				Lab_protocol.load_Attributes(result[i]['Input'].split(':'), function (err, atts) {
-					if (err) { return res.send("Error loading attributes") }
-
-					console.log("Attributes: " + JSON.stringify(atts));
-					if (atts['Plate'].length > 0) {
-						for (var i=0; i< atts['Plate'].length; i++) {
-							Attribute.options('Plate', atts['Plate'][i], function (err, opts) {
-								if (err) { return res.send("Error generating Plate attribute options") }
-
-								console.log('Options: ' + JSON.stringify(opts) );
-								Options.push(opts);
-							});
-						}
-					}
-				});
-
-			}
-			*/
-			
-			// return res.send();
+		    }
+		    */
+		    Lab_protocol.input_list( result )
+		    .then ( function (inputList) {
+		    	console.log("INPUT : " + JSON.stringify(inputList));
+		    	console.log('globals:' + JSON.stringify(sails.config.globals));		    	
+		    	console.log('session:' + JSON.stringify(req.session));
+		    	console.log("fields : " + JSON.stringify(inputList.input));
+		    	console.log("fields : " + JSON.stringify(inputList.attributes));
+		    	return res.render('lims/Protocol_Step', { Steps : result, Samples: containers, fields: inputList['input'], attributes: inputList.attributes } );
+		    });
 
 		});
+
 	},	
 
-	'completed' : function (req, res) {
+	/** return data on success **/
+	'complete' : function (req, res) {
 		console.log("COMPLETED STEP");
-		console.log(JSON.stringify(req.param));
-		return res.render('lims/Protocol_Step', {steps: [ {'Protocol_Step_Name' : 'next', 'Protocol_Step_Message' : 'hello'} ]});
+		var data = req.body;
+		
+		console.log("Send Prep data: " + JSON.stringify(data['Prep']));
+		console.log("Send Plate data: " + data['Plate']);
+
+		if (data && data['Prep']) {
+			Prep.create( data['Prep'] )
+			.exec (function (err, PrepResult) {
+				if (err) { return res.send("ERROR creating Prep record") }
+				else {
+					console.log("Added Prep: " + JSON.stringify(PrepResult));
+
+					data['Plate']['FK_Prep__ID'] = PrepResult.id;
+
+					Plate_Prep.create( data['Plate'] )
+					.exec (function (err, PlateResult) {
+						if (err) { return res.send("ERROR creating Plate record") }		
+					
+						console.log("Added Plate_Prep: " + PlateResult);
+						return res.send("Added Prep + Plate Records: " + PrepResult)
+					});
+				}
+
+			});
+		}
+		else {
+			console.log("NO DATA INPUT");
+			return res.send('no data');
+		}
+
 	},
 
 	'define' : function (req, res) { 

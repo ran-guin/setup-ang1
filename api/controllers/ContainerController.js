@@ -10,6 +10,7 @@ var bodyParser = require('body-parser');
 module.exports = {
 	
 	transfer : function (req, res ) {
+		console.log("transferring samples");
 		req.body = { size : 1, target_size: '3x6', target_format : 5, prep_id : 7, target_rows: ['A','B','C','D'], target_cols : [1,2,3,4,5,6] }; // test
 		
 		var id = req.body.id || '';
