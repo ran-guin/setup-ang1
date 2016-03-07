@@ -1,0 +1,46 @@
+head
+    meta(name='viewport', content='width=device-width, initial-scale=1, maximum-scale=1')
+
+    //
+    //     Stylesheets and Preprocessors
+    //      ==============================
+    //      You can always bring in CSS files manually with `link` tags, or asynchronously
+    //      on the client using a solution like AMD (RequireJS).  Or, if you like, you can
+    //      take advantage of Sails' boilerplate asset management.
+    //      By default, tylesheets from your `assets/linker/styles` folder are included
+    //      here automatically.  Both CSS (.css) and LESS (.less) are supported.
+    //      In production, your styles will be minified and concatenated into a single file.
+    //      To customize any part of the built-in behavior, just edit your Gruntfile.
+    //      For example, here are a few things you could do:
+    //      + Change the order of your CSS files
+    //      + Import stylesheets from other directories
+    //      + Use a different or additional preprocessor, like SASS, SCSS or Stylus
+
+    // customize baseURL to enable reverse proxy to work for links (also change tasks/register/default.js to use linkAssets instead of linkAssetsBuild    
+    // this causes dropdown menus to redirect here for some reason... turn off for now... 
+
+
+    // STYLES
+    link(rel="stylesheet", href="/styles/angular-toastr.css")
+    link(rel="stylesheet", href="/styles/bootstrap.3.1.1.css")
+    link(rel="stylesheet", href="/styles/custom.css")
+    link(rel="stylesheet", href="/styles/font-awesome.min.css")
+    link(rel="stylesheet", href="/styles/font-awesome/font-awesome-4.4.0/css/font-awesome.css")
+    link(rel="stylesheet", href="/styles/font-awesome/font-awesome-4.4.0/css/font-awesome.min.css")
+    link(rel="stylesheet", href="/styles/importer.css")
+    link(rel="stylesheet", href="/styles/jquery-ui-1.11.4.css")
+    link(rel="stylesheet", href="/styles/jquery.dataTables.min.css")
+    // STYLES END
+
+    base(href=req.baseUrl) 
+    
+    include ./../customize/private_header.jade
+
+    // Added this so the client has access to the csrf tag and it's grabbed first service side on every page
+    //script(type='text/javascript').
+    //  window.overlord = { csrf: "<%= _csrf %>" };
+    
+    // The sound file tht will play on activity events
+      source(src='/sounds/notify.ogg', type='audio/ogg')
+      source(src='/sounds/notify.mp3', type='audio/mpeg')
+      source(src='/sounds/notify.wav', type='audio/wav')

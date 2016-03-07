@@ -1,0 +1,11 @@
+
+span.dropdown
+	input.fill-id(type='hidden' id='#{table}-id' name='#{table}-id' value='0') 
+	input.fill-label(type='hidden' id='#{table}-label' name='#{table}-label' value='?') 
+
+	button.btn.btn-default.dropdown-toggle(type='button' data-toggle='dropdown' id='#{table}-lookup' value="unset") - Select - &nbsp;
+		span.caret
+	ul.dropdown-menu
+		each option in data
+			li 
+				a(href='#' onclick="return false;" value='#{option.id}') #{option.label} 
