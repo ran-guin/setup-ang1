@@ -1,0 +1,73 @@
+extends ./../customize/privateLayout
+block content
+
+  .header
+    h1(id="main-title" class="container") Well Map 
+
+  - Rows = ['A','B','C'];
+  - Cols = [1,2,3,4]
+  - targets = [];
+  - config = JSON.stringify({ sources : sources, target : target, options : options });
+  
+  div.container
+    div(ng-app='myApp')
+      div(ng-controller="CommonController")
+       div(ng-controller='WellController', ng-init="initialize('#{config}')")
+        button(type='button' ng-click="distribute()") Distribute
+        hr
+        //b Sources: {{ sources }}
+        //hr
+        b Target: {{ colours }}
+        hr
+        b Fill By: 
+        input(type='radio-group', values=['column','row'] ng-model='fill_by')
+
+        h2 Context: {{ context }}
+        h3 Source List:
+        h4 #{targets.length} Target Plates/Tubes
+        b {{ JSON.stringify(rgbList) }}
+        - var index = 0;
+        table.table()
+          tr
+            td(style='width:50%')
+              h2 Source Samples: [{{ source_rows }} x {{ source_cols }}]
+              table
+                tr
+                  th &nbsp;
+                  th(ng-repeat="col in source_cols") {{ col }}
+                tr(ng-repeat="row in source_rows")
+                  td {{ row }}
+                  td(ng-repeat="col in source_cols" style="background-color:#{{ rgbList[ $parent.$index*source_cols.length + $index ] }}") &nbsp; &nbsp; &nbsp;
+
+            td(style='width:50%')
+              h2 Target Samples:
+
+              - var i = 0;
+              each plate in targets
+                table.table.table-bordered
+                  tr
+                    th &nbsp;
+                    each col in Cols
+                      th(style='background-color:#aaa') 
+                        b #{col}
+                  each row in Rows
+                    tr
+                      td(style='background-color:#aaa') 
+                        b #{row}
+                      each col in Cols
+                        td 
+                          - index = plate + ':' + row + col
+                            if plateMap[index]
+                              b #{plateMap[index]} 
+                            else 
+                              b 0
+
+        hr
+        //b {{ map }}
+        b Colour Map:
+
+        b {{ colours.length }} colours:
+
+        table.table.table-bordered
+          tr(ng-repeat="colour in colours") 
+              td(ng-repeat="hue in colourMap[colour]" style="background-color:#{{hue}}") {{hue}}
