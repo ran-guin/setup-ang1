@@ -43,11 +43,11 @@ module.exports.routes = {
   
   '/': 'DemoController.home',
 
-  '/public' : { view: 'core/public'},
-  '/contact' : { view: 'core/ContactUs'},
+  '/public' : { view: 'customize/public'},
+  '/contact' : { view: 'customize/ContactUs'},
 
-  '/page1': { view: 'core/Page1'},
-  '/page2': { view: 'core/Page2'},
+  '/page1': { view: 'customize/Page1'},
+  '/page2': { view: 'customize/Page2'},
 
   // User enrollment + authentication
   'POST /signup': 'UserController.signup',
@@ -57,7 +57,6 @@ module.exports.routes = {
   'GET /demo' : 'MainController.showDemoPage',
 
   // Home page 
-  'GET /home': 'MainController.showMainPage',
   'GET /dash': 'UserController.dashboard',
 
   // Default User pages 
@@ -68,8 +67,8 @@ module.exports.routes = {
   'GET /api/q': 'QueryController.query',
   'POST /api/search': 'QueryController.search',
 
-  'GET /': { view: 'core/public' },
-  'GET /homepage': { view: 'core/homepage' },
+  'GET /': { view: 'customize/public' },
+  'GET /home': { view: 'customize/home' },
 
   /* Generic Record control options */
   'GET /record/add/:model': 'RecordController.new',
@@ -77,6 +76,7 @@ module.exports.routes = {
   'GET /record/edit/:model': 'RecordController.edit',
   'POST /record/edit/:model': 'RecordController.update',
 
+  'GET /lookup/:table/:fields' : 'RecordController.lookup',
   'GET /lookup/:table' : 'RecordController.lookup',
 
   /***************************************************************************
@@ -90,6 +90,7 @@ module.exports.routes = {
   ***************************************************************************/
   
   'GET /xfer' : 'ContainerController.transfer',
+  'POST /xfer' : 'ContainerController.transfer',
 
   // Custom Pages 
 
@@ -106,8 +107,12 @@ module.exports.routes = {
   'GET /Lab_protocol/new' : 'Lab_protocolController.define',
   '/Lab_protocol/save' : 'Lab_protocolController.save',
   '/Lab_protocol/view/:id' : 'Lab_protocolController.view',
-  '/Lab_protocol/demo/:id' : 'Lab_protocolController.demo',
+  '/Lab_protocol/demo/:id' : 'DemoController.protocol',
   '/Lab_protocol/list' : 'Lab_protocolController.list',
+  '/Lab_protocol/run'  : 'Lab_protocolController.run',
+  
+  'POST /Lab_protocol/complete-step' : 'Lab_protocolController.complete',
+
 
   'POST /scan-barcode' : 'BarcodeController.scan',
 
