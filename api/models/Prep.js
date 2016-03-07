@@ -7,8 +7,15 @@
 
 module.exports = {
 
-  attributes: {
+  tableName : 'Prep', 
 
+  attributes: {
+  	Prep_Name : { type : 'string' },
+  	Prep_Comments : { type : 'string' },
+  	Prep_Action : { 
+  		type : 'string',
+  		enum : ['Completed','Failed','Skipped'],
+  	},
   }
 };
 
