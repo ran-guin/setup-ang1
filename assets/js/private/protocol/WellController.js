@@ -3,8 +3,8 @@
 var app = angular.module('myApp');
 
 app.controller('WellController', 
-['$scope', '$rootScope', '$http', '$q'  ,   
-function wellController ($scope, $rootScope, $http, $q) {
+['$scope', '$rootScope', '$http', '$q' , 
+function wellController ($scope, $rootScope, $http, $q ) {
 
     $scope.context = 'Wells';
 
@@ -27,6 +27,7 @@ function wellController ($scope, $rootScope, $http, $q) {
         $scope.batch   = Config['batch'] || 1;    // applicable only for splitting with parallel mode (if N wells pipetted together)
         $scope.mode    = Config['mode'] || 'serial';  // serial or parallel...appliable only for split (eg A1, A1, A2, A2... or A1, A2... A1, A2...)
     }
+
 
     $scope.distribute = function distribute() {
 
