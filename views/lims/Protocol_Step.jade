@@ -46,14 +46,14 @@ block content
             div(ng-show="SplitTracking")
               div.col-sm-2 &nbsp;
               div.col-sm-10
-                b Expanding lists in: &nbsp;
+                b Note: Expanding lists in: &nbsp;
                 label
                   input(type='radio' value = 'Serial' ng-model="split_mode" ng-click="reset_Split_mode()") 
                   b &nbsp; Serial &nbsp;
                 label
                   input(type='radio' value = 'Parallel' ng-model="split_mode" ng-click="reset_Split_mode()")
                   b &nbsp; Parallel &nbsp;
-                span &nbsp; Format [ eg : 
+                span &nbsp; [ eg : 
                   b {{ splitExample }}
                   span ]
 
@@ -101,11 +101,12 @@ block content
 
                   else if units[fld] && ! prompted[fld]
                     // non special fields with units (eg attributes with units...)
-                    - prompted[fld] = 1;
-
+                    - prompted[fld] = 1
                     label.col-sm-2.control-label(for='#{fld}') #{alias}:
                     div.col-sm-8
                       input.form-control(type='integer', placeholder = "-- Scan " + alias + '--' id='#{fld}' ng-blur="splitField('#{fld}')" ng-model='#{fld}')
+                      div.help-block.with-errors(style='color:red' ng-model="#{fld}_errors") {{ #{fld}_errors }}
+
                     - fld = units[fld];
                     - prompted[fld] = 1;
                     div.col-sm-2
@@ -117,6 +118,18 @@ block content
                               each opt,j in options
                                   li 
                                       a(href='#' onclick='return false;') #{opt}
+
+                  else if fld == 'Prep_Comments' 
+                    // non splittable field 
+                    div.form-group
+                      label.col-sm-2.control-label(for='#{fld}') #{alias}
+                      div.col-sm-10
+                        if (fld == field)
+                          input.form-control(type='#{fType}'  pattern=".*" maxlength="15" placeholder = "Enter " + alias id='#{fld}' ng-model='#{fld}' default='' force=1)
+                        else 
+                           input.form-control(type='#{fType}' pattern="^[_A-z0-9]{1,}$" maxlength="15" placeholder = "Enter " + alias id='#{fld}' ng-model='#{fld}'  default='' force=1 )
+
+                        div.help-block.with-errors(style='color:red' ng-model="#{fld}_errors") {{ #{fld}_errors }}  
                   else if ! prompted[fld]
                     // non special fields without units 
                     div.form-group
@@ -125,7 +138,7 @@ block content
                         if (fld == field)
                           input.form-control(type='#{fType}' ng-blur="splitField('#{fld}')" pattern=".*" maxlength="15" placeholder = "Enter " + alias id='#{fld}' ng-model='#{fld}' default='' force=1)
                         else 
-                           input.form-control(type='#{fType}'  ng-blur="splitField('#{fld}')" required pattern="^[_A-z0-9]{1,}$" maxlength="15" placeholder = "Enter " + alias id='#{fld}' ng-model='#{fld}'  default='' force=1 data-custom="{")
+                           input.form-control(type='#{fType}'  ng-blur="splitField('#{fld}')" required pattern="^[_A-z0-9]{1,}$" maxlength="15" placeholder = "Enter " + alias id='#{fld}' ng-model='#{fld}'  default='' force=1 )
 
                         div.help-block.with-errors(style='color:red' ng-model="#{fld}_errors") {{ #{fld}_errors }}
                   else 
@@ -135,13 +148,13 @@ block content
             div.form-group
               div.col-sm-2 &nbsp;
               div.col-sm-3
-                button.btn.btn-success(type='button' ng-click="complete()") Completed Step
+                button.btn.btn-success(type='button' ng-click="complete('Completed')" ng-disabled="formDisabled") Completed Step
               div.col-sm-2
-                button.btn.btn-warning(type='submit') Skip Step
+                button.btn.btn-warning(type='submit' ng-click="complete('Skipped')") Skip Step
               div.col-sm-2
-                button.btn.btn-danger(type='submit') Failed Step
+                button.btn.btn-danger(type='submit' ng-click="complete('Failed')") Failed Step
               div.col-sm-3
-                button.btn.btn-primary(type='button') Repeat Previous Step
+                button.btn.btn-primary(type='button' ng-click="repeat()" ng-disable="Step.Repeatable") Repeat Previous Step
               div.col-sm-12
                 div.help-block.with-errors
 
@@ -155,7 +168,7 @@ block content
 
           h3(ng-show="debug || 1") Debugging 
 
-            button.btn.primary(type='button' ng-click="back()" ng-disabled='stepNumber > steps') BACK
+            button.btn.primary(type='button' ng-click="back()" ng-disabled='stepNumber <= 1') BACK
             span &nbsp;
             button.btn.btn-primary(type='button' ng-click="forward()" ng-disabled="stepNumber >= steps") FWD
 

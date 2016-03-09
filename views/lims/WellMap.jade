@@ -13,24 +13,32 @@ block content
     div(ng-app='myApp')
       div(ng-controller="CommonController")
        div(ng-controller='WellController', ng-init="initialize('#{config}')")
+        
+        p &nbsp;
+        b Fill By: 
+        label
+          input(type='radio' value = 'Row' ng-model="fill_by" ng-click="reset_fill_by()") 
+          b &nbsp; Row &nbsp;
+        label
+          input(type='radio' value = 'Column' ng-model="fill_by" ng-click="reset_fill_by()")
+          b &nbsp; Column &nbsp;
+
+        hr
+        h3 Source List:
+        h4 Samples: {{ sources[0] }} ... {{ sources[sources.length-1] }}
+        hr
+        h4 Target: {{ target }}
+        hr
+        h5 Options: {{ options }}
+        hr
         button(type='button' ng-click="distribute()") Distribute
         hr
-        //b Sources: {{ sources }}
-        //hr
-        b Target: {{ colours }}
-        hr
-        b Fill By: 
-        input(type='radio-group', values=['column','row'] ng-model='fill_by')
 
-        h2 Context: {{ context }}
-        h3 Source List:
-        h4 #{targets.length} Target Plates/Tubes
-        b {{ JSON.stringify(rgbList) }}
         - var index = 0;
         table.table()
           tr
             td(style='width:50%')
-              h2 Source Samples: [{{ source_rows }} x {{ source_cols }}]
+              h2 Source Samples:
               table
                 tr
                   th &nbsp;
@@ -70,4 +78,4 @@ block content
 
         table.table.table-bordered
           tr(ng-repeat="colour in colours") 
-              td(ng-repeat="hue in colourMap[colour]" style="background-color:#{{hue}}") {{hue}}
+              td(ng-repeat="hue in colourMap[colour]" style="background-color:#" + "{{hue}}" ) {{hue}}

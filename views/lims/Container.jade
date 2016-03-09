@@ -8,28 +8,25 @@ block content
       div(ng-controller="CommonController")
 
         h3 Current Samples: 
-          b #{samples.length} x #{samples[0].sample_type} sample [ #{samples[0].format} ]
+          b #{samples.length} x #{samples[0].sample_type} sample [ #{samples[0].container_format} ]
         // *** Generate Dropdown for ENUM Values *** //
         hr
-        b IDS: #{ids}
+        h5(style='color:red') TESTING ONLY: using #{ sampleList.length } sample IDs: #{sampleList[0]} ... #{sampleList[95]} 
+        hr
+
         b Continue Protocol: 
         form(role='form' method='post' action="/Lab_protocol/run" enctype='form-data')
           input(type='hidden' id='Plate_ID' name='Plate_ID' value='#{ids}')
-          span.lookup(id='Lookup-Lab_Protocol' ng-init="loadLookup('Lab_Protocol', 'Lab_Protocol_ID', 'Lab_Protocol_Name')") &nbsp;
+          span.lookup(id='Lookup-Lab_Protocol' ng-init="loadLookup('Lab_Protocol', 'Lab_Protocol_ID', 'Lab_Protocol_Name')")
+          span &nbsp; &nbsp;
           button.btn.btn-primary(type='submit') Run Protocol
 
         hr
         b Transfer To: 
-        b #{sampleList.join(',')}
+
         form(role='form' method = 'post' action= "/xfer")
 
           input(id = 'id' type='hidden' value="#{sampleList.join(',')}")
-          span.dropdown
-              button.btn.btn-default.dropdown-toggle(type='button' data-toggle='dropdown' id = 'Container_Format') Target Format &nbsp;
-                  span.caret
-              ul.dropdown-menu
-                  each format in target_formats
-                      li 
-                          a(href='#' onclick='return false;') #{format.name} 
-          span &nbsp;
+          span.lookup(id='Lookup-Plate_Format' ng-init="loadLookup('Plate_Format', 'Plate_Format_ID', 'Plate_Format_Name')") 
+          span &nbsp; &nbsp;
           button.btn.btn-primary(type='submit') Transfer Samples
