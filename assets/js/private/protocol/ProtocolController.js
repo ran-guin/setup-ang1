@@ -21,10 +21,13 @@ function protocolController ($scope, $rootScope, $http, $q) {
             $scope.Samples = config['samples'];
             $scope.N = $scope.Samples.split(',').length;
 
-            $scope.split_mode = 'parallel';  // or parallel ... eg split 1,2 x 2 -> 1,2,1,2 (parallel) or 1,1,2,2 (serial)
-
             $scope.user = 'Ran';  // TEMP
+            $scope.PrepFields = [];
+            
             $scope.SplitFields = {};
+            $scope.split_mode = 'Parallel';  // or parallel ... eg split 1,2 x 2 -> 1,2,1,2 (parallel) or 1,1,2,2 (serial)
+            
+            $scope.FK_Employee__ID = 2;  // test data 
         }
 
         console.log("Steps: " + JSON.stringify($scope.Steps) );
@@ -46,72 +49,6 @@ function protocolController ($scope, $rootScope, $http, $q) {
         $scope.reload();
     }
 
-    $scope.splitField = function splitField (field) {
-        var input = $scope[field];
-        console.log('split '+ field + ' = ' + $scope[field]);
-
-        if (input) {
-            $scope[field + '_split'] = $scope[field];
-            var input_array = input.split(/\s*,\s*/);
-            
-            var split = $scope.Split || 1;
-            var N = $scope.N * split;
-            var entered = input_array.length;
-
-            var factor = $scope.N / entered;
-            var round = Math.round(factor);
-     
-            if (factor == round) {
-                 $scope[field+'_errors'] = '';
-            }
-            else {
-                // $scope.errMsg = "# of entered values must be factor of " + $scope.N;
-                $scope[field+'_errors'] = "# of entered values must be factor of " + $scope.N;
-            }
-
-            var array = [];
-            var offset = 0;
-            var index = 0;
-
-            if ($scope.split_mode == 'Serial') {
-                $scope.splitExample = " 1,2 -> 1, 1, 2, 2 ";
-                for (var i=0; i<N; i++) {
-                    if (offset >= round) {
-                        offset=0;
-                        index++;
-                    }
-                    else {
-                        offset++;
-                    }
-
-                    array[i] = input_array[index];
-                }
-            }
-            else {
-                $scope.splitExample = " 1,2 -> 1, 2, 1, 2 ";
-               for (var i=0; i<N; i++) {
-                    if (index >= entered) {
-                        index=0;
-                    }
-                    else { index++ }
- 
-                    array[i] = input_array[index];
-                }                
-            }
-
-     
-            $scope[field + '_split'] = array.join(','); 
-
-            console.log(field + ' split to: ' + JSON.stringify($scope[field+'_split']));
-            
-            $scope.SplitFields[field] = array;
-
-            $scope.SplitTracking = true;
-
-            return array;
-        }
-        else { console.log('no value...') }
-    }
 
     $scope.reset_Split_mode = function () {
         var fields = Object.keys($scope.SplitFields);
@@ -122,7 +59,79 @@ function protocolController ($scope, $rootScope, $http, $q) {
         }
 
     }
+    /* Enable split distribution in parallel or in series */
+    $scope.splitField = function splitField (field) {
 
+        var input = $scope[field];
+ 
+        if (input) {
+            $scope[field + '_split'] = $scope[field];
+            var input_array = input.split(/\s*,\s*/);
+
+            var split = $scope.Split || 1;
+            var Nx = $scope.N * split;
+            var entered = input_array.length;
+
+            var factor = Nx / entered;
+            var round = Math.round(factor);
+            
+            console.log("Array: " + JSON.stringify(input_array) + " x " + factor);
+     
+            if (factor == round) {
+                 $scope[field+'_errors'] = '';
+                 $scope.formDisabled  = false;
+            }
+            else {
+                // $scope.errMsg = "# of entered values must be factor of " + $scope.N;
+                $scope[field+'_errors'] = "# of entered values must be factor of " + $scope.N;
+                $scope.formDisabled  = true;
+           }
+
+            var array = [];
+            var offset = 0;
+            var index = 0;
+
+            if ($scope.split_mode == 'Serial') {
+                $scope.splitExample = " A,B,C -> A, A...B, B...C, C...";
+                for (var i=0; i<Nx; i++) {
+                     
+                    array[i] = input_array[index];
+                    offset++;
+                    if (offset >= round) {
+                        offset=0;
+                        index++;
+                    }
+ 
+                }
+            }
+            else {
+                $scope.splitExample = " A,B,C -> A, B, C...A, B, C...";
+                for (var i=0; i<Nx; i++) {
+                    array[i] = input_array[index];
+
+                    index++;
+                    if (index >= entered) {
+                        index=0;
+                    }
+ 
+                }                
+            }
+
+     
+            $scope[field + '_split'] = array.join(','); 
+
+            console.log(field + ' split to: ' + JSON.stringify($scope[field+'_split']));
+            
+            $scope.SplitFields[field] = array;
+
+            if (entered > 1) $scope.SplitTracking = true;  
+  
+            return array;
+        }
+        else { console.log('no value...') }
+    }
+
+    /* Retrieve data from fields which are splittable ... eg may accept different values for each of N samples based on comma-delimited list */
     $scope.splitData = function ( input ) {
         var recordData = [];
         for (var n=0; n< $scope.N; n++) {
@@ -144,22 +153,24 @@ function protocolController ($scope, $rootScope, $http, $q) {
         return recordData;
     }
 
-    $scope.complete = function complete () {
+    $scope.complete = function complete (action) {
         // complete step (if validated)
+        $scope.Prep_Action = action;
 
         var url = "/Lab_protocol/complete-step";
 
         var PlateData = $scope.splitData($scope.input);
         console.log("split " + $scope.input);
 
+        var PrepData = { 'Prep_Name' : $scope.Step.Protocol_Step_Name };
+        var PrepFields = ['FK_Lab_Protocol__ID', 'FK_Employee__ID', 'Prep_Action','Prep_Comments'];
+        for (var i=0; i< PrepFields.length; i++) {
+            PrepData[PrepFields[i]] = $scope[PrepFields[i]] || $scope.Step[PrepFields[i]];
+        }
+        console.log("PREP DATA: " + JSON.stringify(PrepData));
+
         var data =  {
-            'Prep' : {
-                //FK_Lab_Protocol__ID : $scope.Step.FK_Lab_Protocol__ID,
-                Prep_Name : $scope.Step.Protocol_Step_Name,
-                //FK_Employee__ID : $scope.user,
-                Prep_Action : 'Completed',
-                Prep_Comments : $scope.Prep_Comments,
-            },
+            'Prep' : PrepData,
             'Plate' : PlateData,
 
             ids: $scope.samples,
