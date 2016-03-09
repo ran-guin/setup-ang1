@@ -16,6 +16,9 @@ module.exports = {
   		type : 'string',
   		enum : ['Completed','Failed','Skipped'],
   	},
+  
+        FK_Employee__ID : { model : 'employee' },
+	FK_Lab_Protocol__ID : { model : 'lab_protocol' },
   }
 };
 

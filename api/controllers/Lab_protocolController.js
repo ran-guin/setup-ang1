@@ -156,10 +156,9 @@ module.exports = {
 		console.log("COMPLETED STEP");
 		var data = req.body;
 		
-		console.log("Send Prep data: " + JSON.stringify(data['Prep']));
-		console.log("Send Plate data: " + data['Plate']);
-
 		if (data && data['Prep']) {
+			console.log("Send Prep data: " + JSON.stringify(data['Prep']));
+
 			Prep.create( data['Prep'] )
 			.exec (function (err, PrepResult) {
 				if (err) { return res.send("ERROR creating Prep record") }
@@ -168,19 +167,29 @@ module.exports = {
 
 					data['Plate']['FK_Prep__ID'] = PrepResult.id;
 
+					console.log("Send Plate data: " + JSON.stringify(data['Plate']));
+
 					Plate_Prep.create( data['Plate'] )
 					.exec (function (err, PlateResult) {
 						if (err) { return res.send("ERROR creating Plate record") }		
 					
-						console.log("Added Plate_Prep: " + PlateResult);
-						return res.send("Added Prep + Plate Records: " + PrepResult)
+						console.log("Added Plate_Prep: " + JSON.stringify(PlateResult));
+
+						Container.xfer_if_required( PrepResult, PlateResult )
+						.exec (function (err, xferResult) {
+							if (err) { return res.send("ERROR creating new Plates...") }		
+
+							console.log("Transferring Samples ? " + JSON.stringify(xferResult));
+							return res.send(PrepResult);
+						});
+
 					});
 				}
 
 			});
 		}
 		else {
-			console.log("NO DATA INPUT");
+			console.log("Prep Data");
 			return res.send('no data');
 		}
 

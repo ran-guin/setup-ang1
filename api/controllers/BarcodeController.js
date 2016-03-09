@@ -55,9 +55,9 @@ module.exports = {
 		var rows = ['A','B','C','D','E','F','G','H'];
 		for (row = 0; row < rows.length; row++) {
 			for (var i = 0; i< 12; i++) {
-				var sample = { id : 300 + i + offset, container_format : '96-well Beckman', position : rows[row] + i.toString(), sample_type : 'Blood'}
+				var sample = { id : 300 + i + offset, container_format : 'Epindorf', position : rows[row] + i.toString(), sample_type : 'Blood'}
 				Samples.push(sample);
-				sampleList.push(300+i);
+				sampleList.push(300+i+offset);
 
 				ids.push(300+i+offset);
 			}
@@ -66,9 +66,9 @@ module.exports = {
 		// end of test data... 
 
 		var target_formats = [
-			{ id : 1, name : '96-well Beckman Coulter'}, 
-			{ id : 2, name : 'Data Matrix Tube'}, 
-			{ id : 3, name : 'Epindorf Tube'}
+			{ id : 1, format : '96-well Beckman Coulter'}, 
+			{ id : 2, format : 'Data Matrix Tube'}, 
+			{ id : 3, format : 'Epindorf Tube'}
 		];
 
 		return res.render('lims/Container', { ids: ids.join(','), protocols : List, samples: Samples , target_formats : target_formats } );

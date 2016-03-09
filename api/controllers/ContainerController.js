@@ -11,6 +11,26 @@ module.exports = {
 	
 	transfer : function (req, res ) {
 		console.log("transferring samples");
+		
+		// Input: 
+		//
+		// Samples: array of hashes [ { id, ...}. { id: } ...] - may contain other sample attributes
+		// Target:  array of hashes: [{ source_index, source_id, source_position, target_index, target_position, volume, units, colour_code ?)},..]
+		// Options: hash : { prep: { prepdata }, user, timestamp, extraction_type, target_format, location }    
+		//
+		// Output:
+		//
+		// Generates records for N x sample transfer:
+		//
+		// [Optional] Prep record (+ Plate_Prep reccords x N)
+		// New Plate records x N
+		//  + New MUL Plate records if applicable
+		//
+		// Updates Source Plate volumes
+		// 
+		// Returns: create data hash for new Plates.... (need to be able to reset samples attribute within Protocol controller (angular)
+
+
 		req.body = { size : 1, target_size: '3x6', target_format : 5, prep_id : 7, target_rows: ['A','B','C','D'], target_cols : [1,2,3,4,5,6] }; // test
 		
 		var id = req.body.id || '';
@@ -25,8 +45,8 @@ module.exports = {
 
 		// TEST 
 		var sources = [];
-		for (var i=1; i<=300; i++) {
-			sources.push( { id : i+200, position : 'A1'  });
+		for (var i=1; i<=96; i++) {
+			sources.push( { id : i+200, position : 'A1', container : null });
 		} // test
 
 		if (size == target_size) {
@@ -64,7 +84,14 @@ module.exports = {
 			});
 			*/		
 		}
-	}
+	},
+
+	transfer_if_required : function (prepData, PlateData) {
+		/** Handles Transfers within Protocols if applicable **/
+		console.log("Pending Transfer function");
+
+		return { Transferred : false; data: { 'other' : 'stuff'} };
+	},
 };
 
   
