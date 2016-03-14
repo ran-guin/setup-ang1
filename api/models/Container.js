@@ -127,6 +127,37 @@ module.exports = {
 		return deferred.promise;
 	},
 
+	clone : function (id, resetData) {
+		console.log("CLONING " + id);
+
+		var deferred = q.defer();
+	
+		var query = "SELECT * from Plate where Plate_ID = " + id;	
+		console.log("q: " + query);
+
+		Record.query(query, function (err, result) {
+
+			if (err) { console.log("cloning error"); deferred.reject(err);  }
+
+			var data = result;
+			for (var index=0; index<result.length; index++) {
+
+				var resetFields = Object.keys(resetData);
+
+				for (var i=0; i<resetFields.length; i++) {
+					var value = resetData[resetFields[i]] || null;
+					data[index][resetFields[i]] = value;
+					console.log('reset ' + resetFields[i] + ' to ' + value);
+				}
+			}
+				
+			console.log("Data: " + JSON.stringify(data));
+			deferred.resolve(data);	
+		});
+		return deferred.promise;
+
+	},
+
 	position : function (id) {
 		return ' i' + id;
 	},
