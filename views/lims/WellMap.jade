@@ -25,13 +25,22 @@ block content
 
         hr
         h3 Source List:
-        h4 Samples: {{ sources[0] }} ... {{ sources[sources.length-1] }}
+        h4 Samples: {{ sources[0] }}, {{ sources[1] }} ...{{ sources[sources.length-1] }}
         hr
         h4 Target: {{ target }}
         hr
         h5 Options: {{ options }}
         hr
         button(type='button' ng-click="distribute()") Distribute
+        span &nbsp; &nbsp;
+        button(type='button' ng-click="source_by_Col()") Pick Columns First
+        span &nbsp; &nbsp;
+        button(type='button' ng-click="source_by_Row()") Pick Rows First
+        span &nbsp; &nbsp;
+        button(type='button' ng-click="reset_sources()") Reset Source Order
+
+        button.btn.btn-primary(type='button' ng-click="testXfer()") Complete Transfer
+        span &nbsp; &nbsp;
         hr
 
         - var index = 0;
@@ -45,8 +54,8 @@ block content
                   th(ng-repeat="col in source_cols") {{ col }}
                 tr(ng-repeat="row in source_rows")
                   td {{ row }}
-                  td(ng-repeat="col in source_cols" style="background-color:#{{ rgbList[ $parent.$index*source_cols.length + $index ] }}") &nbsp; &nbsp; &nbsp;
-
+                  td(ng-repeat="col in source_cols" style="background-color:#{{ rgbList[ $parent.$index*source_cols.length + $index ] }}" ) 
+                    span(data-toggle="tooltip" title="{{sources[$parent.$index*source_cols.length + $index].id}}") &nbsp; &nbsp; &nbsp;
             td(style='width:50%')
               h2 Target Samples:
 
@@ -79,3 +88,6 @@ block content
         table.table.table-bordered
           tr(ng-repeat="colour in colours") 
               td(ng-repeat="hue in colourMap[colour]" style="background-color:#" + "{{hue}}" ) {{hue}}
+
+        hr
+        b {{ sources }}
