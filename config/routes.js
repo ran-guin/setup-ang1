@@ -90,7 +90,7 @@ module.exports.routes = {
   ***************************************************************************/
   
   'GET /xfer' : 'ContainerController.transfer',
-  'POST /xfer' : 'ContainerController.transfer',
+  'POST /xfer' : 'ContainerController.completeTransfer',
 
   // Custom Pages 
 
@@ -116,7 +116,7 @@ module.exports.routes = {
 
   'POST /scan-barcode' : 'BarcodeController.scan',
 
-  'POST /completed-step' : 'Lab_protocolController.completed',
+  'POST /completed-step' : 'Lab_protocolController.complete',
 
   // Clinic Pages
   'GET /clinic/home/:id' : 'ClinicController.home',
