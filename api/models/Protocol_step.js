@@ -23,8 +23,8 @@ module.exports = {
 		FK_Lab_Protocol__ID : { type : 'integer' },
 		FKQC_Attribute__ID : { type : 'integer' },
 		QC_Condition : { type : 'string'},
-		Validate : { type : 'enum', enum : ['Primer','Enzyme','Antibiotic'] },
-		Repeatable : { type : 'enum', enum: ['Yes','No',''], defaultsTo: ''}
+		Validate : { type : 'string' },
+		Repeatable : { type : 'string', enum: ['Yes','No',''], defaultsTo: ''}
 	}  
 };
 
