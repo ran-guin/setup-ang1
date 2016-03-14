@@ -41,7 +41,9 @@ var jsFilesToInject = [
 
   'js/dependencies/bootstrap*.js',
   'js/dependencies/ui-bootstrap*.js',
+  'js/dependencies/underscore.js',
 
+  'js/dependencies/*.js',
   'js/dependencies/**/*.js',
 
 //  "https://ajax.googleapis.com/ajax/libs/angularjs/1.2.16/angular-resource.js",
