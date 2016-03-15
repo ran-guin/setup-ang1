@@ -11,7 +11,7 @@ var q = require('q');
 module.exports = {
 	
 	transfer : function (req, res ) {
-		console.log("transferring samples");
+		console.log("transfer prompt");
 
 		// TEST DATA
 		var starter = 200;
@@ -41,7 +41,7 @@ module.exports = {
 	},
 
 	completeTransfer : function (req, res ) {
-		console.log("transferring samples");
+		console.log("completing transfer");
 		
 		// Input: 
 		//
@@ -94,9 +94,12 @@ module.exports = {
 			}
 			console.log("Clone sample: id=" + Sources[0].id + "; reset: " + JSON.stringify(resetData));
 
-			Container.clone( Sources[i].id, resetData)
-			.then( function (result) {
-				console.log('got data: ' + JSON.stringify(result))
+			Record.clone('Plate', Sources[i].id, resetData)
+			.then( function (cloneData) {
+				Record.create('Plate', cloneData)
+				.then( function (ids) {
+
+				});
 			});
 		}
 

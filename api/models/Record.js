@@ -5,7 +5,7 @@
 * @docs        :: http://sailsjs.org/#!documentation/models
 */
 
-//var q = require('q');
+var q = require('q');
 
 module.exports = {
 
@@ -48,5 +48,65 @@ module.exports = {
 	    //deferred.resolve(data);
 	    return data;
 	},
+
+	clone : function (table, id, resetData) {
+		console.log("CLONING " + id);
+
+		var deferred = q.defer();
+	
+		var query = "SELECT * from Plate where Plate_ID = " + id;	
+		console.log("q: " + query);
+
+		Record.query(query, function (err, result) {
+
+			if (err) { console.log("cloning error"); deferred.reject(err);  }
+
+			var data = result;
+			for (var index=0; index<result.length; index++) {
+
+				var resetFields = Object.keys(resetData);
+
+				for (var i=0; i<resetFields.length; i++) {
+					var value = resetData[resetFields[i]] || null;
+					data[index][resetFields[i]] = value;
+					console.log('reset ' + resetFields[i] + ' to ' + value);
+				}
+			}
+
+			console.log('generate new records...');
+			Record.createNew(table, data)
+			.then (function (target_id) {
+				Record.clone_attributes(table, target_id)
+				.then (function (data1) {
+					console.log('data1');
+				});
+			})
+			.then (function (data2) {
+				console.log('data2');
+				deferred.resolve(data);
+			});
+		});
+		return deferred.promise;
+
+	},
+
+	createNew : function (table, data) {
+		var deferred = q.defer();
+		console.log("create new record(s) in " + table + ": " + JSON.stringify(data));
+
+		setTimeout(function(){
+    		console.log("Waited...");
+    		deferred.resolve({'newdata' : 'abc'});
+		}, 3000);
+		
+		return deferred.promise;
+	},
+
+	clone_attributes : function (table, target_id) {
+		var deferred = q.defer();
+		console.log('clone attributes for ' + table + target_id);
+		deferred.resolve({'att1' : 123});
+		return deferred.promise;
+	}
 };
 
