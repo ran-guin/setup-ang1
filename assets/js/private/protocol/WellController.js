@@ -109,7 +109,11 @@ function wellController ($scope, $rootScope, $http, $q ) {
         var data = { Sources: [{ id: 1}], Targets: [{ index: 1, position: 'A2', volume: 2, volume_units: 'ml'}], Options: { 'target_format' : 3} };
 
         console.log("POSTING DATA: " + JSON.stringify(data));
-        $http.post("/xfer", data);
+        $scope.feedback = "..."
+        $http.post("/xfer", data)
+        .then (function () {
+            $scope.feedback = 'done';
+        });        
     }
 
     $scope.resort = function resort() {
