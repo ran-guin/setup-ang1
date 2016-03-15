@@ -38,9 +38,11 @@ block content
         button(type='button' ng-click="source_by_Row()") Pick Rows First
         span &nbsp; &nbsp;
         button(type='button' ng-click="reset_sources()") Reset Source Order
-
+        hr
         button.btn.btn-primary(type='button' ng-click="testXfer()") Complete Transfer
         span &nbsp; &nbsp;
+        hr
+        b {{ feedback }}
         hr
 
         - var index = 0;
