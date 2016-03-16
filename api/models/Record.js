@@ -59,40 +59,70 @@ module.exports = {
 
 		Record.query(query, function (err, result) {
 
-			if (err) { console.log("cloning error"); deferred.reject(err);  }
-
-			var data = result;
-			for (var index=0; index<result.length; index++) {
-
-				var resetFields = Object.keys(resetData);
-
-				for (var i=0; i<resetFields.length; i++) {
-					var value = resetData[resetFields[i]] || null;
-					data[index][resetFields[i]] = value;
-					console.log('reset ' + resetFields[i] + ' to ' + value);
-				}
+			if (err) { console.log("cloning error: " + err); deferred.reject(err);  }
+			else if (result.length == 0) {
+				console.log("cloned record not found");
+				deferred.reject("reference record not found");
 			}
+			else {
+				var data = result;
+				for (var index=0; index<result.length; index++) {
+					var resetFields = Object.keys(resetData);
 
-			console.log('generate new records...');
-			Record.createNew(table, data)
-			.then (function (target_id) {
-				Record.clone_attributes(table, target_id)
-				.then (function (data1) {
-					console.log('data1');
-				});
-			})
-			.then (function (data2) {
-				console.log('data2');
-				deferred.resolve(data);
-			});
+					for (var i=0; i<resetFields.length; i++) {
+						var value = resetData[resetFields[i]] || null;
+						data[index][resetFields[i]] = value;
+						console.log('reset ' + resetFields[i] + ' to ' + value);
+					}
+				}
+
+				console.log('generate new records...');
+				Record.createNew(table, data)
+				.then (function (target_id) {
+					Record.clone_attributes(table, target_id)
+					.then (function (data1) {
+						console.log('data1');
+					})
+					.catch ( function (err2) {
+						deferred.reject('err1');
+					});	
+				})
+			}
 		});
 		return deferred.promise;
 
 	},
 
 	createNew : function (table, data) {
+		// Bypass waterline create method to enable insertion into models in non-standard format //
 		var deferred = q.defer();
 		console.log("create new record(s) in " + table + ": " + JSON.stringify(data));
+		
+		var resetData = {'Plate_ID' : 'null', 'Plate_Created' : '2001-01-01', FKParent_Plate__ID : '123' };
+
+		var Values = [];
+		for (index=0; index<data.length; index++) {
+			var Vi = [];
+			var F = [];
+			var fields = Object.keys(data[index]);
+			for (var f=0; f<fields.length; f++) {
+				var value = data[index][fields[f]];
+
+				F.push(fields[f]);
+				if (resetData[fields[f]]) {
+					Vi.push(resetData[fields[f]]);
+				}
+				else if (value == null) { 
+					Vi.push('null');
+				}
+				else {
+					Vi.push("\"" + value + "\"");
+				}
+			}
+			Values.push( "(" + Vi.join(", ") + ")");
+		}
+		var createString = "INSERT INTO " + table + " (" + F.join(',') + ") VALUES " + Values.join(', ');
+		console.log("CREATE: " + createString);
 
 		setTimeout(function(){
     		console.log("Waited...");
