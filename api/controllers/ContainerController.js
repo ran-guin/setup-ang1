@@ -95,11 +95,11 @@ module.exports = {
 			console.log("Clone sample: id=" + Sources[0].id + "; reset: " + JSON.stringify(resetData));
 
 			Record.clone('Plate', Sources[i].id, resetData)
-			.then( function (cloneData) {
-				Record.create('Plate', cloneData)
-				.then( function (ids) {
-
-				});
+			.then ( function (cloneData) {
+				console.log("Created new record(s): " + cloneData);
+			})
+			.catch ( function (cloneError) {
+				console.log("Cloning Error: " + cloneError);
 			});
 		}
 
