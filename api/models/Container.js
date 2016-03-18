@@ -13,6 +13,21 @@ module.exports = {
 
 	},
 
+	alias: function (name) {
+		// enable customization of field names if non-standard //
+		var alias = { 
+			'volume' : 'Current_Volume',
+			'volume_units' : 'Current_Volume_Units',
+			'sample_type'  : 'FK_Sample_Type__ID',
+			'format' : 'FK_Plate_Format__ID',
+			'created' : 'Plate_Created',
+			'location' : 'FK_Rack__ID',
+		}
+
+		var field = alias[name];
+		return field;  // return null if no alias defined... 
+	},
+
 	target_specs: function (format_id, prep_id) {
 		// fields to be reset when item is cloned from an existing container (eg standard transfer)
 		var fields = {

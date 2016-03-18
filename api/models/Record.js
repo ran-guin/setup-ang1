@@ -13,6 +13,27 @@ module.exports = {
 
 	},
 
+	grab: function (table, condition) {
+		// Wrapper for simple extract (similar to waterline findOne but not dependent upon waterline format)
+		
+		var deferred = q.defer();
+
+		Record.query("SELECT * FROM " + table + " WHERE " + condition, function (err, result) {
+			if (err) { 
+				console.log("Error grabbing " + table + ' record.'); 
+				deferred.reject(err);  
+			}
+			else if (result.length == 0) {
+				console.log("No " + table + " records matching condition: " + condition);
+				deferred.resolve([]);
+			}
+			else {
+				deferred.resolve(result);
+			}
+		});
+		return deferred.promise;
+	}, 
+
 	join_data: function (join_to) {   
 
 
@@ -49,16 +70,21 @@ module.exports = {
 	    return data;
 	},
 
-	clone : function (table, id, resetData) {
-		console.log("CLONING " + id);
+	clone : function (table, ids, resetData, options) {
+		var id_list = ids.join(',');
+		console.log("CLONING " + id_list);
 
 		var deferred = q.defer();
-	
-		var query = "SELECT * from Plate where Plate_ID = " + id;	
+
+		if (! options) { options = {} }
+		var idField = options.id || 'id';
+
+		var query = "SELECT * from " + table + " WHERE " + idField + ' IN (' + id_list + ')';	
 		console.log("q: " + query);
 
 		Record.query(query, function (err, result) {
-
+			console.log("PULLED: " + JSON.stringify(result));
+			console.log("RESET: " + JSON.stringify(resetData));
 			if (err) { console.log("cloning error: " + err); deferred.reject(err);  }
 			else if (result.length == 0) {
 				console.log("cloned record not found");
@@ -66,39 +92,58 @@ module.exports = {
 			}
 			else {
 				var data = result;
+				
 				for (var index=0; index<result.length; index++) {
-					var resetFields = Object.keys(resetData);
+					var id = result[index][idField];
+					var resetFields = Object.keys(resetData[id]);
 
 					for (var i=0; i<resetFields.length; i++) {
-						var value = resetData[resetFields[i]] || null;
+						var value = resetData[id][resetFields[i]] || null;
 						data[index][resetFields[i]] = value;
-						console.log('reset ' + resetFields[i] + ' to ' + value);
+						console.log('** RESET ' + id + ':' + resetFields[i] + ' to ' + value);
 					}
 				}
-
-				console.log('generate new records...');
-				Record.createNew(table, data)
-				.then (function (target_id) {
-					Record.clone_attributes(table, target_id)
-					.then (function (data1) {
-						console.log('data1');
-					})
-					.catch ( function (err2) {
-						deferred.reject('err1');
-					});	
+				
+				Record.createNew(table, data, resetData)
+				.then (function (newResponse) {
+					console.log("createNew response: " + JSON.stringify(newResponse));
+					var target_id = newResponse.insertId;
+					var target_count = newResponse.affectedRows;
+					var target_ids = [];
+					if (target_count == ids.length) {
+						for (var i=0; i<target_count; i++) {
+							var nextId = target_id + i;
+							target_ids.push(nextId);
+						}
+						Attribute.clone(table, ids, target_ids)
+						.then (function (data1) {
+							console.log("attribute update: " + JSON.stringify(data1));
+							deferred.resolve({ data: data, created: newResponse, attributes: data1});
+						})
+						.catch ( function (err2) {
+							deferred.reject('atterr2' + err2); //{error :err2, table: table, ids: ids, target_ids: target_ids});
+						});	
+					}
+					else if (target_count == 0) {
+						deferred.reject('atterr0'); //error: "No target records created", response: newResponse });
+					}
+					else {
+						deferred.reject('atterr00: ' + ids + ':' + target_ids); //{error: "Target count != Source count", sources: ids, targets: target_ids});
+					}
 				})
+				.catch ( function (err3) {
+					deferred.reject('atterr3'+err3); //{error: err3, table: table, data: data, reset: resetData});
+				});
 			}
 		});
 		return deferred.promise;
 
 	},
 
-	createNew : function (table, data) {
+	createNew : function (table, data, resetData) {
 		// Bypass waterline create method to enable insertion into models in non-standard format //
 		var deferred = q.defer();
 		console.log("create new record(s) in " + table + ": " + JSON.stringify(data));
-		
-		var resetData = {'Plate_ID' : 'null', 'Plate_Created' : '2001-01-01', FKParent_Plate__ID : '123' };
 
 		var Values = [];
 		for (index=0; index<data.length; index++) {
@@ -109,11 +154,22 @@ module.exports = {
 				var value = data[index][fields[f]];
 
 				F.push(fields[f]);
-				if (resetData[fields[f]]) {
-					Vi.push(resetData[fields[f]]);
-				}
-				else if (value == null) { 
-					Vi.push('null');
+				if (resetData && resetData[fields[f]]) {
+					var resetValue = resetData[fields[f]];
+					console.log("** RESET (std) " + fields[f] + " to " + resetValue); 
+
+					if (resetValue == '<NULL>') {
+						Vi.push('null');
+					}
+					else if (resetValue == null) {
+						Vi.push("\"" + value + "\"");
+					}
+					else {
+						Vi.push("\"" + resetValue + "\"");
+					}
+				}						
+				else if (value == null){
+					Vi.push('null');					
 				}
 				else {
 					Vi.push("\"" + value + "\"");
@@ -121,22 +177,20 @@ module.exports = {
 			}
 			Values.push( "(" + Vi.join(", ") + ")");
 		}
-		var createString = "INSERT INTO " + table + " (" + F.join(',') + ") VALUES " + Values.join(', ');
-		console.log("CREATE: " + createString);
 
-		setTimeout(function(){
-    		console.log("Waited...");
-    		deferred.resolve({'newdata' : 'abc'});
-		}, 3000);
+		var createString = "INSERT INTO " + table + " (" + F.join(',') + ") VALUES " + Values.join(', ')
+		console.log("INSERT STRING: " + createString);
+
+		Record.query(createString, function (err, result) {
+			if (err) { deferred.resolve({error : "Error creating new record(s): " + err}) }
+			else {
+				var insertId = result.insertId;
+				deferred.resolve(result);
+			}
+		});
 		
 		return deferred.promise;
 	},
 
-	clone_attributes : function (table, target_id) {
-		var deferred = q.defer();
-		console.log('clone attributes for ' + table + target_id);
-		deferred.resolve({'att1' : 123});
-		return deferred.promise;
-	}
 };
 
