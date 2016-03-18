@@ -16,6 +16,7 @@ module.exports = {
 		// TEST DATA
 		var starter = 200;
 		var container = 1000;
+		var target_format = 4;
 
 		for (var i=0; i<8; i++) {
 
@@ -36,8 +37,19 @@ module.exports = {
 			);
 			container++;
 		}
-			
-		if (1) { return res.render('lims/WellMap', { sources: sources, target: { wells: 96, max_row: 'A', max_col: 12 }, options : { split: 1 }}) }
+
+		Record.grab('Plate_Format', "Plate_Format_ID=" + target_format)
+		.then (function (target) {
+			console.log("retrived target info: " + JSON.stringify(target));
+			return res.render(
+				'lims/WellMap', 
+				{ sources: sources, target: target, options : { split: 1 }}
+			);
+		})
+		.catch (function (err) {
+			console.log("ERROR retrieving target Plate_Format");
+			return res.send("Error: " + err);
+		});
 	},
 
 	completeTransfer : function (req, res ) {
@@ -64,9 +76,9 @@ module.exports = {
 
 		// req.body = { size : 1, target_size: '3x6', target_format : 5, prep_id : 7, target_rows: ['A','B','C','D'], target_cols : [1,2,3,4,5,6] }; // test
 		
-		var Targets = req.body.Targets || [];
-		var Sources = req.body.Sources || [];
-		var Set     = req.body.Set || {};
+		var Targets = req.body.Targets || [];   // array of targets (hashes)
+		var Sources = req.body.Sources || [];   // array of sources (hashes)
+		var Set     = req.body.Set || {};       // optional specs: format, sample_type
 
 		console.log("BODY: " + JSON.stringify(req.body));
 
@@ -80,42 +92,53 @@ module.exports = {
 		var target_cols = req.body.target_cols;
 		var target_rows = req.body.target_rows;
 
-//		for (var i-=0; i<Targets.length; i++) {
-		var reset = { 'volume' : 'Current_Volume', 'volume_units' : 'Current_Volume_Units', 'sample_type' : 'FK_Plate_Format__ID'};
+		for (var i=0; i<Sources.length; i++) {
+		var input = ['volume', 'volume_units'];
+
+		var optional_input = Object.keys(Set);
+
+		// resetData is comprised of a potential combination of standard field resets:
+		var resetData = {'Plate_ID' : '<NULL>', 'FK_Rack__ID' : '<NULL>'};
+		// ... and item specific resets (keyed on id) as set below
+		// eg resetData = { 15: { parent_id = 7 }, 'Plate_ID' : '<NULL>'}
+
+		for (var j=0; j<optional_input.length; j++) {
+			var opt = optional_input[j];
+			var fld = Container.alias(opt) || opt;
+			if (Set[opt]) { resetData[fld] = Set[opt] };
+			console.log("optionally set " + opt + " to " + Set[opt]);
+		}
 
 		console.log(Targets.length + " target samples to be created...");
+		var clone_ids = [];
 		for (var i=0; i<Targets.length; i++) {
-			var resetData = { 'FKParent_Plate__ID' : Sources[i].id};
-			var keys = Object.keys(reset);
-			for (j=0; j<keys.length; j++) {
-				var val = Targets[i][keys[j]] || Set[keys[j]] || null;
-				resetData[reset[keys[j]]] = val;
-				console.log(keys[j] + " :  try resetting " + reset[keys[j]] + ' to ' + val);
+			var thisId = Sources[i].id;
+			clone_ids.push(thisId);
+
+			resetData[thisId] = { 'FKParent_Plate__ID' : Sources[i].id };
+
+			for (j=0; j<input.length; j++) {
+				var fld = Container.alias(input[j]) || input[j];
+				var val = Targets[i][input[j]] || Set[input[j]] || null;
+				resetData[thisId][fld] = val;
 			}
 			console.log("Clone sample: id=" + Sources[0].id + "; reset: " + JSON.stringify(resetData));
-
-			Record.clone('Plate', Sources[i].id, resetData)
-			.then ( function (cloneData) {
-				console.log("Created new record(s): " + cloneData);
-			})
-			.catch ( function (cloneError) {
-				console.log("Cloning Error: " + cloneError);
-			});
 		}
 
-		if (size == target_size) {
-			// Standard direct transfer 
-			Container.standard_transfer( Sources, target_format )
-			.then ( function (barcodes) {
-				Barcode.generate(barcodes);
-				return res.send('Transfer Success'); 
-			})
-			.catch ( function (err) {
-				return res.send('Transfer Error');
-			});
-		}
-		else {
-			if (1) { return res.render('lims/WellMap', { sources: Sources, Targets: Targets, target: { wells: 96, max_row: 'A', max_col: 12 }, options : { split: 1 }}) }
+		Record.clone('Plate', clone_ids, resetData, { id: 'Plate_ID' })
+		.then ( function (cloneData) {
+			console.log("Created new record(s): " + JSON.stringify(cloneData));
+			return res.send('okay1');
+			//return res.render('lims/WellMap', { sources: Sources, Targets: Targets, target: { wells: 96, max_row: 'A', max_col: 12 }, options : { split: 1 }});
+		})
+		.catch ( function (cloneError) {
+			console.log("Cloning Error: " + cloneError);
+			return res.send('error2');
+			//return res.render('lims/WellMap', { sources: Sources, errorMsg: "cloning Error"});
+		});
+
+
+		//if (1) { return res.render('lims/WellMap', { sources: Sources, Targets: Targets, target: { wells: 96, max_row: 'A', max_col: 12 }, options : { split: 1 }}) }
 
 			/*
 			var params = { id: sources, target_format_id: target_format, prep_id : prep_id, target_size: target_size, target_cols : target_cols, target_rows : target_rows}; // TEST
@@ -124,7 +147,7 @@ module.exports = {
 			console.log('test rearray transfer');
 			Container.rearray_transfer( params )
 			.then ( function (data) {
-//				Barcode.generate(barcodes);
+				Barcode.generate(barcodes);
 				var map = data.map;
 				var rows = data.rows;
 				var cols = data.cols;
