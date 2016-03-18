@@ -13,7 +13,8 @@ block content
     div(ng-app='myApp')
       div(ng-controller="CommonController")
        div(ng-controller='WellController', ng-init="initialize('#{config}')")
-        
+        if errorMsg 
+          h2(style='color:red') Error: #{errorMsg}
         p &nbsp;
         b Fill By: 
         label
