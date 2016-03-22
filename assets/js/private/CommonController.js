@@ -40,6 +40,11 @@ app.controller('CommonController',
    
         $scope.setup = function( config ) {
 
+	    },
+
+	    $scope.setField = function (field, value) {
+	    	console.log("SET " + field + ' to ' + value);
+	    	$scope[field] = value;
 	    }
 
 }]);

@@ -63,7 +63,7 @@ function newProtocolController ($scope, $rootScope, $http, $q) {
 
     $scope.save = function save () {
 
-        console.log("Name: " + $scope.Lab_Protocol_Name + " : " + $scope.Lab_Protocol_Message);
+        console.log("Name: " + $scope.name + " : " + $scope.message);
 
         var fields = ['Solution', 'Transfer', 'Equipment'];
         for (var i=0; i<$scope.Steps.length; i++) {
@@ -74,9 +74,9 @@ function newProtocolController ($scope, $rootScope, $http, $q) {
             
         }   
 
-        console.log("save " + $scope.Lab_Protocol_Name + " via API");
+        console.log("save " + $scope.name + " via API");
 
-        var LPfields = ['Lab_Protocol_Name', 'Lab_Protocol_Message', 'Lab_Protocol_Description'];
+        var LPfields = ['name', 'message', 'description'];
 
         var data = { Steps: $scope.Steps };
         for (var i=0; i<LPfields; i++) {
