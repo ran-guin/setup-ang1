@@ -1,8 +1,6 @@
 extends ./../customize/privateLayout
 block content
 
-  .header
-    h1(id="main-title" class="container") Sample Home Page 
   div.container
      div(ng-app='myApp')
       div(ng-controller="CommonController")
@@ -17,7 +15,7 @@ block content
         b Continue Protocol: 
         form(role='form' method='post' action="/Lab_protocol/run" enctype='form-data')
           input(type='hidden' id='Plate_ID' name='Plate_ID' value='#{ids}')
-          span.lookup(id='Lookup-Lab_Protocol' ng-init="loadLookup('Lab_Protocol', 'Lab_Protocol_ID', 'Lab_Protocol_Name')")
+          span.lookup(id='Lookup-lab_protocol' ng-init="loadLookup('lab_protocol')")
           span &nbsp; &nbsp;
           button.btn.btn-primary(type='submit') Run Protocol
 
@@ -27,6 +25,6 @@ block content
         form(role='form' method = 'post' action= "/xfer")
 
           input(id = 'id' type='hidden' value="#{sampleList.join(',')}")
-          span.lookup(id='Lookup-Plate_Format' ng-init="loadLookup('Plate_Format', 'Plate_Format_ID', 'Plate_Format_Name')") 
+          span.lookup(id='Lookup-Plate_Format' ng-init="loadLookup('Plate_Format', 'Plate_Format_ID', 'Plate_Format_Type')") 
           span &nbsp; &nbsp;
           button.btn.btn-primary(type='submit') Transfer Samples
