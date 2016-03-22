@@ -1,9 +1,8 @@
 doctype html
 html
-  include ./../core/private_header.jade
+	include ./../core/private_header.jade
+	
+	body	 
+		block content
 
-  body
-     
-    block content
-
-    include ./../core/footer.jade
+		include ./../core/footer.jade

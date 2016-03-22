@@ -1,0 +1,17 @@
+.container
+	div.modal.fade#userMenu
+		div.modal-dialog
+			div.modal-content
+				div.modal-header
+					button.close(type="button" class="close" data-dismiss="modal" aria-label="Close")
+						span(aria-hidden="true") &times;
+					h4.modal-title User Menu
+				div.modal-body
+					b User: ..me
+					hr
+					b details..
+					hr
+					button.btn.btn-danger() Logout
+					div#insideModal
+				div.modal-footer
+					button.btn.btn-default(type="button button-danger" data-dismiss="modal") Close

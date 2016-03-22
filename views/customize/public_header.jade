@@ -1,2 +1,8 @@
-link(rel='shortcut icon' href='/images/lims/BCG-mini.png' id='favicon')
-title Public Title 
+.header(style='background-color:#344')
+	h2(style='color:#ddd') BC Generations
+		div.navbar-right
+			a(href='#' onclick="return false;" data-toggle='modal' data-target='#LoginModal')
+				//data-toggle="popover" data-trigger="focus" data-placement='left' title="Logged In; username" data-content="<a href='#'>Logout</a>hr<a href='#'>Login</a>")
+				i.fa.fa-bars(style='color:#ddd')
+
+include LoginModal.jade
