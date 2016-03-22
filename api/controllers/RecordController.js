@@ -120,6 +120,8 @@ module.exports = {
 		var table = req.param('table');
 		var fields = req.param('fields') || 'id:name';
 
+		if (fields == 'undefined') { fields = 'id:name' }
+			
 		console.log('generate ' + table + ' lookup');
 		console.log("using: " + fields);
 
@@ -131,7 +133,7 @@ module.exports = {
 		console.log("Select: " + select);
 		Record.query("Select " + select + " from " + table, function (err, result) {
 			if (err) {
-				return res.negotiate(err);
+				return res.send("ERROR: " + err);
 			}
 			console.log("Lookup: " + JSON.stringify(result));
 			//return res.send(result);

@@ -16,16 +16,12 @@ app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
 
 module.exports = {
 
-	'test2' : function (req, res) {
-		res.send('yup');
-	},
-
 	'view' : function (req, res) {
 		var id = req.param('id');
 
 		console.log("view Lab Protocol " + id);
 
-		var q = "SELECT * FROM Protocol_Step where FK_Lab_Protocol__ID = " + id;
+		var q = "SELECT * FROM protocol_step where Lab_protocol = " + id;
 
 	    Record.query(q, function (err, result) {
 	    	if (err) {
@@ -52,7 +48,7 @@ module.exports = {
 
 		var demo = req.param('demo') || 1;
 
-		var q = "SELECT * FROM Lab_Protocol";
+		var q = "SELECT * FROM lab_protocol";
 
 	    console.log("QUERY: " + q + ':' + barcode);
 
@@ -76,8 +72,8 @@ module.exports = {
 			console.log("Found " + result.length + " active Protocols");
 
 			for (var i=0; i<result.length; i++) {
-					var name = result[i]['Lab_Protocol_Name'];
-					var id   = result[i]['Lab_Protocol_ID'];
+					var name = result[i]['name'];
+					var id   = result[i]['id'];
 					
 					console.log('include ' + name);
 					List.push({id : id, name: name});
@@ -93,14 +89,14 @@ module.exports = {
 	'run' : function (req, res) {
 		var id = req.param('id');
 		var demo = req.param('demo');
-		var containers = req.body.Plate_ID || 'nothing';
+		var containers = req.body.Plate_ID || 'nothing';  // Legacy 
 
 		console.log("BODY: " + JSON.stringify(req.body));
 
-		var protocol = req.body['Lab_Protocol-id'];
+		var protocol = req.body['lab_protocol-id'];
 		console.log("protocol: " + protocol);
 
-		var q = "SELECT * FROM Protocol_Step where FK_Lab_Protocol__ID = " + protocol;
+		var q = "SELECT * FROM protocol_step where Lab_protocol = " + protocol;
 
 		Record.query(q, function (err, result) {
 		    if (err) {
@@ -143,7 +139,7 @@ module.exports = {
 		    	console.log('globals:' + JSON.stringify(sails.config.globals));		    	
 		    	console.log('session:' + JSON.stringify(req.session));
 		    	console.log("fields : " + JSON.stringify(inputList.input));
-		    	console.log("fields : " + JSON.stringify(inputList.attributes));
+		    	console.log("attributes : " + JSON.stringify(inputList.attributes));
 		    	return res.render('lims/Protocol_Step', { Steps : result, Samples: containers, fields: inputList['input'], attributes: inputList.attributes } );
 		    });
 
@@ -159,33 +155,42 @@ module.exports = {
 		if (data && data['Prep']) {
 			console.log("Send Prep data: " + JSON.stringify(data['Prep']));
 
-			Prep.create( data['Prep'] )
-			.exec (function (err, PrepResult) {
-				if (err) { return res.send("ERROR creating Prep record") }
-				else {
-					console.log("Added Prep: " + JSON.stringify(PrepResult));
+			Record.createNew('Prep', data['Prep'] )
+			.then (function (PrepResult) {
+				console.log("Added Prep: " + JSON.stringify(PrepResult));
 
-					data['Plate']['FK_Prep__ID'] = PrepResult.id;
-
-					console.log("Send Plate data: " + JSON.stringify(data['Plate']));
-
-					Plate_Prep.create( data['Plate'] )
-					.exec (function (err, PlateResult) {
-						if (err) { return res.send("ERROR creating Plate record") }		
-					
-						console.log("Added Plate_Prep: " + JSON.stringify(PlateResult));
-
-						Container.xfer_if_required( PrepResult, PlateResult )
-						.exec (function (err, xferResult) {
-							if (err) { return res.send("ERROR creating new Plates...") }		
-
-							console.log("Transferring Samples ? " + JSON.stringify(xferResult));
-							return res.send(PrepResult);
-						});
-
-					});
+				var ids = [];
+				var prepId = PrepResult.insertId;  // Legacy
+				var added = PrepResult.affectedRows;
+				for (var i=0; i<added; i++) {
+					ids.push(prepId++);
 				}
+				data['Plate']['FK_Prep__ID'] = ids; 
 
+
+				console.log("Send Plate data: " + JSON.stringify(data['Plate']));
+
+				Record.createNew('Plate_Prep', data['Plate'] )
+				.then (function (PlatePrepResult) {				
+					console.log("Added Plate_Prep: " + JSON.stringify(PlatePrepResult));
+					console.log('transfer if necessary....');
+					return res.send(PrepResult);
+					/*
+					Container.xfer_if_required( PrepResult, PlateResult )
+					.exec (function (err, xferResult) {
+						if (err) { return res.send("ERROR creating new Plates...") }		
+
+						console.log("Transferring Samples ? " + JSON.stringify(xferResult));
+						return res.send(PrepResult);
+					});
+						*/
+				})
+				.catch (function (err) {
+					return res.send("ERROR creating Plate record: " + err)
+				})
+			})
+			.catch ( function (err) {
+				return res.send("ERROR creating Prep record: " + err);				
 			});
 		}
 		else {
@@ -206,16 +211,16 @@ module.exports = {
 
 
 		var Steps = req.body.Steps;
-		var Name = req.body.Lab_Protocol_Name;
+		var Name = req.body.name;
 		console.log("BODY: " + JSON.stringify(req.body));
 		console.log("Save: " +  Name);
 
 		// var S2 = req.query.Steps;
 	//	console.log("s2: " + S2);
 
-		var FKey = 'FK_Lab_Protocol__ID';   // CUSTOM
+		var FKey = 'Lab_protocol'; // FK_Lab_Protocol__ID';   // CUSTOM
 
-		Lab_protocol.create({ Lab_Protocol_Name : Name })
+		Lab_protocol.create({ name : Name })
 		.exec( function (err, result) {
 			if (err) {
 				console.log("ERR: " + err);
