@@ -139,21 +139,27 @@ module.exports = {
 		return deferred.promise;
 
 	},
-
-	createNew : function (table, data, resetData) {
+	createNew : function (table, Tdata, resetData) {
 		// Bypass waterline create method to enable insertion into models in non-standard format //
 		var deferred = q.defer();
-		console.log("create new record(s) in " + table + ": " + JSON.stringify(data));
+		console.log("create new record(s) in " + table + ": " + JSON.stringify(Tdata));
+
+		console.log('type: ' + typeof Tdata.length);
+		//var F = [];
+		var dtype = typeof Tdata.length;
+
+		var data = [];
+		if (Tdata.length == undefined) { data = [Tdata] }
+		else { data = Tdata }
+
+		var fields = Object.keys(data[0]);
 
 		var Values = [];
-		for (index=0; index<data.length; index++) {
+		for (var index=0; index<data.length; index++) {
 			var Vi = [];
-			var F = [];
-			var fields = Object.keys(data[index]);
 			for (var f=0; f<fields.length; f++) {
 				var value = data[index][fields[f]];
 
-				F.push(fields[f]);
 				if (resetData && resetData[fields[f]]) {
 					var resetValue = resetData[fields[f]];
 					console.log("** RESET (std) " + fields[f] + " to " + resetValue); 
@@ -178,7 +184,7 @@ module.exports = {
 			Values.push( "(" + Vi.join(", ") + ")");
 		}
 
-		var createString = "INSERT INTO " + table + " (" + F.join(',') + ") VALUES " + Values.join(', ')
+		var createString = "INSERT INTO " + table + " (" + fields.join(',') + ") VALUES " + Values.join(', ')
 		console.log("INSERT STRING: " + createString);
 
 		Record.query(createString, function (err, result) {
