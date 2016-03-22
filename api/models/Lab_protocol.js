@@ -9,9 +9,24 @@ var _ = require('underscore-node');
 var Q = require('q');
 module.exports = {
 
-	tableName: 'Lab_Protocol',
-
 	attributes: {
+		name : { type : 'string' },
+
+		createdBy : { model : 'Employee' },
+
+		status : {
+			type : 'string',
+			'enum' : ['Active','Archived','Under Development']
+		},
+
+		description : { type : 'string '},
+
+		repeatable : { 
+			type : 'boolean',
+			defaultsTo : 'false'
+		},
+
+		/*
 		Lab_Protocol_Name : { type : 'string' },
 
 		FK_Employee__ID : { model : 'Employee' },
@@ -24,7 +39,7 @@ module.exports = {
 		Lab_Protocol_Description : { type : 'string'},
 		Lab_Protocol_ID : { type : 'integer' },
 		Lab_Protocol_VersionDate : { type : 'date' },
-/*
+
 		Max_Tracking_Size : {
 			type : 'enum',
 			enum : ['384','96','1'],
@@ -38,7 +53,7 @@ module.exports = {
 			defaultsTo: 'Yes',
 			required: false,
 		},
-*/
+	*/
 	},
 	
 	validation_messages: {
@@ -89,7 +104,7 @@ module.exports = {
 
 		var list = [];
 		for (i=0; i<query_result.length; i++) {
-			var input = query_result[i]['Input'].split(':');
+			var input = query_result[i]['input'].split(':');
 		
 			for (j=0; j<input.length; j++) {
 				var att1 = input[j].replace('Plate_Attribute=','');

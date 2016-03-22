@@ -6,9 +6,31 @@
 */
 
 module.exports = {
-	tableName : 'Protocol_Step',
 	
 	attributes: {
+
+		name : { type : 'string '},
+		Lab_protocol : { model : 'Lab_protocol' },
+		step_number : { type : 'int' },
+		instructions : { type : 'string'},
+		message : { type : 'string' },
+		input : { type : 'string'},
+		format : { type : 'string'},
+		defaults : { type : 'string'},
+
+		prompt : { 
+			type : 'boolean',
+			defaultsTo: true,
+		},
+
+		createdBy : { model : 'Employee' },
+		
+		repeatable : { 
+			type : 'boolean',
+			defaultsTo: false,
+		}
+
+		/*
 		Protocol_Step_Number : { type : 'integer' },
 		Protocol_Step_Name : { type : 'string'},
 		Protocol_Step_Instructions : { type : 'string'},
@@ -25,6 +47,7 @@ module.exports = {
 		QC_Condition : { type : 'string'},
 		Validate : { type : 'string' },
 		Repeatable : { type : 'string', enum: ['Yes','No',''], defaultsTo: ''}
+		*/
 	}  
 };
 
