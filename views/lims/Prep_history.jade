@@ -8,9 +8,9 @@ block content
     h3 Sample History:
       ul
         each step,i in steps
-          - protocol = step['Lab_Protocol_Name'];
-          - name = step['Protocol_Step_Name'];
-          - id   = step['Prep_ID']; 
+          - protocol = step.Lab_protocol.name;
+          - name = step.name;
+          - id   = step.id; 
           li 
             a(href="/record/Prep/#{id}") #{name} 
       

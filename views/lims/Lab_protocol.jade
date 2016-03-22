@@ -7,8 +7,8 @@ block content
     h3 List of the Steps:
       ul
         each step,i in steps
-          - name = step['Protocol_Step_Name'];
-          - message = step['Protocol_Step_Message'];
+          - name = step.name;
+          - message = step.message;
           
           li 
             a(href="/Lab_protocol/#{name}") #{name} 
