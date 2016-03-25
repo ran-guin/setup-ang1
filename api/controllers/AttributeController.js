@@ -22,6 +22,26 @@ module.exports = {
 			console.log(':-(');
 		});
 		return res.send('increment completed');
+	},
+
+	prompt: function (req, res) {
+		var model = req.param('model');
+		var attribute = req.param('attribute');
+			
+		console.log('generate ' + model + ': ' + attribute + ' prompt');
+
+		// Legacy
+		var fields = "Attribute_Class as model, Attribute_Name as attribute, Attribute_Type as type, Attribute_Format as format, 3 as defaultsTo";
+		var query = "SELECT " + fields + " FROM Attribute WHERE Attribute_Class = '" + model + "' AND Attribute_Name = '" + attribute + "'";
+		console.log("Select: " + query);
+		Record.query(query, function (err, result) {
+			if (err) {
+				return res.send("ERROR: " + err);
+			}
+			console.log("Attribute Prompt: " + JSON.stringify(result[0]));
+			//return res.send(result);
+			return res.render('core/attributePrompt', result[0] );
+		});
 	}
 };
 

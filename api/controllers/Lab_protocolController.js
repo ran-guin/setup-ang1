@@ -89,7 +89,8 @@ module.exports = {
 	'run' : function (req, res) {
 		var id = req.param('id');
 		var demo = req.param('demo');
-		var containers = req.body.Plate_ID || 'nothing';  // Legacy 
+
+		var containers = id || req.body.Plate_ID || 'nothing';  // Legacy 
 
 		console.log("BODY: " + JSON.stringify(req.body));
 
