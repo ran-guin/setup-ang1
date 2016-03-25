@@ -1,5 +1,7 @@
 extends ./../customize/privateLayout
+
 block content
+
 
   div.container
 
@@ -22,13 +24,16 @@ block content
               span {{ timestamp }}
           hr
 
-          h3 {{Step.name}} &nbsp;
-            span(ng-show="Step.instructions")
-              a(href='#' onclick="return false;" data-toggle="popover" data-trigger="focus" title="Instructions" data-content="{{Step.instructions}}")
-                i.fa.fa-question-circle
-              span &nbsp;
+          div.alert.alert-info
+            h3 {{Step.name}} &nbsp; 
+              span.navbar-right
+                span(ng-show="Step.instructions")
+                  a(href='#' onclick="return false;" tooltip='instructions' data-toggle="popover" data-placement="left" data-trigger="focus" title="Instructions" data-content="{{Step.instructions}}")
+                    i.fa.fa-question-circle
+                  span &nbsp;
+                span &nbsp; [ {{stepNumber}} / {{steps}} ] &nbsp;
 
-          h4(style="color:red") {{ Step.message }} [ {{stepNumber}} / {{steps}}]
+            h4(style="color:red") &nbsp; &nbsp; {{ Step.message }} 
 
           hr
            
@@ -130,6 +135,13 @@ block content
                            input.form-control(type='#{fType}' pattern="^[_A-z0-9]{1,}$" maxlength="15" placeholder = "Enter " + alias id='#{fld}' ng-model='#{fld}'  default='' force=1 )
 
                         div.help-block.with-errors(style='color:red' ng-model="#{fld}_errors") {{ #{fld}_errors }}  
+
+                  else if fld == 'Minutes_Clotted'
+                    div.form-group
+                      label.col-sm-2.control-label(for='#{fld}') #{alias}
+                      div.col-sm-10
+                        span.lookup(id='Prep-Minutes_Clotted' ng-init="loadAttributePrompt('Prep','Minutes_Clotted')")
+
                   else if ! prompted[fld]
                     // non special fields without units 
                     div.form-group
@@ -167,7 +179,10 @@ block content
 
 
           h3(ng-show="debug || 1") Debugging 
-
+            span.lookup(id='Lookup-lab_protocol' ng-init="loadLookup('lab_protocol')")
+            hr
+            span.lookup(id='Prep-Minutes_Clotted' ng-init="loadAttributePrompt('Prep','Minutes_Clotted','Clot Time')")
+            hr
             button.btn.primary(type='button' ng-click="back()" ng-disabled='stepNumber <= 1') BACK
             span &nbsp;
             button.btn.btn-primary(type='button' ng-click="forward()" ng-disabled="stepNumber >= steps") FWD
