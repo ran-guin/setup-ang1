@@ -4,6 +4,7 @@ app.factory('CommonFactory', function($rootScope, $http){
   var service = {};
 
   service.Lookup = [];
+  service.AttributePrompt = [];
 
   /** Load Lookup Table **/
   service.loadLookup = function (url, table, model, def) { 
@@ -54,6 +55,45 @@ app.factory('CommonFactory', function($rootScope, $http){
  
         }
         else { console.log("no lookup table specfied") }
+  }
+
+  service.loadAttributePrompt = function (url, model, attribute, label, def) { 
+        if (!model) { model = table }
+        console.log('load ' + attribute + ' Attribute for ' + model );
+
+        if ( ! this.AttributePrompt[model]) { this.AttributePrompt[model] = {} }
+
+        if ( this.AttributePrompt[model][attribute]) {
+          console.log('already loaded ' + model + " : " + attribute );
+        }
+        else if ( model && attribute) {  
+            this.AttributePrompt[model][attribute] = {};   
+
+            /** use reference that will be populated when available **/
+            var AttributePrompt = {options : null, value : null};
+
+            console.log('call: ' + url);
+            $http.get(url)
+            .success ( function (response) {
+                var options = response;
+                
+                console.log("Loaded " + model + ': ' + attribute + " Attribute successfully: ");
+                console.log(JSON.stringify(options));
+
+                var el = document.getElementById(model + '-' + attribute );
+                if (el) { el.innerHTML=response }
+                else { console.log("could not locate " + model + '-' + attribute + " element") }
+
+                $rootScope.$broadcast('loadedAttributePrompt', { model : model, attribute : attribute });
+            })
+            .error ( function (response) {
+                console.log("Error loading " + model + ': ' + attribute + " Attribute HTTP request");
+            });
+
+            this.AttributePrompt[model][attribute] = AttributePrompt; 
+ 
+        }
+        else { console.log("no Attribute specfied") }
   }
 
   return service;

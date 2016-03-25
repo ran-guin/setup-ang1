@@ -272,9 +272,10 @@ function protocolController ($scope, $rootScope, $http, $q) {
         var Attributes = { Plate : [], Prep : [] };
         for (var i=0; i<$scope.input.length; i++) {
             var input = $scope.input[i];
+
             var attribute_test = input.split('_Attribute=');
             if (attribute_test.length > 1) {
-                Attributes[attribute_test[0]].push(attribute_test[1]);
+                Attributes[attribute_test[0]].push(attribute_test[1].replace(' ','_'));
             }
             else {
                 if (input != input.replace('Plate_Attribute=','')) {

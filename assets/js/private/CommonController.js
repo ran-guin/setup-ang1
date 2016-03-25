@@ -18,6 +18,15 @@ app.controller('CommonController',
        		console.log("Loaded " + table + " Lookup Table");
     	}
 
+        $scope.loadAttributePrompt = function loadAttributePrompt(model, attribute, label, defaultTo) {
+        
+        	var url = "/attribute/" + model + '/' + attribute + '/';
+
+       		var got = CommonFactory.loadAttributePrompt(url, model, attribute, label, defaultTo);
+
+       		console.log("Loaded " + model + ': ' + attribute + " attribute prompt");
+    	}
+
 
     	// Automatically generate timestamp attribute along with standard attributes for lastMonth & nextMonth //
 	    var start = new Date();
