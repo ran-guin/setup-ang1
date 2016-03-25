@@ -78,6 +78,7 @@ module.exports.routes = {
 
   'GET /lookup/:table/:fields' : 'RecordController.lookup',
   'GET /lookup/:table' : 'RecordController.lookup',
+  'GET /attribute/:model/:attribute' : 'AttributeController.prompt',
 
   /***************************************************************************
   *                                                                          *
