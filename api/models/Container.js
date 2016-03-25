@@ -28,6 +28,34 @@ module.exports = {
 		return field;  // return null if no alias defined... 
 	},
 
+	loadData : function (ids) {
+
+		var id_list;
+		if (ids == undefined) { id_list = '' }
+		else { id_list = ids.join(',') }
+
+		var deferred = q.defer();
+
+		var fields = 'Plate_ID as id, Sample_Type as sample_type, Plate_Format_Type as container_format';
+		var query = 'SELECT ' + fields + " FROM Plate LEFT JOIN Sample_Type ON FK_Sample_Type__ID=Sample_Type_ID LEFT JOIN Plate_Format ON FK_Plate_Format__ID=Plate_Format_ID WHERE Plate_ID IN (" + id_list + ')';
+
+		console.log("SQL: " + query);
+	    Record.query(query, function (err, result) {
+	    	if (err) {
+	    		console.log("error: " + err);
+	    		deferred.reject("Error: " + err);
+	    	}
+	    	else {
+	    		console.log("DATA: " + JSON.stringify(result));
+	    		deferred.resolve(result);
+	    	}
+
+	    });
+	    	
+	    return deferred.promise;
+		
+	},
+
 	target_specs: function (format_id, prep_id) {
 		// fields to be reset when item is cloned from an existing container (eg standard transfer)
 		var fields = {
