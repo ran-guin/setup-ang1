@@ -55,6 +55,41 @@ module.exports = {
 		},
 	*/
 	},
+
+	list : function (input) {
+
+		if (input == undefined) { input = {} }
+
+		var ids = input['Plate'];
+		
+		var q = "SELECT * FROM Lab_Protocol";
+	    Record.query(q, function (err, result) {
+	    	if (err) {
+
+	    	    console.log("ASYNC Error in q post request: " + err);
+	            console.log("Q: " + q);
+
+				return res.negotiate(err);
+     		}
+
+			if (!result) {
+					console.log('no results');
+					return res.send('');
+			}
+
+			var Protocols = [];
+
+			console.log("Found " + result.length + " active Protocols");
+
+			for (var i=0; i<result.length; i++) {
+				var name = result[i]['Lab_Protocol_Name'];
+				var id   = result[i]['Lab_Protocol_ID'];
+				Protocols.push({id : id, name: name});
+			}
+
+			return Protocols;
+		});
+	},
 	
 	validation_messages: {
 	    Lab_Protocol_Name: {
@@ -77,7 +112,7 @@ module.exports = {
 		console.log("Input: " + JSON.stringify(input));
 		for (j=0; j<input.length; j++) {
 			var att1 = input[j].replace('Plate_Attribute=','');
-			var att2 = input[j].replace('Prep_Attribute=','');
+			var att2 = input[j].replace('Prep_Attribute=','').replace(' ','_');
 			if (att1 != input[j]) { Plate_attributes.push(att1) }
 			else if (att2 != input[j]) { Prep_attributes.push(att2) }
 
@@ -102,25 +137,39 @@ module.exports = {
 
 		var deferred = Q.defer();
 
+		var staticInput = ['Split', 'Prep_Comments'];
+
 		var list = [];
 		for (i=0; i<query_result.length; i++) {
 			var input = query_result[i]['input'].split(':');
-		
+
+			/*
 			for (j=0; j<input.length; j++) {
 				var att1 = input[j].replace('Plate_Attribute=','');
 				var att2 = input[j].replace('Prep_Attribute=','');
 				if (att1 != input[j]) { Plate_attributes.push(att1) }
 				else if (att2 != input[j]) { Prep_attributes.push(att2) }
 			}
-
+			*/
 			list = _.union(list, input);
 		}
 
+		var fields = "Attribute_Class as model, Attribute_Name as name, Attribute_Type as type, Attribute_Format as format"; // legacy 
+		var query = 'SELECT ' + fields + " FROM Attribute WHERE Attribute_Name IN ('" 
+			+ list.join("','")
+			+ "')";
+
+		console.log("SQL: " + query);
+
+		Record.query(query, function (err, attributeData) {
+			if (err) { deferred.reject("error looking for Attributes") }
+			else {
+				console.log("Attributes: " + JSON.stringify(attributeData))
+				deferred.resolve({ 'input' : list, 'attributes' : attributeData});
+			}
+		});
+
 		console.log("Union: " + JSON.stringify(list));
-
-		// return cb(null, { 'input' : list, 'attributes' : { 'Plate' : Plate_attributes, 'Prep' : Prep_attributes }} );
-
-		deferred.resolve({ 'input' : list, 'attributes' : { 'Plate' : Plate_attributes, 'Prep' : Prep_attributes }});
 		return deferred.promise;
 	},
 };
