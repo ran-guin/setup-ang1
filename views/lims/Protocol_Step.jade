@@ -73,18 +73,44 @@ block content
                 - alias = alias + '*';
 
               div(ng-show="Show['#{fld}']")
-                div.form-group
-                  if attributes[fld]
-                    - fType = attributes[fld];
+                if attributes[fld]
+                  - fType = attributes[fld];
 
-                  if fld == 'Split'
-                    label.col-sm-2.control-label(for='#{fld}') Split x:
-                    div.col-sm-10
-                      input(type='text' ng-model="Split") 
+                //if fld == 'Split'
+                  label.col-sm-2.control-label(for='#{fld}') Split x:
+                  div.col-sm-10
+                    input(type='text' ng-model="Split") 
 
-                    - prompted[fld] = 1;
+                  - prompted[fld] = 1;
 
-                  else if fld == 'solution'
+                if fld == 'transfer_qty'
+                  div.form-group
+                    label.col-sm-2.control-label(for='transfer_qty') Transfer:
+                      
+                    div.col-sm-3
+                      input.form-control(type='text', placeholder = " -- Qty --" id='transfer_qty' ng-model='transfer_qty' ng-blur="splitField('transfer_qty')") 
+                    div.col-sm-3
+                      // *** Generate Dropdown for ENUM Values *** // 
+                      div.dropdown(id='transfer_qty_units')
+                          button.btn.btn-default.dropdown-toggle(type='button' data-toggle='dropdown' id = 'transfer_qty_units' ng-model='transfer_qty_units') Units &nbsp;
+                              span.caret
+                          ul.dropdown-menu
+                              each opt,j in options
+                                  li 
+                                      a(href='#' ng-click="setField('transfer_qty_units','#{opt}')" onclick='return false;') #{opt}
+                    div.col-sm-1
+                      span &nbsp;
+                    div.col-sm-3
+                      b Split X &nbsp;
+                      input(type='text' id='Split' ng-model="Split") 
+
+                    - prompted[fld]=1;
+                    - prompted['Split']=1;
+                    - prompted['transfer_qty']=1;
+                    - prompted['transfer_qty_units']=1;
+
+                else if fld == 'solution'
+                  div.form-group
                     label.col-sm-2.control-label(for='#{fld}') Sol/Reagent:
                     div.col-sm-4
                       input.form-control(type='text', placeholder = "-- Scan --" id = '#{fld}' ng-model='#{fld}' ng-blur="splitField('#{fld}')") 
@@ -93,7 +119,7 @@ block content
                     div.col-sm-3
                       // *** Generate Dropdown for ENUM Values *** // 
                       div.dropdown(id='solution_qty_units')
-                          button.btn.btn-default.dropdown-toggle(type='button' data-toggle='dropdown' id = 'solution_qty_units') Units &nbsp;
+                          button.btn.btn-default.dropdown-toggle(type='button' data-toggle='dropdown' id = 'solution_qty_units' ng-model='solution_qty_units') Units &nbsp;
                               span.caret
                           ul.dropdown-menu
                               each opt,j in options
@@ -104,7 +130,8 @@ block content
                     - prompted['solution_qty']=1;
                     - prompted['solution_qty_units']=1;
 
-                  else if units[fld] && ! prompted[fld]
+                else if units[fld] && ! prompted[fld]
+                  div.form-group
                     // non special fields with units (eg attributes with units...)
                     - prompted[fld] = 1
                     label.col-sm-2.control-label(for='#{fld}') #{alias}:
@@ -124,38 +151,44 @@ block content
                                   li 
                                       a(href='#' onclick='return false;') #{opt}
 
-                  else if fld == 'comments' 
-                    // non splittable field 
-                    div.form-group
-                      label.col-sm-2.control-label(for='#{fld}') #{alias}
-                      div.col-sm-10
-                        if (fld == field)
-                          input.form-control(type='#{fType}'  pattern=".*" maxlength="15" placeholder = "Enter " + alias id='#{fld}' ng-model='#{fld}' default='' force=1)
-                        else 
-                           input.form-control(type='#{fType}' pattern="^[_A-z0-9]{1,}$" maxlength="15" placeholder = "Enter " + alias id='#{fld}' ng-model='#{fld}'  default='' force=1 )
+                else if fld == 'comments' 
+                  // non splittable field 
+                  div.form-group
+                    label.col-sm-2.control-label(for='#{fld}') #{alias}
+                    div.col-sm-10
+                      if (fld == field)
+                        input.form-control(type='#{fType}'  pattern=".*" maxlength="15" placeholder = "Enter " + alias id='#{fld}' ng-model='#{fld}' default='' force=1)
+                      else 
+                         input.form-control(type='#{fType}' pattern="^[_A-z0-9]{1,}$" maxlength="15" placeholder = "Enter " + alias id='#{fld}' ng-model='#{fld}'  default='' force=1 )
 
-                        div.help-block.with-errors(style='color:red' ng-model="#{fld}_errors") {{ #{fld}_errors }}  
+                      div.help-block.with-errors(style='color:red' ng-model="#{fld}_errors") {{ #{fld}_errors }}  
 
-                  else if fld == 'Minutes_Clotted'
-                    div.form-group
-                      label.col-sm-2.control-label(for='#{fld}') #{alias}
-                      div.col-sm-10
-                        span.lookup(id='Prep-Minutes_Clotted' ng-init="loadAttributePrompt('Prep','Minutes_Clotted')")
+                else if fld == 'Minutes_Clotted'
+                  div.form-group
+                    label.col-sm-2.control-label(for='#{fld}') #{alias}
+                    div.col-sm-10
+                      span.lookup(id='Prep-Minutes_Clotted' ng-init="loadAttributePrompt('Prep','Minutes_Clotted')")
 
-                  else if ! prompted[fld]
-                    // non special fields without units 
-                    div.form-group
-                      label.col-sm-2.control-label(for='#{fld}') #{alias}
-                      div.col-sm-10
-                        if (fld == field)
-                          input.form-control(type='#{fType}' ng-blur="splitField('#{fld}')" pattern=".*" maxlength="15" placeholder = "Enter " + alias id='#{fld}' ng-model='#{fld}' default='' force=1)
-                        else 
-                           input.form-control(type='#{fType}'  ng-blur="splitField('#{fld}')" required pattern="^[_A-z0-9]{1,}$" maxlength="15" placeholder = "Enter " + alias id='#{fld}' ng-model='#{fld}'  default='' force=1 )
+                else if ! prompted[fld]
+                  // non special fields without units 
+                  div.form-group
+                    label.col-sm-2.control-label(for='#{fld}') #{alias}
+                    div.col-sm-10
+                      if (fld == field)
+                        input.form-control(type='#{fType}' ng-blur="splitField('#{fld}')" pattern=".*" maxlength="15" placeholder = "Enter " + alias id='#{fld}' ng-model='#{fld}' default='' force=1)
+                      else 
+                         input.form-control(type='#{fType}'  ng-blur="splitField('#{fld}')" required pattern="^[_A-z0-9]{1,}$" maxlength="15" placeholder = "Enter " + alias id='#{fld}' ng-model='#{fld}'  default='' force=1 )
 
-                        div.help-block.with-errors(style='color:red' ng-model="#{fld}_errors") {{ #{fld}_errors }}
-                  else 
-                    b unrecognized: {{fld}}
-
+                      div.help-block.with-errors(style='color:red' ng-model="#{fld}_errors") {{ #{fld}_errors }}
+            //div
+              span.lookup(id='Prep-Minutes_Clotted' ng-init="loadAttributePrompt('Prep','Minutes_Clotted','Clot Time')" ng-model='Minutes_Clotted')
+              
+              hr
+              div(ng-repeat="att in AttributePrompt")
+                div.col-sm-2
+                  b att.name
+                div.col-sm-10
+                  input(type='text' ng-model='')
             hr
             div.form-group
               div.col-sm-2 &nbsp;
@@ -170,23 +203,28 @@ block content
               div.col-sm-12
                 div.help-block.with-errors
 
+          
             hr
-            
-            input(type='hidden' id='ids' value='2,4,6,8')
-            input(type='hidden' id='target-format' value='3')
-            input(type='hidden' id='target-wells' value='A01,B01,C01,D01')
-            input(type='hidden' id='source-wells' value='')
+
+            // TEST ...   
+              input(type='hidden' id='ids' value='2,4,6,8')
+              input(type='hidden' id='target-format' value='3')
+              input(type='hidden' id='target-wells' value='A01,B01,C01,D01')
+              input(type='hidden' id='source-wells' value='')
 
 
           h3(ng-show="debug || 1") Debugging 
-            span.lookup(id='Lookup-lab_protocol' ng-init="loadLookup('lab_protocol')")
+            span(id='Lookup-lab_protocol' ng-init="loadLookup('lab_protocol')")
             hr
-            span.lookup(id='Prep-Minutes_Clotted' ng-init="loadAttributePrompt('Prep','Minutes_Clotted','Clot Time')")
+            span(id='Prep-Waybill_Number' ng-init="loadAttributePrompt('Prep','Waybill_Number','Waybill #')" ng-model='Waybill_Number')
+
             hr
             button.btn.primary(type='button' ng-click="back()" ng-disabled='stepNumber <= 1') BACK
             span &nbsp;
             button.btn.btn-primary(type='button' ng-click="forward()" ng-disabled="stepNumber >= steps") FWD
 
+            h5 Defaults: {{ Default }}
+            h5 Att : {{ AttributePrompt }}
             h5 Details: {{ Step }}
             h5 Samples: {{ Samples }}
             h5 Input: {{ input }}
