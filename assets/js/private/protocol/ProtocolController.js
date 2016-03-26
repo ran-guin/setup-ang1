@@ -273,18 +273,25 @@ function protocolController ($scope, $rootScope, $http, $q) {
         for (var i=0; i<$scope.input.length; i++) {
             var input = $scope.input[i];
 
-            var attribute_test = input.split('_Attribute=');
-            if (attribute_test.length > 1) {
-                Attributes[attribute_test[0]].push(attribute_test[1].replace(' ','_'));
-            }
-            else {
-                if (input != input.replace('Plate_Attribute=','')) {
-                    PlateAttributes.push()
+            $scope.Show[input] = true;
+            if ($scope.defaults.length > i) {
+                var def = $scope.defaults[i];
+                if (input.match(/\_qty$/)) {
+                    var units = def.match(/[a-zA-Z]+/);
+                    if (units && units.length) {
+                        $scope.Default[input + '_units'] = units[0];
+                        $scope[input + '_units'] = units[0];
+                        def = def.replace(units[0],'');
+                    }
+                    $scope.Default[input] = def;
+                    $scope[input] = def;
                 }
-                $scope.Show[input] = true;
-                if ($scope.defaults.length > i) { $scope.Default[input] = $scope.defaults[i]; $scope[input] = $scope.defaults[i] }
-                if ($scope.formats.length > i) { $scope.Format[input] = $scope.formats[i] }
+                else {
+                    $scope.Default[input] = def; 
+                    $scope[input] = def;
+                }
             }
+            if ($scope.formats.length > i) { $scope.Format[input] = $scope.formats[i] }
         }
         console.log("Attributes: " + JSON.stringify(Attributes));
         console.log("Step: " + $scope.stepNumber + ' / ' + $scope.steps);
