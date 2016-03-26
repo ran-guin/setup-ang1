@@ -154,6 +154,40 @@ module.exports = {
 			list = _.union(list, input);
 		}
 
+		console.log("List: " + list.join(','));
+		var ordered = ['transfer_qty','Split','solution','solution_qty','equipment'];
+		var last    = ['location','comments'];
+		var orderedList = [];
+		// reorder list in standard order for normal input //
+
+		var Included = {};
+		for (var i=0; i<ordered.length; i++) {
+			if ( list.indexOf(ordered[i]) > 0 ) {
+				orderedList.push(ordered[i])
+				Included[ordered[i]] = 1;
+			}
+		}
+		for (var i=0; i<list.length; i++) {
+			if ( Included[list[i]]) {
+				console.log('already included ' + list[i]);
+			}
+			else if ( last.indexOf(list[i]) > 0 ) { 
+				console.log('moving to back: ' + list[i]);
+			}
+			else {
+				orderedList.push(list[i]);
+			}
+		}
+
+		for (var i=0; i<last.length; i++) {
+			if ( list.indexOf(last[i]) ) {
+				orderedList.push(last[i])
+				Included[last[i]] = 1;
+			}
+		}
+
+		console.log("Reordered List: " + orderedList.join(', '));
+
 		var fields = "Attribute_Class as model, Attribute_Name as name, Attribute_Type as type, Attribute_Format as format"; // legacy 
 		var query = 'SELECT ' + fields + " FROM Attribute WHERE Attribute_Name IN ('" 
 			+ list.join("','")
@@ -165,7 +199,7 @@ module.exports = {
 			if (err) { deferred.reject("error looking for Attributes") }
 			else {
 				console.log("Attributes: " + JSON.stringify(attributeData))
-				deferred.resolve({ 'input' : list, 'attributes' : attributeData});
+				deferred.resolve({ 'input' : orderedList, 'attributes' : attributeData});
 			}
 		});
 
