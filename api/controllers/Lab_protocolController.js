@@ -152,6 +152,18 @@ module.exports = {
 	'complete' : function (req, res) {
 		console.log("COMPLETED STEP");
 		var data = req.body;
+
+		var action = '';
+		if (data && data['Prep'] && data['Prep']['Prep_Action']) {
+			action = data['Prep']['Prep_Action'];
+		} 
+
+		console.log("Complete Prep: " + action);
+		if (action == 'Debug') {
+			console.log("Form Data:");
+			console.log(data);
+			return res.send('Debug only - nothing saved');
+		}
 		
 		if (data && data['Prep']) {
 			console.log("Send Prep data: " + JSON.stringify(data['Prep']));
