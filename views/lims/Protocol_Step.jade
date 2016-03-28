@@ -5,7 +5,7 @@ block content
 
   div.container
 
-    - var config = { steps : Steps, samples: Samples };
+    - var config = { steps : Steps, samples: Samples, attributes: attributes};
     - var init = "initialize(" + JSON.stringify(config) + ")";
 
     - flds = fields || []; // ['FK_Equipment__ID', 'FK_Solution__ID', 'Solution_Qty', 'Solution_Qty_Units', 'Transfer_Qty', 'Transfer_Qty_Units', 'Thaw_Time', 'Prep_Comments'];
@@ -76,13 +76,6 @@ block content
                 if attributes[fld]
                   - fType = attributes[fld];
 
-                //if fld == 'Split'
-                  label.col-sm-2.control-label(for='#{fld}') Split x:
-                  div.col-sm-10
-                    input(type='text' ng-model="Split") 
-
-                  - prompted[fld] = 1;
-
                 if fld == 'transfer_qty'
                   div.form-group
                     label.col-sm-2.control-label(for='transfer_qty') Transfer:
@@ -151,7 +144,30 @@ block content
                                   li 
                                       a(href='#' onclick='return false;') #{opt}
 
-                else if fld == 'comments' 
+            // Prompt for Attributes if applicable //
+            each att in attributes
+              - id = att.model + '-' + att.name
+              - name = att.name
+              if ! prompted[name]
+                div(ng-show="Show['#{att.name}']") 
+                  div.form-group
+                    div.col-sm-2                   
+                      b #{att.name}
+                    div.col-sm-10
+                      input.form-control(type='text' ng-blur="splitField('#{att.name}')" pattern=".*" maxlength="15" placeholder = "Enter " + alias id='#{att.name}' ng-model='#{att.name}' default='' force=1)
+                - prompted[att.name] = 1                 
+
+            // Resume remaining fields after attributes ... 
+            each field in flds
+              - fld = field.replace('*','');
+              - alias = aliases[fld] || fld;
+              - fType = 'text';
+
+              if (fld != field)
+                - alias = alias + '*';
+              
+              div(ng-show="Show['#{fld}']") 
+                if fld == 'comments' 
                   // non splittable field 
                   div.form-group
                     label.col-sm-2.control-label(for='#{fld}') #{alias}
@@ -162,12 +178,6 @@ block content
                          input.form-control(type='#{fType}' pattern="^[_A-z0-9]{1,}$" maxlength="15" placeholder = "Enter " + alias id='#{fld}' ng-model='#{fld}'  default='' force=1 )
 
                       div.help-block.with-errors(style='color:red' ng-model="#{fld}_errors") {{ #{fld}_errors }}  
-
-                else if fld == 'Minutes_Clotted'
-                  div.form-group
-                    label.col-sm-2.control-label(for='#{fld}') #{alias}
-                    div.col-sm-10
-                      span.lookup(id='Prep-Minutes_Clotted' ng-init="loadAttributePrompt('Prep','Minutes_Clotted')")
 
                 else if ! prompted[fld]
                   // non special fields without units 
@@ -180,60 +190,47 @@ block content
                          input.form-control(type='#{fType}'  ng-blur="splitField('#{fld}')" required pattern="^[_A-z0-9]{1,}$" maxlength="15" placeholder = "Enter " + alias id='#{fld}' ng-model='#{fld}'  default='' force=1 )
 
                       div.help-block.with-errors(style='color:red' ng-model="#{fld}_errors") {{ #{fld}_errors }}
-            //div
-              span.lookup(id='Prep-Minutes_Clotted' ng-init="loadAttributePrompt('Prep','Minutes_Clotted','Clot Time')" ng-model='Minutes_Clotted')
-              
-              hr
-              div(ng-repeat="att in AttributePrompt")
-                div.col-sm-2
-                  b att.name
-                div.col-sm-10
-                  input(type='text' ng-model='')
+ 
+
             hr
             div.form-group
               div.col-sm-2 &nbsp;
               div.col-sm-3
                 button.btn.btn-success(type='button' ng-click="complete('Completed')" ng-disabled="formDisabled") Completed Step
               div.col-sm-2
-                button.btn.btn-warning(type='submit' ng-click="complete('Skipped')") Skip Step
+                button.btn.btn-warning(type='button' ng-click="complete('Skipped')") Skip Step
               div.col-sm-2
-                button.btn.btn-danger(type='submit' ng-click="complete('Failed')") Failed Step
+                button.btn.btn-danger(type='button' ng-click="complete('Failed')") Failed Step
               div.col-sm-3
                 button.btn.btn-primary(type='button' ng-click="repeat()" ng-disable="Step.Repeatable") Repeat Previous Step
               div.col-sm-12
                 div.help-block.with-errors
 
-          
-            hr
-
-            // TEST ...   
-              input(type='hidden' id='ids' value='2,4,6,8')
-              input(type='hidden' id='target-format' value='3')
-              input(type='hidden' id='target-wells' value='A01,B01,C01,D01')
-              input(type='hidden' id='source-wells' value='')
-
-
-          h3(ng-show="debug || 1") Debugging 
-            span(id='Lookup-lab_protocol' ng-init="loadLookup('lab_protocol')")
-            hr
-            span(id='Prep-Waybill_Number' ng-init="loadAttributePrompt('Prep','Waybill_Number','Waybill #')" ng-model='Waybill_Number')
+            button.btn.btn-danger(type='button' ng-click="complete('Debug')") View Form Input
 
             hr
-            button.btn.primary(type='button' ng-click="back()" ng-disabled='stepNumber <= 1') BACK
-            span &nbsp;
-            button.btn.btn-primary(type='button' ng-click="forward()" ng-disabled="stepNumber >= steps") FWD
 
-            h5 Defaults: {{ Default }}
-            h5 Att : {{ AttributePrompt }}
-            h5 Details: {{ Step }}
-            h5 Samples: {{ Samples }}
-            h5 Input: {{ input }}
-            h5 Show: {{ Show }}
-            h5 Fields: #{ JSON.stringify(flds) }
-            h5 Attributes: #{JSON.stringify(attributes)}
+            h3(ng-show="debug || 1") Debugging 
 
-          hr
- 
+              hr
+              button.btn.primary(type='button' ng-click="back()" ng-disabled='stepNumber <= 1') BACK
+              span &nbsp;
+              button.btn.btn-primary(type='button' ng-click="forward()" ng-disabled="stepNumber >= steps") FWD
+              span &nbsp;
+              button.btn.btn-success(type='button' ng-click="ngalert('fix')") update
+              hr
+
+              h5 Defaults: {{ Default }}
+              h5 Att : {{ AttributePrompt }}
+              h5 Details: {{ Step }}
+              h5 Samples: {{ Samples }}
+              h5 Input: {{ input }}
+              h5 Show: {{ Show }}
+              h5 Fields: #{ JSON.stringify(flds) }
+              h5 Attributes: #{JSON.stringify(attributes)}
+
+            hr
+   
 
 
          
