@@ -21,6 +21,8 @@ function protocolController ($scope, $rootScope, $http, $q) {
             $scope.Samples = config['samples'];
             $scope.N = $scope.Samples.split(',').length;
 
+            $scope.Attributes = config['attributes'];
+            
             $scope.user = 'Ran';  // TEMP
             $scope.PrepFields = [];
             
@@ -300,6 +302,10 @@ function protocolController ($scope, $rootScope, $http, $q) {
         console.log("Defaults: " + JSON.stringify($scope.Default));
         console.log("Format: " + JSON.stringify($scope.Format));
         console.log("Input: " + JSON.stringify($scope.input));
+    }
+
+    $scope.ngalert = function ngalert(msg) {
+        console.log("NG ALERT: " + msg);
     }
 
 }]);
