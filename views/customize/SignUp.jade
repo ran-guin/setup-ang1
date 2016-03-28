@@ -1,5 +1,5 @@
 .container
-  div.modal.fade#LoginModal
+  div.modal.fade#SignUp
     .modal-dialog
       // Modal content
       .modal-content
@@ -7,7 +7,7 @@
           button.close(type='button', data-dismiss='modal') ×
           h2
             i.fa.fa-lock.fa
-            |  &nbsp; Login
+            |  &nbsp; Register
         .modal-body
           form(role='form')
             .form-group
@@ -19,23 +19,20 @@
               label(for='psw')
                 i.fa.fa-eye
                 |  Password
-              input#psw.form-control(type='text', placeholder='Enter password')
-            .checkbox
-              label
-                input(type='checkbox', value='', checked='')
-                | Remember me
+              input#pwd.form-control(type='text', placeholder='Enter password')
+            .form-group
+              label(for='psw')
+                i.fa.fa-eye
+                |  Confirm Password
+              input#pwd2.form-control(type='text', placeholder='Confirm password')                
             button.btn.btn-default.btn-success.btn-block(type='submit')
               fa.fa.fa-power-off
-              |  Login
+              |  Submit
         .modal-footer
           button.btn.btn-default.btn-danger.pull-left(type='submit', data-dismiss='modal')
             i.fa.fa-remove
             |  Cancel
           p
-            | Not a member? 
-            a(href='#' onclick="return false;" data-dismiss='modal' data-toggle='modal' data-target='#SignUp') Sign Up
-          p
-            | Forgot 
-            a(href='#') Password?
+            | Questions? 
+            a(href='#') Contact Us
 
-include SignUp.jade
