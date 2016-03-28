@@ -14,7 +14,7 @@ module.exports = {
 		var barcode = req.body.barcode;
 		var Scanned = Barcode.parse(barcode);
 
-		if (Scanned['Plate']) {
+		if (Scanned['Plate'] && Scanned['Plate'].length > 0) {
 
 			var ids = Scanned['Plate'];
 
@@ -54,6 +54,9 @@ module.exports = {
 			.catch ( function (err) {
 				return res.send("Error: " + err);
 			});
+	    }
+	    else { 
+	    	return res.send("Error: Unrecognized barcode");
 	    }
 
 	},
