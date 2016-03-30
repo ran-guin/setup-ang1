@@ -44,7 +44,8 @@ block content
                 table
                   tr
                     td(style='background-color:#faa')
-                      b Error: {{ errMsg }}
+                      PRE
+                        B {{ errMsg }}
             - prompted = {};
             - options = ['ml', 'ul', 'nl', 'pl'];
 
@@ -154,7 +155,11 @@ block content
                     div.col-sm-2                   
                       b #{att.name}
                     div.col-sm-10
-                      input.form-control(type='text' ng-blur="splitField('#{att.name}')" pattern=".*" maxlength="15" placeholder = "Enter " + alias id='#{att.name}' ng-model='#{att.name}' default='' force=1)
+                      if (att.model == 'Prep')
+                        input.form-control(type='text' pattern=".*" placeholder = "Enter Prep " + alias id='#{att.name}' ng-model='#{att.name}' default='' force=1)
+                      else 
+                        // Enable Split Mode 
+                        input.form-control(type='text' ng-blur="splitField('#{att.name}')" pattern=".*" maxlength="15" placeholder = "Enter " + alias + ' (x N)' id='#{att.name}' ng-model='#{att.name}' default='' force=1)
                 - prompted[att.name] = 1                 
 
             // Resume remaining fields after attributes ... 
