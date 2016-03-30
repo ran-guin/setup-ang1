@@ -22,7 +22,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
             $scope.N = $scope.Samples.split(',').length;
 
             $scope.Attributes = config['attributes'];
-            
+
             $scope.user = 'Ran';  // TEMP
             $scope.PrepFields = [];
             
@@ -214,21 +214,33 @@ function protocolController ($scope, $rootScope, $http, $q) {
             'transfer_qty_units' : 'Transfer_Qty_Units'
         };
 
-        var PlateData = $scope.splitData(PlateInfo, map);
+        var PlateData = $scope.splitData(PlateInfo, map);        
 
         console.log("split " + $scope.input);
         console.log("PlateData: " + JSON.stringify(PlateData));
 
-        var PlateAttributes = [];
-        var PrepAttributes = [];
-        console.log("... figure out attributes entered... ");
+        var PlateAttributes = {};
+        var PrepAttributes = {};
+
+        // Load Attribute Data 
+        for (var i=0; i<$scope.Attributes.length; i++) {
+            var att = $scope.Attributes[i];
+            if ($scope.SplitFields[att.name]) {
+                PlateAttributes[att.name] = $scope.SplitFields[att.name];
+                console.log(att.name + ' : ' + $scope.SplitFields[att.name]);
+            }
+            else {
+                PrepAttributes[att.name] = $scope[att.name];
+                console.log(att.name + ' = ' + $scope[att.name]);
+            }
+        }
 
         var data =  {
             ids: $scope.samples,
             'Prep' : PrepData,
             'Plate' : PlateData,
-            'Plate_Attribute' : PlateAttributes,
-            'Prep_Attribute'  : PrepAttributes
+            'Plate_Attributes' : PlateAttributes,
+            'Prep_Attributes'  : PrepAttributes
         };
 
         console.log("Send: " + JSON.stringify(data));
@@ -238,7 +250,15 @@ function protocolController ($scope, $rootScope, $http, $q) {
         .then ( function (result) {
             console.log("Step Saved");
             console.log(JSON.stringify(result));
+
+            if (action == 'Debug') {
+                $scope.errMsg = JSON.stringify(result,null,4);
+            }
         });
+    }
+
+    $scope.showErrors = function showErrors() {
+        return $scope.errMsg;
     }
 
     $scope.skip = function skip () {
@@ -258,8 +278,6 @@ function protocolController ($scope, $rootScope, $http, $q) {
 
         $scope.Step = $scope.Steps[$scope.stepNumber-1];
 
-        console.log("Source: " + JSON.stringify($scope.Steps) );
-        console.log("GOT STEP " + $scope.stepNumber + " : " + $scope.Step);
         // start custom block //
         $scope.input = $scope.Step['input'].split(':');
         $scope.defaults = $scope.Step['defaults'].split(':');
@@ -270,7 +288,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
         $scope.Default = {};
         $scope.Format = {};
 
-        console.log("parse input... ");
+        console.log("parse input for next step... ");
         var Attributes = { Plate : [], Prep : [] };
         for (var i=0; i<$scope.input.length; i++) {
             var input = $scope.input[i];
@@ -302,6 +320,8 @@ function protocolController ($scope, $rootScope, $http, $q) {
         console.log("Defaults: " + JSON.stringify($scope.Default));
         console.log("Format: " + JSON.stringify($scope.Format));
         console.log("Input: " + JSON.stringify($scope.input));
+
+        $scope.errMsg = '';
     }
 
     $scope.ngalert = function ngalert(msg) {
