@@ -191,7 +191,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
 
     $scope.complete = function complete (action) {
         // complete step (if validated)
-        $scope.Prep_Action = action;
+        $scope.action = action;
 
         var url = "/Lab_protocol/complete-step";
 
@@ -200,18 +200,21 @@ function protocolController ($scope, $rootScope, $http, $q) {
             'Prep_Name' : $scope.Step.name ,
             'FK_Lab_Protocol__ID' : $scope.Step['Lab_protocol'],
             'FK_Employee__ID' : 1, 
-            'Prep_Action' : $scope['Prep_Action'],
-            'Prep_Comments' : $scope['Prep_Comments']
+            'Prep_Action' : $scope['action'],
+            'Prep_Comments' : $scope['comments']
         };
+
         console.log("PREP DATA: " + JSON.stringify(PrepData));
         var PlateInfo = ['solution', 'equipment','solution_qty','solution_qty_units', 'transfer_qty','transfer_qty_units'];
+
+        // Legacy fields //
         var map = {
             'solution' : 'FK_Solution__ID',
             'equipment' : 'FK_Equipment__ID',
             'solution_qty' : 'Solution_Qty',
             'solution_qty_units' : 'Solution_Qty_Units',
-            'transfer_qty' : 'Transfer_Qty',
-            'transfer_qty_units' : 'Transfer_Qty_Units'
+            'transfer_qty' : 'Transfer_Quantity',
+            'transfer_qty_units' : 'Transfer_Quantity_Units'
         };
 
         var PlateData = $scope.splitData(PlateInfo, map);        
@@ -219,19 +222,30 @@ function protocolController ($scope, $rootScope, $http, $q) {
         console.log("split " + $scope.input);
         console.log("PlateData: " + JSON.stringify(PlateData));
 
+        console.log("Attributes: " + JSON.stringify($scope.Attributes));
+
         var PlateAttributes = {};
         var PrepAttributes = {};
 
-        // Load Attribute Data 
-        for (var i=0; i<$scope.Attributes.length; i++) {
-            var att = $scope.Attributes[i];
-            if ($scope.SplitFields[att.name]) {
-                PlateAttributes[att.name] = $scope.SplitFields[att.name];
-                console.log(att.name + ' : ' + $scope.SplitFields[att.name]);
-            }
-            else {
-                PrepAttributes[att.name] = $scope[att.name];
-                console.log(att.name + ' = ' + $scope[att.name]);
+        if (action != 'Skipped') {
+            // Load Attribute Data 
+            for (var i=0; i<$scope.Attributes.length; i++) {
+                var att = $scope.Attributes[i];
+                if (att.type == 'Count' && att.model == 'Plate') { 
+                    $scope[att.name] = '<increment>';
+                    PlateAttributes[att.id] = $scope[att.name];
+                }
+                else if (att.model == 'Plate' && $scope.SplitFields[att.name]) {
+                    PlateAttributes[att.id] = $scope.SplitFields[att.name];
+                    console.log(att.name + ' : ' + $scope.SplitFields[att.name]);
+                }
+                else if (att.model == 'Prep') {
+                    PrepAttributes[att.id] = $scope[att.name];
+                    console.log(att.name + ' = ' + $scope[att.name]);
+                }
+                else {
+                    console.log("Invalid Attribute: " + JSON.stringify(att))
+                }
             }
         }
 
@@ -239,8 +253,8 @@ function protocolController ($scope, $rootScope, $http, $q) {
             ids: $scope.samples,
             'Prep' : PrepData,
             'Plate' : PlateData,
-            'Plate_Attributes' : PlateAttributes,
-            'Prep_Attributes'  : PrepAttributes
+            'Plate_Attribute' : PlateAttributes,
+            'Prep_Attribute'  : PrepAttributes
         };
 
         console.log("Send: " + JSON.stringify(data));
@@ -250,6 +264,14 @@ function protocolController ($scope, $rootScope, $http, $q) {
         .then ( function (result) {
             console.log("Step Saved");
             console.log(JSON.stringify(result));
+            if ($scope.stepNumber < $scope.steps) {
+                console.log('completed... go to next step');
+                $scope.forward()
+            }
+            else {
+                console.log('completed... done');
+                $scope['status'] = 'Completed';
+            }
 
             if (action == 'Debug') {
                 $scope.errMsg = JSON.stringify(result,null,4);
@@ -272,6 +294,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
 
     $scope.repeat = function repeat () {
         // go back one step (if allowed)
+        $scope.back();
     }
 
     $scope.reload = function reload () {
@@ -287,6 +310,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
         $scope.Show = {};
         $scope.Default = {};
         $scope.Format = {};
+        $scope.comments = '';
 
         console.log("parse input for next step... ");
         var Attributes = { Plate : [], Prep : [] };
