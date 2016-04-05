@@ -8,23 +8,26 @@ block content
     - var config = { steps : Steps, samples: Samples, attributes: attributes};
     - var init = "initialize(" + JSON.stringify(config) + ")";
 
-    - flds = fields || []; // ['FK_Equipment__ID', 'FK_Solution__ID', 'Solution_Qty', 'Solution_Qty_Units', 'Transfer_Qty', 'Transfer_Qty_Units', 'Thaw_Time', 'Prep_Comments'];
+    - flds = fields || []; 
     - units = { 'solution_qty' : 'solution_qty_units', 'transfer_qty' : 'transfer_qty_units'};
     - aliases = { 'equipment' : 'Equip', 'solution' : 'Sol' }
     - attributes = attributes || {}; // {'Thaw_Time' : 'integer' }
 
     hr
     div(ng-app='myApp')
-      
       div(ng-controller="CommonController")
         div(ng-controller='ProtocolController' ng-init="#{init}" ngcloak)
+          
           h5 Active Samples: {{N}} x Matrix Data Tubes
             div.navbar.navbar-right 
               b {{user}} &nbsp;
               span {{ timestamp }}
           hr
 
-          div.alert.alert-info
+          div(ng-show="status=='Completed'")
+            h2 Protocol Completed
+
+          div.alert.alert-info(ng-if="status != 'Completed'")
             h3 {{Step.name}} &nbsp; 
               span.navbar-right
                 span(ng-show="Step.instructions")
@@ -37,7 +40,7 @@ block content
 
           hr
            
-          form.form-horizontal(role="form" data-toggle="validator" method='post' action="/completed-step")
+          form.form-horizontal(role="form" data-toggle="validator" method='post' action="/completed-step" ng-if="status != 'Completed'")
             div(ng-show='errMsg')
               div.col-sm-2 &nbsp;
               div.col-sm-10
@@ -149,18 +152,24 @@ block content
             each att in attributes
               - id = att.model + '-' + att.name
               - name = att.name
+              - type = att.type
+
               if ! prompted[name]
                 div(ng-show="Show['#{att.name}']") 
-                  div.form-group
-                    div.col-sm-2                   
-                      b #{att.name}
-                    div.col-sm-10
-                      if (att.model == 'Prep')
-                        input.form-control(type='text' pattern=".*" placeholder = "Enter Prep " + alias id='#{att.name}' ng-model='#{att.name}' default='' force=1)
-                      else 
-                        // Enable Split Mode 
-                        input.form-control(type='text' ng-blur="splitField('#{att.name}')" pattern=".*" maxlength="15" placeholder = "Enter " + alias + ' (x N)' id='#{att.name}' ng-model='#{att.name}' default='' force=1)
-                - prompted[att.name] = 1                 
+                  if (att.type == 'Count')
+                    input(type='hidden' ng-model='#{att.name}' id='#{att.name}')
+                  else
+                    div.form-group
+                      div.col-sm-2                   
+                        b #{att.name}
+                        input(type='hidden' name="#{att.name}-id" value="#{att.id}")
+                      div.col-sm-10
+                        if (att.model == 'Prep')
+                          input.form-control(type='text' pattern=".*" placeholder = "Enter Prep " + alias id='#{att.name}' ng-model='#{att.name}' default='' force=1)
+                        else 
+                          // Enable Split Mode 
+                          input.form-control(type='text' ng-blur="splitField('#{att.name}')" pattern=".*" maxlength="15" placeholder = "Enter " + alias + ' (x N)' id='#{att.name}' ng-model='#{att.name}' default='' force=1)
+                  - prompted[att.name] = 1                 
 
             // Resume remaining fields after attributes ... 
             each field in flds
