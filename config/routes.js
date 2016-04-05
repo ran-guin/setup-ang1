@@ -51,7 +51,10 @@ module.exports.routes = {
 
   // User enrollment + authentication
   'POST /signup': 'UserController.signup',
+
   'GET /login': 'UserController.login',
+  'POST /login': 'UserController.login',
+
   'GET /logout': 'UserController.logout',
 
   'GET /demo' : 'MainController.showDemoPage',
