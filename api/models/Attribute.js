@@ -131,5 +131,52 @@ module.exports = {
 
 		return deferred.promise;		
 	},
+
+
+	'save' : function ( model, ids, data ) {
+		var deferred = q.defer();
+
+		var attModel = model + '_Attribute';   // Legacy
+
+		console.log('SA att: ' + JSON.stringify(data));
+		if (! data || data == 'undefined' || Object.keys(data) == 'undefined') {
+			console.log('no data...');
+			deferred.resolve({});
+		}
+		else {
+			var atts = Object.keys(data);
+			console.log("KEYS: " + JSON.stringify(atts));
+			console.log("IDS: " + JSON.stringify(ids));
+
+			var add = [];
+
+			for (var i=0; i<atts.length; i++) {
+				for (var j=0; j<ids.length; j++) {
+					var insertData = { 
+						'FK_Attribute__ID' : atts[i], 
+						//'Attribute_Value' : data[atts[i]],
+					};
+					insertData['Attribute_Value'] = data[atts[i]];					
+					insertData['FK_' + model + '__ID'] = ids[j];
+
+					add.push(insertData);
+				}
+			}
+
+			console.log(model + " Att data: " + JSON.stringify(add));
+
+			Record.createNew(attModel, add )
+			.then (function (AttResult) {
+				console.log("Added Attribute: " + JSON.stringify(AttResult));
+				deferred.resolve(AttResult);
+			})
+			.catch ( function (err) {
+				deferred.reject("Error saving attributes: " + err);
+			});
+		}
+
+		return deferred.promise;
+	},
+
 };
 
