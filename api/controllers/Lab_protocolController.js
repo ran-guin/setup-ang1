@@ -5,14 +5,15 @@
  * @help        :: See http://sailsjs.org/#!/documentation/concepts/Controllers
  */
 
-var express = require('express');
-var app = express();
-var bodyParser = require('body-parser');
-
+/*
 app.use( bodyParser.json() );       // to support JSON-encoded bodies
 app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
   extended: true
 })); 
+*/
+
+var bodyParser = require('body-parser');
+var q = require('q');
 
 module.exports = {
 
@@ -49,8 +50,6 @@ module.exports = {
 		var demo = req.param('demo') || 1;
 
 		var q = "SELECT * FROM lab_protocol";
-
-	    console.log("QUERY: " + q + ':' + barcode);
 
 	    Record.query(q, function (err, result) {
 	    	if (err) {
@@ -149,23 +148,25 @@ module.exports = {
 	},	
 
 	/** return data on success **/
-	'complete' : function (req, res) {
-		console.log("COMPLETED STEP");
-		var data = req.body;
+	'savePrep' : function (data) {
+		console.log("savePrep");
 
 		var action = '';
 		if (data && data['Prep'] && data['Prep']['Prep_Action']) {
 			action = data['Prep']['Prep_Action'];
 		} 
 
+		var deferred = q.defer();
+
 		console.log("Complete Prep: " + action);
 		if (action == 'Debug') {
 			console.log("Form Data:");
 			console.log(data);
-			return res.send('Debug only - nothing saved');
+			//return res.send('Debug only - nothing saved');
+			deferred.reject("Debug only - nothing saved");
 		}
 		
-		if (data && data['Prep']) {
+		else if (data && data['Prep']) {
 			console.log("Send Prep data: " + JSON.stringify(data['Prep']));
 
 			Record.createNew('Prep', data['Prep'] )
@@ -180,14 +181,15 @@ module.exports = {
 				}
 				data['Plate']['FK_Prep__ID'] = ids; 
 
-
 				console.log("Send Plate data: " + JSON.stringify(data['Plate']));
 
 				Record.createNew('Plate_Prep', data['Plate'] )
 				.then (function (PlatePrepResult) {				
 					console.log("Added Plate_Prep: " + JSON.stringify(PlatePrepResult));
 					console.log('transfer if necessary....');
-					return res.send(PrepResult);
+					
+					deferred.resolve({ Prep: PrepResult, Plate_Prep: PlatePrepResult});
+					//return res.send(PrepResult);
 					/*
 					Container.xfer_if_required( PrepResult, PlateResult )
 					.exec (function (err, xferResult) {
@@ -199,18 +201,59 @@ module.exports = {
 						*/
 				})
 				.catch (function (err) {
-					return res.send("ERROR creating Plate record: " + err)
+					deferred.reject("Error creating Plate record: " + err);
+					//return res.send("ERROR creating Plate record: " + err)
 				})
 			})
 			.catch ( function (err) {
-				return res.send("ERROR creating Prep record: " + err);				
+				deferred.reject("Error creating Prep record: " + err);
+				//return res.send("ERROR creating Prep record: " + err);				
 			});
 		}
 		else {
 			console.log("Prep Data");
-			return res.send('no data');
+			deferred.reject("No data");
+			//return res.send('no data');
 		}
 
+		return deferred.promise;
+
+	},
+
+	'complete' : function (req, res) {
+		var data = req.body;
+		console.log("COMPLETE ALL STEPS: " + JSON.stringify(data));
+
+		var plate_ids = [1,2];
+
+		this.savePrep(data)
+		.then ( function (PrepResult) {
+
+			var promises = [];
+			console.log("Added Single Prep: " + JSON.stringify(PrepResult));
+
+			var prep_id = [ PrepResult.Prep.insertId ];
+			console.log("Prep IDS: " + JSON.stringify(prep_id));
+
+			promises.push( Attribute.save('Plate', plate_ids, data["Plate_Attribute"]) );
+			promises.push( Attribute.save( 'Prep', prep_id, data["Prep_Attribute"]) );
+			promises.push( Container.saveLastPrep(plate_ids, prep_id[0]) );
+
+			q.all( promises )
+			.then ( function (Qdata) {
+				console.log("ALL PROMISES: " + JSON.stringify(Qdata));
+				res.send(Qdata);
+			})
+			.catch ( function (Qerr) {
+				console.log("Error completing all actions: " + Qerr);
+				res.send(Qerr);
+			});
+		})
+		.catch (function (err) {
+			console.log("Error saving completed Prep Record: " + err);
+			res.send(err);
+		});
+		//.push( this.savePrep(data) );
 	},
 
 	'define' : function (req, res) { 

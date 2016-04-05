@@ -5,6 +5,20 @@
  * @help        :: See http://sailsjs.org/#!/documentation/concepts/Controllers
  */
 
+/*
+var express = require('express');
+var app = express();
+var bodyParser = require('body-parser');
+var q = require('q');
+
+app.use( bodyParser.json() );       // to support JSON-encoded bodies
+app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
+  extended: true
+})); 
+*/
+
+var bodyParser = require('body-parser');
+
 module.exports = {
   /**
    * Check the provided email address and password, and if they
@@ -13,18 +27,18 @@ module.exports = {
 
 
   dashboard: function (req, res) {
-    var id = req.param('id')
-    
+    var id = req.param('id') || req.body.id;
+     
     console.log('sess: ' + JSON.stringify(req.session));
     console.log('params : ' + JSON.stringify(req.session.params));
 
     if (req.session && req.session.params  && req.session.params) {
       var page = req.session.params.defaultPage || 'homepage';
-      res.render('user/User', req.session.params );
+      res.render('customize/User', req.session.params );
     }
     else if (req.payload && req.payload.user) {
         var user_id = req.payload.user;
-        res.render('user/User', req.payload);
+        res.render('customize/User', req.payload);
     }
     else {
       console.log("No user defined ... default to public homepage");
@@ -33,42 +47,52 @@ module.exports = {
   },
 
   login: function (req, res) {
-  
+
+    console.log("BODY: " + JSON.stringify(req.body));
+    
+    var user = req.body.user || req.body.email || req.param('user');
+    var pwd = req.body.password || req.param('password');
+
+    console.log('attempt login by ' + user);
+
     var Passwords = require('machinepack-passwords');
 
     // Try to look up user using the provided email address
     User.findOne({
-      email: req.param('email')
+      email: user
     }, function foundUser(err, user) {
       if (err) return res.negotiate(err);
       if (!user) return res.notFound();
 
       // Compare password attempt from the form params to the encrypted password
       // from the database (`user.password`)
-        Passwords.checkPassword({
-        passwordAttempt: req.param('password'),
+      console.log("confirming password...");
+      Passwords.checkPassword({
+        passwordAttempt: pwd,
         encryptedPassword: user.encryptedPassword
       }).exec({
 
         error: function (err){
+          console.log("error: " + err);
           return res.negotiate(err);
         },
 
         // If the password from the form params doesn't checkout w/ the encrypted
         // password from the database...
-        incorrect: function (){
-          return res.notFound();
+        incorrect: function () {
+          console.log("incorrect password");
+          return res.render("customize/public_login", {error: "Incorrect user/password... try again..." });
         },
 
         success: function (){
-
+          console.log("access granted");
           var payload = User.payload(user.id, 'Login Access (TBD)');
           
           if ( req.param('Debug') ) { payload['Debug'] = true; }
 
           payload['token'] = jwToken.issueToken(payload); 
           
-          return res.render('user/User', payload);
+          return res.render('customize/private_home', payload);
         }
       });
     });
@@ -80,13 +104,19 @@ module.exports = {
    */
   signup: function(req, res) {
 
+    var email = req.body.user || req.body.email;
+    var user = req.body.user || email;
+
+    var pwd = req.body.password;
+    var pwd2 = req.body.confirm_password;
+
     console.log('signup...');
     var Passwords = require('machinepack-passwords');
     var Gravatar = require('machinepack-gravatar');
 
     // Encrypt a string using the BCrypt algorithm.
     Passwords.encryptPassword({
-      password: req.param('password'),
+      password: pwd,
       difficulty: 10,
     }).exec({
       // An unexpected error occurred.
@@ -97,7 +127,7 @@ module.exports = {
       success: function(encryptedPassword) {
         console.log('ok...');
         Gravatar.getImageUrl({
-          emailAddress: req.param('email')
+          emailAddress: email
         }).exec({
           error: function(err) {
             return res.negotiate(err);
@@ -105,11 +135,11 @@ module.exports = {
           success: function(gravatarUrl) {
           // Create a User with the params sent from
           // the sign-up form --> signup.jade
-            console.log("Create user : " + req.param('name'));
+            console.log("Create user : " + user);
 
             User.create({
-              name: req.param('name'),
-              email: req.param('email'),
+              name: user,
+              email: email,
               encryptedPassword: encryptedPassword,
               lastLoggedIn: new Date(),
               gravatarUrl: gravatarUrl,
@@ -143,7 +173,7 @@ module.exports = {
               
               req.session.token = token;
               
-              return res.json(200, { user: req.param('name'), token: token });
+              return res.json(200, { user: user, token: token });
 
             });
           }
