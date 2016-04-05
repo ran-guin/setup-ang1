@@ -1,0 +1,18 @@
+form(role='form' method='post' action="/login")
+  .form-group
+    label(for='usrname')
+      i.fa.fa-user
+      |  Username
+    input#email.form-control(name='email' type='text', placeholder='Enter email')
+  .form-group
+    label(for='psw')
+      i.fa.fa-eye
+      |  Password
+    input#password.form-control(name='password' type='password', placeholder='Enter password')
+  .checkbox
+    label
+      input(type='checkbox', name='remember' value='', checked='')
+      | Remember me
+  button.btn.btn-default.btn-success.btn-block(type='submit')
+    fa.fa.fa-power-off
+    |  Login  

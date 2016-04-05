@@ -1,10 +1,14 @@
-title BC Generations
+title BC Generationsff
 link(rel='shortcut icon' href='/images/lims/BCG-32x32.png' id='favicon')
 .header(style='background-color:#344')
 	h2(style='color:#ddd') BC Generations
 		div.navbar-right
 			a(href='#' onclick="return false;" data-toggle='modal' data-target='#LoginModal')
-				//data-toggle="popover" data-trigger="focus" data-placement='left' title="Logged In; username" data-content="<a href='#'>Logout</a>hr<a href='#'>Login</a>")
 				button.btn.btn-success(type='button') Sign In
+			span &nbsp;
+			a(href='#' onclick="return false;" data-toggle='modal' data-target='#SignUp')
+				button.btn.btn-danger(type='button') Register
 
 include LoginModal.jade
+
+include SignUp.jade
