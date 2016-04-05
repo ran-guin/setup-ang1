@@ -9,31 +9,14 @@
             i.fa.fa-lock.fa
             |  &nbsp; Login
         .modal-body
-          form(role='form')
-            .form-group
-              label(for='usrname')
-                i.fa.fa-user
-                |  Username
-              input#usrname.form-control(type='text', placeholder='Enter email')
-            .form-group
-              label(for='psw')
-                i.fa.fa-eye
-                |  Password
-              input#psw.form-control(type='text', placeholder='Enter password')
-            .checkbox
-              label
-                input(type='checkbox', value='', checked='')
-                | Remember me
-            button.btn.btn-default.btn-success.btn-block(type='submit')
-              fa.fa.fa-power-off
-              |  Login
+          include LoginForm.jade
         .modal-footer
           button.btn.btn-default.btn-danger.pull-left(type='submit', data-dismiss='modal')
             i.fa.fa-remove
             |  Cancel
           p
             | Not a member? 
-            a(href='#' onclick="return false;" data-dismiss='modal' data-toggle='modal' data-target='#SignUp') Sign Up
+            a(href='#' onclick="return false;" data-dismiss='modal' data-toggle='modal' data-target='#SignUp') Register
           p
             | Forgot 
             a(href='#') Password?

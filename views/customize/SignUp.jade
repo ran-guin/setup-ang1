@@ -9,22 +9,22 @@
             i.fa.fa-lock.fa
             |  &nbsp; Register
         .modal-body
-          form(role='form')
+          form(role='form' method='post' action="/signup")
             .form-group
-              label(for='usrname')
+              label(for='user')
                 i.fa.fa-user
-                |  Username
-              input#usrname.form-control(type='text', placeholder='Enter email')
+                |  Email
+              input#email.form-control(name='email' type='text', placeholder='Enter email')
             .form-group
-              label(for='psw')
+              label(for='pwd')
                 i.fa.fa-eye
                 |  Password
-              input#pwd.form-control(type='text', placeholder='Enter password')
+              input#pwd.form-control(name='password' type='password', placeholder='Enter password')
             .form-group
-              label(for='psw')
+              label(for='pwd2')
                 i.fa.fa-eye
                 |  Confirm Password
-              input#pwd2.form-control(type='text', placeholder='Confirm password')                
+              input#pwd2.form-control(name='confirm_password' type='password', placeholder='Confirm password')                
             button.btn.btn-default.btn-success.btn-block(type='submit')
               fa.fa.fa-power-off
               |  Submit
