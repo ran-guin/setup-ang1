@@ -142,15 +142,6 @@ module.exports = {
 		var list = [];
 		for (i=0; i<query_result.length; i++) {
 			var input = query_result[i]['input'].split(':');
-
-			/*
-			for (j=0; j<input.length; j++) {
-				var att1 = input[j].replace('Plate_Attribute=','');
-				var att2 = input[j].replace('Prep_Attribute=','');
-				if (att1 != input[j]) { Plate_attributes.push(att1) }
-				else if (att2 != input[j]) { Prep_attributes.push(att2) }
-			}
-			*/
 			list = _.union(list, input);
 		}
 
@@ -158,6 +149,7 @@ module.exports = {
 		var ordered = ['transfer_qty','Split','solution','solution_qty','equipment'];
 		var last    = ['location','comments'];
 		var orderedList = [];
+		var attributeList = [];
 		// reorder list in standard order for normal input //
 
 		var Included = {};
@@ -175,6 +167,7 @@ module.exports = {
 				console.log('moving to back: ' + list[i]);
 			}
 			else {
+				attributeList.push(list[i]);
 				orderedList.push(list[i]);
 			}
 		}
@@ -187,10 +180,10 @@ module.exports = {
 		}
 
 		console.log("Reordered List: " + orderedList.join(', '));
-
-		var fields = "Attribute_Class as model, Attribute_Name as name, Attribute_Type as type, Attribute_Format as format"; // legacy 
-		var query = 'SELECT ' + fields + " FROM Attribute WHERE Attribute_Name IN ('" 
-			+ list.join("','")
+		// Legacy fields specified //
+		var fields = "Attribute_ID as id, Attribute_Class as model, Attribute_Name as name, Attribute_Type as type, Attribute_Format as format"; // legacy 
+		var query = 'SELECT ' + fields + " FROM Attribute WHERE Attribute_Class IN ('Plate','Prep') AND Attribute_Name IN ('" 
+			+ attributeList.join("','")
 			+ "')";
 
 		console.log("SQL: " + query);
