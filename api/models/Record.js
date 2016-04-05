@@ -139,11 +139,14 @@ module.exports = {
 		return deferred.promise;
 
 	},
+
 	createNew : function (table, Tdata, resetData) {
 		// Bypass waterline create method to enable insertion into models in non-standard format //
 		var deferred = q.defer();
 		console.log("create new record(s) in " + table + ": " + JSON.stringify(Tdata));
 
+		if (Tdata == 'undefined') { deferred.reject('no data'); return deferred.promise }
+		
 		console.log('type: ' + typeof Tdata.length);
 		//var F = [];
 		var dtype = typeof Tdata.length;
@@ -155,10 +158,26 @@ module.exports = {
 		var fields = Object.keys(data[0]);
 
 		var Values = [];
+		var onDuplicate = '';
+
 		for (var index=0; index<data.length; index++) {
 			var Vi = [];
 			for (var f=0; f<fields.length; f++) {
 				var value = data[index][fields[f]];
+
+				if (typeof value == 'number') { value = value.toString() }
+
+				console.log("check " + value);
+				if (value.match(/^<user>$/i)) {
+					value = 7;
+				}
+				else if (value.match(/^<increment>$/i)) {
+					value = 1;
+					onDuplicate = " ON DUPLICATE KEY UPDATE " + fields[f] + "=" + fields[f] + " + 1";
+				}
+				else if (value.match(/^<now>$/i)) {
+					value = '2016-01-01'; 
+				}
 
 				if (resetData && resetData[fields[f]]) {
 					var resetValue = resetData[fields[f]];
@@ -184,7 +203,7 @@ module.exports = {
 			Values.push( "(" + Vi.join(", ") + ")");
 		}
 
-		var createString = "INSERT INTO " + table + " (" + fields.join(',') + ") VALUES " + Values.join(', ')
+		var createString = "INSERT INTO " + table + " (" + fields.join(',') + ") VALUES " + Values.join(', ') + onDuplicate;
 		console.log("INSERT STRING: " + createString);
 
 		Record.query(createString, function (err, result) {
