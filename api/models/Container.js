@@ -28,6 +28,25 @@ module.exports = {
 		return field;  // return null if no alias defined... 
 	},
 
+	saveLastPrep : function (plates, prep_id) {
+		var deferred = q.defer();
+		
+		var list = plates.join(',');
+		
+		var query = "UPDATE Plate SET FKLast_Prep__ID = "
+			+ prep_id + " WHERE Plate_ID IN (" + list + ")";
+			
+		Record.query( query, function (err, result) {	
+			if (err) { deferred.reject("Error updating last prep id: " + err) }
+			else {
+				console.log("set last prep id to " + prep_id + ' for ' + list);
+				deferred.resolve(result);
+			}
+		});
+
+		return deferred.promise;
+	},
+
 	loadData : function (ids) {
 
 		var id_list;
