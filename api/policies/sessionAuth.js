@@ -12,6 +12,8 @@ module.exports = function(req, res, next) {
   // User is allowed, proceed to the next policy, 
   // or if this is the last policy, the controller
   if (req.session.authenticated) {
+    console.log("session authenticated");
+    console.log("Payload: " + JSON.stringify(req.session.payload));
     return next();
   }
   else {
@@ -19,7 +21,7 @@ module.exports = function(req, res, next) {
         var requireLoginError = [{name: 'requireLogin', message: "you must be signed in"}];
           req.session.flash = { err: requireLoginError };
         
-        console.log('authentication required');
+        console.log('session authentication required');
 
         res.redirect('/session/new');
         return;

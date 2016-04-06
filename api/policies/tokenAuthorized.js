@@ -8,6 +8,7 @@
 module.exports = function (req, res, next) {
   var token;
 
+  console.log("authorize token ... ");
   if (req.headers) {
     console.log('HEADER: ' + JSON.stringify(req.headers) );
   }
@@ -29,15 +30,23 @@ module.exports = function (req, res, next) {
     } else {
       return res.json(401, {err: 'Format is authorization: Bearer [token]'});
     }
-  } else if (req.headers && req.headers['x-access-token']) {
+  } 
+  else if (req.headers && req.headers['x-access-token']) {
+    console.log("got x-access token...");
     token = req.headers['x-access-token'];
   }
   else if (req.param('token')) {
+    console.log("got token...");
     token = req.param('token');
     
     // We delete the token from param to not mess with blueprints
     delete req.query.token;
-  } else {
+  }
+  else if ( req.token ) {
+    console.log("FOUND TOKEN: " + req.token);
+    console.log("FOUND PAYLOAD: " + req.payload);
+  } 
+  else {
     return res.json(401, {err: 'No Authorization header was found'});
   }
 
