@@ -28,7 +28,7 @@ module.exports = {
 
   dashboard: function (req, res) {
     var id = req.param('id') || req.body.id;
-     
+    
     console.log('sess: ' + JSON.stringify(req.session));
     console.log('params : ' + JSON.stringify(req.session.params));
 
@@ -40,9 +40,13 @@ module.exports = {
         var user_id = req.payload.user;
         res.render('customize/User', req.payload);
     }
+    else if (req.session && req.session.payload && req.session.payload.user) {
+      var user_id = req.session.payload.user;
+      res.render('customize/User', req.session.payload)
+    }
     else {
       console.log("No user defined ... default to public homepage");
-      res.render('public', {message: "No user defined ... default to public homepage"});
+      res.render('customize/public_home', {message: "No user defined ... default to public homepage"});
     }
   },
 
@@ -86,12 +90,20 @@ module.exports = {
 
         success: function (){
           console.log("access granted");
-          var payload = User.payload(user.id, 'Login Access (TBD)');
+          var payload = User.payload(user, 'Login Access (TBD)');
           
           if ( req.param('Debug') ) { payload['Debug'] = true; }
 
+          // session authorization
+          req.session.authenticated = true;
+          req.session.payload = payload;
+
+          // token authorization 
           payload['token'] = jwToken.issueToken(payload); 
-          
+          req.headers.authorization = "Bearer [" + payload['token'] + ']';
+
+          sails.config.payload = payload;
+
           return res.render('customize/private_home', payload);
         }
       });
