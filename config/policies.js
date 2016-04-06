@@ -53,6 +53,7 @@ module.exports.policies = {
       'create' : true,
       'login'  : true,
       'signup' : true,
+	 'dashboard'	: "sessionAuth",	
 //      '*' : "sessionAuth"
   },
   
@@ -62,7 +63,7 @@ module.exports.policies = {
       'save' : true,
   },
 
-  '*' : true,
+  '*' : ['sessionAuth'],
 
 //  '*': ['tokenAuthorized'],
 
