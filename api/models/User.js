@@ -43,6 +43,11 @@ module.exports = {
       type: 'string'
     },
 
+    member_of : {
+      collection: 'grp',
+      via: 'member'
+    },
+
     beforeCreate: function(values, next) {
         // ensure pwd matches confirmation pwd 
         if (!values.password || values.password != values.confirmation) {

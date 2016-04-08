@@ -6,8 +6,8 @@
 */
 
 module.exports = {
-	tableName : 'Employee',
-	
+
+/*	
   attributes: {
  		Employee_ID : { type : 'integer' },
 		Employee_Name : { type : 'string' },
@@ -23,5 +23,7 @@ module.exports = {
 		Machine_Name : { type : 'string' },
 		FK_Department__ID : { type : 'integer' },
 	}
+*/
+	
 };
 

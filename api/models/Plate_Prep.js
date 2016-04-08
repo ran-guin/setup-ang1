@@ -6,7 +6,7 @@
  */
 
 module.exports = {
-
+/*
   attributes: {
   	FK_Plate__ID : { model : 'plate' },
   	FK_Prep__ID : { model : 'prep' },
@@ -24,5 +24,6 @@ module.exports = {
   		enum : ['pl','nl','ul','ml','l','g','mg','ug','ng','pg'],
   	},
   }
+*/
 };
 
