@@ -147,6 +147,15 @@ module.exports = {
 
 	},	
 
+	'isTransfer' : function ( name ) {
+		// Determine if a protocol step is a transfer step according to name format 
+		if ( name.match(/^Transfer (.+) (in|out|) to (.+)/) ) {
+			console.log("Matches: " + JSON.stringify(matches));
+		}
+
+	},
+
+
 	/** return data on success **/
 	'savePrep' : function (data) {
 		console.log("savePrep");
@@ -238,6 +247,14 @@ module.exports = {
 			promises.push( Attribute.save('Plate', plate_ids, data["Plate_Attribute"]) );
 			promises.push( Attribute.save( 'Prep', prep_id, data["Prep_Attribute"]) );
 			promises.push( Container.saveLastPrep(plate_ids, prep_id[0]) );
+
+			var prepName = data['Prep']['Prep_Name'];
+			console.log("Test " + prepName);
+			var $test = scope.isTransfer(prepName);
+
+			if ($test) { 
+				promises.push( Container.transfer(transfer));
+			}
 
 			q.all( promises )
 			.then ( function (Qdata) {

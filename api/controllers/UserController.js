@@ -54,23 +54,27 @@ module.exports = {
 
     console.log("BODY: " + JSON.stringify(req.body));
     
-    var user = req.body.user || req.body.email || req.param('user');
+    var tryuser = req.body.user || req.body.email || req.param('user');
     var pwd = req.body.password || req.param('password');
 
-    console.log('attempt login by ' + user);
+    console.log('attempt login by ' + tryuser);
 
     var Passwords = require('machinepack-passwords');
 
     // Try to look up user using the provided email address
     User.findOne({
-      email: user
+      email: tryuser
     }, function foundUser(err, user) {
+
       if (err) return res.negotiate(err);
-      if (!user) return res.notFound();
+
+      if (!user || (user == 'undefined') ) { 
+        return res.render("customize/public_login", {error: "Unrecognized user: '" + tryuser + "'", email: tryuser });
+      }
 
       // Compare password attempt from the form params to the encrypted password
       // from the database (`user.password`)
-      console.log("confirming password...");
+      console.log("Confirming password for " + JSON.stringify(user));
       Passwords.checkPassword({
         passwordAttempt: pwd,
         encryptedPassword: user.encryptedPassword
@@ -109,6 +113,10 @@ module.exports = {
       });
     });
 
+  },
+
+  home : function (req, res) {
+    return res.render('customize/private_home', req.session.payload);
   },
 
   /**
@@ -185,7 +193,8 @@ module.exports = {
               
               req.session.token = token;
               
-              return res.json(200, { user: user, token: token });
+              return res.render('customize/public_home', { message : "Registered.  Access pending approval by administrator" })
+              //return res.json(200, { user: user, token: token });
 
             });
           }

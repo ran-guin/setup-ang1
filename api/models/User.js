@@ -43,9 +43,9 @@ module.exports = {
       type: 'string'
     },
 
-    member_of : {
+    groups : {
       collection: 'grp',
-      via: 'member'
+      via: 'members'
     },
 
     beforeCreate: function(values, next) {

@@ -25,35 +25,6 @@ module.exports = {
 			type : 'boolean',
 			defaultsTo : 'false'
 		},
-
-		/*
-		Lab_Protocol_Name : { type : 'string' },
-
-		FK_Employee__ID : { model : 'Employee' },
-
-		Lab_Protocol_Status : { 
-			type: 'enum',
-			enum : ['Active','Archived','Under Development'],
-		},
-
-		Lab_Protocol_Description : { type : 'string'},
-		Lab_Protocol_ID : { type : 'integer' },
-		Lab_Protocol_VersionDate : { type : 'date' },
-
-		Max_Tracking_Size : {
-			type : 'enum',
-			enum : ['384','96','1'],
-			defaultsTo: '1',
-			required: true,
-		},
-
-		Repeatable : {
-			type: 'enum',
-			enum: ['Yes','No'],
-			defaultsTo: 'Yes',
-			required: false,
-		},
-	*/
 	},
 
 	list : function (input) {
@@ -62,8 +33,10 @@ module.exports = {
 
 		var ids = input['Plate'];
 		
-		var q = "SELECT * FROM Lab_Protocol";
+		var q = "SELECT * FROM lab_protocol";
 	    Record.query(q, function (err, result) {
+			var Protocols = [];
+
 	    	if (err) {
 
 	    	    console.log("ASYNC Error in q post request: " + err);
@@ -71,20 +44,19 @@ module.exports = {
 
 				return res.negotiate(err);
      		}
-
-			if (!result) {
+			else if (!result) {
 					console.log('no results');
 					return res.send('');
 			}
 
-			var Protocols = [];
+			else {
+				console.log("Found " + result.length + " active Protocols");
 
-			console.log("Found " + result.length + " active Protocols");
-
-			for (var i=0; i<result.length; i++) {
-				var name = result[i]['Lab_Protocol_Name'];
-				var id   = result[i]['Lab_Protocol_ID'];
-				Protocols.push({id : id, name: name});
+				for (var i=0; i<result.length; i++) {
+					var name = result[i]['Lab_Protocol_Name'];
+					var id   = result[i]['Lab_Protocol_ID'];
+					Protocols.push({id : id, name: name});
+				}
 			}
 
 			return Protocols;
