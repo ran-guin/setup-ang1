@@ -220,18 +220,23 @@ block content
               div.col-sm-12
                 div.help-block.with-errors
 
-            button.btn.btn-danger(type='button' ng-click="complete('Debug')") View Form Input
-
             hr
 
             h3(ng-show="debug || 1") Debugging 
 
               hr
               button.btn.primary(type='button' ng-click="back()" ng-disabled='stepNumber <= 1') BACK
+
               span &nbsp;
               button.btn.btn-primary(type='button' ng-click="forward()" ng-disabled="stepNumber >= steps") FWD
+
               span &nbsp;
               button.btn.btn-success(type='button' ng-click="ngalert('fix')") update
+
+              span &nbsp;
+              button.btn.btn-danger(type='button' ng-click="complete('Debug')") View Form Input
+
+
               hr
 
               h5 Defaults: {{ Default }}
