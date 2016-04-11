@@ -62,18 +62,28 @@ module.exports = {
     var Passwords = require('machinepack-passwords');
 
     // Try to look up user using the provided email address
-    User.findOne({
-      email: tryuser
-    }, function foundUser(err, user) {
+    // User.findOne({
+
+      var query = "SELECT user.id, user.name, encryptedPassword, email, group_concat(distinct access) as access from user left join grp_members__user_groups ON user.id = user_groups LEFT JOIN grp ON grp_members=grp.id WHERE email ='" 
+        + tryuser 
+        + "'";
+
+      console.log("Q: " + query);
+      Record.query(query, function (err, results) {
+    //email: tryuser
+    //})
+    //.exec (function (err, results) { 
 
       if (err) return res.negotiate(err);
 
-      if (!user || (user == 'undefined') ) { 
+      if (!results || (results == 'undefined') ) { 
         return res.render("customize/public_login", {error: "Unrecognized user: '" + tryuser + "'", email: tryuser });
       }
+      var user = results[0];
 
       // Compare password attempt from the form params to the encrypted password
       // from the database (`user.password`)
+      console.log('Grps: ');
       console.log("Confirming password for " + JSON.stringify(user));
       Passwords.checkPassword({
         passwordAttempt: pwd,
@@ -93,8 +103,8 @@ module.exports = {
         },
 
         success: function (){
-          console.log("access granted");
-          var payload = User.payload(user, 'Login Access (TBD)');
+          console.log("access granted: ");
+          var payload = User.payload(user);
           
           if ( req.param('Debug') ) { payload['Debug'] = true; }
 
