@@ -61,6 +61,6 @@ module.exports.globals = {
 
 	// models: true
     
-  url : "http://limsdev06.bcgsc.ca/ovid",
+  url : "http://bcgpdev5/lims",
 
 };
