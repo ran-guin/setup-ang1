@@ -18,5 +18,14 @@ block content
     a(href='/Lab_protocol/list')
       button.btn.btn-primary Lab Protocols
 
+    hr
+
+    b Data Matrix File: &nbsp;
+    span(style='width:100%')
+      form(method = 'post' action="/uploadDataMatrix" enctype="multipart/form-data" style='display:inline-block') 
+        input(type = 'file' name='dataMatrix' style='display:inline-block')
+        span &nbsp; &nbsp; 
+        button.btn.btn-primary(type='submit') Load
+
   // If link section to the right include line below (and adjust Links.jade file as required) //
   //include Links
