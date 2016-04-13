@@ -5,8 +5,15 @@
  * @help        :: See http://sailsjs.org/#!/documentation/concepts/Controllers
  */
 
-var bodyParser = require('body-parser');
+//var bodyParser = require('body-parser');
 var q = require('q');
+
+//var XLSX = require('xlsx');
+//var express = require('express');
+//var app = express();
+//app.use(require('skipper')());
+
+var xlsx = require('node-xlsx');
 
 module.exports = {
 	
@@ -51,6 +58,55 @@ module.exports = {
 			return res.send("Error: " + err);
 		});
 	},
+
+	uploadDataMatrix : function (req, res) {
+		// Expects 8 rows of 12 columns (A1..H12) //
+	    res.setTimeout(0);
+
+	    req.file('dataMatrix')
+	    .upload({
+	    	maxBytes: 100000
+	    }, function (err, uploadedFiles) {
+			if (err) return res.serverError(err);
+			else if (uploadedFiles.length == 0) {
+				return res.json("No File Uploaded");
+			}
+			else {
+				// assume only one file for now, but may easily enable multiple files if required... 
+
+				var f = 0; // file index
+
+				var matrix = uploadedFiles[f].fd
+				var obj = xlsx.parse(matrix);
+
+				var f = 0;
+				var rows = obj[f].data.length;
+				var cols = obj[f].data[f].length;
+
+				columns = ['A','B','C','D','E','F','G','H'];
+
+				var map = {};
+				for (var i=1; i<=rows; i++) {
+					for (var j=0; j<cols; j++) {
+					
+						var posn =  columns[j];
+						//if (i<10) { posn = posn + '0' }
+						posn = posn + i.toString();
+
+						map[posn] = obj[f].data[i-1][j];
+					}
+
+				}
+
+					return res.json({
+				    files: uploadedFiles,
+				    textParams: req.allParams(),
+				    map: map,
+				    //workbook: workbook,
+				});
+	     	}
+	    });
+  	},
 
 	completeTransfer : function (req, res ) {
 		console.log("completing transfer");
