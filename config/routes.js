@@ -92,7 +92,8 @@ module.exports.routes = {
   * for configuration options and examples.                                  *
   *                                                                          *
   ***************************************************************************/
-  
+  'POST /uploadDataMatrix' : 'ContainerController.uploadDataMatrix',
+
   'GET /xfer' : 'ContainerController.transfer',
   'POST /xfer' : 'ContainerController.completeTransfer',
 
