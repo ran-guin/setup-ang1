@@ -66,7 +66,7 @@ module.exports = {
 
       var query = "SELECT user.id, user.name, encryptedPassword, email, group_concat(distinct access) as access from user left join grp_members__user_groups ON user.id = user_groups LEFT JOIN grp ON grp_members=grp.id WHERE email ='" 
         + tryuser 
-        + "'";
+        + "' GROUP BY user.id";
 
       console.log("Q: " + query);
       Record.query(query, function (err, results) {
