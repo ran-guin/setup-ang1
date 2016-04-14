@@ -1,11 +1,14 @@
-extends ./../core/privateLayout
+extends ./../customize/privateLayout
 block content
   div.container
     h2 #{action} '#{table}' Record
 
     - var debug = 0;
-    div.container()
-        div.container(ng-controller="FancyForm" style="background-color:#db9")
+
+    div(ng-app='myApp')
+        div.container(ng-controller="CommonController" style="background-color:#db9")
+
+            include ./../core/errorMsg.jade
             p &nbsp;
             form.form-horizontal(role='form' action='/record/save', method='POST')
 
@@ -48,7 +51,9 @@ block content
                                                             a(href='#' onclick='return false') #{j} : #{opt}
                                        
                                         else if type === 'lookup'
-                                            b lookup table ... 
+                                            b lookup table to #{fld} 
+                                            br
+                                            span.lookup(id='Lookup-lab_protocol' ng-init="loadLookup('lab_protocol')")
                                         
                                         else 
                                             input.col-md-10.form-control(id='#{fld}' ng-model=fld type=ngType default='#{defaultTo}')
