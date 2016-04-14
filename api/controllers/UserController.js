@@ -28,7 +28,7 @@ module.exports = {
 
   dashboard: function (req, res) {
     var id = req.param('id') || req.body.id;
-     
+    
     console.log('sess: ' + JSON.stringify(req.session));
     console.log('params : ' + JSON.stringify(req.session.params));
 
@@ -40,9 +40,13 @@ module.exports = {
         var user_id = req.payload.user;
         res.render('customize/User', req.payload);
     }
+    else if (req.session && req.session.payload && req.session.payload.user) {
+      var user_id = req.session.payload.user;
+      res.render('customize/User', req.session.payload)
+    }
     else {
       console.log("No user defined ... default to public homepage");
-      res.render('public', {message: "No user defined ... default to public homepage"});
+      res.render('customize/public_home', {message: "No user defined ... default to public homepage"});
     }
   },
 
@@ -50,23 +54,37 @@ module.exports = {
 
     console.log("BODY: " + JSON.stringify(req.body));
     
-    var user = req.body.user || req.body.email || req.param('user');
+    var tryuser = req.body.user || req.body.email || req.param('user');
     var pwd = req.body.password || req.param('password');
 
-    console.log('attempt login by ' + user);
+    console.log('attempt login by ' + tryuser);
 
     var Passwords = require('machinepack-passwords');
 
     // Try to look up user using the provided email address
-    User.findOne({
-      email: user
-    }, function foundUser(err, user) {
+    // User.findOne({
+
+      var query = "SELECT user.id, user.name, encryptedPassword, email, group_concat(distinct access) as access from user left join grp_members__user_groups ON user.id = user_groups LEFT JOIN grp ON grp_members=grp.id WHERE email ='" 
+        + tryuser 
+        + "'";
+
+      console.log("Q: " + query);
+      Record.query(query, function (err, results) {
+    //email: tryuser
+    //})
+    //.exec (function (err, results) { 
+
       if (err) return res.negotiate(err);
-      if (!user) return res.notFound();
+
+      if (!results || (results == 'undefined') ) { 
+        return res.render("customize/public_login", {error: "Unrecognized user: '" + tryuser + "'", email: tryuser });
+      }
+      var user = results[0];
 
       // Compare password attempt from the form params to the encrypted password
       // from the database (`user.password`)
-      console.log("confirming password...");
+      console.log('Grps: ');
+      console.log("Confirming password for " + JSON.stringify(user));
       Passwords.checkPassword({
         passwordAttempt: pwd,
         encryptedPassword: user.encryptedPassword
@@ -85,18 +103,30 @@ module.exports = {
         },
 
         success: function (){
-          console.log("access granted");
-          var payload = User.payload(user.id, 'Login Access (TBD)');
+          console.log("access granted: ");
+          var payload = User.payload(user);
           
           if ( req.param('Debug') ) { payload['Debug'] = true; }
 
+          // session authorization
+          req.session.authenticated = true;
+          req.session.payload = payload;
+
+          // token authorization 
           payload['token'] = jwToken.issueToken(payload); 
-          
+          req.headers.authorization = "Bearer [" + payload['token'] + ']';
+
+          sails.config.payload = payload;
+
           return res.render('customize/private_home', payload);
         }
       });
     });
 
+  },
+
+  home : function (req, res) {
+    return res.render('customize/private_home', req.session.payload);
   },
 
   /**
@@ -173,7 +203,8 @@ module.exports = {
               
               req.session.token = token;
               
-              return res.json(200, { user: user, token: token });
+              return res.render('customize/public_home', { message : "Registered.  Access pending approval by administrator" })
+              //return res.json(200, { user: user, token: token });
 
             });
           }

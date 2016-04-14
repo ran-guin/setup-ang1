@@ -6,10 +6,9 @@
  */
 
 module.exports = {
-	tableName : 'Plate',
 
-  attributes: {
-  	Plate_Comments : { type : 'string' }
-  }
+	  attributes: {
+	  		comments : { type : 'string' }
+	  }
 };
 

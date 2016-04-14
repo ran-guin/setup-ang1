@@ -53,6 +53,7 @@ module.exports.policies = {
       'create' : true,
       'login'  : true,
       'signup' : true,
+	 'dashboard'	: "sessionAuth",	
 //      '*' : "sessionAuth"
   },
   
@@ -62,14 +63,19 @@ module.exports.policies = {
       'save' : true,
   },
 
-  '*' : true,
-
 //  '*': ['tokenAuthorized'],
+  'remote_login' : {
+    'test' : true,
+    'validate' : true,
+  },
 
   // enable testing during development mode 
   test: {
       'test' : 'flash'
   },
+
+  //'*' : ['sessionAuth'],
+  '*' : true,
 
   /***************************************************************************
   *                                                                          *

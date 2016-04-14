@@ -35,7 +35,7 @@ module.exports.routes = {
   // Server-rendered HTML webpages
   ////////////////////////////////////////////////////////////
 
-  'GET /signup': {view: 'signup'},
+  'GET /signup': {view: 'customize/SignUp'},
 
   ////////////////////////////////////////////////////////////
   // JSON API
@@ -45,6 +45,8 @@ module.exports.routes = {
 
   '/public' : { view: 'customize/public'},
   '/contact' : { view: 'customize/ContactUs'},
+
+  '/about'   : { view: 'customize/About' },
 
   '/page1': { view: 'customize/Page1'},
   '/page2': { view: 'customize/Page2'},
@@ -64,14 +66,14 @@ module.exports.routes = {
 
   // Default User pages 
   'GET /user/dashboard/:id': 'UserController.dashboard',
-  'GET /user/:id': 'UserController.dashboard',
+  //'GET /user/:id': 'UserController.dashboard',  // reserve for waterline standard 
 
  'GET /api': 'QueryController.staff',
   'GET /api/q': 'QueryController.query',
   'POST /api/search': 'QueryController.search',
 
   'GET /': { view: 'customize/public' },
-  'GET /home': { view: 'customize/home' },
+  'GET /home': 'UserController.home',
 
   /* Generic Record control options */
   'GET /record/add/:model': 'RecordController.new',
@@ -82,6 +84,9 @@ module.exports.routes = {
   'GET /lookup/:table/:fields' : 'RecordController.lookup',
   'GET /lookup/:table' : 'RecordController.lookup',
   'GET /attribute/:model/:attribute' : 'AttributeController.prompt',
+
+  'POST /remote_login' : 'Remote_login.validate',
+  'POST /remote_login/test' : 'Remote_login.test',
 
   /***************************************************************************
   *                                                                          *

@@ -7,22 +7,5 @@
 
 module.exports = {
 
-  attributes: {
-  	FK_Plate__ID : { model : 'plate' },
-  	FK_Prep__ID : { model : 'prep' },
-  	//FK_Plate_Set__Number : { type : 'integer' },
-  	FK_Equipment__ID : { model : 'equipment' },
-  	FK_Solution__ID : { model : 'solution' },
-  	Transfer_Quantity : { type : 'float' },
-  	Transfer_Quantity_Units : { 
-  		type : 'string',
-  		enum : ['pl','nl','ul','ml','l','g','mg','ug','ng','pg'],
-  	},
-  	Solution_Quantity : { type : 'float' },
-  	Solution_Quantity_Units : { 
-  		type : 'string',
-  		enum : ['pl','nl','ul','ml','l','g','mg','ug','ng','pg'],
-  	},
-  }
 };
 

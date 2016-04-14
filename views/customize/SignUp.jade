@@ -14,7 +14,7 @@
               label(for='user')
                 i.fa.fa-user
                 |  Email
-              input#email.form-control(name='email' type='text', placeholder='Enter email')
+              input#email.form-control(name='email' type='text', placeholder='Enter Email' value="#{email}" force=1)
             .form-group
               label(for='pwd')
                 i.fa.fa-eye
@@ -27,7 +27,7 @@
               input#pwd2.form-control(name='confirm_password' type='password', placeholder='Confirm password')                
             button.btn.btn-default.btn-success.btn-block(type='submit')
               fa.fa.fa-power-off
-              |  Submit
+              |  Submit 
         .modal-footer
           button.btn.btn-default.btn-danger.pull-left(type='submit', data-dismiss='modal')
             i.fa.fa-remove

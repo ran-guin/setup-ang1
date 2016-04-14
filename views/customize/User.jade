@@ -1,5 +1,5 @@
-extends publicLayout
+extends privateLayout
 block content
 
   div.main.container
-    h2 User home page...
+    h2 #{ session.payload.user }

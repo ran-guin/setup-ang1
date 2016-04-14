@@ -1,0 +1,71 @@
+extends publicLayout
+block content
+  div.container
+    h1 Tasks Enabled via New Interface
+    ul
+      li 
+        h3 Identify Barcoded Samples
+        ul 
+          li Scan Plate/Tube Barcodes
+          li (continue to run lab protocols or transfer samples)
+
+      li 
+        h3 Run Lab Protocols
+        ul
+          li Scan Plate/Tube Barcodes
+          li Select Protocol
+          li Start Protocol
+            ul
+              li Supports new 'increment' type attribute (eg Thaw Count)
+              li Supports dynamic toggling between serial / parallel input mode
+              li Info link to instructions provided
+      li 
+        h3 Transfer/Aliquot Lab Samples
+        ul
+          li Scan Plate/Tube Barcodes
+          li Select Target Format
+          li Optionally specify:
+            ul
+              li Split x
+              li New Sample Type
+              li Serial / Parallel Distribution Strategy
+      li 
+        h3 Move Samples
+        ul
+          li Scan Plate/Tube Barcodes
+          li Scan Target Box
+          li Optionally select distribution options
+          li Confirm Sample Movement
+      li
+        h3 Use Data Matrix (pre-barcoded) Tubes
+        ul
+          li 
+            h3 Transfer samples into Data Matrix Tubes (optionally barcode DM rack)
+            ul
+              li Select Data Matrix format as transfer/aliquot target
+              li Upload Data Matrix file to equate DM rack with barcoded rack
+          li 
+            h3 Transfer sample out of Data Matrix Rack
+            ul
+              li Scan Data Matrix rack - or barcoded rack (Loc#) equivalent if available
+              li Perform standard transfer/aliquot as required
+          li 
+            h3 Confirm Sample Locations within Data Matrix Array
+            ul
+              li Upload Data Matrix File (using data matrix scanner)
+              li Scan Data Matrix Rack (Loc#)
+              li Observe/Confirm Contents (highlights potential conflict)  
+      li 
+        h3 Remote Login from other LIMS
+        span This enables users to seamlessly move back and forth between different LIMS interfaces, allowing process to flow smoothly between separate LIMS (which may support different functions)
+        ul
+          li Auto-login when directed FROM secured login from another LIMS
+          li Auto-login via return TO another LIMS 
+        span Example:
+        ul 
+          li redirect to new LIMS automatically when starting a lab protocol
+          li provide direct link to old LIMS following protocols or sample transfers.
+    h1 Administrative Features
+      h3 Manage Lab Protocols
+      h3 Manage User Accounts
+      h3 Receive/Barcode new Stock Items (eg Equipment / Reagents)

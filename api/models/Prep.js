@@ -7,18 +7,15 @@
 
 module.exports = {
 
-  tableName : 'Prep', 
-
   attributes: {
-  	Prep_Name : { type : 'string' },
-  	Prep_Comments : { type : 'string' },
-  	Prep_Action : { 
+  	name : { type : 'string' },
+  	comments : { type : 'string' },
+  	action : { 
   		type : 'string',
   		enum : ['Completed','Failed','Skipped'],
   	},
-  
-        FK_Employee__ID : { model : 'employee' },
-	FK_Lab_Protocol__ID : { model : 'lab_protocol' },
+    createdBy : { model : 'employee' },
+    Lab_protocol : { model : 'lab_protocol' },
   }
 };
 

@@ -6,11 +6,10 @@
  */
 
 module.exports = {
-
-	tableName : 'Plate_Format',
+	
   attributes: {
 	Plate_Format_ID : { type : 'integer' },
-	Plate_Format_Name : { type : 'string'},
+	Plate_Format_Type : { type : 'string'},
   }
 };
 

@@ -29,3 +29,11 @@ block content
 
   // If link section to the right include line below (and adjust Links.jade file as required) //
   //include Links
+
+    a(href="/user/dashboard/1" method='post')
+      button.btn.btn-primary Home
+
+    hr
+    
+    b session: #{JSON.stringify(session)}
+    br

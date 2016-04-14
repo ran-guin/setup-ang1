@@ -1,8 +1,12 @@
 title BC Generations
 link(rel='shortcut icon' href='/images/lims/BCG-32x32.png' id='favicon')
 .mini-header(style='background-color:#344')
-	h2(style='color:#ddd') BC Generations
+	h2(style='color:#ddd') 
+		a(href='customize/private_home')
+			i.fa.fa-home(style='color:#ddd') &nbsp; &nbsp; &nbsp;
+		span BC Generations
 		div.navbar-right
+			span #{session.payload.user} &nbsp; &nbsp;
 			a(href='#' onclick="return false;" data-toggle='modal' data-target='#userMenu')
 				//data-toggle="popover" data-trigger="focus" data-placement='left' title="Logged In; username" data-content="<a href='#'>Logout</a>hr<a href='#'>Login</a>")
 				i.fa.fa-bars(style='color:#ddd')

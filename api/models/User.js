@@ -43,6 +43,11 @@ module.exports = {
       type: 'string'
     },
 
+    groups : {
+      collection: 'grp',
+      via: 'members'
+    },
+
     beforeCreate: function(values, next) {
         // ensure pwd matches confirmation pwd 
         if (!values.password || values.password != values.confirmation) {
@@ -63,11 +68,11 @@ module.exports = {
     }
   },
 
-  payload : function (id, access) {
+  payload : function (user, access) {
       // generate standard payload 
       var url = sails.config.globals.url;
 
-      var payload = { user: id, access: access, url: url};
+      var payload = { user: user.name, userid: user.id, access: user.access, url: url};
       return payload;
   }
 
