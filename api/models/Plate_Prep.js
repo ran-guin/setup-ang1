@@ -7,5 +7,8 @@
 
 module.exports = {
 
+  migrate: 'safe',
+  tableName: 'Plate_Prep',
+
 };
 

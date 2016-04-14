@@ -7,6 +7,8 @@
 
 module.exports = {
 
+  viewFields : ['id','name','createdAt'],
+
   attributes: {
     // The user's full name
     // e.g. Nikola Tesla
