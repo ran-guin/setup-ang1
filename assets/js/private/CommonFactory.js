@@ -26,7 +26,7 @@ app.factory('CommonFactory', function($rootScope, $http){
                 var options = response;
                 
                 console.log("Loaded Lookup successfully: ");
-                console.log(JSON.stringify(options));
+                //console.log(JSON.stringify(options));
 
                 document.getElementById('Lookup-' + table ).innerHTML=response;
 

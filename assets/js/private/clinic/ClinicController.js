@@ -291,9 +291,8 @@ app.controller('ClinicController',
                 console.log(error);
             });
 
-            console.log("Reset duty to " + status);
-
-            console.log("Reset duty: " + JSON.stringify($scope.clinic.staff));
+            //console.log("Reset duty to " + status);
+            //console.log("Reset duty: " + JSON.stringify($scope.clinic.staff));
            
         }
     }
