@@ -7,6 +7,7 @@
 
 module.exports = {
 
+	migrate: 'safe',
 /*	
   attributes: {
  		Employee_ID : { type : 'integer' },

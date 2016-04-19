@@ -10,10 +10,12 @@ module.exports = {
   migrate: 'safe',
   tableName: 'Plate_Format',
 
+/*
   attributes: {
 	format : { type : 'string' },
 	wells : { type : 'integer' },
 	description : { type : 'string' }
   }
+  */
 };
 
