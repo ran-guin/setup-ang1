@@ -99,6 +99,8 @@ module.exports.routes = {
   ***************************************************************************/
   
   'GET /xfer' : 'ContainerController.transfer',
+  'POST /transfer' : 'ContainerController.transfer',
+  
   'POST /xfer' : 'ContainerController.completeTransfer',
 
   // Custom Pages 
