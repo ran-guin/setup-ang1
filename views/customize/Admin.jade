@@ -1,0 +1,39 @@
+extends privateLayout
+block content
+
+  - lookups = ['Plate_Format', 'Sample_Type'];
+
+  div.container
+    h2  Admin Page
+    hr
+                          
+    a(href='/Lab_protocols')
+      button.btn.btn-primary Manage Lab Protocols 
+
+    hr
+
+    div(ng-app='myApp')
+      div(ng-controller="CommonController")
+            
+        include ./../core/errorMsg.jade
+
+        form(role='form' method='post' action="/record/list" enctype='form-data')
+          input(type='hidden' name='test' value='testval')
+          span.dropdown(id='model')
+
+            //input.fill-id(type='hidden' id='model-id' name='model-id' value='0') 
+            input.fill-label(type='hidden' id='model-label' name='model-label' value='?') 
+
+
+            button.btn.btn-default.dropdown-toggle(type='button' data-toggle='dropdown' id = 'model' ng-model='model' name='model') DB Table &nbsp;
+                span.caret
+            ul.dropdown-menu
+              each model in lookups
+                li 
+                  a(href='#' ng-click="setField('table','#{model}')" onclick='return false;') #{model}
+          span &nbsp; &nbsp;
+          button.btn.btn-primary(type='submit') List
+          span &nbsp; &nbsp;
+
+    // If link section to the right include line below (and adjust Links.jade file as required) //
+      include Links
