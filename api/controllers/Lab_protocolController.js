@@ -86,15 +86,19 @@ module.exports = {
 
 	/** return view **/
 	'run' : function (req, res) {
-		var id = req.param('id');
-		var demo = req.param('demo');
 
-		var containers = id || req.body.Plate_ID || 'nothing';  // Legacy 
+		if (!req.body) { return json('Run via post') }
+
+		var plate_ids = req.body['plate_ids'] || [];
 
 		console.log("BODY: " + JSON.stringify(req.body));
 
 		var protocol = req.body['lab_protocol-id'];
 		console.log("protocol: " + protocol);
+
+		var Samples = JSON.parse(req.body.Samples);
+		console.log("Samples: " + JSON.stringify(Samples));
+
 
 		var q = "SELECT * FROM protocol_step where Lab_protocol = " + protocol;
 
@@ -135,142 +139,42 @@ module.exports = {
 		    */
 		    Lab_protocol.input_list( result )
 		    .then ( function (inputList) {
-		    	console.log("INPUT : " + JSON.stringify(inputList));
 		    	console.log('globals:' + JSON.stringify(sails.config.globals));		    	
 		    	console.log('session:' + JSON.stringify(req.session));
-		    	console.log("fields : " + JSON.stringify(inputList.input));
-		    	console.log("attributes : " + JSON.stringify(inputList.attributes));
-		    	return res.render('lims/Protocol_Step', { Steps : result, Samples: containers, fields: inputList['input'], attributes: inputList.attributes } );
+
+		    	var send = { 
+		    		plate_ids : plate_ids, 
+		    		Steps : result, 
+		    		Samples: Samples, 
+		    		fields: inputList['input'], 
+		    		attributes: inputList.attributes,
+		    	};
+
+		    	console.log("SEND: " + JSON.stringify(send));
+		    	return res.render('lims/Protocol_Step', send);
+		    })
+		    .catch ( function (err) {
+		    	console.log("ERROR: " + err);
+		    	return res.json({ error : 'Error encountered: ' + err});
 		    });
 
 		});
 
 	},	
 
-	'isTransfer' : function ( name ) {
-		// Determine if a protocol step is a transfer step according to name format 
-		if ( name.match(/^Transfer (.+) (in|out|) to (.+)/) ) {
-			console.log("Matches: " + JSON.stringify(matches));
-		}
-
-	},
-
-
-	/** return data on success **/
-	'savePrep' : function (data) {
-		console.log("savePrep");
-
-		var action = '';
-		if (data && data['Prep'] && data['Prep']['Prep_Action']) {
-			action = data['Prep']['Prep_Action'];
-		} 
-
-		var deferred = q.defer();
-
-		console.log("Complete Prep: " + action);
-		if (action == 'Debug') {
-			console.log("Form Data:");
-			console.log(data);
-			//return res.send('Debug only - nothing saved');
-			deferred.reject("Debug only - nothing saved");
-		}
-		
-		else if (data && data['Prep']) {
-			console.log("Send Prep data: " + JSON.stringify(data['Prep']));
-
-			Record.createNew('Prep', data['Prep'] )
-			.then (function (PrepResult) {
-				console.log("Added Prep: " + JSON.stringify(PrepResult));
-
-				var ids = [];
-				var prepId = PrepResult.insertId;  // Legacy
-				var added = PrepResult.affectedRows;
-				for (var i=0; i<added; i++) {
-					ids.push(prepId++);
-				}
-				data['Plate']['FK_Prep__ID'] = ids; 
-
-				console.log("Send Plate data: " + JSON.stringify(data['Plate']));
-
-				Record.createNew('Plate_Prep', data['Plate'] )
-				.then (function (PlatePrepResult) {				
-					console.log("Added Plate_Prep: " + JSON.stringify(PlatePrepResult));
-					console.log('transfer if necessary....');
-					
-					deferred.resolve({ Prep: PrepResult, Plate_Prep: PlatePrepResult});
-					//return res.send(PrepResult);
-					/*
-					Container.xfer_if_required( PrepResult, PlateResult )
-					.exec (function (err, xferResult) {
-						if (err) { return res.send("ERROR creating new Plates...") }		
-
-						console.log("Transferring Samples ? " + JSON.stringify(xferResult));
-						return res.send(PrepResult);
-					});
-						*/
-				})
-				.catch (function (err) {
-					deferred.reject("Error creating Plate record: " + err);
-					//return res.send("ERROR creating Plate record: " + err)
-				})
-			})
-			.catch ( function (err) {
-				deferred.reject("Error creating Prep record: " + err);
-				//return res.send("ERROR creating Prep record: " + err);				
-			});
-		}
-		else {
-			console.log("Prep Data");
-			deferred.reject("No data");
-			//return res.send('no data');
-		}
-
-		return deferred.promise;
-
-	},
-
 	'complete' : function (req, res) {
+		// execute completion of lab protocol step //
 		var data = req.body;
+
 		console.log("COMPLETE ALL STEPS: " + JSON.stringify(data));
 
-		var plate_ids = [1,2];
-
-		this.savePrep(data)
-		.then ( function (PrepResult) {
-
-			var promises = [];
-			console.log("Added Single Prep: " + JSON.stringify(PrepResult));
-
-			var prep_id = [ PrepResult.Prep.insertId ];
-			console.log("Prep IDS: " + JSON.stringify(prep_id));
-
-			promises.push( Attribute.save('Plate', plate_ids, data["Plate_Attribute"]) );
-			promises.push( Attribute.save( 'Prep', prep_id, data["Prep_Attribute"]) );
-			promises.push( Container.saveLastPrep(plate_ids, prep_id[0]) );
-
-			var prepName = data['Prep']['Prep_Name'];
-			console.log("Test " + prepName);
-			var $test = scope.isTransfer(prepName);
-
-			if ($test) { 
-				promises.push( Container.transfer(transfer));
-			}
-
-			q.all( promises )
-			.then ( function (Qdata) {
-				console.log("ALL PROMISES: " + JSON.stringify(Qdata));
-				res.send(Qdata);
-			})
-			.catch ( function (Qerr) {
-				console.log("Error completing all actions: " + Qerr);
-				res.send(Qerr);
-			});
+		q.when( Lab_protocol.complete(data) )
+		.then ( function (result) {
+			return res.json(result);
 		})
-		.catch (function (err) {
-			console.log("Error saving completed Prep Record: " + err);
-			res.send(err);
+		.catch ( function (err) {
+			return res.json(err);
 		});
-		//.push( this.savePrep(data) );
 	},
 
 	'define' : function (req, res) { 
