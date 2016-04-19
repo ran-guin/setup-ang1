@@ -4,8 +4,7 @@ block content
 
 
   div.container
-
-    - var config = { steps : Steps, samples: Samples, attributes: attributes};
+    - var config = { Steps : Steps, plate_ids: plate_ids, Samples: Samples, Attributes: attributes};
     - var init = "initialize(" + JSON.stringify(config) + ")";
 
     - flds = fields || []; 
@@ -25,7 +24,7 @@ block content
           hr
 
           div(ng-show="status=='Completed'")
-            h2 Protocol Completed
+            h2 Protocol Completed {{ status }}
 
           div.alert.alert-info(ng-if="status != 'Completed'")
             h3 {{Step.name}} &nbsp; 
@@ -66,17 +65,17 @@ block content
                   b {{ splitExample }}
                   span ]
 
-
-
             each field in flds
               - fld = field.replace('*','');
               - alias = aliases[fld] || fld;
               - fType = 'text';
+              - mandatory = false;
 
               if (fld != field)
                 - alias = alias + '*';
+                - mandatory = true;
 
-              div(ng-show="Show['#{fld}']")
+              div(ng-show="Show['#{alias}']")
                 if attributes[fld]
                   - fType = attributes[fld];
 
@@ -176,11 +175,13 @@ block content
               - fld = field.replace('*','');
               - alias = aliases[fld] || fld;
               - fType = 'text';
+              - mandatory = false;
 
               if (fld != field)
                 - alias = alias + '*';
+                - mandatory = true;
               
-              div(ng-show="Show['#{fld}']") 
+              div(ng-show="Show['#{alias}']") 
                 if fld == 'comments' 
                   // non splittable field 
                   div.form-group
@@ -199,14 +200,16 @@ block content
                     label.col-sm-2.control-label(for='#{fld}') #{alias}
                     div.col-sm-10
                       if (fld == field)
-                        input.form-control(type='#{fType}' ng-blur="splitField('#{fld}')" pattern=".*" maxlength="15" placeholder = "Enter " + alias id='#{fld}' ng-model='#{fld}' default='' force=1)
+                        b O
+                        input.form-control(type='#{fType}' ng-required=mandatory ng-blur="splitField('#{fld}')" pattern=".*" maxlength="15" placeholder = "Enter " + alias id='#{fld}' ng-model='#{fld}' default='' force=1)
                       else 
-                         input.form-control(type='#{fType}'  ng-blur="splitField('#{fld}')" required pattern="^[_A-z0-9]{1,}$" maxlength="15" placeholder = "Enter " + alias id='#{fld}' ng-model='#{fld}'  default='' force=1 )
+                         b M
+                         input.form-control(type='#{fType}' ng-required=1 ng-blur="splitField('#{fld}')" required pattern="^[_A-z0-9]{1,}$" maxlength="15" placeholder = "Enter " + alias id='#{fld}' ng-model='#{fld}'  default='' force=1 )
 
                       div.help-block.with-errors(style='color:red' ng-model="#{fld}_errors") {{ #{fld}_errors }}
  
-
             hr
+
             div.form-group
               div.col-sm-2 &nbsp;
               div.col-sm-3
@@ -242,14 +245,9 @@ block content
               h5 Defaults: {{ Default }}
               h5 Att : {{ AttributePrompt }}
               h5 Details: {{ Step }}
+              h5 ids: {{ ids }}
               h5 Samples: {{ Samples }}
               h5 Input: {{ input }}
               h5 Show: {{ Show }}
               h5 Fields: #{ JSON.stringify(flds) }
               h5 Attributes: #{JSON.stringify(attributes)}
-
-            hr
-   
-
-
-         
