@@ -5,6 +5,9 @@
  * @help        :: See http://sailsjs.org/#!/documentation/concepts/Controllers
  */
 
+var bodyParser = require('body-parser');
+var q = require('q');
+
 module.exports = {
 
 	// get custom attributes from models to ensure specifications remain centralized
@@ -13,9 +16,8 @@ module.exports = {
 
 
 	new: function (req, res) { 
-
 		var model = req.param('model');
-
+		console.log("retrieving " + model + ' model');
 		var table = sails.models[model].tableName || model;
 
 		Record.query("desc " + table, 
@@ -73,14 +75,19 @@ module.exports = {
 				}
 
 				var access = '';   // store access permissions in database ? ... or in model ... 
-				res.render('record/form', { table: table, fields: Fields, access: access, action: 'Add'});
+				var data = { table: table, fields: Fields, access: access, action: 'Add'};
+				console.log("Render form with " + JSON.stringify(data));
+				res.render('record/form', database);
 			}
 		);
 	},
 
 	add: function (req, res) {
 		
-		var table = req.param('table');
+		var table;
+		if (req.param && req.param('table')) { table = req.param('table') }
+		else if (req.body && req.body.table) { table = req.body.table }
+
 		console.log('add ' + table + ' record...');
 
 		Record.query("desc " + table, function (err, result) {
@@ -139,6 +146,75 @@ module.exports = {
 			//return res.send(result);
 			return res.render('core/lookup', { table : table, data : result });
 		});
+	},
+
+	list : function (req, res) {
+		var table;
+		var condition = '1';
+
+		if (req.param && req.param('model')) { table = req.param('model'); console.log('param: ') + table }
+		else if (req.body) { 
+			table = req.body.model || req.body['model-label']; 
+			if (req.body.condition) { condition = req.body.condition }
+			console.log("body: " + JSON.stringify(req.body));
+		}
+		else { console.log('table = ' + table) }
+
+		var query = "Select * from " + table;
+		console.log("Generate list of " + table + ' records: ' + query);
+
+		var model = sails.models[table] || {};
+		var fields = model.viewFields;
+
+		var query = "Select * from " + table + " WHERE " + condition;
+		console.log("Generate list of " + table + ' records: ' + query);
+
+		Record.query(query, function (err, result) {
+			if (err) {
+				return res.send("ERROR: " + err);
+			}
+			console.log("Data: " + JSON.stringify(result));
+
+			if (result.length) {
+				if (!fields) { fields = Object.keys(result[0]) }
+				return res.render('record/list', { table : table, fields : fields, data : result });
+			}
+			else {
+				return res.send("No data");
+			}
+		});
+	},
+
+	view : function (req, res) {
+		var table = req.param('model');
+		var id    = req.param('id');
+		var condition = req.param('condition') || '1';
+
+		if (id) { condition = condition + " AND " + table + '.id' + "=" + id }
+
+		var model = sails.models[table] || {};
+		var fields = model.viewFields;
+
+		var query = "Select * from " + table + " WHERE " + condition;
+		console.log("Generate list of " + table + ' records: ' + query);
+
+		Record.query(query, function (err, result) {
+			if (err) {
+				return res.send("ERROR: " + err);
+			}
+			console.log("Data: " + JSON.stringify(result));
+
+			if (result.length) {
+				if (!fields) { fields = Object.keys(result[0]) }
+				console.log("Fields: " + fields.join(','));
+
+				return res.render('record/view', { table : table, fields : fields, data : result });
+			}
+			else {
+				return res.send("No data");
+			}
+		});
+
 	}
 	
 };
