@@ -9,6 +9,9 @@ var q = require('q');
 
 module.exports = {
 
+	/* LEGACY */
+	migrate: 'safe',
+	
 	attributes: {
 
 	},
@@ -132,16 +135,20 @@ module.exports = {
 		return deferred.promise;		
 	},
 
-
 	'save' : function ( model, ids, data ) {
 		var deferred = q.defer();
 
 		var attModel = model + '_Attribute';   // Legacy
 
-		console.log('SA att: ' + JSON.stringify(data));
-		if (! data || data == 'undefined' || Object.keys(data) == 'undefined') {
-			console.log('no data...');
-			deferred.resolve({});
+		console.log(model + " ids: " + JSON.stringify(ids));
+		console.log(model + ' Attributes: ' + JSON.stringify(data));
+		
+		if (! data 
+			|| data == 'undefined' 
+			|| Object.keys(data) == 'undefined' 
+			|| Object.keys(data).length == 0 ) {
+				console.log('no ' + model + ' attribute data...');
+				deferred.resolve({});
 		}
 		else {
 			var atts = Object.keys(data);

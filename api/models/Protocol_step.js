@@ -14,9 +14,15 @@ module.exports = {
 		step_number : { type : 'int' },
 		instructions : { type : 'string'},
 		message : { type : 'string' },
-		input : { type : 'string'},
-		format : { type : 'string'},
-		defaults : { type : 'string'},
+		Target_format : { model : 'Plate_Format' },
+		Target_sample : { model : 'Sample_Type' },
+		reset_focus : { 
+			type : 'boolean',
+			defaultsTo : false,
+		},
+		input_options : { type : 'string'},
+		input_format : { type : 'string'},
+		input_defaults : { type : 'string'},
 
 		prompt : { 
 			type : 'boolean',

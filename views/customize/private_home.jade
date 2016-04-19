@@ -4,6 +4,10 @@ block content
   div.main.container
                
     h3 LIMS Dashboard
+      .navbar-right 
+        a(href="/admin")
+          button.btn.btn-danger(type='button') Admin
+
     if message
       div.alert.alert-warning #{message}
     br            

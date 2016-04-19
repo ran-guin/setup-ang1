@@ -1,10 +1,10 @@
-var app = angular.module('myApp');
+var app = angular.module('myApp',['ngFileUpload']);
 
 app.controller('CommonController', 
-    ['$scope', '$q', '$rootScope', '$http', '$location', 'CommonFactory', 
-    function ($scope, $q, $rootScope, $http, $location, CommonFactory) {
+    ['$scope', '$q', '$rootScope', '$http', '$location', 'CommonFactory', 'Upload', 
+    function ($scope, $q, $rootScope, $http, $location, CommonFactory, Upload) {
         console.log('loaded Common Controller');
-
+        console.log(JSON.stringify(app));
         // Automatically Load Lookup Files //
         $scope.loadLookup = function loadLookup(table, id, label) {
         

@@ -13,21 +13,68 @@ block content
             br
             h5 [ IDs: #{sampleList[0]} ... #{sampleList[samples.length-1]} ] 
 
-          b Continue Protocol: 
           form(role='form' method='post' action="/Lab_protocol/run" enctype='form-data')
+            input(type = 'hidden' name='Samples' value='#{JSON.stringify(samples)}')
+            input(id = 'id' name='plate_ids' type='hidden' value="#{sampleList.join(',')}")
             input(type='hidden' id='Plate_ID' name='Plate_ID' value='#{ids}')
-            span.lookup(id='Lookup-lab_protocol' ng-init="loadLookup('lab_protocol')")
-            span &nbsp; &nbsp;
-            button.btn.btn-primary(type='submit') Run Protocol
-
-          hr
-          b Transfer To: 
+            table.table
+              tr
+                td(style='width:30%')
+                  b Continue Protocol: 
+                td(style='width:40%')
+                  span.lookup(id='Lookup-lab_protocol' ng-init="loadLookup('lab_protocol')")
+                td(style='width:30%')
+                  button.btn.btn-primary.form-control(type='submit') Run Protocol
 
           form(role='form' method = 'post' action= "/xfer")
+            input(type = 'hidden' name='Samples' value='#{JSON.stringify(samples)}')
+            input(id = 'id' name='ids' type='hidden' value="#{sampleList.join(',')}")
+          
+            table.table
+              tr
+                td(style='width:30%')
+                  b Transfer To: &nbsp;
+                td(style='width:40%')
+                    span.lookup(id='Lookup-Plate_Format' ng-init="loadLookup('Plate_Format', 'Plate_Format_ID', 'Plate_Format_Type')") 
+                    b &nbsp; Split X: 
+                    input(name='split' type='text' size='5px')
+                td(style='width:30%')
+                    button.btn.btn-primary.form-control(type='submit') Transfer Samples
 
-            input(id = 'id' type='hidden' value="#{sampleList.join(',')}")
-            span.lookup(id='Lookup-Plate_Format' ng-init="loadLookup('Plate_Format', 'Plate_Format_ID', 'Plate_Format_Type')") 
-            span &nbsp; &nbsp;
-            button.btn.btn-primary(type='submit') Transfer Samples
-          hr
-          b #{JSON.stringify(session)}
+          hr         
+
+          table.table.table-bordered
+            tr
+              td(style='width:30%')
+                b Assign to Matrix Tubes              
+              td(style='width:40%')
+                  //div(ng-app="fileUpload" ng-controller="MyCtrl")
+                  div(style='padding: 40px' ngf-drop ngf-select ng-model="files" class="drop-box" 
+                      ngf-drag-over-class="'dragover'" ngf-multiple="true" ngf-allow-dir="true"
+                      accept="image/*,application/pdf" 
+                      ngf-pattern="'image/*,application/pdf'") 
+                      b Drop images here ... or 
+                      br
+                      button.btn.btn-default.form-control Select File(s) to Upload
+                  div(ngf-no-file-drop) File Drag/Drop is not supported for this browser
+              td(style='width:30%')
+                div &nbsp;
+                button.form-control.btn.btn-primary(ng-disabled="! files.length") Link Matrix Tubes to BCG IDs
+                div &nbsp;
+
+                b Files:
+                ul
+                  li(ng-repeat="f in files" style="font:smaller") {{f.name}} {{f.$error}} {{f.$errorParam}}
+            tr
+              td &nbsp;
+              td(colspan=2)         
+                b Upload Log:
+                pre(style='height: 100%')
+                  {{log}}
+        hr
+        b session: #{JSON.stringify(session)} 
+        BR
+        b Samples: #{JSON.stringify(samples)}
+        BR
+        b IDs: #{JSON.stringify(sampleList)}
+        hr

@@ -2,7 +2,7 @@ var app = angular.module('myApp', [
         'ngResource',
         'ngRoute',
         'ngCookies',
-        'CommonFactory',
+//        'CommonFactory',
         'angularjs-dropdown-multiselect',
         'angularMoment',
         'ngAnimate',

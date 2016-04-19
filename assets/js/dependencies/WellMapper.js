@@ -27,7 +27,7 @@ function wellMapper() {
     //
     //  Options: 
     //      split = N           : indicates that each source record is to be assigned to N target positions
-    //      fill_by = 'ros'     : indicates whether ordering of sample distribution occurs by row or by column
+    //      fill_by = 'row'     : indicates whether ordering of sample distribution occurs by row or by column
     //      mode = 'parallel'   : indicates whether distribution is applied in 'parallel' or 'serially'
     //      batch = M       : indicates that M wells are to be handled together (as with multi-channel pipette)
     //                          (this is only applicable when split > 1 and mode = 'parallel')
@@ -178,17 +178,27 @@ function wellMapper() {
 
     },
 
-    this.distribute = function ( options ) {
+    this.distribute = function ( sources, target, options ) {
 
         var targetMap = [];
-        options = {};
+        if (! options) { options = {} };
+        if (! target || ! sources) { 
+            console.log("Missing Source or Target information");
+            return {}
+        }
 
-        var sources = [{ id: 1, type: 'blood', position: 'A1'}, { id : 2, type : 'blood', position : 'A2'}];
-        var rows = options.rows || this.source_rows;
-        var cols = options.cols || this.source_cols;
+        console.log("run distribute function... ");
+        console.log("Sources: " + JSON.stringify(sources));
+        console.log("Target: " + JSON.stringify(target));
+        console.log("Options: " + JSON.stringify(options));
 
-        var fill_by = 'column';
-        var batch = 1;
+        //var sources = [{ id: 1, type: 'blood', position: 'A1'}, { id : 2, type : 'blood', position : 'A2'}];
+        var rows = target.rows || this.source_rows;
+        var cols = target.cols || this.source_cols;
+
+        var fill_by = options.fillBy || 'Row';
+        var pack = options.pack || false;
+        var preserve_position = ! pack;
 
         var x_min = rows[0];
         var x_max = rows[rows.length-1];
@@ -217,8 +227,13 @@ function wellMapper() {
         Target[target_index] = {};
         Target[target_index][target_position] = sources[0];
 
+        Colour[target_index] = {};
+        Colour[target_index][target_position] = this.rgbList[0];
+
+
         for (var i=1; i<sources.length; i++) {
-            if (fill_by == 'row') {
+            if (fill_by == 'Row') {
+                        console.log("fill by row");
                 y++;
                 if (y > y_max) {
                     y = 1;
@@ -229,12 +244,12 @@ function wellMapper() {
                         target_index++;       // next plate ... 
                     }
                     else {
-                        console.log("x = " + x + " : " + x_min);
                         x = String.fromCharCode(x.charCodeAt(0) + 1);
                     }
                 }
             }
             else {
+                        console.log("fill by col");
                 if (x == x_max) {
                     x=x_min;
                     if (y >= y_max) {
@@ -266,7 +281,7 @@ function wellMapper() {
         this.TargetMap = Colour;
 
 
-        return { Targets : Target, TargetMap : Colour };
+        return { Sources: sources, Targets : Target, TargetMap : Colour };
     }
 
 }

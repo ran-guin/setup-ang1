@@ -7,8 +7,20 @@
 
 module.exports = {
 
-	  attributes: {
+
+	/** LEGACY **/
+	migrate: 'safe',
+	tableName : 'Plate',
+
+	attributes: {
 	  		comments : { type : 'string' }
-	  }
+	},
+
+	/** NEW **
+	attributes: {
+	  		comments : { type : 'string' }
+	}
+	*/
+	
 };
 

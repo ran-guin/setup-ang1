@@ -13,8 +13,6 @@ function wellController ($scope, $rootScope, $http, $q ) {
     $scope.map = {};
     $scope.sources = [];
 
- 
-
     $scope.initialize = function initialize(config) {
         var Config = {};
         if (config) { Config = JSON.parse(config) }
@@ -26,8 +24,8 @@ function wellController ($scope, $rootScope, $http, $q ) {
         $scope.options = Config['options'];
 
         $scope.map = Config['map'] || {}; 
-        $scope.target_rows = Config['target_rows'] || ['A','B','C'];
-        $scope.target_cols = Config['target_cols'] || [1,2,3,4,5,6];
+        $scope.target_rows = $scope.target.rows || ['A','B'];
+        $scope.target_cols = $scope.target.cols || [1,2];
 
         // $scope.plates=['pla1','pla2','pla3'];
         // $scope.rows = [['A','B'], ['C','D'], ['E','F']];
@@ -35,7 +33,7 @@ function wellController ($scope, $rootScope, $http, $q ) {
 
         $scope.fill_by = Config['fill_by'] || 'row';
         $scope.split   = Config['splitX'] || 1;
-        $scope.batch   = Config['batch'] || 1;    // applicable only for splitting with parallel mode (if N wells pipetted together)
+        $scope.pack   = Config['pack'] || 0;    // applicable only for splitting with parallel mode (if N wells pipetted together)
         $scope.mode    = Config['mode'] || 'serial';  // serial or parallel...appliable only for split (eg A1, A1, A2, A2... or A1, A2... A1, A2...)
     
         console.log("INIT Map");
@@ -61,9 +59,22 @@ function wellController ($scope, $rootScope, $http, $q ) {
         console.log("MAP: " + JSON.stringify($scope.colourMap));
         console.log("colours: " + JSON.stringify($scope.colours));
         console.log("rgb: " + JSON.stringify($scope.rgbList));
-        console.log("Source Map: " + JSON.stringify(newMap.distribute()));
-        console.log("NEW CMAP: " + JSON.stringify(newMap.CMap));
 
+        $scope.newMap = newMap;
+        console.log("Source Map: " + JSON.stringify(newMap.distribute()));
+        console.log("NEW CMAP: " + JSON.stringify($scope.newMap.CMap));
+
+    }
+
+    $scope.redistribute = function redistribute () {
+        
+        $scope.Map = $scope.newMap.distribute(
+            $scope.sources, 
+            { rows : $scope.target_rows, cols : $scope.target_cols},
+            { fillBy: $scope.fill_by, pack: $scope.pack }
+        );
+        
+        console.log("NEW MAP: " + JSON.stringify($scope.Map));
     }
 
     $scope.source_by_Col = function source_by_Col () {
@@ -103,11 +114,14 @@ function wellController ($scope, $rootScope, $http, $q ) {
         
     }
 
-    $scope.testXfer = function testXfer () {
+    $scope.testXfer = function testXfer (sources, targets, options) {
         var Targets = [{"id":200,"position":"A1","container":1000},{"id":201,"position":"A2","container":1000},{"id":202,"position":"A3","container":1000},{"id":203,"position":"B1","container":1000},{"id":204,"position":"B2","container":1000},{"id":205,"position":"B3","container":1000},{"id":206,"position":"C1","container":1000},{"id":207,"position":"C2","container":1000},{"id":208,"position":"C3","container":1000},{"id":209,"position":"D1","container":1000},{"id":210,"position":"D2","container":1000},{"id":211,"position":"D3","container":1000},{"id":212,"position":"A1","container":1001},{"id":213,"position":"A2","container":1001},{"id":214,"position":"A3","container":1001},{"id":215,"position":"B1","container":1001},{"id":216,"position":"B2","container":1001},{"id":217,"position":"B3","container":1001},{"id":218,"position":"C1","container":1001},{"id":219,"position":"C2","container":1001},{"id":220,"position":"C3","container":1001},{"id":221,"position":"D1","container":1001},{"id":222,"position":"D2","container":1001},{"id":223,"position":"D3","container":1001},{"id":224,"position":"A1","container":1002},{"id":225,"position":"A2","container":1002},{"id":226,"position":"A3","container":1002},{"id":227,"position":"B1","container":1002},{"id":228,"position":"B2","container":1002},{"id":229,"position":"B3","container":1002},{"id":230,"position":"C1","container":1002},{"id":231,"position":"C2","container":1002},{"id":232,"position":"C3","container":1002},{"id":233,"position":"D1","container":1002},{"id":234,"position":"D2","container":1002},{"id":235,"position":"D3","container":1002},{"id":236,"position":"A1","container":1003},{"id":237,"position":"A2","container":1003},{"id":238,"position":"A3","container":1003},{"id":239,"position":"B1","container":1003},{"id":240,"position":"B2","container":1003},{"id":241,"position":"B3","container":1003},{"id":242,"position":"C1","container":1003},{"id":243,"position":"C2","container":1003},{"id":244,"position":"C3","container":1003},{"id":245,"position":"D1","container":1003},{"id":246,"position":"D2","container":1003},{"id":247,"position":"D3","container":1003},{"id":248,"position":"A1","container":1004},{"id":249,"position":"A2","container":1004},{"id":250,"position":"A3","container":1004},{"id":251,"position":"B1","container":1004},{"id":252,"position":"B2","container":1004},{"id":253,"position":"B3","container":1004},{"id":254,"position":"C1","container":1004},{"id":255,"position":"C2","container":1004},{"id":256,"position":"C3","container":1004},{"id":257,"position":"D1","container":1004},{"id":258,"position":"D2","container":1004},{"id":259,"position":"D3","container":1004},{"id":260,"position":"A1","container":1005},{"id":261,"position":"A2","container":1005},{"id":262,"position":"A3","container":1005},{"id":263,"position":"B1","container":1005},{"id":264,"position":"B2","container":1005},{"id":265,"position":"B3","container":1005},{"id":266,"position":"C1","container":1005},{"id":267,"position":"C2","container":1005},{"id":268,"position":"C3","container":1005},{"id":269,"position":"D1","container":1005},{"id":270,"position":"D2","container":1005},{"id":271,"position":"D3","container":1005},{"id":272,"position":"A1","container":1006},{"id":273,"position":"A2","container":1006},{"id":274,"position":"A3","container":1006},{"id":275,"position":"B1","container":1006},{"id":276,"position":"B2","container":1006},{"id":277,"position":"B3","container":1006},{"id":278,"position":"C1","container":1006},{"id":279,"position":"C2","container":1006},{"id":280,"position":"C3","container":1006},{"id":281,"position":"D1","container":1006},{"id":282,"position":"D2","container":1006},{"id":283,"position":"D3","container":1006},{"id":284,"position":"A1","container":1007},{"id":285,"position":"A2","container":1007},{"id":286,"position":"A3","container":1007},{"id":287,"position":"B1","container":1007},{"id":288,"position":"B2","container":1007},{"id":289,"position":"B3","container":1007},{"id":290,"position":"C1","container":1007},{"id":291,"position":"C2","container":1007},{"id":292,"position":"C3","container":1007},{"id":293,"position":"D1","container":1007},{"id":294,"position":"D2","container":1007},{"id":295,"position":"D3","container":1007}];
 
         var data = { 
-            Sources: [
+            Sources: sources,
+            Targets: targets,
+/*
+            Sources = [
                 { id: 1}, 
                 { id: 2}
             ], 
@@ -115,7 +129,15 @@ function wellController ($scope, $rootScope, $http, $q ) {
                 { index: 1, position: 'A2', volume: 2, volume_units: 'ml'},
                 { index: 1, position: 'A4', volume: 3, volume_units: 'ml'}
             ], 
-            Set: { 'format' : 34, 'sample_type' : 56, 'created' : $scope.timestamp, 'location' : 3 } 
+            Set: { 
+                'format' : 34, 
+                'sample_type' : 56, 
+                'created' : $scope.timestamp, 
+                'location' : 3,
+                'volume' : 
+             } 
+*/
+            Set: options,
         };
 
         console.log("POSTING DATA: " + JSON.stringify(data));

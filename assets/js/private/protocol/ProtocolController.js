@@ -1,5 +1,3 @@
-'use strict';
-
 var app = angular.module('myApp');
 
 app.controller('ProtocolController', 
@@ -10,18 +8,22 @@ function protocolController ($scope, $rootScope, $http, $q) {
     $scope.context = 'Protocol';
     $scope.stepNumber = 1;
 
-    $scope.initialize = function( config ) {
-        //  config = { steps: , } 
+    $scope.initialize = function (config) {
 
-        if (config && config['steps']) { 
+        if (config && config['Steps']) { 
             console.log("loaded protocol steps");
-            $scope.Steps = config['steps'];
+            $scope.Steps = config['Steps'];
             $scope.steps = $scope.Steps.length;
 
-            $scope.Samples = config['samples'];
-            $scope.N = $scope.Samples.split(',').length;
+            $scope.Samples = config['Samples'] || {};   // array of sample info
+            $scope.Options = config['Options'] || {};   
 
-            $scope.Attributes = config['attributes'];
+            $scope.plate_list = config['plate_ids'];  // simple comma-delimited list
+            $scope.plate_ids = $scope.plate_list.split(',');
+            $scope.N = $scope.plate_ids.length;
+            console.log("Samples: " + $scope.plate_list);
+
+            $scope.Attributes = config['Attributes'];
 
             $scope.user = 'Ran';  // TEMP
             $scope.PrepFields = [];
@@ -30,12 +32,13 @@ function protocolController ($scope, $rootScope, $http, $q) {
             $scope.split_mode = 'Parallel';  // or parallel ... eg split 1,2 x 2 -> 1,2,1,2 (parallel) or 1,1,2,2 (serial)
             
             $scope.FK_Employee__ID = 2;  // test data 
+            console.log("Steps: " + JSON.stringify($scope.Steps) );
+            $scope.reload();
+
+            $scope['target_format'] = 3;  // Test only 
+            console.log("protocol initialization complete...");
         }
 
-        console.log("Steps: " + JSON.stringify($scope.Steps) );
-
-        $scope.reload();
-        console.log("protocol initialization complete...");
 
     }
 
@@ -52,8 +55,9 @@ function protocolController ($scope, $rootScope, $http, $q) {
     }
 
 
-    $scope.reset_Split_mode = function () {
-        var fields = Object.keys($scope.SplitFields);
+    $scope.reset_Split_mode = function (fields) {
+        
+        if (! fields) { fields = Object.keys($scope.SplitFields) }
 
         for (var i=0; i<fields.length; i++) {
             $scope.splitField(fields[i]);
@@ -162,7 +166,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
         else { console.log('no value...') }
     }
 
-    /* Retrieve data from fields which are splittable ... eg may accept different values for each of N samples based on comma-delimited list */
+    /* Retrieve data from fields which are splittable ... eg may accept different values for each of N plate_ids based on comma-delimited list */
     $scope.splitData = function ( input, map) {
         var recordData = [];
         for (var n=0; n< $scope.N; n++) {
@@ -205,10 +209,11 @@ function protocolController ($scope, $rootScope, $http, $q) {
         };
 
         console.log("PREP DATA: " + JSON.stringify(PrepData));
-        var PlateInfo = ['solution', 'equipment','solution_qty','solution_qty_units', 'transfer_qty','transfer_qty_units'];
+        var PlateInfo = ['plate_list', 'solution', 'equipment','solution_qty','solution_qty_units', 'transfer_qty','transfer_qty_units'];
 
         // Legacy fields //
         var map = {
+            'plate_list' : 'FK_Plate__ID',
             'solution' : 'FK_Solution__ID',
             'equipment' : 'FK_Equipment__ID',
             'solution_qty' : 'Solution_Qty',
@@ -217,6 +222,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
             'transfer_qty_units' : 'Transfer_Quantity_Units'
         };
 
+        $scope['plate_list_split'] = $scope.plate_list;  // test.. should be reverse split
         var PlateData = $scope.splitData(PlateInfo, map);        
 
         console.log("split " + $scope.input);
@@ -250,12 +256,20 @@ function protocolController ($scope, $rootScope, $http, $q) {
         }
 
         var data =  {
-            ids: $scope.samples,
+            'ids': $scope.plate_ids,
             'Prep' : PrepData,
             'Plate' : PlateData,
             'Plate_Attribute' : PlateAttributes,
-            'Prep_Attribute'  : PrepAttributes
+            'Prep_Attribute'  : PrepAttributes,
         };
+
+        if ($scope['target_format']) {
+
+            $scope.distribute();  // change to promise (test.. )
+            data['target_format'] = $scope['target_format'];
+            data['Sources'] = $scope.Map.Sources;
+            data['Targets'] = $scope.Map.Targets;
+        }
 
         console.log("Send: " + JSON.stringify(data));
         console.log("Called: " + url);
@@ -277,6 +291,29 @@ function protocolController ($scope, $rootScope, $http, $q) {
                 $scope.errMsg = JSON.stringify(result,null,4);
             }
         });
+    }
+
+    $scope.distribute = function distribute () {
+        if ($scope['target_format']) {
+
+            var newMap = new wellMapper();
+ 
+            newMap.from($scope.Samples);
+            $scope.newMap = newMap;
+
+            $scope.Map = $scope.newMap.distribute(
+                $scope.Samples, 
+                { format : $scope['target_format']},
+                //{ rows : $scope.target_rows, cols : $scope.target_cols},
+                { fillBy: $scope.Options.fill_by, pack: $scope.Options.pack }
+            );
+            
+            console.log("Distribution MAP: " + JSON.stringify(newMap));
+        }
+        else {
+            $scope.Map = {};
+            console.log("distribution N/A");
+        }
     }
 
     $scope.showErrors = function showErrors() {
@@ -302,9 +339,9 @@ function protocolController ($scope, $rootScope, $http, $q) {
         $scope.Step = $scope.Steps[$scope.stepNumber-1];
 
         // start custom block //
-        $scope.input = $scope.Step['input'].split(':');
-        $scope.defaults = $scope.Step['defaults'].split(':');
-        $scope.formats   = $scope.Step['format'].split(':');
+        $scope.input = $scope.Step['input_options'].split(':');
+        $scope.defaults = $scope.Step['input_defaults'].split(':');
+        $scope.formats   = $scope.Step['input_format'].split(':');
         // end custom block //
 
         $scope.Show = {};

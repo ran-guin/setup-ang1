@@ -7,9 +7,15 @@
 
 module.exports = {
 	
+  migrate: 'safe',
+  tableName: 'Plate_Format',
+
+/*
   attributes: {
-	Plate_Format_ID : { type : 'integer' },
-	Plate_Format_Type : { type : 'string'},
+	format : { type : 'string' },
+	wells : { type : 'integer' },
+	description : { type : 'string' }
   }
+  */
 };
 

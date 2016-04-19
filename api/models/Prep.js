@@ -7,6 +7,11 @@
 
 module.exports = {
 
+  /** LEGACY **/
+  migrate: 'safe',
+  tableName: 'Prep',
+
+  /** NEW 
   attributes: {
   	name : { type : 'string' },
   	comments : { type : 'string' },
@@ -16,6 +21,8 @@ module.exports = {
   	},
     createdBy : { model : 'employee' },
     Lab_protocol : { model : 'lab_protocol' },
-  }
+  },
+  **/
+
 };
 

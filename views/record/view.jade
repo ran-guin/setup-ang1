@@ -1,27 +1,25 @@
-extends ./../layout
+extends ./../customize/privateLayout
 block content
-  container
+  div.container
     form
-        h2 Data Record... 
+        h2 selected '#{table}' Record(s)
 
         - var debug = 0;
+
         hr
-        table.table
+        table.table.table-bordered
             thead
                 tr
                     th.alert.alert-info Field
                     th.alert.alert-info Value
-                    th.alert.alert-info &nbsp;
-                tr
-                    td(colspan=3)
-                        b #{JSON.stringify(recordData)}
-                tr
-                    td(colspan=3)
-                        b #{JSON.stringify(history)}
 
-//                each field,i in recordData 
-//                    tr
-  //                      td #{i}
-    //                    td #{field}
-        hr
-
+                each record in data
+                    each fld in fields
+                        tr
+                            td
+                                b #{ fld }
+                            td
+                                b #{ record[fld] }
+                            //td
+                                a(href='#')
+                                    button(type='button') Edit

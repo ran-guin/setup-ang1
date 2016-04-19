@@ -92,21 +92,35 @@ module.exports = {
 
 	},
 
-	rearray_transfer : function ( transfer_parameters ) {
+	execute_transfer : function (sources, target, options) {
 
-		// input parameters: id [], target_format_id, prep_id, target_size, target_rows, target_cols
-
-		var ids = transfer_parameters['id'];
 		var deferred = q.defer();
 
-		var target_format_id = transfer_parameters['target_format_id'];
-		var prep_id = transfer_parameters['prep_id'];
-		var target_size = transfer_parameters['target_size'];
+		console.log("EXECUTE TRANSFER");
+		console.log("Sources: " + JSON.stringify(sources));
+		console.log("Targets: " + JSON.stringify(target));
+		console.log("Optoins: " + JSON.stringify(options));
+	
+		deferred.resolve({});
 
-		var target_dimensions = target_size.split('\s*x\s*');  // 8 x 12 -> [8,12]
+		return deferred.promise;
+	},
 
-		var rows = transfer_parameters['target_rows'] || ['A'];
-		var cols = transfer_parameters['target_cols'] || [1];
+	rearray_transfer : function ( sources, target, options) {
+
+		var deferred = q.defer();
+
+		// input parameters: id [], target_format_id, prep_id, target_size, target_rows, target_cols
+		var ids = sources[0].id;   // test
+
+		var target_format_id = target.Format.id;
+		var prep_id = options.Prep.id;
+		var target_size = target.size || 1;
+
+		var target_dimensions = target.size.split('\s*x\s*');  // 8 x 12 -> [8,12]
+
+		var rows = target.rows || ['A'];
+		var cols = target.cols || [1];
 
 		var x_min = rows[0];
 		var x_max = rows[rows.length-1];
@@ -116,6 +130,10 @@ module.exports = {
 		if (target_dimensions.length>1) {
 			x_size = target_dimensions[0];
 			y_size = target_dimensions[1];
+		}
+		else { 
+			x_size = 1;
+			y_size = 1;
 		}
 
 		var fill_by = 'column';  //  add row option later...
@@ -131,12 +149,13 @@ module.exports = {
 
 		var target_index = 0;
 		var target_position = x_min + y_min.toString();
-		var targets = ['PLA0']; // CUSTOM TEST
+		var targets = [111]; // CUSTOM TEST
 
 		array.push(targets[target_index], target_position);  // store mul plate record... 
-		rearray.push([ids[i], Container.position(ids[i]), targets[target_index], target_position]);
 
 		for (var i=0; i<ids.length; i++) {
+			var posn = sources[i].position || Container.position(ids[i]);
+			rearray.push([ids[i], posn, targets[target_index], target_position]);
 
 			if (fill_by == 'row') {
 				y++;
@@ -193,6 +212,12 @@ module.exports = {
 		return ' i' + id;
 	},
 
+	transfer : function ( parameters ) {
+		// Add logic for custom transfer pattern ... 
+		console.log("Execute Transfer: " + JSON.stringify(parameters));
+		return {};
+	},
+
 	custom_transfer : function ( custom_parameters ) {
 		// Add logic for custom transfer pattern ... 
 		return ;
@@ -201,6 +226,116 @@ module.exports = {
 	create_daughter : function (id, target_format_id, prep_id) {
 		Record.clone( id, Container.target_specs(target_format_id));
 		return;
+	},
+
+	transfer_samples : function ( sources, target, options ) {
+		// Input: 
+		//
+		// id: comma-delimited list of id(s)
+		// Sources: array of hashes [ { id, ...}. { id: } ...] - may contain other sample attributes
+		// Targets:  array of hashes: [{ source_index, source_id, source_position, target_index, target_position, volume, units, colour_code ?)},..]
+		// Options: hash : { prep: { prepdata }, user, timestamp, extraction_type, target_format, location }    
+		//
+		// Output:
+		//
+		// Generates records for N x sample transfer:
+		//
+		// [Optional] Prep record (+ Plate_Prep reccords x N)
+		// New Plate records x N
+		//  + New MUL Plate records if applicable
+		//
+		// Updates Source Plate volumes
+		// 
+		// Returns: create data hash for new Plates.... (need to be able to reset samples attribute within Protocol controller (angular)
+		
+		q.when( Container.rearray_transfer(sources, target, options) )
+		.then ( function (map) {
+			console.log("Map: " + JSON.stringify(map));
+
+			var Targets = map.Targets || [];   // array of targets (hashes)
+			var Sources = map.Sources || [];   // array of sources (hashes)
+			var Set     = map.Set || map.Options || {};       // optional specs: format, sample_type
+
+			var id = map.id || '';
+			var ids = id.split(/\s*,\s*/);
+
+			var size = Set.size || '1-well'; // || Container.get_size(ids);
+			var target_size   = Set.target_size || 1;
+			var target_format = Set.target_format;
+			var prep_id = Set.prep_id;
+			var target_cols = Set.target_cols;
+			var target_rows = Set.target_rows;
+
+			// ? for (var i=0; i<Sources.length; i++) {
+			var input = ['volume', 'volume_units'];
+
+			var optional_input = Object.keys(Set);
+
+			// resetData is comprised of a potential combination of standard field resets:
+			var resetData = {'Plate_ID' : '<NULL>', 'FK_Rack__ID' : '<NULL>'};
+			// ... and item specific resets (keyed on id) as set below
+			// eg resetData = { 15: { parent_id = 7 }, 'Plate_ID' : '<NULL>'}
+
+			for (var j=0; j<optional_input.length; j++) {
+				var opt = optional_input[j];
+				var fld = Container.alias(opt) || opt;
+				if (Set[opt]) { resetData[fld] = Set[opt] };
+				console.log("optionally set " + opt + " to " + Set[opt]);
+			}
+
+			console.log(Targets.length + " target samples to be created...");
+			var clone_ids = [];
+			for (var i=0; i<Targets.length; i++) {
+				var thisId = Sources[i].id;
+				clone_ids.push(thisId);
+
+				resetData[thisId] = { 'FKParent_Plate__ID' : Sources[i].id };
+
+				for (j=0; j<input.length; j++) {
+					var fld = Container.alias(input[j]) || input[j];
+					var val = Targets[i][input[j]] || Set[input[j]] || null;
+					resetData[thisId][fld] = val;
+				}
+				console.log("Clone sample: id=" + Sources[0].id + "; reset: " + JSON.stringify(resetData));
+			}
+
+			Record.clone('Plate', clone_ids, resetData, { id: 'Plate_ID' })
+			.then ( function (cloneData) {
+				console.log("Created new record(s): " + JSON.stringify(cloneData));
+				return res.send('okay1');
+				//return res.render('lims/WellMap', { sources: Sources, Targets: Targets, target: { wells: 96, max_row: 'A', max_col: 12 }, options : { split: 1 }});
+			})
+			.catch ( function (cloneError) {
+				console.log("Cloning Error: " + cloneError);
+				return res.send('error2');
+				//return res.render('lims/WellMap', { sources: Sources, errorMsg: "cloning Error"});
+			});
+
+
+		//if (1) { return res.render('lims/WellMap', { sources: Sources, Targets: Targets, target: { wells: 96, max_row: 'A', max_col: 12 }, options : { split: 1 }}) }
+
+			/*
+			var params = { id: sources, target_format_id: target_format, prep_id : prep_id, target_size: target_size, target_cols : target_cols, target_rows : target_rows}; // TEST
+			// Track transfer as rearray (track individual well movement)
+
+			console.log('test rearray transfer');
+			Container.rearray_transfer( params )
+			.then ( function (data) {
+				Barcode.generate(barcodes);
+				var map = data.map;
+				var rows = data.rows;
+				var cols = data.cols;
+				var targets = data.targets;
+
+				console.log("rows: " + JSON.stringify(rows));
+				return res.render('lims/WellMap', { sources: sources, Map : map, rows: rows, cols: cols, targets : targets}); 
+			})
+			.catch ( function (err) {
+				return res.send('Rearray Error');
+			});
+		}
+			*/
+		});		
 	},
 
 };

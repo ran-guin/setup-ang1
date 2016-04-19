@@ -1,0 +1,1 @@
+./../../../../lib/angular/ng-file-upload-shim.js

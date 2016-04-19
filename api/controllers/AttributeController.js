@@ -16,7 +16,8 @@ module.exports = {
 
 		Attribute.increment(table, ids, attributes)
 		.then (function (result) {
-			console.log("OKAY EEEE");
+			console.log( table + ids + ' attributes: ' + attributes);
+			console.log(JSON.stringify(result));
 		})
 		.catch (function (error) {
 			console.log(':-(');

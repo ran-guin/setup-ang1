@@ -142,6 +142,8 @@ module.exports = {
 
 	createNew : function (table, Tdata, resetData) {
 		// Bypass waterline create method to enable insertion into models in non-standard format //
+		
+		console.log("**** CALL createNew WRAPPER *****");
 		var deferred = q.defer();
 		console.log("create new record(s) in " + table + ": " + JSON.stringify(Tdata));
 
