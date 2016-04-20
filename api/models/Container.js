@@ -9,6 +9,7 @@ var q = require('q');
 
 module.exports = {
 
+	migrate: 'safe',
 	attributes: {
 
 	},
@@ -57,6 +58,8 @@ module.exports = {
 
 		var fields = 'Plate_ID as id, Sample_Type as sample_type, Plate_Format_Type as container_format';
 		var query = 'SELECT ' + fields + " FROM Plate LEFT JOIN Sample_Type ON FK_Sample_Type__ID=Sample_Type_ID LEFT JOIN Plate_Format ON FK_Plate_Format__ID=Plate_Format_ID WHERE Plate_ID IN (" + id_list + ')';
+		//var fields = "Plate_ID as id, Sample_Type as sample_type, Plate_Format_Type as container_format, case WHEN Rack_Type='Slot' THEN Rack_Name ELSE NULL END as position";
+		//var query = 'SELECT ' + fields + " FROM Plate LEFT JOIN Sample_Type ON FK_Sample_Type__ID=Sample_Type_ID LEFT JOIN Plate_Format ON FK_Plate_Format__ID=Plate_Format_ID LEFT JOIN Rack ON Plate.FK_Rack__ID=Rack_ID WHERE Plate_ID IN (" + id_list + ')';
 
 		console.log("SQL: " + query);
 	    Record.query(query, function (err, result) {
