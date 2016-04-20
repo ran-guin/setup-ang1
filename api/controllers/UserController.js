@@ -125,6 +125,11 @@ module.exports = {
 
   },
 
+  admin : function (req, res) {
+    return res.render('customize/Admin', req.session.payload);
+
+  },
+
   home : function (req, res) {
     return res.render('customize/private_home', req.session.payload);
   },
