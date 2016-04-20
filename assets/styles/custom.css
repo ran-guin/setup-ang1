@@ -1,3 +1,9 @@
+.body {
+    background: url(/images/lims/bcg-background.png);
+    background-repeat: no-repeat;
+    background-position: center top; 
+}
+
 .modal-header {
 	background-color:#777; 
 	color: white; 
