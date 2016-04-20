@@ -20,7 +20,19 @@ function protocolController ($scope, $rootScope, $http, $q) {
 
             $scope.plate_list = config['plate_ids'];  // simple comma-delimited list
             $scope.plate_ids = $scope.plate_list.split(',');
+     
             $scope.N = $scope.plate_ids.length;
+            
+            if ($scope.Samples[0] && $scope.Samples[0]['container_format']) {
+                $scope.container_format = $scope.Samples[0]['container_format'];
+            }
+            else { $scope.container_format = 'undefined' }
+
+            if ($scope.Samples[0] && $scope.Samples[0]['sample_type']) {
+                $scope.sample_type = $scope.Samples[0]['sample_type'];
+            }
+            else { $scope.sample_type = 'undefined' }
+
             console.log("Samples: " + $scope.plate_list);
 
             $scope.Attributes = config['Attributes'];
@@ -342,6 +354,12 @@ function protocolController ($scope, $rootScope, $http, $q) {
         $scope.input = $scope.Step['input_options'].split(':');
         $scope.defaults = $scope.Step['input_defaults'].split(':');
         $scope.formats   = $scope.Step['input_format'].split(':');
+
+        var name = $scope.Step['name'];
+        if (name.match(/^(Transfer|Extract|Aliquot)/) ) {
+            if (! $scope.Split) { $scope.Split = 1 } 
+        }
+
         // end custom block //
 
         $scope.Show = {};
@@ -353,23 +371,26 @@ function protocolController ($scope, $rootScope, $http, $q) {
         var Attributes = { Plate : [], Prep : [] };
         for (var i=0; i<$scope.input.length; i++) {
             var input = $scope.input[i];
+            var cleaned_input = input.replace('*','');
 
             $scope.Show[input] = true;
             if ($scope.defaults.length > i) {
                 var def = $scope.defaults[i];
-                if (input.match(/\_qty$/)) {
+                console.log(cleaned_input + " defaults: " + def);
+                if (cleaned_input.match(/\_qty$/)) {
                     var units = def.match(/[a-zA-Z]+/);
                     if (units && units.length) {
-                        $scope.Default[input + '_units'] = units[0];
-                        $scope[input + '_units'] = units[0];
+                        console.log(JSON.stringify(units));
+                        $scope.Default[cleaned_input + '_units'] = units[0];
+                        $scope[cleaned_input + '_units'] = units[0];
                         def = def.replace(units[0],'');
                     }
-                    $scope.Default[input] = def;
-                    $scope[input] = def;
+                    $scope.Default[cleaned_input] = def;
+                    $scope[cleaned_input] = def;
                 }
                 else {
-                    $scope.Default[input] = def; 
-                    $scope[input] = def;
+                    $scope.Default[cleaned_input] = def; 
+                    $scope[cleaned_input] = def;
                 }
             }
             if ($scope.formats.length > i) { $scope.Format[input] = $scope.formats[i] }
