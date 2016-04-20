@@ -76,10 +76,14 @@ module.exports.routes = {
   'GET /home': 'UserController.home',
 
   /* Generic Record control options */
+  'GET /record/list/:model' : 'RecordController.list',   
+  'POST /record/list' : 'RecordController.list',    
+  'GET /record/view/:model/:id' : 'RecordController.view',
+  
   'GET /record/add/:model': 'RecordController.new',
   'POST /record/add/:model': 'RecordController.add',
-  'GET /record/edit/:model': 'RecordController.edit',
-  'POST /record/edit/:model': 'RecordController.update',
+  'GET /record/edit/:model/:id': 'RecordController.edit',
+  'POST /record/edit/:model/:id': 'RecordController.update',
 
   'GET /lookup/:table/:fields' : 'RecordController.lookup',
   'GET /lookup/:table' : 'RecordController.lookup',
@@ -88,6 +92,7 @@ module.exports.routes = {
   'POST /remote_login' : 'Remote_login.validate',
   'POST /remote_login/test' : 'Remote_login.test',
 
+  'GET /admin' : 'UserController.admin',
   /***************************************************************************
   *                                                                          *
   * Custom routes here...                                                    *
