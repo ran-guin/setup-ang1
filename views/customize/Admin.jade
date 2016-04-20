@@ -7,7 +7,7 @@ block content
     h2  Admin Page
     hr
                           
-    a(href='/Lab_protocols')
+    a(href='/Lab_protocol/list')
       button.btn.btn-primary Manage Lab Protocols 
 
     hr
@@ -17,7 +17,7 @@ block content
             
         include ./../core/errorMsg.jade
 
-        form(role='form' method='post' action="/record/list" enctype='form-data')
+        form(role='form' name='adminForm' method='post' action="/record/list" enctype='form-data')
           input(type='hidden' name='test' value='testval')
           span.dropdown(id='model')
 
@@ -25,14 +25,14 @@ block content
             input.fill-label(type='hidden' id='model-label' name='model-label' value='?') 
 
 
-            button.btn.btn-default.dropdown-toggle(type='button' data-toggle='dropdown' id = 'model' ng-model='model' name='model') DB Table &nbsp;
+            button.btn.btn-default.dropdown-toggle(type='button' data-toggle='dropdown' id = 'model' ng-model='model' name='model') -- Select Database Table -- &nbsp;
                 span.caret
             ul.dropdown-menu
               each model in lookups
                 li 
                   a(href='#' ng-click="setField('table','#{model}')" onclick='return false;') #{model}
           span &nbsp; &nbsp;
-          button.btn.btn-primary(type='submit') List
+          button.btn.btn-primary(type='submit' ng-disabled="!table") List
           span &nbsp; &nbsp;
 
     // If link section to the right include line below (and adjust Links.jade file as required) //
