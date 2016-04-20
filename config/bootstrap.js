@@ -18,6 +18,17 @@ module.exports.bootstrap = function(cb) {
 
 	var models = Object.keys(sails.models);
 
+	if (process.env.MYSQL_HOST) {
+		console.log("Connection:\n******************\n");
+		console.log("Host: \t" + process.env.MYSQL_HOST + "\n");
+		console.log("DB: \t" + process.env.DEFAULT_MYSQL_DATABASE + "\n");
+		console.log("User: \t" + process.env.DEFAULT_MYSQL_USER + "\n\n");
+	}
+	else {
+		console.log("Connection parameters undefined");
+		cb("Define database connection variables in config/local.js");
+	}
+
 	console.log("Auto-correcting ENUM fields for models:\n* " + models.join("\n* ") );
 
 	var errors = [];
