@@ -20,12 +20,25 @@ module.exports = {
 	transfer : function (req, res ) {
 		console.log("CC transfer prompt");
 
+
+		var Samples = {};
+		var Target = {};
+		var Options = {};
+
 		var target_format_id;
 		var split;
 		var sources = [];
 		if (req.body) {
+			var samples = req.body['Samples'];
+			var target  = req.body['Target'] || "{}";
+			var options = req.body['Options'] || "{}";
+
+			Sources = JSON.parse(samples);
+			Target  = target;
+			Options = JSON.parse(options);
+
 			console.log("BODY: " + JSON.stringify(req.body));
-			sources = JSON.parse(req.body.Samples);
+			Sources = JSON.parse(req.body.Samples);
 			target_format_id = req.body['Plate_Format-id'];
 			split = req.body.split;
 		}
@@ -56,12 +69,13 @@ module.exports = {
 				);
 				container++;
 			}
+			Sources = sources;
+			Target = { Format : { id : target_format_id }, rows : ['A','B'] }
 		}
-		var target =  { Format : { id : target_format_id}, rows : ['A','B'] };
 
 		return res.render(
 			'lims/WellMap', 
-			{ sources: sources, target: target, options : { split : split } }
+			{ sources: Sources, target: Target, options : { split : split } }
 		);
 	},
 
@@ -117,17 +131,21 @@ module.exports = {
 	completeTransfer : function (req, res ) {
 		console.log("CC completing transfer");
 		
-		var sources = [ { id : 1}, { id: 2} ];
-		var target = {
+		var Sources = req.body['Sources'];
+		var targets = req.body['Targets'];
+		var Set     = req.body['Set'] || {};
+		var Options = req.body['Options'] || {};
+
+		Sources = [ { id : 1}, { id: 2} ];
+		Targets = {
 			size : 1, 
 			size: '2x3', 
 			Format : { id : 5}, 
 			rows: ['A','B'], 
 			cols : [1],
-		}; // test
-		
-		//		q.when( Container.transfer_samples(test_data) )
-		q.when( Container.rearray_transfer(sources, target, { Prep : { id : 7 }}) )
+		};
+
+		q.when( Container.execute_transfer(Sources, Targets, { Prep : { id : 7 }}) )
 		.then ( function (results) {
 			return res.json(results);
 		})
