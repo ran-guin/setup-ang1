@@ -42,11 +42,17 @@ module.exports = {
 						sampleList.push(data[i].id);
 					}
 				}	
+
+				if (sampleList.length < ids.length) { 
+					warningMsg = "Scanned " + ids.length + " records but only found " + sampleList.length;
+				}
+
 				return res.render('lims/Container', { 
 					ids: ids.join(','), 
 					protocols : Protocols, 
 					samples: data , 
 					sampleList : sampleList,
+					warningMsg: warningMsg,
 					errorMsg : errorMsg,
 					target_formats : target_formats 
 				} );
