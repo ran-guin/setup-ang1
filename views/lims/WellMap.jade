@@ -4,12 +4,13 @@ block content
   - Rows = ['A','B','C'];
   - Cols = [1,2,3,4]
   - targets = [];
-  - config = JSON.stringify({ sources : sources, target : target, options : options });
+  - config = { Sources : sources, Target : target, Options : options };
+  - var init = "initialize(" + JSON.stringify(config) + ")";
   
   div.container
     div(ng-app='myApp')
       div(ng-controller="CommonController")
-       div(ng-controller='WellController', ng-init="initialize('#{config}')")
+       div(ng-controller='WellController', ng-init="#{init}")
         if errorMsg 
           h2(style='color:red') Error: #{errorMsg}
         p &nbsp;
@@ -22,14 +23,25 @@ block content
           b &nbsp; Column &nbsp;
 
         hr
-        h3 Source List:
+        b Transfer: 
+        div
+          input(type='text')
+          span.lookup(id='Lookup-units' ng-init="loadLookup('units')")                  
+        div        
+          span.lookup(id='Lookup-Plate_Format' ng-init="loadLookup('Plate_Format', 'Plate_Format_ID', 'Plate_Format_Type')") 
+          b &nbsp; Split X: 
+          input(name='split' type='text' size='5px')
+
+        hr
+        h3 Source List: {{ sources.length }}
+        b {{ sources }} 
         h4 Samples: {{ sources[0] }}, {{ sources[1] }} ...{{ sources[sources.length-1] }}
         hr
         h4 Target: {{ target }}
         hr
         h5 Options: {{ options }}
         hr
-        button(type='button' ng-click="distribute()") Distribute
+        button(type='button' ng-click="redistribute()") Distribute
         span &nbsp; &nbsp;
         button(type='button' ng-click="redistribute()") Re-Distribute
         span &nbsp; &nbsp;

@@ -27,9 +27,10 @@ block content
                 td(style='width:30%; vertical-align:middle')
                   button.btn.btn-primary.form-control(type='submit' ng-disabled=0) Run Protocol 
 
-          form(role='form' method = 'post' action= "/xfer")
+          form(role='form' method = 'post' action= "/transfer")
             input(type = 'hidden' name='Samples' value='#{JSON.stringify(samples)}')
-            input(id = 'id' name='ids' type='hidden' value="#{sampleList.join(',')}")
+            input(id = 'id' name='plate_ids' type='hidden' value="#{sampleList.join(',')}")
+            input(type='hidden' id='Plate_ID' name='Plate_ID' value='#{ids}')
           
             table.table
               tr
