@@ -83,8 +83,7 @@ module.exports = {
 		console.log("q: " + query);
 
 		Record.query(query, function (err, result) {
-			console.log("PULLED: " + JSON.stringify(result));
-			console.log("RESET: " + JSON.stringify(resetData));
+
 			if (err) { console.log("cloning error: " + err); deferred.reject(err);  }
 			else if (result.length == 0) {
 				console.log("cloned record not found");
@@ -92,21 +91,33 @@ module.exports = {
 			}
 			else {
 				var data = result;
-				
+			
+				var resetFields = Object.keys(resetData);	
 				for (var index=0; index<result.length; index++) {
 					var id = result[index][idField];
-					var resetFields = Object.keys(resetData[id]);
 
 					for (var i=0; i<resetFields.length; i++) {
-						var value = resetData[id][resetFields[i]] || null;
+						var value = resetData[resetFields[i]];
+						if (typeof value == 'object')  {
+							value = resetData[resetFields[i]][index];
+						}
+						else if ( value == '<id>' ) {
+							value = id;
+						}
+						else {
+							value = resetData[resetFields[i]];
+						}
+
 						data[index][resetFields[i]] = value;
-						console.log('** RESET ' + id + ':' + resetFields[i] + ' to ' + value);
+						console.log('** RESET ' + resetFields[i] + ' to ' + value);
 					}
 				}
-				
-				Record.createNew(table, data, resetData)
+
+				console.log("New Record: " + JSON.stringify(data));
+				console.log("Reset: " + JSON.stringify(resetData));
+
+				Record.createNew(table, data)
 				.then (function (newResponse) {
-					console.log("createNew response: " + JSON.stringify(newResponse));
 					var target_id = newResponse.insertId;
 					var target_count = newResponse.affectedRows;
 					var target_ids = [];
@@ -121,18 +132,18 @@ module.exports = {
 							deferred.resolve({ data: data, created: newResponse, attributes: data1});
 						})
 						.catch ( function (err2) {
-							deferred.reject('atterr2' + err2); //{error :err2, table: table, ids: ids, target_ids: target_ids});
+							deferred.reject({error :err2, table: table, ids: ids, target_ids: target_ids});
 						});	
 					}
 					else if (target_count == 0) {
-						deferred.reject('atterr0'); //error: "No target records created", response: newResponse });
+						deferred.reject({ error: "No target records created", response: newResponse });
 					}
 					else {
-						deferred.reject('atterr00: ' + ids + ':' + target_ids); //{error: "Target count != Source count", sources: ids, targets: target_ids});
+						deferred.reject({error: "Target count != Source count", sources: ids, targets: target_ids});
 					}
 				})
 				.catch ( function (err3) {
-					deferred.reject('atterr3'+err3); //{error: err3, table: table, data: data, reset: resetData});
+					deferred.reject({error: err3, table: table, data: data, reset: resetData});
 				});
 			}
 		});
@@ -144,14 +155,11 @@ module.exports = {
 		// Bypass waterline create method to enable insertion into models in non-standard format //
 		
 		console.log("**** CALL createNew WRAPPER *****");
+
 		var deferred = q.defer();
 		console.log("create new record(s) in " + table + ": " + JSON.stringify(Tdata));
 
 		if (Tdata == 'undefined') { deferred.reject('no data'); return deferred.promise }
-		
-		console.log('type: ' + typeof Tdata.length);
-		//var F = [];
-		var dtype = typeof Tdata.length;
 
 		var data = [];
 		if (Tdata.length == undefined) { data = [Tdata] }
@@ -170,8 +178,9 @@ module.exports = {
 				if (typeof value == 'number') { value = value.toString() }
 
 				console.log("check " + value);
-				if (value.match(/^<user>$/i)) {
-					value = 7;
+				if (value == null) {}
+				else if (value.match(/^<user>$/i)) {
+					value = sails.config.userid; 
 				}
 				else if (value.match(/^<increment>$/i)) {
 					value = 1;
@@ -180,6 +189,7 @@ module.exports = {
 				else if (value.match(/^<now>$/i)) {
 					value = '2016-01-01'; 
 				}
+				console.log("Using: " + value);
 
 				if (resetData && resetData[fields[f]]) {
 					var resetValue = resetData[fields[f]];
@@ -187,6 +197,9 @@ module.exports = {
 
 					if (resetValue == '<NULL>') {
 						Vi.push('null');
+					}
+					if (resetValue == '<ID>') {
+						Vi.push(idField);
 					}
 					else if (resetValue == null) {
 						Vi.push("\"" + value + "\"");
