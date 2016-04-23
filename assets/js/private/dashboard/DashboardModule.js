@@ -1,1 +1,1 @@
-angular.module('myApp', ['toastr']);
+angular.module('myApp');
