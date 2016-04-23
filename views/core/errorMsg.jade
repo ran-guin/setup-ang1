@@ -5,3 +5,13 @@ if errorMsg
     strong &nbsp; Error: &nbsp;
       span #{errorMsg}
     a(href="#" class="close" data-dismiss="alert" aria-label="close") &times;
+
+if warningMsg
+  p &nbsp;
+  div.alert.alert-warning
+    i.fa.fa-warning 
+    strong 
+        span.text-danger &nbsp; Warning:
+        span &nbsp;
+      span #{warningMsg}
+    a(href="#" class="close" data-dismiss="alert" aria-label="close") &times;
