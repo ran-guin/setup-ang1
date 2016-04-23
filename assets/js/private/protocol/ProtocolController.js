@@ -267,12 +267,19 @@ function protocolController ($scope, $rootScope, $http, $q) {
             }
         }
 
+        var Transfer;
+
+        if ($scope.Step.Target_format) {
+            Transfer = { target_format : $scope.Step.Target_format }
+        } 
+
         var data =  {
             'ids': $scope.plate_ids,
             'Prep' : PrepData,
             'Plate' : PlateData,
             'Plate_Attribute' : PlateAttributes,
             'Prep_Attribute'  : PrepAttributes,
+            'Transfer' : Transfer,
         };
 
         if ($scope['target_format']) {
