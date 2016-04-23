@@ -17,6 +17,8 @@ module.exports = {
 	alias: function (name) {
 		// enable customization of field names if non-standard //
 		var alias = { 
+			'id' : 'Plate_ID',
+			'Parent' : 'FKParent_Plate__ID',
 			'volume' : 'Current_Volume',
 			'volume_units' : 'Current_Volume_Units',
 			'sample_type'  : 'FK_Sample_Type__ID',
@@ -56,10 +58,10 @@ module.exports = {
 
 		var deferred = q.defer();
 
-		var fields = 'Plate_ID as id, Sample_Type as sample_type, Plate_Format_Type as container_format';
-		var query = 'SELECT ' + fields + " FROM Plate LEFT JOIN Sample_Type ON FK_Sample_Type__ID=Sample_Type_ID LEFT JOIN Plate_Format ON FK_Plate_Format__ID=Plate_Format_ID WHERE Plate_ID IN (" + id_list + ')';
-		//var fields = "Plate_ID as id, Sample_Type as sample_type, Plate_Format_Type as container_format, case WHEN Rack_Type='Slot' THEN Rack_Name ELSE NULL END as position";
-		//var query = 'SELECT ' + fields + " FROM Plate LEFT JOIN Sample_Type ON FK_Sample_Type__ID=Sample_Type_ID LEFT JOIN Plate_Format ON FK_Plate_Format__ID=Plate_Format_ID LEFT JOIN Rack ON Plate.FK_Rack__ID=Rack_ID WHERE Plate_ID IN (" + id_list + ')';
+		//var fields = 'Plate_ID as id, Sample_Type as sample_type, Plate_Format_Type as container_format';
+		//var query = 'SELECT ' + fields + " FROM Plate LEFT JOIN Sample_Type ON FK_Sample_Type__ID=Sample_Type_ID LEFT JOIN Plate_Format ON FK_Plate_Format__ID=Plate_Format_ID WHERE Plate_ID IN (" + id_list + ')';
+		var fields = "Plate_ID as id, Sample_Type as sample_type, Plate_Format_Type as container_format, case WHEN Rack_Type='Slot' THEN Rack_Name ELSE NULL END as position";
+		var query = 'SELECT ' + fields + " FROM Plate LEFT JOIN Sample_Type ON FK_Sample_Type__ID=Sample_Type_ID LEFT JOIN Plate_Format ON FK_Plate_Format__ID=Plate_Format_ID LEFT JOIN Rack ON Plate.FK_Rack__ID=Rack_ID WHERE Plate_ID IN (" + id_list + ')';
 
 		console.log("SQL: " + query);
 	    Record.query(query, function (err, result) {
@@ -95,16 +97,87 @@ module.exports = {
 
 	},
 
-	execute_transfer : function (sources, target, options) {
+	execute_transfer : function (sources, targets, options) {
+		//
+		// Input: 
+		//
+		// id: comma-delimited list of id(s)
+		//  OR
+		// Sources: array of hashes [ { id, ...}. { id: } ...] - may contain other sample attributes
+		// 
+		// (optionally - if target format, size, position, or # of samples (via splitting) differs)
+		// Targets:  array of hashes: [{ source_index, source_id, source_position, target_index, target_position, volume, units, colour_code ?)},..]
+		// Options: hash : { prep: { prepdata }, user, timestamp, extraction_type, target_format, location }    
+		//
+		// Output:
+		//
+		// Generates records for N x sample transfer:
+		//
+		// [Optional] Prep record (+ Plate_Prep reccords x N)
+		// New Plate records x N
+		//  + New MUL Plate records if applicable
+		//
+		// Updates Source Plate volumes
+		// 
+		// Returns: create data hash for new Plates.... (need to be able to reset samples attribute within Protocol controller (angular)
 
+		console.log("Executing Transfer ... ");
 		var deferred = q.defer();
 
-		console.log("EXECUTE TRANSFER");
-		console.log("Sources: " + JSON.stringify(sources));
-		console.log("Targets: " + JSON.stringify(target));
-		console.log("Optoins: " + JSON.stringify(options));
-	
-		deferred.resolve({});
+		if (sources && sources.length) {
+			console.log("EXECUTE TRANSFER");
+			console.log("Sources: " + JSON.stringify(sources));
+
+			var ids = [];
+			var volumes = [];
+
+			if ( typeof sources[0] == 'number' ) {
+				ids = sources;
+			}
+			else if (typeof sources[0] == 'object' && sources[0]['id']) {
+				for (var i=0; i<sources.length; i++) {
+					ids.push(sources[i]['id']);
+					var volume = sources[i]['volume'] || options['volume'];
+					volumes.push(volume);
+				}
+			}
+			else {
+				ids = sources.split(/\s*,\s*/);
+			}
+
+			console.log("IDS:" + JSON.stringify(ids));
+
+			console.log("Targets: " + JSON.stringify(targets));
+			console.log("Options: " + JSON.stringify(options));
+
+			var resetData = {
+				'Plate_ID' : '',
+				'FKParent_Plate__ID' : '<id>',
+				'FK_Rack__ID' : '<NULL>', 
+			};
+
+			// Update Volumes if applicable (default to entire volume) 
+			if (options.volume) {
+				resetData['Current_Volume'] = options.volume;
+				resetData['Current_Volume_Units'] = options.volume_units;
+			}
+
+			Container.updateVolume(ids, options.volume, options_volume_units);
+
+			// Add new records to Database //
+			Record.clone('Plate', ids, resetData, { id: Container.alias('id') })
+			.then ( function (cloneData) {
+				console.log("Created new record(s): " + JSON.stringify(cloneData));
+				deferred.resolve(cloneData);
+				//return res.render('lims/WellMap', { sources: Sources, Targets: Targets, target: { wells: 96, max_row: 'A', max_col: 12 }, options : { split: 1 }});
+			})
+			.catch ( function (cloneError) {
+				console.log("Cloning Error: " + cloneError);
+				deferred.resolve({error: cloneError});
+				//return res.render('lims/WellMap', { sources: Sources, errorMsg: "cloning Error"});
+			});
+		}
+		else { deferred.reject({error: "No transfer sources indicated"}) }
 
 		return deferred.promise;
 	},
@@ -256,7 +329,7 @@ module.exports = {
 			console.log("Map: " + JSON.stringify(map));
 
 			var Targets = map.Targets || [];   // array of targets (hashes)
-			var Sources = map.Sources || [];   // array of sources (hashes)
+			//var Sources = map.Sources || [];   // array of sources (hashes)
 			var Set     = map.Set || map.Options || {};       // optional specs: format, sample_type
 
 			var id = map.id || '';
@@ -275,13 +348,13 @@ module.exports = {
 			var optional_input = Object.keys(Set);
 
 			// resetData is comprised of a potential combination of standard field resets:
-			var resetData = {'Plate_ID' : '<NULL>', 'FK_Rack__ID' : '<NULL>'};
+			var resetData = {'id' : '<NULL>', 'location' : '<NULL>'};
 			// ... and item specific resets (keyed on id) as set below
 			// eg resetData = { 15: { parent_id = 7 }, 'Plate_ID' : '<NULL>'}
 
 			for (var j=0; j<optional_input.length; j++) {
 				var opt = optional_input[j];
-				var fld = Container.alias(opt) || opt;
+				var fld = Container.alias(opt) || opt; // map standard names to custom aliases
 				if (Set[opt]) { resetData[fld] = Set[opt] };
 				console.log("optionally set " + opt + " to " + Set[opt]);
 			}
@@ -289,23 +362,25 @@ module.exports = {
 			console.log(Targets.length + " target samples to be created...");
 			var clone_ids = [];
 			for (var i=0; i<Targets.length; i++) {
-				var thisId = Sources[i].id;
+				var thisId = Targets[i].source_id;
 				clone_ids.push(thisId);
+				resetData[thisId] = { };
 
-				resetData[thisId] = { 'FKParent_Plate__ID' : Sources[i].id };
+				var parent = Container.alias('Parent') || 'Parent';
+				resetData[thisId][parent] = thisId;
 
 				for (j=0; j<input.length; j++) {
 					var fld = Container.alias(input[j]) || input[j];
 					var val = Targets[i][input[j]] || Set[input[j]] || null;
 					resetData[thisId][fld] = val;
 				}
-				console.log("Clone sample: id=" + Sources[0].id + "; reset: " + JSON.stringify(resetData));
+				console.log("Clone sample: id=" + thisId + "; reset: " + JSON.stringify(resetData));
 			}
 
 			Record.clone('Plate', clone_ids, resetData, { id: 'Plate_ID' })
 			.then ( function (cloneData) {
 				console.log("Created new record(s): " + JSON.stringify(cloneData));
-				return res.send('okay1');
+				return res,json(cloneData);
 				//return res.render('lims/WellMap', { sources: Sources, Targets: Targets, target: { wells: 96, max_row: 'A', max_col: 12 }, options : { split: 1 }});
 			})
 			.catch ( function (cloneError) {
