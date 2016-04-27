@@ -1,6 +1,13 @@
 extends ./../customize/privateLayout
 block content
 
+  // input variables: 
+  //    - plate_ids (array); 
+  //    - Samples   (array of hashes)
+  
+  - var config = { plate_ids: plate_ids, Samples: Samples };
+  - var init = "initialize(" + JSON.stringify(config) + ")";
+
   p &nbsp;
   div.container
      div(ng-app='myApp')
@@ -8,14 +15,14 @@ block content
         
         include ./../core/errorMsg.jade
 
-        if samples.length
+        if Samples.length
           div.alert.alert-success
-            b #{samples.length} x #{samples[0].container_format}(s) containing #{samples[0].sample_type}
+            b #{Samples.length} x #{Samples[0].container_format}(s) containing #{Samples[0].sample_type}
             br
-            h5 [ IDs: #{sampleList[0]} ... #{sampleList[samples.length-1]} ] 
+            h5 [ IDs: #{sampleList[0]} ... #{sampleList[Samples.length-1]} ] 
 
           form(role='form' method='post' action="/Lab_protocol/run" enctype='form-data')
-            input(type = 'hidden' name='Samples' value='#{JSON.stringify(samples)}')
+            input(type = 'hidden' name='Samples' value='#{JSON.stringify(Samples)}')
             input(id = 'id' name='plate_ids' type='hidden' value="#{sampleList.join(',')}")
             input(type='hidden' id='Plate_ID' name='Plate_ID' value='#{ids}')
             table.table
@@ -23,12 +30,17 @@ block content
                 td(style='width:30%')
                   h2 Continue Protocol: 
                 td(style='width:40%; vertical-align:middle')
-                  span.lookup(id='Lookup-lab_protocol' ng-init="loadLookup('lab_protocol')")
+                  //- init = "loadLookup('lab_protocol','','','Select Protocol',\"(Container_format IS NULL OR Container_format = '" + Samples[0].container_format_id + "')\")";
+
+                  - init = "loadLookup('lab_protocol','','','Select Protocol',\"(Container_format IS NULL OR Container_format = '" + Samples[0].sample_type_id + "') AND ( Sample_type IS NULL OR Sample_type = '" + Samples[0].container_format_id + "')\")";
+
+
+                  span.lookup(id='Lookup-lab_protocol' ng-init="#{init}")
                 td(style='width:30%; vertical-align:middle')
-                  button.btn.btn-primary.form-control(type='submit' ng-disabled=0) Run Protocol 
+                  button.btn.btn-success.form-control(type='submit' ng-disabled=0) Run Protocol 
 
           form(role='form' method = 'post' action= "/transfer")
-            input(type = 'hidden' name='Samples' value='#{JSON.stringify(samples)}')
+            input(type = 'hidden' name='Samples' value='#{JSON.stringify(Samples)}')
             input(id = 'id' name='plate_ids' type='hidden' value="#{sampleList.join(',')}")
             input(type='hidden' id='Plate_ID' name='Plate_ID' value='#{ids}')
           
@@ -37,46 +49,61 @@ block content
                 td(style='width:30%')
                   h2 Transfer To: &nbsp;
                 td(style='width:40%; vertical-align:middle')
-                    span.lookup(id='Lookup-Plate_Format' ng-init="loadLookup('Plate_Format', 'Plate_Format_ID', 'Plate_Format_Type')") 
-                    b &nbsp; Split X: 
-                    input(name='split' type='text' size='5px')
+                    span.lookup(id='Lookup-Plate_Format' ng-init="loadLookup('Plate_Format', 'Plate_Format_ID', 'Plate_Format_Type','Select Target Format')") 
+
+                    // b &nbsp; Split X: 
+                    // input(name='split' type='text' size='5px')
                 td(style='width:30%; vertical-align:middle')
-                    button.btn.btn-primary.form-control(type='submit') Transfer Samples
+                    button.btn.btn-success.form-control(type='submit') Transfer Samples
 
-          hr         
+          if Samples[0].container_format.match(/^Matrix/)
+            form(role='form' method = 'post' action="/uploadMatrix" enctype="multipart/form-data") 
+              //  style='display:inline-block'
 
-          table.table.table-bordered
-            tr
-              td(style='width:30%')
-                h2 Assign to Matrix Tubes              
-              td(style='width:40%')
-                  //div(ng-app="fileUpload" ng-controller="MyCtrl")
-                  div(style='padding: 40px' ngf-drop ngf-select ng-model="files" class="drop-box" 
-                      ngf-drag-over-class="'dragover'" ngf-multiple="true" ngf-allow-dir="true"
-                      accept="image/*,application/pdf" 
-                      ngf-pattern="'image/*,application/pdf'") 
-                      b Drop images here ... or 
-                      br
-                      button.btn.btn-default.form-control Select File(s) to Upload
-                  div(ngf-no-file-drop) File Drag/Drop is not supported for this browser
-              td(style='width:30%')
-                div &nbsp;
-                button.form-control.btn.btn-primary(ng-disabled="! files.length") Link Matrix Tubes to BCG IDs
-                div &nbsp;
+              table.table
+                tr
+                  td(style='width:30%')
+                    h2 Link Matrix File              
+                  td(style='width:40%; vertical-align:middle' )
+                    span(style='width:100%')
+                        input.btn.btn-warning(type = 'file' name='MatrixFile' style='display:inline-block')
+                        span &nbsp; &nbsp; 
+                  td(style='width:30%; vertical-align:middle')                
+                    button.btn.btn-success.form-control(type='submit') Load Matrix File
 
-                b Files:
-                ul
-                  li(ng-repeat="f in files" style="font:smaller") {{f.name}} {{f.$error}} {{f.$errorParam}}
-            tr
-              td &nbsp;
-              td(colspan=2)         
-                b Upload Log:
-                pre(style='height: 100%')
-                  {{log}}
+              //table
+                tr
+                  td(style='width:30%')
+                    h2 Assign to Matrix Tubes              
+                  td(style='width: 40%')
+                      div(style='padding: 40px' name='MatrixFile' ngf-drop ngf-select ng-model="files" class="drop-box" 
+                          ngf-drag-over-class="'dragover'" ngf-multiple="true" ngf-allow-dir="true"
+                          accept="" 
+                          ngf-pattern="") 
+                          b Drop images here ... or 
+                          br
+                          button.btn.btn-default.form-control Select File(s) to Upload
+                      div(ngf-no-file-drop) File Drag/Drop is not supported for this browser
+                  td(style='width:30%')
+                    div &nbsp;
+                    button.form-control.btn.btn-success(type='submit' ng-disabled="! files.length" ng-click="") Link Matrix Tubes to BCG IDs
+                    div &nbsp;
+
+                    b Files:
+                    ul
+                      li(ng-repeat="f in files" style="font:smaller") {{f.name}} {{f.$error}} {{f.$errorParam}} 
+                tr
+                  td &nbsp;
+                  td(colspan=2)         
+                    b Upload Log:
+                    pre(style='height: 100%')
+                      {{log}}
+
         hr
+        h2.alert.alert-warning Debugging Information:  (hidden in production)
         b session: #{JSON.stringify(session)} 
         BR
-        b Samples: #{JSON.stringify(samples)}
+        b Samples: #{JSON.stringify(Samples)}
         BR
         b IDs: #{JSON.stringify(sampleList)}
         hr

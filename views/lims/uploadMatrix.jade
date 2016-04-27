@@ -1,0 +1,16 @@
+if Samples[0].container_format.match(/^EDTA/)
+  form(role='form' method = 'post' action="/uploadMatrix" enctype="multipart/form-data") 
+    input(type = 'hidden' name='Samples' value='#{JSON.stringify(Samples)}')
+    input(id = 'id' name='plate_ids' type='hidden' value="#{plate_ids}")  
+    //  style='display:inline-block'
+
+    table.table
+      tr
+        td(style='width:30%')
+          h2 Link Matrix File              
+        td(style='width:40%; vertical-align:middle' )
+          span(style='width:100%')
+              input.btn.btn-warning(type = 'file' name='MatrixFile' style='display:inline-block')
+              span &nbsp; &nbsp; 
+        td(style='width:30%; vertical-align:middle')                
+          button.btn.btn-success.form-control(type='submit') Load Matrix File
