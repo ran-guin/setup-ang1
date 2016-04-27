@@ -102,11 +102,10 @@ module.exports.routes = {
   * for configuration options and examples.                                  *
   *                                                                          *
   ***************************************************************************/
-  'POST /uploadDataMatrix' : 'ContainerController.uploadDataMatrix',
-
-  'GET /xfer' : 'ContainerController.transfer',
+  'POST /uploadMatrix' : 'ContainerController.uploadMatrix',
   'POST /transfer' : 'ContainerController.transfer',
-  
+
+  'GET /xfer' : 'ContainerController.transfer',  
   'POST /xfer' : 'ContainerController.completeTransfer',
 
   // Custom Pages 
@@ -134,7 +133,7 @@ module.exports.routes = {
 
   'POST /scan-barcode' : 'BarcodeController.scan',
 
-  'POST /completed-step' : 'Lab_protocolController.complete',
+  //'POST /completed-step' : 'Lab_protocolController.complete',
 
   // Clinic Pages
   'GET /clinic/home/:id' : 'ClinicController.home',
