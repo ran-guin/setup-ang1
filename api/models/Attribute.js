@@ -174,7 +174,7 @@ module.exports = {
 
 			Record.createNew(attModel, add )
 			.then (function (AttResult) {
-				console.log("Added Attribute: " + JSON.stringify(AttResult));
+				console.log("Added " + model + " Attribute: " + JSON.stringify(AttResult));
 				deferred.resolve(AttResult);
 			})
 			.catch ( function (err) {
