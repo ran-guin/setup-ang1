@@ -14,7 +14,7 @@ module.exports = {
 		step_number : { type : 'int' },
 		instructions : { type : 'string'},
 		message : { type : 'string' },
-		Target_format : { model : 'Plate_Format' },
+		Target_format : { model : 'container_format' },
 		Target_sample : { model : 'Sample_Type' },
 		reset_focus : { 
 			type : 'boolean',
