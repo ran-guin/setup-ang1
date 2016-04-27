@@ -17,6 +17,7 @@ module.exports = {
 
 	new: function (req, res) { 
 		var model = req.param('model');
+
 		console.log("retrieving " + model + ' model');
 		var table = sails.models[model].tableName || model;
 
@@ -77,7 +78,7 @@ module.exports = {
 				var access = '';   // store access permissions in database ? ... or in model ... 
 				var data = { table: table, fields: Fields, access: access, action: 'Add'};
 				console.log("Render form with " + JSON.stringify(data));
-				res.render('record/form', database);
+				res.render('record/form', data);
 			}
 		);
 	},
@@ -126,6 +127,8 @@ module.exports = {
 	lookup: function (req, res) {
 		var table = req.param('table');
 		var fields = req.param('fields') || 'id:name';
+		var prompt = req.param('prompt') || 'Select:';
+		var condition = req.param('condition') || 1;
 
 		if (fields == 'undefined') { fields = 'id:name' }
 			
@@ -137,14 +140,16 @@ module.exports = {
 		if (extract.length == 1) { extract[1] = extract[0] }
 
 		var select = extract[0] + ' as id, ' + extract[1] + ' as label';
-		console.log("Select: " + select);
-		Record.query("Select " + select + " from " + table, function (err, result) {
+		var query = "Select " + select + " from " + table + " WHERE " + condition;
+		console.log("Query: " + query);
+
+		Record.query(query, function (err, result) {
 			if (err) {
 				return res.send("ERROR: " + err);
 			}
 			console.log("Lookup: " + JSON.stringify(result));
 			//return res.send(result);
-			return res.render('core/lookup', { table : table, data : result });
+			return res.render('core/lookup', { table : table, data : result, prompt: prompt });
 		});
 	},
 
