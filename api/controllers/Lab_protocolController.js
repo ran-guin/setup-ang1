@@ -87,7 +87,7 @@ module.exports = {
 	/** return view **/
 	'run' : function (req, res) {
 
-		if (!req.body) { return json('Run via post') }
+		if (!req.body) { return res.json('Run via post') }
 
 		var plate_ids = req.body['plate_ids'] || [];
 
@@ -115,28 +115,6 @@ module.exports = {
 		        return res.send('');
 		    }
 
-		    /*
-		    var Options = [];
-		    for (var i=0; i<result.length; i++) {
-		        Lab_protocol.load_Attributes(result[i]['Input'].split(':'), function (err, atts) {
-		            if (err) { return res.send("Error loading attributes") }
-
-		            console.log("Attributes: " + JSON.stringify(atts));
-		            if (atts['Plate'].length > 0) {
-		                for (var i=0; i< atts['Plate'].length; i++) {
-		                    Attribute.options('Plate', atts['Plate'][i], function (err, opts) {
-		                        if (err) { return res.send("Error generating Plate attribute options") }
-
-		                        console.log('Options: ' + JSON.stringify(opts) );
-		                        Options.push(opts);
-		                    });
-		                }
-		            }
-
-		        });
-
-		    }
-		    */
 		    Lab_protocol.input_list( result )
 		    .then ( function (inputList) {
 		    	console.log('globals:' + JSON.stringify(sails.config.globals));		    	
@@ -166,10 +144,11 @@ module.exports = {
 		// execute completion of lab protocol step //
 		var data = req.body;
 
-		console.log("COMPLETE ALL STEPS: " + JSON.stringify(data));
+		console.log("COMPLETE in LP controller: " + JSON.stringify(data));
 
 		q.when( Lab_protocol.complete(data) )
 		.then ( function (result) {
+			console.log("returned from Lab_protocol.complete method...");
 			return res.json(result);
 		})
 		.catch ( function (err) {
