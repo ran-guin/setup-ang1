@@ -11,12 +11,28 @@ module.exports = {
 	
 	scan: function (req, res) {
 
+		var model = req.body.model;
+		//var alt_param = model.toLowerCase + '_ids';
+		var ids;
+
 		var barcode = req.body.barcode;
-		var Scanned = Barcode.parse(barcode);
 
-		if (Scanned['Plate'] && Scanned['Plate'].length > 0) {
+		console.log("Scan: " + JSON.stringify(req.body));
 
-			var ids = Scanned['Plate'];
+		var Scanned = {};
+		if (barcode) { 
+			Scanned = Barcode.parse(barcode);
+			if (Scanned['Plate'] && Scanned['Plate'].length > 0) {
+				model = 'Plate';
+				ids = Scanned['Plate'];
+			}
+		}
+
+		if (model == 'Plate') {
+			if (! ids && req.body['ids'] || req.body['plate_ids']) { 
+				var id_list = req.body['ids'] || req.body['plate_ids'];
+				ids = id_list.split(/\s*,\s*/);
+			}
 
 			console.log("IDS: " + JSON.stringify(ids));
 			var Protocols = Lab_protocol.list({ 'Plate' : ids} );
@@ -32,6 +48,7 @@ module.exports = {
 			.then (function (data) {
 
 				var errorMsg;
+				var warningMsg;
 
 				var sampleList = [];
 				if (data.length == 0) {
@@ -47,14 +64,15 @@ module.exports = {
 					warningMsg = "Scanned " + ids.length + " records but only found " + sampleList.length;
 				}
 
+				console.log('render....');
 				return res.render('lims/Container', { 
-					ids: ids.join(','), 
-					protocols : Protocols, 
-					samples: data , 
+					//plate_ids: ids.join(','), 
+					//protocols : Protocols, 
+					Samples: data , 
 					sampleList : sampleList,
 					warningMsg: warningMsg,
 					errorMsg : errorMsg,
-					target_formats : target_formats 
+					//target_formats : target_formats 
 				} );
 			})
 			.catch ( function (err) {
