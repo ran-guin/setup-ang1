@@ -5,15 +5,28 @@ app.controller('CommonController',
     function ($scope, $q, $rootScope, $http, $location, CommonFactory, Upload) {
         console.log('loaded Common Controller');
         console.log(JSON.stringify(app));
-        // Automatically Load Lookup Files //
-        $scope.loadLookup = function loadLookup(table, id, label) {
         
+        // Automatically Load Lookup Files //
+        $scope.loadLookup = function loadLookup(table, id, label, prompt, condition) {
+         
         	var url = "/lookup/" + table + '/';
         	url = url + id;
 
-        	if (label) { url = url + ':' + label }
+        	var options = {};
+        	if ( label ) { 
+        		url = url + ':' + label;
+        		options.label = label;
+        	}
+        	if (prompt) {
+        		options.prompt = prompt;
+        	}
+        	if (condition) {
+        		options.condition = condition;
+        	}
 
-       		var got = CommonFactory.loadLookup(url, table);
+        	url = url + '?';
+
+       		var got = CommonFactory.loadLookup(url, table, options);
 
        		console.log("Loaded " + table + " Lookup Table");
     	}
@@ -26,7 +39,6 @@ app.controller('CommonController',
 
        		console.log("Loaded " + model + ': ' + attribute + " attribute prompt");
     	}
-
 
     	// Automatically generate timestamp attribute along with standard attributes for lastMonth & nextMonth //
 	    var start = new Date();

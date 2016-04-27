@@ -7,9 +7,18 @@ app.factory('CommonFactory', function($rootScope, $http){
   service.AttributePrompt = [];
 
   /** Load Lookup Table **/
-  service.loadLookup = function (url, table, model, def) { 
-        if (!model) { model = table }
-	    console.log('load lookup table for ' + table + ' : ' + model );
+  service.loadLookup = function (url, table, options) {
+
+    if (! options ) { options = {} } 
+    var model = options.model || table;
+    var prompt = options.prompt || 'Select';
+    var def = options.default;
+    var condition = options.condition || '';
+
+    if (prompt) { url = url + "prompt=" + prompt + '&'}
+    if (condition) { url = url + "condition=" + condition }
+
+	console.log('load lookup table for ' + table + ' : ' + model );
 
         if ( this.Lookup[table]) {
           console.log('already loaded ' + table );
