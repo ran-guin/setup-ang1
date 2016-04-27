@@ -60,7 +60,7 @@ module.exports = {
 
 		//var fields = 'Plate_ID as id, Sample_Type as sample_type, Plate_Format_Type as container_format';
 		//var query = 'SELECT ' + fields + " FROM Plate LEFT JOIN Sample_Type ON FK_Sample_Type__ID=Sample_Type_ID LEFT JOIN Plate_Format ON FK_Plate_Format__ID=Plate_Format_ID WHERE Plate_ID IN (" + id_list + ')';
-		var fields = "Plate_ID as id, Sample_Type as sample_type, Plate_Format_Type as container_format, case WHEN Rack_Type='Slot' THEN Rack_Name ELSE NULL END as position";
+		var fields = "Plate_ID as id, Sample_Type as sample_type, Sample_Type_ID as sample_type_id, Plate_Format_Type as container_format, Plate_Format_ID as container_format_id, case WHEN Rack_Type='Slot' THEN Rack_Name ELSE NULL END as position";
 		var query = 'SELECT ' + fields + " FROM Plate LEFT JOIN Sample_Type ON FK_Sample_Type__ID=Sample_Type_ID LEFT JOIN Plate_Format ON FK_Plate_Format__ID=Plate_Format_ID LEFT JOIN Rack ON Plate.FK_Rack__ID=Rack_ID WHERE Plate_ID IN (" + id_list + ')';
 
 		console.log("SQL: " + query);
@@ -121,11 +121,10 @@ module.exports = {
 		// 
 		// Returns: create data hash for new Plates.... (need to be able to reset samples attribute within Protocol controller (angular)
 
-		console.log("Executing Transfer ... ");
+		console.log("Executing Container Transfer ... ");
 		var deferred = q.defer();
 
 		if (sources && sources.length) {
-			console.log("EXECUTE TRANSFER");
 			console.log("Sources: " + JSON.stringify(sources));
 
 			var ids = [];
@@ -146,7 +145,6 @@ module.exports = {
 			}
 
 			console.log("IDS:" + JSON.stringify(ids));
-
 			console.log("Targets: " + JSON.stringify(targets));
 			console.log("Options: " + JSON.stringify(options));
 
@@ -160,20 +158,21 @@ module.exports = {
 			if (options.volume) {
 				resetData['Current_Volume'] = options.volume;
 				resetData['Current_Volume_Units'] = options.volume_units;
-			}
 
-			Container.updateVolume(ids, options.volume, options_volume_units);
+				console.log("track removal of " + options.volume + options.volume_units);
+				//Container.updateVolume(ids, -options.volume, options.volume_units, { prep : options.prep_id});
+			}
 
 			// Add new records to Database //
 			Record.clone('Plate', ids, resetData, { id: Container.alias('id') })
 			.then ( function (cloneData) {
-				console.log("Created new record(s): " + JSON.stringify(cloneData));
+				console.log("\nCreated new record(s): " + JSON.stringify(cloneData));
 				deferred.resolve(cloneData);
 				//return res.render('lims/WellMap', { sources: Sources, Targets: Targets, target: { wells: 96, max_row: 'A', max_col: 12 }, options : { split: 1 }});
 			})
 			.catch ( function (cloneError) {
 				console.log("Cloning Error: " + cloneError);
-				deferred.resolve({error: cloneError});
+				deferred.reject({error: cloneError});
 				//return res.render('lims/WellMap', { sources: Sources, errorMsg: "cloning Error"});
 			});
 		}
@@ -379,7 +378,7 @@ module.exports = {
 
 			Record.clone('Plate', clone_ids, resetData, { id: 'Plate_ID' })
 			.then ( function (cloneData) {
-				console.log("Created new record(s): " + JSON.stringify(cloneData));
+				console.log("\nCreated new record(s): " + JSON.stringify(cloneData));
 				return res,json(cloneData);
 				//return res.render('lims/WellMap', { sources: Sources, Targets: Targets, target: { wells: 96, max_row: 'A', max_col: 12 }, options : { split: 1 }});
 			})
