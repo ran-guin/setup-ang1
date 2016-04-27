@@ -113,7 +113,7 @@ module.exports = {
 					}
 				}
 
-				console.log("New Record: " + JSON.stringify(data));
+				console.log("\nNew Record: " + JSON.stringify(data));
 				console.log("Reset: " + JSON.stringify(resetData));
 
 				Record.createNew(table, data)
@@ -157,7 +157,7 @@ module.exports = {
 		console.log("**** CALL createNew WRAPPER *****");
 
 		var deferred = q.defer();
-		console.log("create new record(s) in " + table + ": " + JSON.stringify(Tdata));
+		console.log("\ncreate new record(s) in " + table + ": " + JSON.stringify(Tdata));
 
 		if (Tdata == 'undefined') { deferred.reject('no data'); return deferred.promise }
 
@@ -177,19 +177,20 @@ module.exports = {
 
 				if (typeof value == 'number') { value = value.toString() }
 
-				console.log("check " + value);
 				if (value == null) {}
 				else if (value.match(/^<user>$/i)) {
 					value = sails.config.userid; 
+					console.log("replacing <user> with " + value);
 				}
 				else if (value.match(/^<increment>$/i)) {
 					value = 1;
 					onDuplicate = " ON DUPLICATE KEY UPDATE " + fields[f] + "=" + fields[f] + " + 1";
+					console.log("replacing <increment> with SQL ");
 				}
 				else if (value.match(/^<now>$/i)) {
 					value = '2016-01-01'; 
+					console.log("replacing <now> with " + value);
 				}
-				console.log("Using: " + value);
 
 				if (resetData && resetData[fields[f]]) {
 					var resetValue = resetData[fields[f]];
@@ -219,7 +220,7 @@ module.exports = {
 		}
 
 		var createString = "INSERT INTO " + table + " (" + fields.join(',') + ") VALUES " + Values.join(', ') + onDuplicate;
-		console.log("INSERT STRING: " + createString);
+		console.log("\nInsert String: " + createString);
 
 		Record.query(createString, function (err, result) {
 			if (err) { deferred.resolve({error : "Error creating new record(s): " + err}) }
