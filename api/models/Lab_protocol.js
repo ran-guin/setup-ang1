@@ -22,6 +22,8 @@ module.exports = {
 
 		description : { type : 'string '},
 
+		Container_format : { model : 'container_format' },
+		Sample_type : { model : 'sample_type'} ,
 		repeatable : { 
 			type : 'boolean',
 			defaultsTo : 'false'
@@ -48,75 +50,71 @@ module.exports = {
 		console.log("COMPLETE ALL STEPS: " + JSON.stringify(data));
 
 		var plate_list = '';
-		var ids = [];  // array version of same list ... 
-		if (data && data['ids']  && data['ids'] != 'undefined') {
-			ids = data.ids;
-			plate_list = ids.join(',');
+		console.log('get ids...');
+		var ids = data['ids'] || data['plate_ids'];  // array version of same list ... 
+		if (ids && ids.length > 0 && ids != 'undefined') {
+
+			console.log(typeof ids + " = type: " + ids.constructor); 
+
+			if ( ids.constructor == 'String' ) { console.log("list"); plate_list = ids; ids = plate_list.split(/\s*,\s*/) }
+			else { console.log("ARRAY"); plate_list = ids.join(',') }
+			Lab_protocol.savePrep(data)
+			.then ( function (PrepResult) {
+
+				var promises = [];
+				console.log("Added Single Prep: " + JSON.stringify(PrepResult));
+
+				var prep_id = [ PrepResult.Prep.insertId ];
+				console.log("Prep IDS: " + JSON.stringify(prep_id));
+
+				if (data['Sources']) {
+
+					var transfer = { 
+						size : 1, 
+						target_size: '3x6', 
+						target_format : 5,  
+						target_rows: ['A','B','C','D'], 
+						target_cols : [1,2,3,4,5,6]
+					}; // test
+
+					console.log('Sources: ' + JSON.stringify(data['Sources']));
+					promises.push( Container.execute_transfer( 
+						data['Sources'],
+						transfer,
+						{ 'prep_id' : prep_id } // test data
+					));
+
+				}
+				else {
+					console.log("No Prep Name in data: " + JSON.stringify(data));
+				}
+				
+				console.log("save attributes to plates: " + plate_list + '; prep: ' + prep_id);
+
+				promises.push( Attribute.save('Plate', ids, data["Plate_Attribute"]) );
+				promises.push( Attribute.save('Prep', prep_id, data["Prep_Attribute"]) );
+				
+				promises.push( Container.saveLastPrep(ids, prep_id[0]) );
+
+				q.all( promises )
+				.then ( function (Qdata) {
+					console.log("ALL PROMISES COMPLETE: " + JSON.stringify(Qdata));
+					deferred.resolve(Qdata);
+				})
+				.catch ( function (Qerr) {
+					console.log("Error Completing all actions: " + JSON.stringify(Qerr));
+					deferred.reject({ error : "Error completing all actions: " + JSON.stringify(Qerr)}) ;
+				});
+			})
+			.catch (function (err) {
+				console.log("Error saving completed Prep Record: " + err);
+				deferred.reject({ error : "Error saving Prep Record: " + err} );
+			});
+
 		}
 		else {
 			deferred.reject({ error : " No Plate IDs or Data "} );
 		}
-
-		Lab_protocol.savePrep(data)
-		.then ( function (PrepResult) {
-
-			var promises = [];
-			console.log("Added Single Prep: " + JSON.stringify(PrepResult));
-
-			var prep_id = [ PrepResult.Prep.insertId ];
-			console.log("Prep IDS: " + JSON.stringify(prep_id));
-
-			if (data['Prep'] && data['Prep']['Prep_Name']) {
-				var prepName = data['Prep']['Prep_Name'];
-				var isTransfer = true; // Lab_protocol.isTransfer(prepName);
-				console.log("Test " + prepName + " : " + isTransfer);
-
-				var transfer = { 
-					size : 1, 
-					target_size: '3x6', 
-					target_format : 5, 
-					prep_id : 7, 
-					target_rows: ['A','B','C','D'], 
-					target_cols : [1,2,3,4,5,6]
-				}; // test
-		
-				if (isTransfer) {
-					console.log('Sources: ' + JSON.stringify(data['Sources']));
-					console.log('plate data: ' + JSON.stringify(data['Plate']));
-					promises.push( Container.execute_transfer( 
-						data['Sources'],
-						transfer,
-						{ 'prep_id' : 7 } // test data
-					));
-					//promises.push( Container.transfer(transfer));
-				}
-
-			}
-			else {
-				console.log("No Prep Name in data: " + JSON.stringify(data));
-			}
-			
-			console.log("save attributes to plates: " + plate_list + '; prep: ' + prep_id);
-
-			promises.push( Attribute.save('Plate', ids, data["Plate_Attribute"]) );
-			promises.push( Attribute.save('Prep', prep_id, data["Prep_Attribute"]) );
-			
-			promises.push( Container.saveLastPrep(ids, prep_id[0]) );
-
-			q.all( promises )
-			.then ( function (Qdata) {
-				console.log("ALL PROMISES: " + JSON.stringify(Qdata));
-				deferred.resolve(Qdata);
-			})
-			.catch ( function (Qerr) {
-				console.log("Error completing all actions: " + Qerr);
-				deferred.reject({ error : "Error completing all actions: " + Qerr} );
-			});
-		})
-		.catch (function (err) {
-			console.log("Error saving completed Prep Record: " + err);
-			deferred.reject({ error : "Error saving Prep Record: " + err} );
-		});
 
 		return deferred.promise;
 	},
@@ -150,11 +148,11 @@ module.exports = {
 				var ids = [];
 				var prepId = PrepResult.insertId;  // Legacy
 				var added = PrepResult.affectedRows;
-				for (var i=0; i<added; i++) {
-					ids.push(prepId++);
-				}
-				data['Plate']['FK_Prep__ID'] = ids; 
 
+				for (var i=0; i<data['Plate'].length; i++) {
+					data['Plate'][i]['FK_Prep__ID'] = prepId;
+				}
+			
 				console.log("Send Plate data: " + JSON.stringify(data['Plate']));
 
 				Record.createNew('Plate_Prep', data['Plate'] )
@@ -163,16 +161,6 @@ module.exports = {
 					console.log('transfer if necessary....');
 					
 					deferred.resolve({ Prep: PrepResult, Plate_Prep: PlatePrepResult});
-					//return res.send(PrepResult);
-					/*
-					Container.xfer_if_required( PrepResult, PlateResult )
-					.exec (function (err, xferResult) {
-						if (err) { return res.send("ERROR creating new Plates...") }		
-
-						console.log("Transferring Samples ? " + JSON.stringify(xferResult));
-						return res.send(PrepResult);
-					});
-						*/
 				})
 				.catch (function (err) {
 					deferred.reject("Error creating Plate record: " + err);
@@ -263,7 +251,6 @@ module.exports = {
 			// console.log("Plate Atts: " + JSON.stringify(Plate_attributes));
 			// console.log("Prep Atts: " + JSON.stringify(Prep_attributes));
 		}
-
 		return cb(null, { 'Plate' : Plate_attributes, 'Prep' : Prep_attributes });
 
 	},
@@ -288,8 +275,7 @@ module.exports = {
 		var list = [];
  		for (i=0; i<query_result.length; i++) {
 			var input = query_result[i]['input_options'];
-			if (input) { 
-				var stepInput = input.split(':');
+			if (input) { 				var stepInput = input.split(':');
 				list = _.union(list, stepInput);
 			}
 		}
