@@ -20,7 +20,6 @@ module.exports = {
 	transfer : function (req, res ) {
 		console.log("CC transfer prompt");
 
-
 		var Samples = {};
 		var Target = {};
 		var Options = {};
@@ -79,17 +78,20 @@ module.exports = {
 		);
 	},
 
-	uploadDataMatrix : function (req, res) {
+	uploadMatrix : function (req, res) {
 		// Expects 8 rows of 12 columns (A1..H12) //
 	    res.setTimeout(0);
 
-	    req.file('dataMatrix')
+	    console.log("BODY: ");
+	    console.log(JSON.stringify(req.body));
+
+	    req.file('MatrixFile')
 	    .upload({
 	    	maxBytes: 100000
 	    }, function (err, uploadedFiles) {
 			if (err) return res.serverError(err);
 			else if (uploadedFiles.length == 0) {
-				return res.json("No File Uploaded");
+				return res.json("Error: No File Uploaded");
 			}
 			else {
 				// assume only one file for now, but may easily enable multiple files if required... 
@@ -136,6 +138,7 @@ module.exports = {
 		var Set     = req.body['Set'] || {};
 		var Options = req.body['Options'] || {};
 
+/*
 		Sources = [ { id : 1}, { id: 2} ];
 		Targets = {
 			size : 1, 
@@ -144,6 +147,7 @@ module.exports = {
 			rows: ['A','B'], 
 			cols : [1],
 		};
+*/
 
 		q.when( Container.execute_transfer(Sources, Targets, { Prep : { id : 7 }}) )
 		.then ( function (results) {
