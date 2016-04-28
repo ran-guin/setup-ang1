@@ -82,8 +82,11 @@ module.exports = {
 		// Expects 8 rows of 12 columns (A1..H12) //
 	    res.setTimeout(0);
 
-	    console.log("BODY: ");
-	    console.log(JSON.stringify(req.body));
+	    var ids = req.body.ids || req.body.plate_ids;
+	    var Samples = JSON.parse(req.body.Samples);
+
+	    console.log("Samples: ");
+	    console.log(Samples);
 
 	    req.file('MatrixFile')
 	    .upload({
@@ -95,11 +98,13 @@ module.exports = {
 			}
 			else {
 				// assume only one file for now, but may easily enable multiple files if required... 
-
+				console.log("Parsing contents...");
 				var f = 0; // file index
 
 				var matrix = uploadedFiles[f].fd
 				var obj = xlsx.parse(matrix);
+
+				console.log(JSON.stringify(obj));
 
 				var f = 0;
 				var rows = obj[f].data.length;
@@ -108,6 +113,7 @@ module.exports = {
 				columns = ['A','B','C','D','E','F','G','H'];
 
 				var map = {};
+				var applied = 0;
 				for (var i=1; i<=rows; i++) {
 					for (var j=0; j<cols; j++) {
 					
@@ -116,16 +122,56 @@ module.exports = {
 						posn = posn + i.toString();
 
 						map[posn] = obj[f].data[i-1][j];
+						applied = applied + 1;
 					}
 
 				}
 
-					return res.json({
-				    files: uploadedFiles,
-				    textParams: req.allParams(),
-				    map: map,
-				    //workbook: workbook,
-				});
+				var warning;
+				if (rows > Samples.length) {
+					warning = applied + " applicable records supplied, but only " + Samples.length + " Samples";
+				}
+				else if (Samples.length > rows) {
+					warning = Samples.length + " active Samples, but data only found for " + applied;
+				}
+
+				console.log(Samples.length + ' Sample found');
+				var data = [];
+				var errors = [];
+				for (var i=0; i<Samples.length; i++) {
+					var id = Samples[i].id;
+					var position = Samples[i].position;
+					if (position) {
+						var mapped = map[position];
+						if (mapped) {
+							data.push([id, mapped]);
+						}
+						else {
+							errors.push("Nothing mapped to " + position);
+						}
+					}
+					else {
+						errors.push("No position for sample #" + i + ' : ' + id);
+					}					
+				}
+				console.log("Errors: " + JSON.stringify(errors));
+				console.log("Map: " + JSON.stringify(map));
+				console.log("Data: " + JSON.stringify(data));
+
+				var plate_ids = req.body.plate_ids;
+				var attribute = 3;  // test
+
+				Attribute.uploadAttributes('Plate', attribute, data)
+				.then ( function (resp) {
+					var message;
+					if (resp.affectedRows) { message = resp.affectedRows + " added" }
+					return res.render('lims/Container', { Samples : Samples, plate_ids: ids, warningMsg: warning, message: message});					
+				})	
+				.catch ( function (err) {
+					return res.json({error : err, attribute: attribute, data: data});
+				})
+					
+				
 	     	}
 	    });
   	},
