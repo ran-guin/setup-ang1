@@ -1,3 +1,11 @@
+if message
+  p &nbsp;
+  div.alert.alert-success
+    i.fa.fa-warning 
+    strong
+      span #{message}
+    a(href="#" class="close" data-dismiss="alert" aria-label="close") &times;
+
 if errorMsg
   p &nbsp;
   div.alert.alert-danger
