@@ -29,14 +29,13 @@ module.exports = {
     // e.g. asdgh8a249321e9dhgaslcbqn2913051#T(@GHASDGA
     encryptedPassword: {
       type: 'string',
-      required: true
+      //required: true
     },
 
     // The timestamp when the the user last logged in
     // (i.e. sent a username and password to the server)
     lastLoggedIn: {
       type: 'date',
-      required: true,
       defaultsTo: new Date(0)
     },
 
@@ -69,6 +68,12 @@ module.exports = {
       return obj;
     }
   },
+
+  initData : [
+    { name : 'Admin', email : 'admin@domain.com' },
+    { name : 'DemoUser', email: 'demo@domain.com' },
+    { name : 'Guest', email : 'guest@domain.com' },
+  ],
 
   payload : function (user, access) {
       // generate standard payload 

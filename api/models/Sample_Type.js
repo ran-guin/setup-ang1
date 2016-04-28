@@ -7,6 +7,9 @@
 
 module.exports = {
 
+ 	migrate: 'safe',
+	/* LEGACY */
+
   attributes: {
 
   }

@@ -9,6 +9,11 @@ module.exports = {
 
   attributes: {
   	name : { type : 'string' } 
-  }
+  },
+
+  initData: [
+  	{ name : 'LIMS' },
+  	{ name : 'Laboratory' }
+  ],
 };
 
