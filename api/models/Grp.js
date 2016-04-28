@@ -7,6 +7,9 @@
 
 module.exports = {
 
+  tableName : 'Grp',
+  migrate : 'safe',
+
   attributes: {
   	name : { type: 'string'},
   	access : { type: 'string'},
@@ -16,7 +19,13 @@ module.exports = {
   		collection : 'user',
   		via : 'groups'
   	}
-  }
+  },
+
+  initData : [
+    { name : 'Admin', access : 'read,write,delete', department: 1},
+    { name : 'Users', access : 'read,write,delete', department: 1},
+    { name : 'Guest', access : 'read', department: 1},
+  ],
 
 };
 

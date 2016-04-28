@@ -9,6 +9,8 @@
  * http://sailsjs.org/#!/documentation/reference/sails.config/sails.config.bootstrap.html
  */
 
+var q = require('q');
+
 module.exports.bootstrap = function(cb) {
 
   // It's very important to trigger this callback method when you are finished
@@ -29,20 +31,51 @@ module.exports.bootstrap = function(cb) {
 		cb("Define database connection variables in config/local.js");
 	}
 
-	console.log("Auto-correcting ENUM fields for models:\n* " + models.join("\n* ") );
+	// console.log("Models:\n* " + models.join("\n* ") );
 
 	var errors = [];
 	var added_enum = 0;
+
+	var promises = [];
 	for (var i=0; i< models.length; i++) {
 
   		var Model = sails.models[models[i]];
-  		var attributes = Object.keys(Model.attributes);
+		promises.push( custom_initialize(Model) );
+	}
 
-  		// console.log("*** " + models[i] + " ***");
+	q.all(promises)
+	.then ( function (results) {
+		for (var i=0; i<results.length; i++) {
+			if (results[i].init) {
+				console.log(results[i].init);
+			}
+			if (results[i].errors) {
+				console.log("\n*** Warning: " + JSON.stringify(results[i].errors));
+			}
+		}
+		console.log("\n** Initialization completed successfully **");
+		console.log("\n- Auto-corrected ENUM Fields\n - Initialized data\n");
+		cb('',results);
+	})
+	.catch ( function (err) {
+		console.log("Err: " + JSON.stringify(err));
+		cb(err);
+	});
+
+	function custom_initialize(Model) {
+		var deferred = q.defer();
+
+		var Table = Model.tableName;
+  		var attributes = Object.keys(Model.attributes);
+ 
+ 		var added_enum = 0;
+ 		var errors = [];
+
+  		// Convert to ENUM Fields in Database if applicable //
+
   		for (var j=0; j<attributes.length; j++) {
 			var att = attributes[j];
 
-			var Table = Model.tableName;
 			var Atype = Model.attributes[att].type;
 			var Aenum =  Model.attributes[att].enum;
 		        var defaultsTo = Model.attributes[att].defaultsTo;
@@ -53,7 +86,7 @@ module.exports.bootstrap = function(cb) {
 			// console.log(att + " : " + Atype + " " + Aenum);
 			if (Aenum) {
 				var command = " ALTER TABLE " + Table + " MODIFY " + att + " ENUM('" + Aenum.join("','") + "') " + defaultsTo;
-				console.log(command); 
+				console.log("* ENUM created: " + command); 
 
 		  		Record.query(command, function (err, result) {
 		  			if (err) {
@@ -64,13 +97,26 @@ module.exports.bootstrap = function(cb) {
 
 		  		added_enum++;
 		  	}
-		  }
-	}
+		}
 
-	if (errors.length) { cb( " Errors: " + errors.join("; ")) }
-	else { 
-		console.log("Updated " + added_enum + " ENUM fields ");
-		cb();
-	}
+		// Initialize data if applicable //
 
+		if (Model.initData && Model.initData != 'undefined' && Model.initData.length > 0) {
+			Model.count().exec(function (err, count) {
+	    		if (err) deferred.reject({ errors: errors, init : err});
+	    		if (count > 0) deferred.resolve({ init : Table + " table already initialized (" + count + " records found)"});
+				else {
+					Model.create(Model.initData)
+					.exec( function (err, result) {
+						if (err) { deferred.reject({errors: errors, init: err}) }
+						else { deferred.resolve({ init: "* Initialized " + Table + " with " + result.length + ' records'}) }
+					});
+				}
+			});
+		}
+		else { deferred.resolve({}) }
+
+		return deferred.promise;
+
+	}
 };
