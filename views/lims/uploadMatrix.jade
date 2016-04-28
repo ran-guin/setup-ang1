@@ -1,4 +1,5 @@
-if Samples[0].container_format.match(/^EDTA/)
+div
+  // if Samples[0].container_format.match(/^EDTA/)
   form(role='form' method = 'post' action="/uploadMatrix" enctype="multipart/form-data") 
     input(type = 'hidden' name='Samples' value='#{JSON.stringify(Samples)}')
     input(id = 'id' name='plate_ids' type='hidden' value="#{plate_ids}")  
