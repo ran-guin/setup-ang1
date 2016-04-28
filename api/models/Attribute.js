@@ -185,5 +185,37 @@ module.exports = {
 		return deferred.promise;
 	},
 
+	uploadAttributes : function (model, attribute, data) {
+		/*
+		var ids = data['ids'];
+		var map = data['map'];
+
+		var positions = Object.keys(map);
+		*/
+		var deferred = q.defer();
+
+		console.log("Upload Attributes: ");
+		console.log("model = " + model + "; attribute = " + attribute);
+		console.log(JSON.stringify(data));
+
+		var upload = [];
+		var table = model + '_Attribute';
+		for (var i=0; i<data.length; i++) {
+			upload[i] = {};
+			upload[i]['FK_' + model + '__ID'] = data[i][0];
+			upload[i]['Attribute_Value'] = data[i][1];
+			upload[i]['FK_Attribute__ID'] = attribute;
+		}
+
+		Record.createNew( table, upload )
+		.then ( function (result) {
+			console.log("\nupload results: " + JSON.stringify(result));
+			deferred.resolve(result);			
+		})
+		.catch ( function (err) {
+			deferred.reject({error: err});
+		});
+		return deferred.promise;
+	}
 };
 
