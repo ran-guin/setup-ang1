@@ -66,10 +66,10 @@ module.exports = {
 
 				console.log('render....');
 				return res.render('lims/Container', { 
-					//plate_ids: ids.join(','), 
+					plate_ids: sampleList.join(','), 
 					//protocols : Protocols, 
 					Samples: data , 
-					sampleList : sampleList,
+					//sampleList : sampleList,
 					warningMsg: warningMsg,
 					errorMsg : errorMsg,
 					//target_formats : target_formats 
