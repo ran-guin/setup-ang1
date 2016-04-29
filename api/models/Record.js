@@ -13,6 +13,18 @@ module.exports = {
 
 	},
 
+	query_promise: function (query) {
+		// Wrapper for standard Record.query returning a promise //	
+		var deferred = q.defer();
+
+		Record.query(query, function (err, result) {
+			if (err) { deferred.reject(err) }
+			else { deferred.resolve(result) }
+		});
+
+		return deferred.promise;	
+	},
+
 	grab: function (table, condition) {
 		// Wrapper for simple extract (similar to waterline findOne but not dependent upon waterline format)
 		
