@@ -41,7 +41,7 @@ module.exports.routes = {
   // JSON API
   ////////////////////////////////////////////////////////////
   
-  '/': 'DemoController.home',
+  '/': 'UserController.home',
 
   '/public' : { view: 'customize/public'},
   '/contact' : { view: 'customize/ContactUs'},

@@ -6,6 +6,7 @@
 */
 
 var q = require('q');
+var fs = require('fs');
 
 module.exports = {
 
@@ -45,6 +46,37 @@ module.exports = {
 		});
 		return deferred.promise;
 	}, 
+
+	uploadFile: function (table, file) {
+
+		try {
+			var f = fs.readFileSync(file, {encoding: 'utf-8'} );
+
+			console.log("Custom file: " + file);			
+			f = f.split("\n");
+
+			var headers = f.shift().split(/\t/);
+
+			var data = [];
+			f.forEach ( function (row) {
+				var elements = row.split(/\t/);
+				var record = {};
+				for (var i=0; i<elements.length; i++) {
+					record[headers[i]] = elements[i];
+	 			}
+	 			data.push(record);
+			})
+			console.log("Added " + data.length + " custom records from " + file);
+			// console.log("\nHeaders: " + headers);
+			return data.length;
+
+		} 
+		catch (e) {
+			//console.log('no data file: ' + file);
+			return ;
+		}
+
+	},
 
 	join_data: function (join_to) {   
 

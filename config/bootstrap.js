@@ -10,13 +10,15 @@
  */
 
 var q = require('q');
+var fs = require('fs');
+var path = require('path');
 
 module.exports.bootstrap = function(cb) {
 
   // It's very important to trigger this callback method when you are finished
   // with the bootstrap!  (otherwise your server will never lift, since it's waiting on the bootstrap)
 
-    // sails.sql_helper = require('./../custom_modules/sql-helper.js');
+  // sails.sql_helper = require('./../custom_modules/sql-helper.js');
 
 	var models = Object.keys(sails.models);
 
@@ -46,6 +48,18 @@ module.exports.bootstrap = function(cb) {
 
 	console.log("loaded promises...");
 
+
+	var custom_data_files = ['Plate_Format', 'Sample_Type', 'Attribute', 'lab_protocol', 'protocol_step'];
+	var added_custom_data = 0;
+	for (var i=0; i<custom_data_files.length; i++) {
+		var table = custom_data_files[i];
+
+		var add = Record.uploadFile(table, __dirname + "/data/" + table + '.txt' );
+		if (add) { added_custom_data = added_custom_data + 1 }
+		else { console.log("** Warning: missing customization file for " + table) }
+	}
+	console.log("Added data from " + added_custom_data + " custom init files" );
+	
 	q.all(promises)
 	.then ( function (results) {
 		console.log("completed promises");
