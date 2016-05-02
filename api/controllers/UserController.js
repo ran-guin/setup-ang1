@@ -81,6 +81,8 @@ module.exports = {
       }
       var user = results[0];
 
+      if (user == undefined) { return res.render("customize/public_login", { error: "User not found.  Try again or Register for an account"} ) }
+
       // Compare password attempt from the form params to the encrypted password
       // from the database (`user.password`)
       console.log('Grps: ');
@@ -131,7 +133,14 @@ module.exports = {
   },
 
   home : function (req, res) {
-    return res.render('customize/private_home', req.session.payload);
+    console.log("Payload: " + req.session.payload);
+
+    if ( req.session.payload) {
+      return res.render('customize/private_home', req.session.payload);
+    }
+    else {
+      return res.render('customize/public_home');
+    }
   },
 
   /**
