@@ -201,18 +201,19 @@ function protocolController ($scope, $rootScope, $http, $q) {
             recordData[n] = {};
             for (var i=0; i< input.length; i++) {
                 var fld = input[i];
+                var key = fld + $scope.stepNumber;
 
                 var mapped = fld;  /* Enable option for mapping field to custom name */
                 if (map && map[fld]) {
                     mapped = map[fld];
                 }
                 
-                if ($scope[fld + '_split']) { 
-                    var splitV = $scope[fld + '_split'].split(',');
+                if ($scope[key + '_split']) { 
+                    var splitV = $scope[key + '_split'].split(',');
                     recordData[n][mapped] = splitV[n];
                 }
                 else if ($scope[fld]) {
-                    recordData[n][mapped] = $scope[fld];
+                    recordData[n][mapped] = $scope[key];
                 }
 
             }
@@ -232,8 +233,9 @@ function protocolController ($scope, $rootScope, $http, $q) {
             'Prep_Name' : $scope.Step.name ,
             'FK_Lab_Protocol__ID' : $scope.Step['Lab_protocol'],
             'FK_Employee__ID' : 1, 
-            'Prep_Action' : $scope['action'],
-            'Prep_Comments' : $scope['comments']
+            'Prep_Action' : $scope['action' + $scope.stepNumber],
+            'Prep_Comments' : $scope['comments' + $scope.stepNumber],
+            'Prep_DateTime' : $scope.timestamp,
         };
 
         console.log("PREP DATA: " + JSON.stringify(PrepData));
@@ -265,22 +267,23 @@ function protocolController ($scope, $rootScope, $http, $q) {
             // Load Attribute Data 
             for (var i=0; i<$scope.Attributes.length; i++) {
                 var att = $scope.Attributes[i];
+                var key = att.name + $scope.stepNumber;
                 if (att.type == 'Count' && att.model == 'Plate') { 
-                    $scope[att.name] = '<increment>';
-                    PlateAttributes[att.id] = $scope[att.name];
+                    $scope[key] = '<increment>';
+                    PlateAttributes[att.id] = $scope[key];
                 }
-                else if (att.model == 'Plate' && $scope.SplitFields[att.name]) {
-                    PlateAttributes[att.id] = $scope.SplitFields[att.name];
-                    console.log(att.name + ' : ' + $scope.SplitFields[att.name]);
+                else if (att.model == 'Plate' && $scope.SplitFields[key]) {
+                    PlateAttributes[att.id] = $scope.SplitFields[key];
+                    console.log(key + ' : ' + $scope.SplitFields[key]);
                 }
                 else if (att.model == 'Plate') {
-                    PlateAttributes[att.id] = $scope[att.name];
-                    console.log(att.name + ' : ' + $scope[att.name]);
+                    PlateAttributes[att.id] = $scope[key];
+                    console.log(key + ' : ' + $scope[key]);
                 }
 
                 else if (att.model == 'Prep') {
-                    PrepAttributes[att.id] = $scope[att.name];
-                    console.log(att.name + ' = ' + $scope[att.name]);
+                    PrepAttributes[att.id] = $scope[key];
+                    console.log(key + ' = ' + $scope[key]);
                 }
                 else {
                     console.log("Invalid Attribute: " + JSON.stringify(att))
@@ -299,13 +302,27 @@ function protocolController ($scope, $rootScope, $http, $q) {
         console.log("\nDATA: " + JSON.stringify(data));
 
         if ($scope.Step.Target_format > 0) {
-            var Transfer = {};
+
+            var format = $scope.Step.Target_format;
+            var sample_type = $scope.Step.Target_sample;
+            var transfer_type   = $scope.Step.Target_type;
+            var reset_focus  = $scope.Step.reset_focus;
+            var split        = $scope['Split'] || 1;
+            var pack         = $scope['Pack'] || 0;
 
             var formatElement = document.getElementById('Plate_Format-id');
             if (formatElement) { 
-                $scope.Step.Target_format = formatElement.value
-                Transfer['target_format'] = formatElement.value;
+                format = formatElement.value;
             }
+
+            var Transfer = { 
+                'target_format' : format,
+                'sample_type'   : sample_type,
+                'transfer_type' : transfer_type,
+                'reset_focus'   : reset_focus,
+                'split'         : split,
+                'pack'          : pack
+            };
 
             $scope.distribute();  // change to promise (test.. )
             
@@ -330,7 +347,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
             }
             else {
                 console.log('completed... done');
-                $scope['status'] = 'Completed';
+                $scope['status' + $scope.stepNumber] = 'Completed';
             }
 
             if (action == 'Debug') {
@@ -340,7 +357,8 @@ function protocolController ($scope, $rootScope, $http, $q) {
     }
 
     $scope.distribute = function distribute () {
-        if ($scope['target_format']) {
+        var targetKey = 'target_format' + $scope.stepNumber;
+        if ($scope[targetKey]) {
 
             var newMap = new wellMapper();
  
@@ -349,7 +367,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
 
             $scope.Map = $scope.newMap.distribute(
                 $scope.Samples, 
-                { format : $scope['target_format']},
+                { format : $scope[targetKey]},
                 //{ rows : $scope.target_rows, cols : $scope.target_cols},
                 { fillBy: $scope.Options.fill_by, pack: $scope.Options.pack }
             );
@@ -372,7 +390,8 @@ function protocolController ($scope, $rootScope, $http, $q) {
 
     $scope.test = function test (data) {
         console.log('test');
-        console.log('this: ' + JSON.stringify(data));
+        $scope.comments = 'tested';
+        console.log('reset to: ' + $scope.comments);
     }
 
     $scope.repeat = function repeat () {
@@ -384,17 +403,11 @@ function protocolController ($scope, $rootScope, $http, $q) {
 
         $scope.Step = $scope.Steps[$scope.stepNumber-1];
 
-        // start custom block //
         $scope.input = $scope.Step['input_options'].split(':');
         $scope.defaults = $scope.Step['input_defaults'].split(':');
         $scope.formats   = $scope.Step['input_format'].split(':');
 
         var name = $scope.Step['name'];
-        if (name.match(/^(Transfer|Extract|Aliquot)/) ) {
-            if (! $scope.Split) { $scope.Split = 1 } 
-        }
-
-        // end custom block //
 
         $scope.Show = {};
         $scope.Default = {};
@@ -405,29 +418,32 @@ function protocolController ($scope, $rootScope, $http, $q) {
         var Attributes = { Plate : [], Prep : [] };
         for (var i=0; i<$scope.input.length; i++) {
             var input = $scope.input[i];
-            var cleaned_input = input.replace('*','');
+            var mandatory = input.match(/\*$/);
+            var key = input.replace('*','');
+            var id = key + $scope.stepNumber;
 
-            $scope.Show[input] = true;
+            $scope.Show[key] = true;
             if ($scope.defaults.length > i) {
-                var def = $scope.defaults[i];
-                console.log(cleaned_input + " defaults: " + def);
-                if (cleaned_input.match(/\_qty$/)) {
+                var def = $scope.defaults[i] || '';
+                if (key.match(/\_qty$/)) {
                     var units = def.match(/[a-zA-Z]+/);
                     if (units && units.length) {
                         console.log(JSON.stringify(units));
-                        $scope.Default[cleaned_input + '_units'] = units[0];
-                        $scope[cleaned_input + '_units'] = units[0];
-                        def = def.replace(units[0],'');
+
+                        $scope.Default[key + '_units'] = units[0]; // units only
+                        $scope[key + '_units' + $scope.stepNumber] = units[0];
+                        def = def.replace(units[0],''); // strip units 
                     }
-                    $scope.Default[cleaned_input] = def;
-                    $scope[cleaned_input] = def;
+                    $scope.Default[key] = def;          // value only
+                    $scope[id] = def;
                 }
                 else {
-                    $scope.Default[cleaned_input] = def; 
-                    $scope[cleaned_input] = def;
+                    console.log(key + " default = " + def)
+                    $scope.Default[key] = def;         // not qty requiring units
+                    $scope[id] = def;
                 }
             }
-            if ($scope.formats.length > i) { $scope.Format[input] = $scope.formats[i] }
+            if ($scope.formats.length > i) { $scope.Format[key] = $scope.formats[i] }
         }
         console.log("Attributes: " + JSON.stringify(Attributes));
         console.log("Step: " + $scope.stepNumber + ' / ' + $scope.steps);
