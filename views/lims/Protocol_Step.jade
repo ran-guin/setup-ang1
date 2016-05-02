@@ -15,8 +15,8 @@ block content
 
     - var init = "initialize(" + JSON.stringify(config) + ")";
 
-    - flds = fields || []; 
-    - units = { 'solution_qty' : 'solution_qty_units', 'transfer_qty' : 'transfer_qty_units'};
+    //- flds = fields || []; 
+    //- units = { 'solution_qty' : 'solution_qty_units', 'transfer_qty' : 'transfer_qty_units'};
     - aliases = { 'equipment' : 'Equip', 'solution' : 'Sol' }
     - attributes = attributes || {}; // {'Thaw_Time' : 'integer' }
 
@@ -32,8 +32,8 @@ block content
             span.navbar.navbar-right 
               b {{user}} &nbsp;
               span {{ timestamp }} &nbsp; &nbsp;
-
-          div(ng-show="status=='Completed'")
+         
+          div(ng-if="status=='Completed'")
             p.bg-success(style='padding:20px') 
               b Protocol {{ status }}
             form(role='form' method='post' action="/Lab_protocol/run" enctype='form-data')
@@ -53,219 +53,153 @@ block content
             hr
             include uploadMatrix.jade
 
-          div.alert.alert-info(ng-if="status != 'Completed'" style='opacity:0.9')
-            h3 {{Step.name}} &nbsp; 
-              span.navbar-right
-                span(ng-show="Step.instructions")
-                  a(href='#' onclick="return false;" tooltip='instructions' data-toggle="popover" data-placement="left" data-trigger="focus" title="Instructions" data-content="{{Step.instructions}}")
-                    i.fa.fa-question-circle
-                  span &nbsp;
-                span &nbsp; [ {{stepNumber}} / {{steps}} ] &nbsp;
+          each Step,index in Steps
+            - var Snum = index + 1;
+            div(ng-if="#{Snum} == stepNumber")
+              - var flds = Step.input_options.split(':');
+              - var formats = Step.input_format.split(':');
+              - var defaults = Step.input_defaults.split(':');
 
-            h4(style="color:red") &nbsp; &nbsp; {{ Step.message }} 
+              div.alert.alert-info(ng-if="status#{Snum} != 'Completed'" style='opacity:0.9')
 
-            hr
-             
-            form.form-horizontal(role="form" data-toggle="validator" method='post' action="/scan-barcode" ng-if="status != 'Completed'")
-              input(type = 'hidden' name='Samples' value='{{Samples}}')
-              input(type='hidden' id = 'id' name='plate_ids' value="{{plate_list}}")
-              input(type='hidden' name='model' value='Plate')
+                h3 #{Step.name} &nbsp; 
+                  span.navbar-right
+                    if Step.instructions
+                      a(href='#' onclick="return false;" tooltip='instructions' data-toggle="popover" data-placement="left" data-trigger="focus" title="Instructions" data-content="#{Step.instructions}")
+                        i.fa.fa-question-circle
+                      span &nbsp;
+                    span &nbsp; [ {{stepNumber}} / {{steps}} ] &nbsp;
 
-              div(ng-show='errMsg')
-                div.col-sm-2 &nbsp;
-                div.col-sm-10
-                  table
-                    tr
-                      td(style='background-color:#faa')
-                        PRE
-                          B {{ errMsg }}
-              - prompted = {};
-              - options = ['ml', 'ul', 'nl', 'pl'];
+                h4(style="color:red") &nbsp; &nbsp; #{ Step.message } 
 
-              div(ng-show="SplitTracking")
-                div.col-sm-2 &nbsp;
-                div.col-sm-10
-                  b Note: Expanding lists in: &nbsp;
-                  label
-                    input(type='radio' value = 'Serial' ng-model="split_mode" ng-click="reset_Split_mode()") 
-                    b &nbsp; Serial &nbsp;
-                  label
-                    input(type='radio' value = 'Parallel' ng-model="split_mode" ng-click="reset_Split_mode()")
-                    b &nbsp; Parallel &nbsp;
-                  span &nbsp; [ eg : 
-                    b {{ splitExample }}
-                    span ]
+                hr
 
-              each field in flds
-                - fld = field.replace('*','');
-                - alias = aliases[fld] || fld;
-                - fType = 'text';
-                - mandatory = false;
-
-                if (fld != field)
-                  - alias = alias + '*';
-                  - mandatory = true;
-
-                div(ng-show="Show['#{alias}']")
-                  if attributes[fld]
-                    - fType = attributes[fld];
-
-                  if fld == 'transfer_qty'
-                    div.form-group
-                      label.col-sm-2.control-label(for='transfer_qty') Transfer:
-                        
-                      div.col-sm-3
-                        input.form-control(type='text', placeholder = " -- Qty --" id='transfer_qty' ng-model='transfer_qty' ng-blur="splitField('transfer_qty')" data-error="You must enter a valid quantity" required) 
-                      div.col-sm-3
-                        // *** Generate Dropdown for ENUM Values *** // 
-                        div.dropdown(id='transfer_qty_units')
-                            button.btn.btn-default.dropdown-toggle(type='button' data-toggle='dropdown' id = 'transfer_qty_units' ng-model='transfer_qty_units') Units &nbsp; 
-                                span.caret
-                            ul.dropdown-menu
-                                each opt,j in options
-                                    li 
-                                      a(href='#' ng-click="setField('transfer_qty_units','#{opt}')" onclick='return false;') #{opt}
-                      div.col-sm-1
-                        span &nbsp;
-                      div.col-sm-3
-                        div(ng-show="Show['Split']")
-                          b Split X &nbsp;
-                          input(type='text' id='Split' value=1 force=1 ng-model="Split") 
-
-                      - prompted[fld]=1;
-                      - prompted['Split']=1;
-                      - prompted['transfer_qty']=1;
-                      - prompted['transfer_qty_units']=1;
-
-                  else if fld == 'solution'
-                    div.form-group
-                      label.col-sm-2.control-label(for='#{fld}') Sol/Reagent:
-                      div.col-sm-4
-                        input.form-control(type='text', placeholder = "-- Scan --" id = '#{fld}' ng-model='#{fld}' ng-blur="splitField('#{fld}')") 
-                      div.col-sm-3
-                        input.form-control(type='text', placeholder = " -- Qty --" id='solution_qty' ng-model='solution_qty' ng-blur="splitField('solution_qty')") 
-                      div.col-sm-3
-                        // *** Generate Dropdown for ENUM Values *** // 
-                        div.dropdown(id='solution_qty_units')
-                            button.btn.btn-default.dropdown-toggle(type='button' data-toggle='dropdown' id = 'solution_qty_units' ng-model='solution_qty_units') Units &nbsp;
-                                span.caret
-                            ul.dropdown-menu
-                                each opt,j in options
-                                    li 
-                                        a(href='#' ng-click="setField('solution_qty_units','#{opt}')" onclick='return false;') #{opt}
-
-                      - prompted[fld]=1;
-                      - prompted['solution_qty']=1;
-                      - prompted['solution_qty_units']=1;
-
-                  else if units[fld] && ! prompted[fld]
-                    div.form-group
-                      // non special fields with units (eg attributes with units...)
-                      - prompted[fld] = 1
-                      label.col-sm-2.control-label(for='#{fld}') #{alias}:
-                      div.col-sm-8
-                        input.form-control(type='integer', placeholder = "-- Scan " + alias + '--' id='#{fld}' ng-blur="splitField('#{fld}')" ng-model='#{fld}')
-                        div.help-block.with-errors(style='color:red' ng-model="#{fld}_errors") {{ #{fld}_errors }}
-
-                      - fld = units[fld];
-                      - prompted[fld] = 1;
-                      div.col-sm-2
-                        // *** Generate Dropdown for Units *** //
-                        div.dropdown
-                            button.btn.btn-default.dropdown-toggle(type='button' data-toggle='dropdown') Units &nbsp;
-                                span.caret
-                            ul.dropdown-menu
-                                each opt,j in options
-                                    li 
-                                        a(href='#' onclick='return false;') #{opt}
-
-              // Prompt for Attributes if applicable //
-              each att in attributes
-                - id = att.model + '-' + att.name
-                - name = att.name
-                - type = att.type
-                - alias = aliases[name] || name
-
-                if ! prompted[name]
-                  div(ng-show="Show['#{att.name}']") 
-                    if (att.type == 'Count')
-                      input(type='hidden' ng-model='#{att.name}' id='#{att.name}')
-                    else
-                      div.form-group
-                        div.col-sm-2                   
-                          b #{att.name}
-                          input(type='hidden' name="#{att.name}-id" value="#{att.id}")
-                        div.col-sm-10
-                          if (att.model == 'Prep')
-                            input.form-control(type='text' pattern=".*" placeholder = "Enter Prep " + alias id='#{att.name}' ng-model='#{att.name}' default='' force=1)
-                          else 
-                            // Enable Split Mode 
-                            input.form-control(type='text' ng-blur="splitField('#{att.name}')" pattern=".*" maxlength="15" placeholder = "Enter " + alias + ' (x N)' id='#{att.name}' ng-model='#{att.name}' default='' force=1)
-                    - prompted[att.name] = 1                 
-
-              // Resume remaining fields after attributes ... 
-              each field in flds
-                - fld = field.replace('*','');
-                - alias = aliases[fld] || fld;
-                - fType = 'text';
-                - mandatory = false;
-
-                if (fld != field)
-                  - alias = alias + '*';
-                  - mandatory = true;
+                //form.form-horizontal(role="form" name = "form#{Snum}" data-toggle="validator" method='post' ng-submit="complete('Completed')" ng-if="status != 'Completed'")
                 
-                div(ng-show="Show['#{alias}']") 
-                  if fld == 'comments' 
-                    // non splittable field 
-                    div.form-group
-                      label.col-sm-2.control-label(for='#{fld}') #{alias}
-                      div.col-sm-10
-                        if (fld == field)
-                          input.form-control(type='#{fType}'  pattern=".*" maxlength="15" placeholder = "Enter " + alias id='#{fld}' ng-model='#{fld}' default='' force=1)
-                        else 
-                           input.form-control(type='#{fType}' pattern="^[_A-z0-9]{1,}$" maxlength="15" placeholder = "Enter " + alias id='#{fld}' ng-model='#{fld}'  default='' force=1 )
+                form.form-horizontal(role="form" name = "form#{Snum}" method='post' ng-submit="complete('Completed')" ng-if="status != 'Completed'")
+ 
+                  input(type = 'hidden' name='Samples' value='{{Samples}}')
+                  input(type='hidden' id = 'id' name='plate_ids' value="{{plate_list}}")
+                  input(type='hidden' name='model' value='Plate')
 
-                        div.help-block.with-errors(style='color:red' ng-model="#{fld}_errors") {{ #{fld}_errors }}  
-                    - prompted[fld] = 1;
+                  div(ng-if='errMsg')
+                    div.col-sm-2 &nbsp;
+                    div.col-sm-10
+                      table
+                        tr
+                          td(style='background-color:#faa')
+                            PRE
+                              B {{ errMsg }}
 
-                  else if ! prompted[fld]
-                    // non special fields without units 
-                    div.form-group
-                      label.col-sm-2.control-label(for='#{fld}') #{alias}
-                      div.col-sm-10
-                        if (fld == field)
-                          input.form-control(type='#{fType}' ng-required=mandatory ng-blur="splitField('#{fld}')" pattern=".*" maxlength="15" placeholder = "Enter " + alias id='#{fld}' ng-model='#{fld}' default='' force=1)
-                        else 
-                           input.form-control(type='#{fType}' ng-required=1 ng-blur="splitField('#{fld}')" required pattern="^[_A-z0-9]{1,}$" maxlength="15" placeholder = "Enter " + alias id='#{fld}' ng-model='#{fld}'  default='' force=1 )
+                  - prompted = {};
+                  - options = ['ml', 'ul', 'nl', 'pl'];
 
-                        div.help-block.with-errors(style='color:red' ng-model="#{fld}_errors") {{ #{fld}_errors }}
-                    - prompted[fld] = 1;
-              hr
+                  div(ng-if="SplitTracking")
+                    div.col-sm-2 &nbsp;
+                    div.col-sm-10
+                      b Note: Expanding lists in: &nbsp;
+                      label
+                        input(type='radio' value = 'Serial' ng-model="split_mode#{Snum}" ng-click="reset_Split_mode()") 
+                        b &nbsp; Serial &nbsp;
+                      label
+                        input(type='radio' value = 'Parallel' ng-model="split_mode#{Snum}" ng-click="reset_Split_mode()")
+                        b &nbsp; Parallel &nbsp;
+                      span &nbsp; [ eg : 
+                        b {{ splitExample }}
+                        span ]
 
-              div.form-group
-                //div.col-sm-2 &nbsp;
-                div.col-sm-3
-                  button.btn.btn-success(type='button' ng-click="complete('Completed')" ng-disabled="formDisabled") Completed Step
-                div.col-sm-2
-                  button.btn.btn-warning(type='button' ng-click="complete('Skipped')") Skip Step
-                div.col-sm-2
-                  button.btn.btn-danger(type='button' ng-click="complete('Failed')") Failed Step
-                div.col-sm-3
-                  button.btn.btn-primary(type='button' ng-click="repeat()" ng-disable="Step.Repeatable") Repeat Previous Step
-                div.col-sm-2
-                  button.btn.btn-danger(type='submit') Exit
-                div.col-sm-12
-                  div.help-block.with-errors
+                  each field,i in flds
+                    - fld = field.replace('*','');
+                    - alias = aliases[fld] || fld;
+                    - fType = 'text';
+                    - mandatory = false;
+                    - pattern = formats[i];
+                    - def     = defaults[i];
 
-              hr
+                    - var attr_index = attributes.indexOf(fld);
 
-          h3(ng-show="debug || 1") Debugging 
+                    if (fld != field)
+                      - mandatory = true;
+                      - pattern = "^[\\S]{1,}$"; 
+
+                    div(ng-if="Show['#{fld}']")
+                      if attributes[fld]
+                        - fType = attributes[fld];
+
+                      if fld.match(/_qty/)
+                        - mandatory = true;
+                        div.form-group
+                          label.col-sm-2.control-label(for='#{fld}') Transfer:
+                            
+                          div.col-sm-3
+
+                            input.form-control(type='text', placeholder = " -- Qty --" id='#{fld}#{Snum}' ng-required="#{mandatory}" pattern="#{pattern}" ng-model='#{fld}#{Snum}' ng-blur="splitField('#{fld}')" data-error="You must enter a valid quantity" required) 
+                            div.help-block.with-errors(style='color:red' ng-model="#{fld}#{Snum}_errors")
+                          div.col-sm-1
+                            // *** Generate Dropdown for ENUM Values *** // 
+                            div.dropdown(id='#{fld}_units')
+                                button.btn.btn-default.dropdown-toggle(type='button' data-toggle='dropdown' id='#{fld}_units#{Snum}' ng-model='#{fld}_units#{Snum}' ng-required="#{mandatory}" pattern="#{pattern}" ) Units &nbsp; 
+                                    span.caret
+                                ul.dropdown-menu
+                                    each opt,j in options
+                                        li 
+                                          a(href='#' ng-click="setField('#{fld}_units','#{opt}')" onclick='return false;') #{opt}
+                          div.col-sm-2(ng-if="Show['Split']" style='text-=align:right')
+                            b Split X
+                          div.col-sm-2
+                            div(ng-if="Show['Split']")
+                              input(type='text' id='Split' value="1" force=1 ng-model="Split#{Snum}") 
+
+                          - prompted[fld]=1;
+                          - prompted['Split']=1;
+                          - prompted[fld]=1;
+                          - prompted[fld + '_units']=1;
+                      else if !prompted[fld]
+                        div.form-group
+                          label.col-sm-2.control-label(for='#{fld}') #{alias}
+                          div.col-sm-8
+                            input.form-control(type='#{fType}' name="#{fld}#{Snum}" ng-required="#{mandatory}" ng-blur="splitField('#{fld}')" required maxlength="15" placeholder = "Enter #{alias}" id='#{fld}' ng-model='#{fld}#{Snum}' default='' force=1)
+                            
+                            div.help-block.with-errors(style='color:red' ng-show="!form#{Snum}.#{fld}#{Snum}.$pristine && form#{Snum}.#{fld}#{Snum}.$invalid") #{alias} is Mandatory
+                          div.col-sm-2
+                            b #{fld}#{Snum} = {{ #{fld}#{Snum} }} [ {{ Split6 }} ]
+                        - prompted[fld] = 1;
+
+
+                  hr
+ 
+                  div.form-group
+                    //div.col-sm-2 &nbsp;
+                    div.col-sm-3
+                      button.btn.btn-success(type='submit' ng-disabled="form#{Snum}.$invalid") Completed Step
+                    div.col-sm-2
+                      button.btn.btn-warning(type='button' ng-click="complete('Skipped')") Skip Step
+                    div.col-sm-2
+                      button.btn.btn-danger(type='button' ng-click="complete('Failed')") Failed Step
+                    div.col-sm-3
+                      button.btn.btn-primary(type='button' ng-click="repeat()" ng-disable="Step.Repeatable") Repeat Previous Step
+                    div.col-sm-2
+                      button.btn.btn-primary(type='submit') Test Mandatory Button
+                    div.col-sm-12
+                      div.help-block.with-errors
+
+                  hr
+
+                form.form-horizontal(role="form" data-toggle="validator" method='post' action="/scan-barcode")
+                  input(type = 'hidden' name='Samples' value='{{Samples}}')
+                  input(type='hidden' id = 'id' name='plate_ids' value="{{plate_list}}")
+                  input(type='hidden' name='model' value='Plate')
+                  div
+                    button.btn.btn-danger(type='submit') Exit Protocol              
+
+          h3(ng-if="debug || 1") Debugging 
 
           hr
 
           h5 Defaults: {{ Default }}
           h5 Att : {{ AttributePrompt }}
           h5 Details: {{ Step }}
+          h5 Steps : {{ Steps }}
           h5 ids: {{ plate_ids }}
           h5 Samples: {{ Samples }}
           h5 Input: {{ input }}
