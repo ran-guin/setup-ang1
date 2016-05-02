@@ -18,7 +18,7 @@ module.exports.bootstrap = function(cb) {
   // It's very important to trigger this callback method when you are finished
   // with the bootstrap!  (otherwise your server will never lift, since it's waiting on the bootstrap)
 
-    // sails.sql_helper = require('./../custom_modules/sql-helper.js');
+  // sails.sql_helper = require('./../custom_modules/sql-helper.js');
 
 	var models = Object.keys(sails.models);
 
@@ -42,11 +42,12 @@ module.exports.bootstrap = function(cb) {
 	for (var i=0; i< models.length; i++) {
 
   		var Model = sails.models[models[i]];
-		promises.push( custom_initialize(Model) );
-
-		
-
+		promises.push( fix_enums(Model) );
+		promises.push( initialize_table(Model) );
 	}
+
+	console.log("loaded promises...");
+
 
 	var custom_data_files = ['Plate_Format', 'Sample_Type', 'Attribute', 'lab_protocol', 'protocol_step'];
 	var added_custom_data = 0;
@@ -61,12 +62,10 @@ module.exports.bootstrap = function(cb) {
 	
 	q.all(promises)
 	.then ( function (results) {
+		console.log("completed promises");
 		for (var i=0; i<results.length; i++) {
-			if (results[i].init) {
-				console.log(results[i].init);
-			}
-			if (results[i].errors) {
-				console.log("\n*** Warning: " + JSON.stringify(results[i].errors));
+			if (results[i]) {
+				console.log(results[i]);
 			}
 		}
 		console.log("\n** Initialization completed successfully **");
@@ -77,62 +76,93 @@ module.exports.bootstrap = function(cb) {
 		console.log("Err: " + JSON.stringify(err));
 		cb(err);
 	});
+}
 
-	function custom_initialize(Model) {
-		var deferred = q.defer();
+function fix_enums (Model) {
+	var deferred = q.defer();
 
-		var Table = Model.tableName;
-  		var attributes = Object.keys(Model.attributes);
- 
- 		var added_enum = 0;
- 		var errors = [];
+	var Table = Model.tableName;
+		var attributes = Object.keys(Model.attributes);
 
-  		// Convert to ENUM Fields in Database if applicable //
+		var added_enum = 0;
+		var errors = [];
 
-  		for (var j=0; j<attributes.length; j++) {
-			var att = attributes[j];
+		// Convert to ENUM Fields in Database if applicable //
 
-			var Atype = Model.attributes[att].type;
-			var Aenum =  Model.attributes[att].enum;
-		        var defaultsTo = Model.attributes[att].defaultsTo;
-			
-			if (defaultsTo) { defaultsTo = ' DEFAULT \'' + defaultsTo + '\'' }
-			else { defaultsTo = '' }
-	
-			// console.log(att + " : " + Atype + " " + Aenum);
-			if (Aenum) {
-				var command = " ALTER TABLE " + Table + " MODIFY " + att + " ENUM('" + Aenum.join("','") + "') " + defaultsTo;
-				console.log("* ENUM created: " + command); 
+		var enumPromises = [];
+		for (var j=0; j<attributes.length; j++) {
+		var att = attributes[j];
 
-		  		Record.query(command, function (err, result) {
-		  			if (err) {
-						console.log("ERROR:" + err);
-						errors.push(err);
-		     		}
-		  		});
+		var Atype = Model.attributes[att].type;
+		var Aenum =  Model.attributes[att].enum;
+	        var defaultsTo = Model.attributes[att].defaultsTo;
+		
+		if (defaultsTo) { defaultsTo = ' DEFAULT \'' + defaultsTo + '\'' }
+		else { defaultsTo = '' }
 
-		  		added_enum++;
-		  	}
-		}
+		// console.log(att + " : " + Atype + " " + Aenum);
+		if (Aenum && Aenum != 'undefined') {
+			var command = " ALTER TABLE " + Table + " MODIFY " + att + " ENUM('" + Aenum.join("','") + "') " + defaultsTo;
+			console.log("* ENUM created: " + command); 
 
-		// Initialize data if applicable //
+		  	enumPromises.push( Record.query_promise(command) );
+	  		added_enum++;
+	  	}
+	}
 
-		if (Model.initData && Model.initData != 'undefined' && Model.initData.length > 0) {
-			Model.count().exec(function (err, count) {
-	    		if (err) deferred.reject({ errors: errors, init : err});
-	    		if (count > 0) deferred.resolve({ init : Table + " table already initialized (" + count + " records found)"});
-				else {
-					Model.create(Model.initData)
-					.exec( function (err, result) {
-						if (err) { deferred.reject({errors: errors, init: err}) }
-						else { deferred.resolve({ init: "* Initialized " + Table + " with " + result.length + ' records'}) }
-					});
-				}
-			});
-		}
-		else { deferred.resolve({}) }
+	if (enumPromises.length > 0) {
+		q.all(enumPromises)
+		. then ( function (results) {
+			console.log("Corrected " + results.length + " ENUM fields in " + Table);
+			deferred.resolve(results);
+		})
+		. catch ( function (err) {
+			deferred.reject({error: err})
+		})
+	}
+	else { deferred.resolve({}) }
 
-		return deferred.promise;
+	return deferred.promise;
+}
+
+function initialize_table (Model) {
+	// Initialize data if applicable //
+
+	var deferred = q.defer();
+	var Table = Model.tableName;
+		
+	console.log('initialize ' + Table);
+
+	if (Model.initData && Model.initData != 'undefined' && Model.initData.length > 0) {
+		console.log(Table + ' defined');
+
+
+		Model.count()
+		.exec(function (err, count) {
+			console.log(count + ' records found in ' + Table);
+    		if (err) { 
+    			var msg = "Error counting " + Table + ' records.';
+    			msg = msg + ' (run once with migrate = alter if table not yet created)'
+    			deferred.reject(msg);
+    		}
+    		else if (count > 0) {
+    			var msg = Table + " table already initialized (" + count + " records found)";
+    			deferred.resolve(msg);
+    		}
+			else {
+				Model.create(Model.initData)
+				.exec( function (err, result) {
+					if (err) { deferred.reject(err) }
+					else { 
+						var msg =  "* Initialized " + Table + " with " + result.length + ' records'; 
+						deferred.resolve(msg);
+					}
+				});
+			}
+		});
 
 	}
-};
+	else { deferred.resolve({}) }
+
+	return deferred.promise;
+}
