@@ -10,6 +10,8 @@
  */
 
 var q = require('q');
+var fs = require('fs');
+var path = require('path');
 
 module.exports.bootstrap = function(cb) {
 
@@ -41,8 +43,22 @@ module.exports.bootstrap = function(cb) {
 
   		var Model = sails.models[models[i]];
 		promises.push( custom_initialize(Model) );
+
+		
+
 	}
 
+	var custom_data_files = ['Plate_Format', 'Sample_Type', 'Attribute', 'lab_protocol', 'protocol_step'];
+	var added_custom_data = 0;
+	for (var i=0; i<custom_data_files.length; i++) {
+		var table = custom_data_files[i];
+
+		var add = Record.uploadFile(table, __dirname + "/data/" + table + '.txt' );
+		if (add) { added_custom_data = added_custom_data + 1 }
+		else { console.log("** Warning: missing customization file for " + table) }
+	}
+	console.log("Added data from " + added_custom_data + " custom init files" );
+	
 	q.all(promises)
 	.then ( function (results) {
 		for (var i=0; i<results.length; i++) {
