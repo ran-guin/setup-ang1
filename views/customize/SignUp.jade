@@ -14,12 +14,12 @@
               label(for='user')
                 i.fa.fa-user
                 |  Email
-              input#email.form-control(name='email' type='text', placeholder='Enter Email' value="#{email}" force=1)
+              input#email.form-control(name='email' type='text', placeholder='Enter Email' default='' value="#{email}" force=1)
             .form-group
               label(for='pwd')
                 i.fa.fa-eye
                 |  Password
-              input#pwd.form-control(name='password' type='password', placeholder='Enter password')
+              input#pwd.form-control(name='password' type='password', default='' placeholder='Enter password' force=1)
             .form-group
               label(for='pwd2')
                 i.fa.fa-eye
@@ -33,6 +33,6 @@
             i.fa.fa-remove
             |  Cancel
           p
-            | Questions? 
+            | Questions ? 
             a(href='#') Contact Us
 
