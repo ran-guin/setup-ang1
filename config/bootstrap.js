@@ -42,6 +42,7 @@ module.exports.bootstrap = function(cb) {
 	for (var i=0; i< models.length; i++) {
 
   		var Model = sails.models[models[i]];
+<<<<<<< HEAD
 		promises.push( fix_enums(Model) );
 		promises.push( initialize_table(Model) );
 	}
@@ -49,6 +50,14 @@ module.exports.bootstrap = function(cb) {
 	console.log("loaded promises...");
 
 
+=======
+		promises.push( custom_initialize(Model) );
+
+		
+
+	}
+
+>>>>>>> 80e5566493e6f527ba1efd9f10fb8fc0a1411432
 	var custom_data_files = ['Plate_Format', 'Sample_Type', 'Attribute', 'lab_protocol', 'protocol_step'];
 	var added_custom_data = 0;
 	for (var i=0; i<custom_data_files.length; i++) {
