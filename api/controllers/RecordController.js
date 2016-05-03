@@ -220,6 +220,35 @@ module.exports = {
 			}
 		});
 
+	},
+
+	search : function (req, res) {
+		var string - req.body.search;
+		var scope = req.body.scope;
+
+		if (! scope ) { 
+			scope = { 
+				'user' : ['email', 'username'} 
+			};
+		}
+
+		var deferred = q.defer();
+
+		var tables = Object.keys(scope);
+		for (var i=0; i< tables.length; i++) {
+			var fields = scope[tables[i]];
+			var query = "SELECT " + fields.join(',') + " FROM " + tables[i];
+			promises.push( Record.query_promise(query));
+		}
+
+		q.all(promises) 
+		.then ( function ( results ) {
+			for (var i=0; i<results.length; i++) {
+				console.log(i + ': ' + JSON.stringify(results[i]));
+			}
+			return res.json(results);
+		});
+
 	}
 	
 };
