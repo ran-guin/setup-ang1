@@ -7,8 +7,10 @@
 
 module.exports = {
 
-  attributes: {
+//	migrate: 'safe',
+	
+	attributes: {
 
-  }
+  	}
 };
 

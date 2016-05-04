@@ -27,6 +27,12 @@ module.exports = {
   	}
   },
 
+  printLabels : function (model, ids) {
+    console.log("Print " + model + " Labels: " + ids);
+    sails.config.warningMsg = ids;
+    return true;
+  }
+
   parse : function (barcode) {
 
   	var P = Barcode.prefix();

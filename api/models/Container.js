@@ -167,6 +167,8 @@ module.exports = {
 			Record.clone('Plate', ids, resetData, { id: Container.alias('id') })
 			.then ( function (cloneData) {
 				console.log("\nCreated new record(s): " + JSON.stringify(cloneData));
+				var newIds = 'generated list of ids... eg 1,2,3'; // temp testing
+				Barcode.printLabels('Plate', newIds);
 				deferred.resolve(cloneData);
 				//return res.render('lims/WellMap', { sources: Sources, Targets: Targets, target: { wells: 96, max_row: 'A', max_col: 12 }, options : { split: 1 }});
 			})

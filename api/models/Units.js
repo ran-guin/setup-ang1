@@ -11,6 +11,10 @@ module.exports = {
   	name : { type : 'string' },
   	base_unit : { type : 'string' },
   	factor : { type : 'float' }
+  },
+
+  initData: {
+  	'name' : 'pl', base_unit: 'l', factor: 1/1000000000
   }
 };
 
