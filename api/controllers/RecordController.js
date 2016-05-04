@@ -223,12 +223,12 @@ module.exports = {
 	},
 
 	search : function (req, res) {
-		var string - req.body.search;
+		var string = req.body.search;
 		var scope = req.body.scope;
 
 		if (! scope ) { 
 			scope = { 
-				'user' : ['email', 'username'} 
+				'user' : ['email', 'username'] 
 			};
 		}
 
