@@ -47,18 +47,6 @@ module.exports.bootstrap = function(cb) {
 	}
 
 	console.log("loaded promises...");
-
-
-	var custom_data_files = ['Plate_Format', 'Sample_Type', 'Attribute', 'lab_protocol', 'protocol_step'];
-	var added_custom_data = 0;
-	for (var i=0; i<custom_data_files.length; i++) {
-		var table = custom_data_files[i];
-
-		var add = Record.uploadFile(table, __dirname + "/data/" + table + '.txt' );
-		if (add) { added_custom_data = added_custom_data + 1 }
-		else { console.log("** Warning: missing customization file for " + table) }
-	}
-	console.log("Added data from " + added_custom_data + " custom init files" );
 	
 	q.all(promises)
 	.then ( function (results) {
@@ -133,36 +121,76 @@ function initialize_table (Model) {
 		
 	console.log('initialize ' + Table);
 
-	if (Model.initData && Model.initData != 'undefined' && Model.initData.length > 0) {
-		console.log(Table + ' defined');
+	Record.query_promise("SELECT count(*) as count FROM " + Table)
+	.then ( function (result) {
+		console.log(JSON.stringify(result));
+		var count = result[0].count;
+		console.log(count + ' records found in ' + Table);
 
+		if (count > 0) {
+			var msg = Table + " table already initialized (" + count + " records found)";
+			deferred.resolve(msg);
+		}
+		else {
+			if (Model.initData && Model.initData != 'undefined' && Model.initData.length > 0) {
+				console.log(Table + ' initData defined');
 
-		Model.count()
-		.exec(function (err, count) {
-			console.log(count + ' records found in ' + Table);
-    		if (err) { 
-    			var msg = "Error counting " + Table + ' records.';
-    			msg = msg + ' (run once with migrate = alter if table not yet created)'
-    			deferred.reject(msg);
-    		}
-    		else if (count > 0) {
-    			var msg = Table + " table already initialized (" + count + " records found)";
-    			deferred.resolve(msg);
-    		}
-			else {
 				Model.create(Model.initData)
 				.exec( function (err, result) {
 					if (err) { deferred.reject(err) }
 					else { 
-						var msg =  "* Initialized " + Table + " with " + result.length + ' records'; 
-						deferred.resolve(msg);
+						var msg =  "* Initialized " + Table + " with " + result.length + ' records';
+						q.when( load_custom_data(Model) )
+						.then (function (msg) {
+							deferred.resolve(msg)
+						})
+						.catch (function (err) {
+							deferred.reject(msg);
+						});
 					}
 				});
 			}
-		});
+			else {
+				q.when( load_custom_data(Model))
+				.then (function (msg) {
+					deferred.resolve(msg)
+				})
+				.catch (function (err) {
+					deferred.reject(msg);
+				});
+			}
+			
+		}
+	})
+	.catch ( function (err) {
+		
+		var msg = 'Could not count ' + Table + ' records (run once with migrate = alter if table not yet created)'
+		deferred.reject(msg);
+	});
 
-	}
-	else { deferred.resolve({}) }
+	return deferred.promise;
+}
+
+function load_custom_data (Model) {
+
+	var Table = Model.tableName;
+	var deferred = q.defer();
+
+	var file = __dirname + "/data/" + Table + '.txt';
+	console.log("\n* Look for " + file);
+	var msg = "check for " + file;
+
+	Record.uploadFile(Table, file )
+	.then ( function (add) {
+		if (add) {
+			msg = msg + ' ... added custom data: ' + JSON.stringify(add);
+		}
+		deferred.resolve(msg);
+	})
+	.catch ( function (err) {
+		msg = msg + '... no data file';
+		deferred.resolve(msg);
+	});	
 
 	return deferred.promise;
 }
