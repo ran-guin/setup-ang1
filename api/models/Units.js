@@ -13,8 +13,18 @@ module.exports = {
   	factor : { type : 'float' }
   },
 
-  initData: {
-  	'name' : 'pl', base_unit: 'l', factor: 1/1000000000
-  }
+  initData: [
+  	{ name : 'l' , base_unit: 'l', factor: 1 },
+  	{ name : 'ml', base_unit: 'l', factor: 0.001 },
+  	{ name : 'ul', base_unit: 'l', factor: 0.000001 },
+  	{ name : 'nl', base_unit: 'l', factor: 0.000000001 },
+  	{ name : 'pl', base_unit: 'l', factor: 0.000000000001 },
+
+  	{ name : 'g' , base_unit: 'g', factor: 1 },
+  	{ name : 'mg', base_unit: 'g', factor: 0.001 },
+  	{ name : 'ug', base_unit: 'g', factor: 0.000001 },
+  	{ name : 'ng', base_unit: 'g', factor: 0.000000001 },
+  	{ name : 'pg', base_unit: 'g', factor: 0.000000000001 },
+  ]
 };
 
