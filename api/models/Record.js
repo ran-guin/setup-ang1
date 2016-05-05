@@ -49,6 +49,7 @@ module.exports = {
 
 	uploadFile: function (table, file) {
 
+		var deferred = q.defer();
 		try {
 			var f = fs.readFileSync(file, {encoding: 'utf-8'} );
 
@@ -68,14 +69,21 @@ module.exports = {
 			})
 			console.log("Added " + data.length + " custom records from " + file);
 			// console.log("\nHeaders: " + headers);
-			return data.length;
-
+			Record.createNew(table, data)
+			.then ( function (added) {
+				deferred.resolve(added);
+			})
+			.catch ( function (err) {
+				var msg = "Error adding data to " + table + ":\n" + JSON.stringify(data);
+				deferred.reject(msg);
+			});
 		} 
 		catch (e) {
-			//console.log('no data file: ' + file);
-			return ;
+			console.log('no data file: ' + file);
+			deferred.reject('no data file: ' + file);
 		}
 
+		return deferred.promise;
 	},
 
 	join_data: function (join_to) {   
