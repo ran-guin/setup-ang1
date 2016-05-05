@@ -31,7 +31,7 @@ module.exports = {
     console.log("Print " + model + " Labels: " + ids);
     sails.config.warningMsg = ids;
     return true;
-  }
+  },
 
   parse : function (barcode) {
 
