@@ -53,7 +53,7 @@ module.exports = {
 		try {
 			var f = fs.readFileSync(file, {encoding: 'utf-8'} );
 
-			console.log("Custom file: " + file);			
+			console.log("Upload file: " + file);			
 			f = f.split("\n");
 
 			var headers = f.shift().split(/\t/);
@@ -67,9 +67,9 @@ module.exports = {
 	 			}
 	 			data.push(record);
 			})
-			console.log("Added " + data.length + " custom records from " + file);
+			console.log("* Added " + data.length + " custom records in " + table);
 			// console.log("\nHeaders: " + headers);
-			Record.createNew(table, data)
+			Record.createNew(table, data, {}, { NULL : "\\N" } )
 			.then ( function (added) {
 				deferred.resolve(added);
 			})
@@ -79,8 +79,7 @@ module.exports = {
 			});
 		} 
 		catch (e) {
-			console.log('no data file: ' + file);
-			deferred.reject('no data file: ' + file);
+			deferred.reject();
 		}
 
 		return deferred.promise;
@@ -206,10 +205,8 @@ module.exports = {
 	createNew : function (table, Tdata, resetData) {
 		// Bypass waterline create method to enable insertion into models in non-standard format //
 		
-		console.log("**** CALL createNew WRAPPER *****");
-
 		var deferred = q.defer();
-		console.log("\ncreate new record(s) in " + table + ": " + JSON.stringify(Tdata));
+		//console.log("\ncreate new record(s) in " + table);
 
 		if (Tdata == 'undefined') { deferred.reject('no data'); return deferred.promise }
 
@@ -226,6 +223,9 @@ module.exports = {
 			var Vi = [];
 			for (var f=0; f<fields.length; f++) {
 				var value = data[index][fields[f]];
+				if (value === 'NULL') {
+					value = null;
+				}
 
 				if (typeof value == 'number') { value = value.toString() }
 
@@ -272,7 +272,7 @@ module.exports = {
 		}
 
 		var createString = "INSERT INTO " + table + " (" + fields.join(',') + ") VALUES " + Values.join(', ') + onDuplicate;
-		console.log("\nInsert String: " + createString);
+		//console.log("\nInsert String: " + createString);
 
 		Record.query(createString, function (err, result) {
 			if (err) { deferred.resolve({error : "Error creating new record(s): " + err}) }
