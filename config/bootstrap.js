@@ -45,15 +45,12 @@ module.exports.bootstrap = function(cb) {
 		promises.push( fix_enums(Model) );
 		promises.push( initialize_table(Model) );
 	}
-
-	console.log("loaded promises...");
 	
 	q.all(promises)
 	.then ( function (results) {
-		console.log("completed promises");
 		for (var i=0; i<results.length; i++) {
 			if (results[i]) {
-				console.log(results[i]);
+				if (results[i].message) { console.log(results[i].message) }
 			}
 		}
 		console.log("\n** Initialization completed successfully **");
@@ -69,7 +66,7 @@ module.exports.bootstrap = function(cb) {
 function fix_enums (Model) {
 	var deferred = q.defer();
 
-	var Table = Model.tableName;
+	var table = Model.tableName;
 		var attributes = Object.keys(Model.attributes);
 
 		var added_enum = 0;
@@ -90,7 +87,7 @@ function fix_enums (Model) {
 
 		// console.log(att + " : " + Atype + " " + Aenum);
 		if (Aenum && Aenum != 'undefined') {
-			var command = " ALTER TABLE " + Table + " MODIFY " + att + " ENUM('" + Aenum.join("','") + "') " + defaultsTo;
+			var command = " ALTER TABLE " + table + " MODIFY " + att + " ENUM('" + Aenum.join("','") + "') " + defaultsTo;
 			console.log("* ENUM created: " + command); 
 
 		  	enumPromises.push( Record.query_promise(command) );
@@ -101,8 +98,8 @@ function fix_enums (Model) {
 	if (enumPromises.length > 0) {
 		q.all(enumPromises)
 		. then ( function (results) {
-			console.log("Corrected " + results.length + " ENUM fields in " + Table);
-			deferred.resolve(results);
+			console.log("Corrected " + results.length + " ENUM fields in " + table);
+			deferred.resolve({ message: "corrected " + results.length + " ENUM fields in " + table});
 		})
 		. catch ( function (err) {
 			deferred.reject({error: err})
@@ -117,29 +114,24 @@ function initialize_table (Model) {
 	// Initialize data if applicable //
 
 	var deferred = q.defer();
-	var Table = Model.tableName;
+	var table = Model.tableName;
 		
-	console.log('initialize ' + Table);
-
-	Record.query_promise("SELECT count(*) as count FROM " + Table)
+	Record.query_promise("SELECT count(*) as count FROM " + table)
 	.then ( function (result) {
-		console.log(JSON.stringify(result));
+
 		var count = result[0].count;
-		console.log(count + ' records found in ' + Table);
 
 		if (count > 0) {
-			var msg = Table + " table already initialized (" + count + " records found)";
-			deferred.resolve(msg);
+			deferred.resolve({message: count + " records found in " + table });
 		}
 		else {
 			if (Model.initData && Model.initData != 'undefined' && Model.initData.length > 0) {
-				console.log(Table + ' initData defined');
-
+				console.log(table + ' initData defined');
 				Model.create(Model.initData)
 				.exec( function (err, result) {
 					if (err) { deferred.reject(err) }
 					else { 
-						var msg =  "* Initialized " + Table + " with " + result.length + ' records';
+						console.log("* Initialized " + table + " with " + result.length + ' records');
 						q.when( load_custom_data(Model) )
 						.then (function (msg) {
 							deferred.resolve(msg)
@@ -151,20 +143,19 @@ function initialize_table (Model) {
 				});
 			}
 			else {
-				q.when( load_custom_data(Model))
+				load_custom_data(Model)
 				.then (function (msg) {
-					deferred.resolve(msg)
+					deferred.resolve(msg);
 				})
 				.catch (function (err) {
 					deferred.reject(msg);
 				});
 			}
-			
 		}
 	})
 	.catch ( function (err) {
 		
-		var msg = 'Could not count ' + Table + ' records (run once with migrate = alter if table not yet created)'
+		var msg = 'Could not count ' + table + ' records (run once with migrate = alter if table not yet created)'
 		deferred.reject(msg);
 	});
 
@@ -173,23 +164,24 @@ function initialize_table (Model) {
 
 function load_custom_data (Model) {
 
-	var Table = Model.tableName;
+	var table = Model.tableName;
 	var deferred = q.defer();
 
-	var file = __dirname + "/data/" + Table + '.txt';
-	console.log("\n* Look for " + file);
-	var msg = "check for " + file;
+	var file = __dirname + "/data/" + table + '.txt';
 
-	Record.uploadFile(Table, file )
+	Record.uploadFile(table, file )
 	.then ( function (add) {
 		if (add) {
-			msg = msg + ' ... added custom data: ' + JSON.stringify(add);
+			var id = add.insertId;
+			var added = add.affectedRows;
+			var msg = "* Added " + added + ' custom ' + table + " records : " + id + '...' + id+added-1;
+			deferred.resolve({ message: msg});
 		}
-		deferred.resolve(msg);
+		deferred.resolve();
 	})
 	.catch ( function (err) {
-		msg = msg + '... no data file';
-		deferred.resolve(msg);
+
+		deferred.resolve();
 	});	
 
 	return deferred.promise;
