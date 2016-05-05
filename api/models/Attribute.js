@@ -12,6 +12,7 @@ module.exports = {
 	/* LEGACY */
 	migrate: 'safe',
 	
+	tableName: 'Attribute',
 	attributes: {
 
 	},
