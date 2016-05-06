@@ -1,11 +1,16 @@
+if ! identifier 
+	- identifier = table
+if !defaultTo
+	- defaultTo = 'ul'
 
-span.dropdown
-	input.fill-id(type='hidden' id='#{table}-id' name='#{table}-id' value='0') 
-	input.fill-label(type='hidden' id='#{table}-label' name='#{table}-label' value='?') 
+span.dropdown.lookupMenu(id='#{identifier}')
+	input.fill-id(type='hidden' id='#{identifier}-id' name='#{identifier}-id' value='0') 
+	input.fill-label(type='hidden' id='#{identifier}-label' name='#{identifier}-label' value='?') 
 	- if (! prompt) prompt = "SELECT"
-	button.btn.btn-default.dropdown-toggle(type='button' data-toggle='dropdown' id='#{table}-lookup' value="unset") -- #{prompt} -- &nbsp;
+	button.btn.btn-default.btn-lg.dropdown-toggle(type='button' data-toggle='dropdown' id='#{identifier}-lookup' ng-init="initLookup('#{table}')") -- #{prompt} -- &nbsp;
 		span.caret
 	ul.dropdown-menu
 		each option in data
-			li 
-				a(href='#' onclick="return false;" value='#{option.id}') #{option.label} 
+			li(class="#{activeClass}")
+				a(href='#' onclick="return false;" value='#{option.id}' label='#{option.label}') #{option.label} 
+		
