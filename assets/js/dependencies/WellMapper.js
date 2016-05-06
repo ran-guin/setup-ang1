@@ -179,7 +179,13 @@ function wellMapper() {
     },
 
     this.distribute = function ( sources, target, options ) {
-
+        /* 
+        Input:
+        
+        sources: array of hashes - eg [ { id: 101, position: 'A1'}, { id: 102, position: 'A2'}]
+        target : hash of specs - eg { max_row : 'A', max_col: 1 } 
+        options: hash of options - eg { split : 2, mode: serial, pack: true }
+*/
         var targetMap = [];
         if (! options) { options = {} };
         if (! target || ! sources) { 
@@ -195,6 +201,7 @@ function wellMapper() {
         //var sources = [{ id: 1, type: 'blood', position: 'A1'}, { id : 2, type : 'blood', position : 'A2'}];
         var rows = target.rows || this.source_rows;
         var cols = target.cols || this.source_cols;
+
 
         var fill_by = options.fillBy || 'Row';
         var pack = options.pack || false;
