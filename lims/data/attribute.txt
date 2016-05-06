@@ -1,0 +1,45 @@
+Attribute_ID	Attribute_Name	Attribute_Format	Attribute_Type	FK_Grp__ID	Inherited	Attribute_Class	Attribute_Access	Attribute_Description
+1	Minutes_Clotted		Int	3	No	Prep	Editable	NULL
+2	Max_Transit_Temp_in_C		Int	3	No	Prep	Editable	NULL
+3	Min_Transit_Temp_in_C		Int	3	No	Prep	Editable	NULL
+4	Waybill_Number		Int	3	No	Prep	Editable	NULL
+5	Data_Logger_Serial_No		Int	3	No	Prep	Editable	NULL
+6	Shipping_Temp_in_C		Int	3	No	Prep	Editable	NULL
+7	Shipper		Int	3	No	Prep	Editable	NULL
+10	collection_time		DateTime	2	No	Source	Editable	NULL
+11	first_stored		DateTime	2	Yes	Plate	Editable	NULL
+12	initial_time_to_freeze		Decimal	2	Yes	Plate	Editable	NULL
+13	Tube_Full		ENUM('Yes','No')	2	No	Source	Editable	NULL
+14	Turbidity Observed		ENUM('Yes','No')	2	Yes	Plate	Editable	NULL
+15	Hematuria Observed		ENUM('Yes','No')	3	Yes	Plate	Editable	NULL
+16	Hemolysis Observed		ENUM('Yes','No')	2	Yes	Plate	Editable	NULL
+17	Lipedemia Observed		ENUM('Yes','No')	2	Yes	Plate	Editable	NULL
+18	Contamination During Pipetting		ENUM('Yes','No')	3	Yes	Plate	Editable	NULL
+19	Contamination Type		Text	3	Yes	Plate	Editable	NULL
+20	Processing Note		Text	3	Yes	Plate	Editable	NULL
+21	Clotting Observed		ENUM('Yes','No')	3	Yes	Plate	Editable	NULL
+23	Post Centrifugation Fibrin Clot Observed		ENUM('Yes','No')	3	Yes	Plate	Editable	NULL
+24	Patient_Service_Centre		FK_Service_Centre__ID	2	Yes	Source	Editable	NULL
+25	Replacement_Source_Status		ENUM('Requested','Received','Replacement')	2	No	Source	ReadOnly	NULL
+26	Replacement_for_Source		FKReplacing_Source__ID	2	No	Source	ReadOnly	NULL
+27	Thaw_Count		Count	3	Yes	Plate	Editable	NULL
+28	Thaw_Count		Int	3	Yes	Source	Editable	NULL
+29	Tube Weight		Decimal	1	No	Plate	Editable	NULL
+30	Sample Weight		Decimal	1	No	Plate	Editable	NULL
+31	Saliva_Collection_Device_Model		Varchar	3	No	Source	Editable	NULL
+32	Saliva_Collection_Device_Lot		Varchar	3	No	Source	Editable	NULL
+33	Patient_Name		varchar	8	No	Patient	Editable	NULL
+34	Offsite_Original_Tubes		int	8	No	Source	Editable	NULL
+35	Freezer_Date		DateTime	8	No	Source	Editable	NULL
+38	Picogreen DNA Quant (ng/uL)		Decimal	7	Yes	Plate	Editable	NULL
+39	For_Toxicology	NULL	ENUM('Yes','No')	8	No	Plate	Editable	NULL
+41	GENIC_Subject_Code		VARCHAR(3)	8	Yes	Source	NonEditable	NULL
+42	CDG_Batch_Identifier		text	23	No	Submission	Editable	NULL
+43	Measured_Tube_Weight_in_g	NULL	Decimal	23	No	Plate	Editable	This attribute can be used to calculate accurate volumes. If this attribute is entered and Plate_Format.Wells = 1 and Container Format has defined Empty_Container_Weight_g, the following calculation will be performed: 1. Subtract empty tube weight from entered (measured) weight. 2. convert grams to ml (assuming water density)
+45	VolumePOC	NULL	Decimal	8	No	Plate	Editable	Volume of plasma from commercial lab
+46	VolumeSOC	NULL	Decimal	8	No	Plate	Editable	Volume of serum from commercial lab
+47	260_280_Ratio		Decimal	8	Yes	Plate	Editable	NULL
+48	Gender_Test_Result		ENUM('M','F','U')	8	Yes	Plate	Editable	NULL
+49	Concentration_ng_per_ul		Decimal	8	Yes	Plate	Editable	NULL
+50	Qiagen_Kit_Lot_Number		varchar	3	Yes	Plate	Editable	
+51	DNA_Wash_Cycles		Int	3	Yes	Plate	Editable	
