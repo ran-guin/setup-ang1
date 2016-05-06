@@ -11,20 +11,23 @@ app.factory('CommonFactory', function($rootScope, $http){
 
     if (! options ) { options = {} } 
     var model = options.model || table;
+    var elementId    = options.elementId || table;   // optional elementId to replace table 
+
     var prompt = options.prompt || 'Select';
     var def = options.default;
     var condition = options.condition || '';
-
+    console.log("URL: " + url);
+    
     if (prompt) { url = url + "prompt=" + prompt + '&'}
     if (condition) { url = url + "condition=" + condition }
 
 	console.log('load lookup table for ' + table + ' : ' + model );
 
-        if ( this.Lookup[table]) {
-          console.log('already loaded ' + table );
+        if ( this.Lookup[elementId]) {
+          console.log('already loaded ' + elementId );
         }
-        else if ( table ) {  
-            this.Lookup[table] = {};   
+        else if ( elementId ) {  
+            this.Lookup[elementId] = {};   
 
             /** use reference that will be populated when available **/
             var lookup = {options : null, value : null};
@@ -37,7 +40,7 @@ app.factory('CommonFactory', function($rootScope, $http){
                 console.log("Loaded Lookup successfully: ");
                 //console.log(JSON.stringify(options));
 
-                document.getElementById('Lookup-' + table ).innerHTML=response;
+                document.getElementById('Lookup-' + elementId ).innerHTML=response;
 
 /*
                 lookup.options = options;
@@ -45,22 +48,22 @@ app.factory('CommonFactory', function($rootScope, $http){
                 var index = 0;
                 if (def) {
                     for (var i=0; i< options.length; i++) {
-                        if (options[i]['id'] == def) { 
+                        if (options[i]['elementId'] == def) { 
                             index = i;
                             break;
                         }
                     }
                     console.log("Default to " + def + ' -> ' + index);
-                    lookup.value = { 'id' : options[index]['id'], 'label' : options[index]['label']};
+                    lookup.value = { 'elementId' : options[index]['elementId'], 'label' : options[index]['label']};
                 }
 */
-                $rootScope.$broadcast('loadedLookup', { table : table, model : model});
+                $rootScope.$broadcast('loadedLookup', { table : table, elementId : elementId, model : model});
             })
             .error ( function (response) {
                 console.log("Error loading " + table + " Lookup HTTP request");
             });
 
-            this.Lookup[table] = lookup; 
+            this.Lookup[elementId] = lookup; 
  
         }
         else { console.log("no lookup table specfied") }
