@@ -7,15 +7,15 @@ app.controller('CommonController',
         console.log(JSON.stringify(app));
         
         // Automatically Load Lookup Files //
-        $scope.loadLookup = function loadLookup(table, id, label, prompt, condition) {
+        $scope.loadLookup = function loadLookup(table, labels, prompt, condition) {
          
         	var url = "/lookup/" + table + '/';
-        	url = url + id;
 
-        	var options = {};
-        	if ( label ) { 
-        		url = url + ':' + label;
-        		options.label = label;
+            var options = {};
+
+            if ( labels ) { 
+        		url = url + labels;   // defaults to "id:name:label"
+        		options.label = labels;
         	}
         	if (prompt) {
         		options.prompt = prompt;
@@ -23,9 +23,9 @@ app.controller('CommonController',
         	if (condition) {
         		options.condition = condition;
         	}
-
+            
         	url = url + '?';
-
+            console.log("call factory lookup with url: " + url + ':' + JSON.stringify(options));
        		var got = CommonFactory.loadLookup(url, table, options);
 
        		console.log("Loaded " + table + " Lookup Table");
@@ -61,11 +61,44 @@ app.controller('CommonController',
    
         $scope.setup = function( config ) {
 
-	    },
+	    }
 
 	    $scope.setField = function (field, value) {
 	    	console.log("SET " + field + ' to ' + value);
 	    	$scope[field] = value;
 	    }
+
+        $scope.updateLookup = function ( lookup ) {
+            var model = lookup + '-id';
+
+            var el1 = document.getElementById(model);
+
+            if (el1) {
+                $scope[lookup] = el1.value;
+                console.log('sync ' + lookup + ' to lookup value: ' + el1.value);
+            }
+            else {
+                console.log("Warning: Could not find " + model + " element to synchronize");
+            }
+             
+            var el2 = document.getElementById(lookup + '-label');
+
+            if (el2) {
+                $scope[lookup + '_label'] = el2.value;
+                console.log('sync label to  ' + el2.value);
+            }
+            else {
+                console.log("Warning: Could not find " + model + " element to synchronize");
+            }
+        }
+
+        $scope.updateLookups = function () {
+            var lookups = document.getElementsByClassName('lookupMenu');
+            for (var i=0; i<lookups.length; i++) {
+                console.log("update " + JSON.stringify(lookups[i]));
+                var identifier = lookups[i].id;
+                $scope.updateLookup(identifier); 
+            }
+        }
 
 }]);
