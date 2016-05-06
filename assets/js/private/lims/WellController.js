@@ -59,14 +59,26 @@ function wellController ($scope, $rootScope, $http, $q ) {
         }  
            
         // recalculate mapping //
-        $scope.Map = $scope.newMap.distribute(
-            $scope.sources, 
-            { rows : $scope.target_rows, cols : $scope.target_cols},
-            { fillBy: $scope.fill_by, pack: $scope.pack }
-        );
+
+        var input = { 
+            samples : $scope.sources,
+            transfer : { 
+                type :  $scope.transfer_type,
+                sample_type: $scope.Sample_type,
+                format: $scope.Target_format, 
+                rows :  $scope.target_rows, 
+                cols :  $scope.target_cols,
+                fillBy: $scope.fill_by, 
+                pack:   $scope.pack,
+                qty:    $scope.transfer_qty,
+                qty_units: $scope.transfer_qty_units,
+            }
+        };
         
-        console.log("Sources: " + JSON.stringify($scope.sources));
+        $scope.Map = $scope.newMap.distribute(input);
+        console.log("\nINPUT: " + JSON.stringify(input));        
         console.log("NEW MAP: " + JSON.stringify($scope.Map));    
+
         // console.log(newMap.source_rows + " x " newMap.source_cols);
 
         console.log("NEW CMAP: " + JSON.stringify($scope.newMap.CMap));
