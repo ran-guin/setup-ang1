@@ -47,8 +47,8 @@ function protocolController ($scope, $rootScope, $http, $q) {
             $scope.user = 'Ran';  // TEMP
             $scope.PrepFields = [];
             
-            $scope.SplitFields = {};
-            $scope.split_mode = 'Parallel';  // or parallel ... eg split 1,2 x 2 -> 1,2,1,2 (parallel) or 1,1,2,2 (serial)
+            // well specific attributes handled in WellController //
+            // eg SplitFields, split_mode, distribution_mode, target_format etc.
             
             $scope.FK_Employee__ID = 2;  // test data 
             console.log("Steps: " + JSON.stringify($scope.Steps) );
@@ -83,6 +83,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
     }
 
 
+
     $scope.reset_Split_mode = function (fields) {
         
         if (! fields) { fields = Object.keys($scope.SplitFields) }
@@ -103,123 +104,6 @@ function protocolController ($scope, $rootScope, $http, $q) {
         };
 
         return P[model];
-    }
-
-    /* Enable split distribution in parallel or in series */
-    $scope.splitField = function splitField (field, separator) {
-
-        var input = $scope[field];
-
-        if (input) {
-            $scope[field + '_split'] = input;
-
-            var prefix = $scope.Prefix(field);
-            
-            if (prefix) { 
-                separator = prefix;
-            }
-            else {
-                separator = ',';
-            }
-            console.log("Split " + field + ' ON ' + separator + ' : ' + prefix);
-
-            var splitExpr = new RegExp('\\s*' + separator + '\\s*', 'ig');
-
-            var input_array = input.split(splitExpr);
-            
-            if (prefix && (input_array.length > 1) && (input_array[0] == '')) { input_array.shift() }  // remove first element 
-
-            console.log('test: ' + JSON.stringify(input_array) );
-
-            var split = $scope.Split || 1;
-            var Nx = $scope.N * split;
-            var entered = input_array.length;
-
-            var factor = Nx / entered;
-            var round = Math.round(factor);
-            
-            console.log("Array: " + JSON.stringify(input_array) + " x " + factor);
-     
-            if (factor == round) {
-                 $scope[field+'_errors'] = '';
-                 $scope.formDisabled  = false;
-            }
-            else {
-                // $scope.errMsg = "# of entered values must be factor of " + $scope.N;
-                $scope[field+'_errors'] = "# of entered values must be factor of " + $scope.N;
-                $scope.formDisabled  = true;
-           }
-
-            var array = [];
-            var offset = 0;
-            var index = 0;
-
-            if ($scope.split_mode == 'Serial') {
-                $scope.splitExample = " A,B,C -> A, A...B, B...C, C...";
-                for (var i=0; i<Nx; i++) {
-                     
-                    array[i] = input_array[index];
-                    offset++;
-                    if (offset >= round) {
-                        offset=0;
-                        index++;
-                    }
- 
-                }
-            }
-            else {
-                $scope.splitExample = " A,B,C -> A, B, C...A, B, C...";
-                for (var i=0; i<Nx; i++) {
-                    array[i] = input_array[index];
-
-                    index++;
-                    if (index >= entered) {
-                        index=0;
-                    }
- 
-                }                
-            }
-
-     
-            $scope[field + '_split'] = array.join(','); 
-
-            console.log(field + ' split to: ' + JSON.stringify($scope[field+'_split']));
-            
-            $scope.SplitFields[field] = array;
-
-            if (entered > 1) $scope.SplitTracking = true;  
-  
-            return array;
-        }
-        else { console.log('no value...') }
-    }
-
-    /* Retrieve data from fields which are splittable ... eg may accept different values for each of N plate_ids based on comma-delimited list */
-    $scope.splitData = function ( input, map) {
-        var recordData = [];
-        for (var n=0; n< $scope.N; n++) {
-            recordData[n] = {};
-            for (var i=0; i< input.length; i++) {
-                var fld = input[i];
-                var key = fld + $scope.stepNumber;
-
-                var mapped = fld;  /* Enable option for mapping field to custom name */
-                if (map && map[fld]) {
-                    mapped = map[fld];
-                }
-                
-                if ($scope[key + '_split']) { 
-                    var splitV = $scope[key + '_split'].split(',');
-                    recordData[n][mapped] = splitV[n];
-                }
-                else if ($scope[fld]) {
-                    recordData[n][mapped] = $scope[key];
-                }
-
-            }
-        }
-        console.log('split Plate data: ' + JSON.stringify(recordData));
-        return recordData;
     }
 
     $scope.complete = function complete (action) {
@@ -301,27 +185,18 @@ function protocolController ($scope, $rootScope, $http, $q) {
 
         console.log("\nDATA: " + JSON.stringify(data));
 
+        $scope.updateLookups();  // use lookup dropdowns to populate ng-model
+
         if ($scope.Step.Target_format > 0) {
 
-            var format = $scope.Step.Target_format;
-            var sample_type = $scope.Step.Target_sample;
-            var transfer_type   = $scope.Step.Target_type;
-            var reset_focus  = $scope.Step.reset_focus;
-            var split        = $scope['Split'] || 1;
-            var pack         = $scope['Pack'] || 0;
-
-            var formatElement = document.getElementById('Plate_Format-id');
-            if (formatElement) { 
-                format = formatElement.value;
-            }
-
             var Transfer = { 
-                'target_format' : format,
-                'sample_type'   : sample_type,
-                'transfer_type' : transfer_type,
-                'reset_focus'   : reset_focus,
-                'split'         : split,
-                'pack'          : pack
+                'target_format' : $scope.Step.Target_format,
+                'sample_type'   : $scope.Step.Target_sample,
+                'transfer_type' : $scope.Step.transfer_type,
+                'reset_focus'   : $scope.reset_focus,
+                'split'         : $scope.splitX,
+                'pack'          : $scope.pack,
+                'distribution_mode' : $scope.distribution_mode,
             };
 
             $scope.distribute();  // change to promise (test.. )
@@ -391,6 +266,8 @@ function protocolController ($scope, $rootScope, $http, $q) {
     $scope.test = function test (data) {
         console.log('test');
         $scope.comments = 'tested';
+        if (data > 0) { $scope.forward() }
+        else { $scope.back() }
         console.log('reset to: ' + $scope.comments);
     }
 
