@@ -38,7 +38,7 @@ block content
 
                   span.lookup(id='Lookup-lab_protocol' ng-init="#{init}")
                 td(style='width:30%; vertical-align:middle')
-                  button.btn-lg.btn.btn-success.form-control(type='submit' ng-disabled=0) Run Protocol 
+                  button.btn.btn-lg.btn-success(type='submit' ng-disabled=0) Run Protocol 
 
           form(role='form' method = 'post' action= "/transfer")
             input(type = 'hidden' name='Samples' value='#{JSON.stringify(Samples)}')
@@ -55,8 +55,8 @@ block content
                     // b &nbsp; Split X: 
                     // input(name='split' type='text' size='5px')
                 td(style='width:30%; vertical-align:middle')
-                    button.btn.btn-lg.btn-success.form-control(type='submit' ng-click="updateLookups") Transfer Samples
-            button(type='button' ng-click="updateLookups()") load lookups
+                    button.btn.btn-lg.btn-success(type='submit' ng-click="updateLookups") Transfer Samples
+
           include uploadMatrix.jade
 
         hr
