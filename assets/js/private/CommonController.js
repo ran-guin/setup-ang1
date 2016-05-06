@@ -6,6 +6,17 @@ app.controller('CommonController',
         console.log('loaded Common Controller');
         console.log(JSON.stringify(app));
         
+        // Support Basic Password Validation and Confirmation
+        // usage: ng-model='repeat' ng-key-up="compare(repeat)"
+        
+        $scope.passwordValidation = /^[a-zA-Z]\w{3,14}$/;
+        $scope.confirmedPassword = false;
+        $scope.compare = function (repeatEntry) {
+            console.log("Compared " + repeatEntry + " with " + $scope.password);
+            $scope.confirmedPassword = $scope.password == repeatEntry ? true : false;
+            if ($scope.confirmedPassword) { document.getElementById('confirm_password').style="color:green" }
+        }
+
         // Automatically Load Lookup Files //
         $scope.loadLookup = function loadLookup(table, labels, prompt, condition) {
          
