@@ -124,7 +124,7 @@ module.exports = {
 		    		plate_ids : plate_ids, 
 		    		Steps : result, 
 		    		Samples: Samples, 
-		    		fields: inputList['input'], 
+		    		// fields: inputList['input'], 
 		    		attributes: inputList.attributes,
 		    	};
 

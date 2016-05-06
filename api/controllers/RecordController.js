@@ -126,22 +126,23 @@ module.exports = {
 
 	lookup: function (req, res) {
 		var table = req.param('table');
-		var fields = req.param('fields') || 'id:name';
+		var fields = req.param('fields') || '';
 		var prompt = req.param('prompt') || 'Select:';
 		var condition = req.param('condition') || 1;
+		var defaultTo = req.param('default') || 'ml';
 
-		if (fields == 'undefined') { fields = 'id:name' }
-			
 		console.log('generate ' + table + ' lookup');
-		console.log("using: " + fields);
+		fields = fields + '::';  // extend to ensure array has at least elements..
 
+		console.log("LABELS: " + fields);
 		var extract = fields.split(':');
+		var idField = extract[0] || 'id';
+		var nameField = extract[1] || 'name';
+		var identifier = extract[2] || table;
 
-		if (extract.length == 1) { extract[1] = extract[0] }
-
-		var select = extract[0] + ' as id, ' + extract[1] + ' as label';
+		var select = idField + ' as id, ' + nameField + ' as label';
 		var query = "Select " + select + " from " + table + " WHERE " + condition;
-		console.log("Query: " + query);
+		console.log("Lookup Query: " + query);
 
 		Record.query(query, function (err, result) {
 			if (err) {
@@ -149,7 +150,7 @@ module.exports = {
 			}
 			console.log("Lookup: " + JSON.stringify(result));
 			//return res.send(result);
-			return res.render('core/lookup', { table : table, data : result, prompt: prompt });
+			return res.render('core/lookup', { table : table, identifier : identifier, data : result, prompt: prompt, defaultTo: defaultTo });
 		});
 	},
 

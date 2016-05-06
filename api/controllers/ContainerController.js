@@ -24,9 +24,10 @@ module.exports = {
 		var Target = {};
 		var Options = {};
 
-		var target_format_id;
 		var split;
 		var sources = [];
+		var target_format_id = 0;
+
 		if (req.body) {
 			var samples = req.body['Samples'];
 			var target  = req.body['Target'] || "{}";
@@ -72,10 +73,22 @@ module.exports = {
 			Target = { Format : { id : target_format_id }, rows : ['A','B'] }
 		}
 
-		return res.render(
-			'lims/WellMap', 
-			{ sources: Sources, target: Target, options : { split : split } }
-		);
+		Record.query_promise("SELECT * FROM Plate_Format WHERE Plate_Format_ID = " + target_format_id)
+		.then ( function (result) {
+			if (result.length == 1) {
+				return res.render(
+					'lims/WellMap', 
+					{ sources: Sources, target: result[0], options : { split : split } }
+				);
+			}
+			else {
+				return res.json("unspecified target format: " + JSON.stringify(result));
+			}
+		})
+		.catch ( function (err) {
+			return res.json(err);
+		})
+
 	},
 
 	uploadMatrix : function (req, res) {
