@@ -10,98 +10,159 @@ block content
   div.container
     div(ng-app='myApp')
       div(ng-controller="CommonController")
-       div(ng-controller='WellController', ng-init="#{init}")
-        if errorMsg 
-          h2(style='color:red') Error: #{errorMsg}
-        p &nbsp;
-        b Fill By: 
-        label
-          input(type='radio' value = 'Row' ng-model="fill_by" ng-click="reset_fill_by()") 
-          b &nbsp; Row &nbsp;
-        label
-          input(type='radio' value = 'Column' ng-model="fill_by" ng-click="reset_fill_by()")
-          b &nbsp; Column &nbsp;
+        div(ng-controller='WellController', ng-init="#{init}")
+          if errorMsg 
+            h2(style='color:red') Error: #{errorMsg}
+          form.form-horizontal(role='form' method='post' action="/transfer")
+            p &nbsp;
+            if target
+              h2 Transfer Samples to #{target.Plate_Format_Type}
+              hr
+            div.form-group
+              div.col-sm-4
+                label
+                  input.input(type='radio' value = 'Pre-Print' ng-model="transfer_type")
+                  b &nbsp; Pre-Print &nbsp;
+                label
+                  input(type='radio' value = 'Aliquot' ng-model="transfer_type")
+                  b &nbsp; Aliquot &nbsp;                
+                label
+                  input(type='radio' value = 'Transfer' ng-model="transfer_type") 
+                  b &nbsp; Transfer &nbsp; 
 
-        hr
-        b Transfer: 
-        div
-          input(type='text')
-          span.lookup(id='Lookup-units' ng-init="loadLookup('units')")                  
-        div        
-          span.lookup(id='Lookup-Plate_Format' ng-init="loadLookup('Plate_Format', 'Plate_Format_ID', 'Plate_Format_Type')") 
-          b &nbsp; Split X: 
-          input(name='split' type='text' size='5px')
+              div.col-sm-4
+                input.input-lg(type='text' placeholder=' -- Transfer Qty --', ng-model='transfer_qty' size='12' ng-disabled="transfer_type=='Pre-Print'")
 
-        hr
-        h3 Source List: {{ sources.length }}
-        b {{ sources }} 
-        h4 Samples: {{ sources[0] }}, {{ sources[1] }} ...{{ sources[sources.length-1] }}
-        hr
-        h4 Target: {{ target }}
-        hr
-        h5 Options: {{ options }}
-        hr
-        button(type='button' ng-click="redistribute()") Distribute
-        span &nbsp; &nbsp;
-        button(type='button' ng-click="redistribute()") Re-Distribute
-        span &nbsp; &nbsp;
-        button(type='button' ng-click="source_by_Col()") Pick Columns First
-        span &nbsp; &nbsp;
-        button(type='button' ng-click="source_by_Row()") Pick Rows First
-        span &nbsp; &nbsp;
-        button(type='button' ng-click="reset_sources()") Reset Source Order
-        hr
-        button.btn.btn-primary(type='button' ng-click="testXfer()") Complete Transfer
-        span &nbsp; &nbsp;
-        hr
-        b {{ feedback }}
-        hr
+                span &nbsp;
+                span.lookup(id='Lookup-units' ng-init="loadLookup('units','','units')")                  
+            
+              div.col-sm-4
+                b &nbsp; Split X: 
+                input.input-lg(name='splitX' ng-model='splitX' type='number' size='5' tooltip="example")
 
-        - var index = 0;
-        table.table()
-          tr
-            td(style='width:50%')
-              h2 Source Samples:
-              table
-                tr
-                  th &nbsp;
-                  th(ng-repeat="col in source_cols") {{ col }}
-                tr(ng-repeat="row in source_rows")
-                  td {{ row }}
-                  td(ng-repeat="col in source_cols" style="background-color:#{{ rgbList[ $parent.$index*source_cols.length + $index ] }}" ) 
-                    span(data-toggle="tooltip" title="{{sources[$parent.$index*source_cols.length + $index].id}}") &nbsp; &nbsp; &nbsp;
-            td(style='width:50%')
-              h2 Target Samples:
+            //p &nbsp;
+              b Into: 
+              span.lookup(id='Lookup-Plate_Format' ng-init="loadLookup('Plate_Format', 'Plate_Format_ID:Plate_Format_Type', 'target format')")
 
-              - var i = 0;
-              each plate in targets
-                table.table.table-bordered
-                  tr
-                    th &nbsp;
-                    each col in Cols
-                      th(style='background-color:#aaa') 
-                        b #{col}
-                  each row in Rows
+            p &nbsp;
+
+            div(ng-show="splitX > 1")
+                p &nbsp;
+                b Fill By {{ fill_by }} : 
+                label
+                  input(type='radio' value = 'row' ng-model="fill_by" ng-click="reset_fill_by()") 
+                  b &nbsp; Row &nbsp;
+                label
+                  input(type='radio' value = 'column' ng-model="fill_by" ng-click="reset_fill_by();")
+                  b &nbsp; Column &nbsp;
+
+                p &nbsp;
+                b Distribution: 
+                label
+                  input(type='radio' value = 'serial' ng-model="split_mode" ng-click="reset_split_mode()") 
+                  b &nbsp; Serial &nbsp;
+                label
+                  input(type='radio' value = 'parallel' ng-model="split_mode" ng-click="reset_split_mode()")
+                  b &nbsp; Parallel &nbsp;
+
+                span &nbsp; [ eg : 
+                  b {{ split_mode }} : {{ splitExample }}
+                  span ]
+
+              p &nbsp;
+              div(ng-show="split_mode == 'serial'")
+                b Pack/Transfer samples in groups of: 
+                label
+                  input.input-lg(type='number' size="10" ng-model="pack_wells" ng-change="reset_split_mode()") 
+            hr
+
+            button.btn.btn-lg.btn-primary(type='button' ng-click="updateLookups(); redistribute()") Distribute
+            hr
+            h2 Input Parameters:  [{{ sources.length }} samples]
+            h4 
+              b Samples: 
+              span {{ sources[0] }}, {{ sources[1] }} ...{{ sources[sources.length-1] }}
+              p &nbsp;
+              b Target: {{ target }}
+
+            h4 
+              b Options:
+              ul
+                li Split: {{ splitX }}
+                li Split_mode: {{ split_mode }}
+                li Pack: {{ pack_wells }}
+                li Fill By: {{ fill_by }}
+                li Transfer Qty: {{ transfer_qty }} {{ units_label }}
+                li Target Container: {{ Plate_Format }}
+                li Transfer Type: {{ transfer_type }}
+            hr
+            h4 Target: {{ target }}
+            hr
+            h5 Options: {{ options }}
+            hr
+            button(type='button' ng-click="redistribute()") Distribute
+            span &nbsp; &nbsp;
+            button(type='button' ng-click="redistribute()") Re-Distribute
+            span &nbsp; &nbsp;
+            button(type='button' ng-click="source_by_Col()") Pick Columns First
+            span &nbsp; &nbsp;
+            button(type='button' ng-click="source_by_Row()") Pick Rows First
+            span &nbsp; &nbsp;
+            button(type='button' ng-click="reset_sources()") Reset Source Order
+
+            hr
+            
+            button.btn.btn-primary(type='button' ng-click="testXfer()") Complete Transfer
+            span &nbsp; &nbsp;
+            hr
+            b {{ feedback }}
+            hr
+
+            - var index = 0;
+            table.table()
+              tr
+                td(style='width:50%')
+                  h2 Source Samples:
+                  table
                     tr
-                      td(style='background-color:#aaa') 
-                        b #{row}
-                      each col in Cols
-                        td 
-                          - index = plate + ':' + row + col
-                            if plateMap[index]
-                              b #{plateMap[index]} 
-                            else 
-                              b 0
+                      th &nbsp;
+                      th(ng-repeat="col in source_cols") {{ col }}
+                    tr(ng-repeat="row in source_rows")
+                      td {{ row }}
+                      td(ng-repeat="col in source_cols" style="background-color:#{{ rgbList[ $parent.$index*source_cols.length + $index ] }}" ) 
+                        span(data-toggle="tooltip" title="{{sources[$parent.$index*source_cols.length + $index].id}}") &nbsp; &nbsp; &nbsp;
+                td(style='width:50%')
+                  h2 Target Samples:
 
-        hr
-        //b {{ map }}
-        b Colour Map:
+                  - var i = 0;
+                  each plate in targets
+                    table.table.table-bordered
+                      tr
+                        th &nbsp;
+                        each col in Cols
+                          th(style='background-color:#aaa') 
+                            b #{col}
+                      each row in Rows
+                        tr
+                          td(style='background-color:#aaa') 
+                            b #{row}
+                          each col in Cols
+                            td 
+                              - index = plate + ':' + row + col
+                                if plateMap[index]
+                                  b #{plateMap[index]} 
+                                else 
+                                  b 0
 
-        b {{ colours.length }} colours:
+            hr
+            //b {{ map }}
+            b Colour Map:
 
-        table.table.table-bordered
-          tr(ng-repeat="colour in colours") 
-              td(ng-repeat="hue in colourMap[colour]" style="background-color:#" + "{{hue}}" ) {{hue}}
+            b {{ colours.length }} colours:
 
-        hr
-        b {{ sources }}
+            table.table.table-bordered
+              tr(ng-repeat="colour in colours") 
+                  td(ng-repeat="hue in colourMap[colour]" style="background-color:#" + "{{hue}}" ) {{hue}}
+
+            hr
+            b {{ sources }}
