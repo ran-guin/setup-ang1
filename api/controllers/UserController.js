@@ -133,7 +133,7 @@ module.exports = {
   },
 
   home : function (req, res) {
-    console.log("Payload: " + req.session.payload);
+    console.log("Payload = " + JSON.stringify(req.session.payload));
 
     if ( req.session.payload) {
       return res.render('customize/private_home', req.session.payload);
