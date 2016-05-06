@@ -69,18 +69,12 @@ module.exports = {
 
 				if (data['Sources']) {
 
-					var transfer = { 
-						size : 1, 
-						target_size: '3x6', 
-						target_format : 5,  
-						target_rows: ['A','B','C','D'], 
-						target_cols : [1,2,3,4,5,6]
-					}; // test
+					var transfer = data['Transfer'];
 
 					console.log('Sources: ' + JSON.stringify(data['Sources']));
 					promises.push( Container.execute_transfer( 
 						data['Sources'],
-						transfer,
+						data['Transfer'],
 						{ 'prep_id' : prep_id } // test data
 					));
 
