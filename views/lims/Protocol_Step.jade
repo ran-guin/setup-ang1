@@ -4,16 +4,17 @@ block content
 
 
   div.container
-
+    include ./../core/errorMsg.jade
+    
     // input variables: 
     //    - plate_ids  (array); 
     //    - Samples    (array of hashes)
     //    - Steps      (array of hashes)
     //    - attributes (array of hashes)
 
-    - var config = { plate_ids: plate_ids, Samples: Samples, Steps : Steps, Attributes: attributes };
+    - var configParams = { plate_ids: plate_ids, Samples: Samples, Steps : Steps, Attributes: attributes };
 
-    - var init = "initialize(" + JSON.stringify(config) + ")";
+    - var init = "initialize(" + JSON.stringify(configParams) + ")";
 
     //- flds = fields || []; 
     //- units = { 'solution_qty' : 'solution_qty_units', 'transfer_qty' : 'transfer_qty_units'};
@@ -23,186 +24,151 @@ block content
     hr
     div(ng-app='myApp')
       div(ng-controller="CommonController")
-        div(ng-controller='ProtocolController' ng-init="#{init}" ngcloak)
-          p.bg-warning(style='padding:20px; margin:0px')
-            span Active Samples: 
-            b {{N}} x 
-            b(style='color:red') {{sample_type}} 
-            b in {{container_format}}
-            span.navbar.navbar-right 
-              b {{user}} &nbsp;
-              span {{ timestamp }} &nbsp; &nbsp;
-         
-          div(ng-if="status=='Completed'")
-            p.bg-success(style='padding:20px') 
-              b Protocol {{ status }}
-            form(role='form' method='post' action="/Lab_protocol/run" enctype='form-data')
-              input(type = 'hidden' name='Samples' value='{{Samples}}')
-              input(type='hidden' id = 'id' name='plate_ids' value="{{plate_list}}")
-              input(type='hidden' id='Plate_ID' name='Plate_ID' value='{{plate_list}}')
-
-              table.table
-                tr
-                  td(style='width:30%')
-                    h2 Run Another Protocol: 
-                  td(style='width:40%; vertical-align:middle')
-                    span.lookup(id='Lookup-lab_protocol' ng-init="loadLookup('lab_protocol','','','Select Protocol',\"(Container_format IS NULL OR Container_format = '" + Samples[0].container_format_id + "') AND ( Sample_type IS NULL OR Sample_type = '" + Samples[0].sample_type_id + "')\")" )
-                  td(style='width:30%; vertical-align:middle')
-                    button.btn.btn-success.form-control(type='submit' ng-disabled=0) Run Protocol 
+        div(ng-controller="WellController")
+          div(ng-controller='ProtocolController' ng-init="#{init}" ngcloak)
             
-            hr
-            include uploadMatrix.jade
+            p.bg-warning(style='padding:20px; margin:0px')
+              span Active Samples: 
+              b {{N}} x 
+              b(style='color:red') {{sample_type}} 
+              b in {{container_format}}
+              span.navbar.navbar-right 
+                b {{user}} &nbsp;
+                span {{ timestamp }} &nbsp; &nbsp;
+            
+            div(ng-if="status != 'Completed'")      
+              each Step,index in Steps
+                - var Snum = index+1;
+           
+                  div(ng-show="#{Snum} == stepNumber")
+                    - var flds = Step.input_options.split(':');
+                    - var formats = Step.input_format.split(':');
+                    - var defaults = Step.input_defaults.split(':');
+                    - var prompted = {};
 
-          each Step,index in Steps
-            - var Snum = index + 1;
-            div(ng-if="#{Snum} == stepNumber")
-              - var flds = Step.input_options.split(':');
-              - var formats = Step.input_format.split(':');
-              - var defaults = Step.input_defaults.split(':');
+                    div.alert.alert-info(style='opacity:0.9')
+                      h3 #{Step.name} &nbsp; 
+                        span.navbar-right
+                          if Step.instructions
+                            a(href='#' onclick="return false;" tooltip='instructions' data-toggle="popover" data-placement="left" data-trigger="focus" title="Instructions" data-content="#{Step.instructions}")
+                              i.fa.fa-question-circle
+                            span &nbsp;
+                          span &nbsp; [ {{stepNumber}} / {{steps}} ] &nbsp;
 
-              div.alert.alert-info(ng-if="status#{Snum} != 'Completed'" style='opacity:0.9')
+                      h4(style="color:red") &nbsp; &nbsp; #{ Step.message } 
 
-                h3 #{Step.name} &nbsp; 
-                  span.navbar-right
-                    if Step.instructions
-                      a(href='#' onclick="return false;" tooltip='instructions' data-toggle="popover" data-placement="left" data-trigger="focus" title="Instructions" data-content="#{Step.instructions}")
-                        i.fa.fa-question-circle
-                      span &nbsp;
-                    span &nbsp; [ {{stepNumber}} / {{steps}} ] &nbsp;
+                      hr
 
-                h4(style="color:red") &nbsp; &nbsp; #{ Step.message } 
+                      div(ng-if='errMsg')
+                        div.alert.alert-danger(style='opacity:1')
+                          b {{ errMsg }} 
 
-                hr
+                      form.form-horizontal(role="form" name ="form#{Snum}" method='post' ng-submit="complete('Completed')")
+                        input(type = 'hidden' name='Samples' value='{{Samples}}')
+                        input(type='hidden' id = 'id' name='plate_ids' value="{{plate_list}}")
+                        input(type='hidden' id='Plate_ID' name='Plate_ID' value='{{plate_list}}')
 
-                //form.form-horizontal(role="form" name = "form#{Snum}" data-toggle="validator" method='post' ng-submit="complete('Completed')" ng-if="status != 'Completed'")
-                
-                form.form-horizontal(role="form" name = "form#{Snum}" method='post' ng-submit="complete('Completed')" ng-if="status != 'Completed'")
- 
-                  input(type = 'hidden' name='Samples' value='{{Samples}}')
-                  input(type='hidden' id = 'id' name='plate_ids' value="{{plate_list}}")
-                  input(type='hidden' name='model' value='Plate')
+                        div(ng-if="SplitTracking")
+                          // Show example for serial vs parallel distribution //
+                          div.col-sm-2 &nbsp;
+                          div.col-sm-10
+                            b Note: Expanding lists in: &nbsp;
+                            label
+                              input(type='radio' value = 'Serial' ng-model="split_mode#{Snum}" ng-click="reset_Split_mode()") 
+                              b &nbsp; Serial &nbsp;
+                            label
+                              input(type='radio' value = 'Parallel' ng-model="split_mode#{Snum}" ng-click="reset_Split_mode()")
+                              b &nbsp; Parallel &nbsp;
+                            span &nbsp; [ eg : 
+                              b {{ splitExample }}
+                              span ]
 
-                  div(ng-if='errMsg')
-                    div.col-sm-2 &nbsp;
-                    div.col-sm-10
-                      table
-                        tr
-                          td(style='background-color:#faa')
-                            PRE
-                              B {{ errMsg }}
+                        each field,i in flds
+                          - fld = field.replace('*','');
+                          - alias = aliases[fld] || fld;
+                          - fType = 'text';
+                          - mandatory = false;
+                          - pattern = formats[i];
+                          - def     = defaults[i];
 
-                  - prompted = {};
-                  - options = ['ml', 'ul', 'nl', 'pl'];
+                          - var attr_index = attributes.indexOf(fld);
 
-                  div(ng-if="SplitTracking")
-                    div.col-sm-2 &nbsp;
-                    div.col-sm-10
-                      b Note: Expanding lists in: &nbsp;
-                      label
-                        input(type='radio' value = 'Serial' ng-model="split_mode#{Snum}" ng-click="reset_Split_mode()") 
-                        b &nbsp; Serial &nbsp;
-                      label
-                        input(type='radio' value = 'Parallel' ng-model="split_mode#{Snum}" ng-click="reset_Split_mode()")
-                        b &nbsp; Parallel &nbsp;
-                      span &nbsp; [ eg : 
-                        b {{ splitExample }}
-                        span ]
+                          if (fld != field)
+                            - mandatory = true;
+                            - pattern = "^[\\S]{1,}$"; 
 
-                  each field,i in flds
-                    - fld = field.replace('*','');
-                    - alias = aliases[fld] || fld;
-                    - fType = 'text';
-                    - mandatory = false;
-                    - pattern = formats[i];
-                    - def     = defaults[i];
+                          div(ng-if="Show['#{fld}']")
+                            if attributes[fld]
+                              - fType = attributes[fld];
 
-                    - var attr_index = attributes.indexOf(fld);
+                            // Prompt for this field //
 
-                    if (fld != field)
-                      - mandatory = true;
-                      - pattern = "^[\\S]{1,}$"; 
-
-                    div(ng-if="Show['#{fld}']")
-                      if attributes[fld]
-                        - fType = attributes[fld];
-
-                      if fld.match(/_qty/)
-                        - mandatory = true;
+                            div.form-group
+                              label.col-sm-2.control-label(for='#{fld}#{Snum}') #{alias}
+                              div.col-sm-6
+                                input.input-lg.form-control(type='#{fType}' name="#{fld}#{Snum}" ng-required="#{mandatory}" ng-blur="splitField('#{fld}#{Snum}')" placeholder = "Enter #{alias}" id='#{fld}#{Snum}' ng-model='#{fld}#{Snum}' default='#{def}' force=1 data-error="You must enter a valid quantity")
+                                
+                                div.help-block.with-errors(style='color:red' ng-show="form#{Snum}.#{fld}#{Snum}.$invalid" ng-model="#{fld}#{Snum}_errors") #{alias} is Mandatory
+                              if fld.match(/_qty/)
+                                div.col-sm-2
+                                  span.lookup(id='Lookup-units' ng-init="loadLookup('units', '::#{fld}_units#{Snum}', 'units')") 
+                                b is = {{ #{fld}_units#{Snum} }}
+                        hr
                         div.form-group
-                          label.col-sm-2.control-label(for='#{fld}') Transfer:
-                            
+                          //div.col-sm-2 &nbsp;
+                          label.col-sm-1 ..
                           div.col-sm-3
-
-                            input.form-control(type='text', placeholder = " -- Qty --" id='#{fld}#{Snum}' ng-required="#{mandatory}" pattern="#{pattern}" ng-model='#{fld}#{Snum}' ng-blur="splitField('#{fld}')" data-error="You must enter a valid quantity" required) 
-                            div.help-block.with-errors(style='color:red' ng-model="#{fld}#{Snum}_errors")
-                          div.col-sm-1
-                            // *** Generate Dropdown for ENUM Values *** // 
-                            div.dropdown(id='#{fld}_units')
-                                button.btn.btn-default.dropdown-toggle(type='button' data-toggle='dropdown' id='#{fld}_units#{Snum}' ng-model='#{fld}_units#{Snum}' ng-required="#{mandatory}" pattern="#{pattern}" ) Units &nbsp; 
-                                    span.caret
-                                ul.dropdown-menu
-                                    each opt,j in options
-                                        li 
-                                          a(href='#' ng-click="setField('#{fld}_units','#{opt}')" onclick='return false;') #{opt}
-                          div.col-sm-2(ng-if="Show['Split']" style='text-=align:right')
-                            b Split X
+                            button.btn.btn-success(type='submit' ng-disabled="form#{Snum}.$invalid") Completed Step
                           div.col-sm-2
-                            div(ng-if="Show['Split']")
-                              input(type='text' id='Split' value="1" force=1 ng-model="Split#{Snum}") 
-
-                          - prompted[fld]=1;
-                          - prompted['Split']=1;
-                          - prompted[fld]=1;
-                          - prompted[fld + '_units']=1;
-                      else if !prompted[fld]
-                        div.form-group
-                          label.col-sm-2.control-label(for='#{fld}') #{alias}
-                          div.col-sm-8
-                            input.form-control(type='#{fType}' name="#{fld}#{Snum}" ng-required="#{mandatory}" ng-blur="splitField('#{fld}')" required maxlength="15" placeholder = "Enter #{alias}" id='#{fld}' ng-model='#{fld}#{Snum}' default='' force=1)
-                            
-                            div.help-block.with-errors(style='color:red' ng-show="!form#{Snum}.#{fld}#{Snum}.$pristine && form#{Snum}.#{fld}#{Snum}.$invalid") #{alias} is Mandatory
+                            button.btn.btn-warning(type='button' ng-click="complete('Skipped')") Skip Step
                           div.col-sm-2
-                            b #{fld}#{Snum} = {{ #{fld}#{Snum} }} [ {{ Split6 }} ]
-                        - prompted[fld] = 1;
+                            button.btn.btn-danger(type='button' ng-click="complete('Failed')") Failed Step
+                          div.col-sm-2
+                            button.btn.btn-primary(type='button' ng-click="repeat()" ng-disable="Step.Repeatable") Repeat Previous Step
+
+              hr
+
+              form.form-horizontal(role="form" data-toggle="validator" method='post' action="/scan-barcode")
+                input(type = 'hidden' name='Samples' value='{{Samples}}')
+                input(type='hidden' id = 'id' name='plate_ids' value="{{plate_list}}")
+                input(type='hidden' name='model' value='Plate')
+                div
+                  button.btn.btn-danger(type='submit') Exit Protocol              
 
 
-                  hr
- 
-                  div.form-group
-                    //div.col-sm-2 &nbsp;
-                    div.col-sm-3
-                      button.btn.btn-success(type='submit' ng-disabled="form#{Snum}.$invalid") Completed Step
-                    div.col-sm-2
-                      button.btn.btn-warning(type='button' ng-click="complete('Skipped')") Skip Step
-                    div.col-sm-2
-                      button.btn.btn-danger(type='button' ng-click="complete('Failed')") Failed Step
-                    div.col-sm-3
-                      button.btn.btn-primary(type='button' ng-click="repeat()" ng-disable="Step.Repeatable") Repeat Previous Step
-                    div.col-sm-2
-                      button.btn.btn-primary(type='submit') Test Mandatory Button
-                    div.col-sm-12
-                      div.help-block.with-errors
+            div(ng-if="status=='Completed'")
+              p.bg-success(style='padding:20px') 
+                b Protocol {{ status }}
 
-                  hr
+              form(role='form' method='post' action="/Lab_protocol/run" enctype='form-data')
+                input(type = 'hidden' name='Samples' value='{{Samples}}')
+                input(type='hidden' id = 'id' name='plate_ids' value="{{plate_list}}")
+                input(type='hidden' id='Plate_ID' name='Plate_ID' value='{{plate_list}}')
 
-                form.form-horizontal(role="form" data-toggle="validator" method='post' action="/scan-barcode")
-                  input(type = 'hidden' name='Samples' value='{{Samples}}')
-                  input(type='hidden' id = 'id' name='plate_ids' value="{{plate_list}}")
-                  input(type='hidden' name='model' value='Plate')
-                  div
-                    button.btn.btn-danger(type='submit') Exit Protocol              
+                table.table
+                  tr
+                    td(style='width:30%')
+                      h2 Run Another Protocol: 
+                    td(style='width:40%; vertical-align:middle')
+                      span.lookup(id='Lookup-lab_protocol' ng-init="loadLookup('lab_protocol','','','Select Protocol',\"(Container_format IS NULL OR Container_format = '" + Samples[0].container_format_id + "') AND ( Sample_type IS NULL OR Sample_type = '" + Samples[0].sample_type_id + "')\")" )
+                    td(style='width:30%; vertical-align:middle')
+                      button.btn.btn-success.form-control(type='submit' ng-disabled=0) Run Protocol 
+              
+                hr
+                include uploadMatrix.jade
 
-          h3(ng-if="debug || 1") Debugging 
+            h3(ng-if="debug || 1") Debugging 
 
-          hr
+            hr
 
-          h5 Defaults: {{ Default }}
-          h5 Att : {{ AttributePrompt }}
-          h5 Details: {{ Step }}
-          h5 Steps : {{ Steps }}
-          h5 ids: {{ plate_ids }}
-          h5 Samples: {{ Samples }}
-          h5 Input: {{ input }}
-          h5 Show: {{ Show }}
-          h5 Fields: #{ JSON.stringify(flds) }
-          h5 Attributes: #{JSON.stringify(attributes)}
+            b comment: {{ comments }}
+            h5 Defaults: {{ Default }}
+            h5 Att : {{ AttributePrompt }}
+            h5 Details: {{ Step }}
+            h5 Steps : {{ Steps }}
+            h5 ids: {{ plate_ids }}
+            h5 Samples: {{ Samples }}
+            h5 Input: {{ input }}
+            h5 Show: {{ Show }}
+            h5 Fields: #{ JSON.stringify(flds) }
+            h5 Attributes: #{JSON.stringify(attributes)}
