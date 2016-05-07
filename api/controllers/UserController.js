@@ -234,6 +234,8 @@ module.exports = {
    */
   logout: function (req, res) {
 
+    /*
+    
     // Look up the user record from the database which is
     // referenced by the id in the user session (req.session.User)
     User.findOne(req.session.User, function foundUser(err, user) {
@@ -242,16 +244,18 @@ module.exports = {
       // If session refers to a user who no longer exists, still allow logout.
       if (!user) {
         sails.log.verbose('Session refers to a user who no longer exists.');
-        return res.backToHomePage();
+        return res.render('customize/public_home');
       }
+    
+    */
 
       // Wipe out the session (log out)
       req.session.User = null;
 
       // Either send a 200 OK or redirect to the home page
-      return res.backToHomePage();
+      return res.render('customize/public_home');
 
-    });
+    // });
   }
 	
 };
