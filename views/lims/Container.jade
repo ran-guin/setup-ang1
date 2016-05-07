@@ -33,7 +33,7 @@ block content
                 td(style='width:40%; vertical-align:middle')
                   //- init = "loadLookup('lab_protocol','','','Select Protocol',\"(Container_format IS NULL OR Container_format = '" + Samples[0].container_format_id + "')\")";
 
-                  - init = "loadLookup('lab_protocol','','Select Protocol',\"(Container_format IS NULL OR Container_format = '" + Samples[0].sample_type_id + "') AND ( Sample_type IS NULL OR Sample_type = '" + Samples[0].container_format_id + "')\")";
+                  - init = "loadLookup('lab_protocol','','Select Protocol',\"(Container_format IS NULL OR Container_format = '" + Samples[0].container_format_id + "') AND ( Sample_type IS NULL OR Sample_type = '" + Samples[0].sample_type_id + "')\")";
 
 
                   span.lookup(id='Lookup-lab_protocol' ng-init="#{init}")
