@@ -86,6 +86,7 @@ app.controller('CommonController',
 
             if (el1) {
                 $scope[lookup] = el1.value;
+                $scope[lookup + '_id'] = el1.value;
                 console.log('sync ' + lookup + ' to lookup value: ' + el1.value);
             }
             else {
