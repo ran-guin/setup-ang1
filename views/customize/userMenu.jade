@@ -17,8 +17,9 @@
 					hr
 					b Access: #{ session.payload.access }
 					hr
-					button.btn.btn-danger() Logout
+					a(href="/logout")
+						button.btn.btn-danger(type="submit") Logout
 					div#insideModal
 				div.modal-footer
 					button.btn.btn-default(type="button button-danger" data-dismiss="modal") Close
-					#{ JSON.stringify(session.payload) }
+					//#{ JSON.stringify(session.payload) }
