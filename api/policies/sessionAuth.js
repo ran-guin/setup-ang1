@@ -23,7 +23,7 @@ module.exports = function(req, res, next) {
         
         console.log('session authentication required');
 
-        res.redirect('/session/new');
+        res.redirect('/logout');
         return;
   }
 
