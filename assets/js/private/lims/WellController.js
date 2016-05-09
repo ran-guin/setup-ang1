@@ -33,19 +33,52 @@ function wellController ($scope, $rootScope, $http, $q ) {
 
         $scope.fill_by = Config['fill_by'] || 'row';
         $scope.Split   = Config['Split'] || 1;
-        $scope.pack_wells   = Config['pack'] || 0;    // applicable only for splitting with parallel mode (if N wells pipetted together)
+        $scope.pack_wells   = Config['pack'] || 'normal';    // applicable only for splitting with parallel mode (if N wells pipetted together)
         $scope.split_mode    = Config['mode'] || 'parallel';  // serial or parallel...appliable only for split (eg A1, A1, A2, A2... or A1, A2... A1, A2...)
         $scope.transfer_type = Config['transfer_type'] || 'Aliquot';
-
+        
         $scope.splitExamples = { 
-            'serial' : "[pack=1] A,B,C... -> A,A, B,B, C,C ...",
-            'parallel' : "[pack=0] A,B,C... -> A,B,C... A,B,C...",
-            'batch'    : "[pack=4] A,B,C,D, A,B,C,D, E,F,G,H, E,F,G,H..."
-        }; 
+            'serial' : "[pack=1] A1, A2 -> A1, A1, A2, A2 ...",
+            'parallel' : "[pack=0] A1, A2... -> A1, A2,... A1, A2...",
+            'batch'    : "[pack=2] A1,B1,C1,D1 ->  A1,B1, A1,B1, C1,D1, C1,D1...",
+            'split'    : " multiple values applied to respective splits",
+        };             
         $scope.splitExample = $scope.splitExamples[$scope.split_mode];
-   
+
+        $scope.packExamples = { 
+            'packed' : " samples packed into first available wells",
+            'normal' : " samples copied into similar well position",
+        };             
+        $scope.packExample = $scope.packExamples[$scope.pack_mode];
+
+
         console.log("INIT Map");
         $scope.redistribute();
+    }
+
+    $scope.reset_pack_mode = function reset_split_mode () {
+        if ($scope['pack_wells'] == 'packed') {
+            $scope.pack_mode = 'packed';
+        }
+        else {
+            $scope.pack_mode = 'normal';
+        }
+        console.log($scope['pack_wells'] + " : set example to " + $scope.pack_mode );
+        console.log(JSON.stringify($scope.packExamples));
+
+        $scope.packExample = $scope.packExamples[$scope.pack_mode];
+    }
+
+    $scope.reset_split_mode = function reset_split_mode () {
+        if ($scope.split_mode == 'parallel') {
+            $scope.splitExample = $scope.splitExamples[$scope.split_mode];
+        }
+        else if ($scope.split_mode == 'serial') {
+            $scope.splitExample = $scope.splitExamples[$scope.split_mode];            
+        }
+        else { console.log(" Unidentified split mode: " + $scope.split_mode) }
+
+        console.log($scope['split_mode'] + ' : reset split example to ' + $scope.splitExample);
     }
 
     $scope.redistribute = function redistribute () {
@@ -104,28 +137,6 @@ function wellController ($scope, $rootScope, $http, $q ) {
     $scope.reset_sources = function reset_sources () {
         $scope.sources = $scope.sources_init;
     }
-
-    $scope.reset_split_mode = function reset_split_mode () {
-        if ($scope.split_mode == 'parallel') {
-            $scope.pack_wells = 0;  // packing off for parallel distribution
-
-            $scope.splitExample = $scope.splitExamples[$scope.split_mode];
-        }
-        else if ($scope.split_mode == 'serial') {
-            if ($scope.pack_wells == 0 ) { $scope.pack_wells = 1 }
-            // in serial mode samples are packed into available wells 
-            if ($scope.pack_wells > 1) {
-                $scope.splitExample = $scope.splitExamples['batch'];            
-            }
-            else {
-                $scope.splitExample = $scope.splitExamples[$scope.split_mode];            
-            }
-        }
-        else { console.log(" Unidentified split mode: " + $scope.split_mode) }
-
-        console.log($scope.pack_wells + ' reset split example to ' + $scope.splitExample);
-    }
-
 
     $scope.distribute = function distribute() {
         /** distribute source samples onto targets using various distribution options **/
