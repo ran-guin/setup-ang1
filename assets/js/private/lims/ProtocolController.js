@@ -59,6 +59,15 @@ function protocolController ($scope, $rootScope, $http, $q) {
             console.log('ids: ' + $scope.plate_ids + '=' + $scope.plate_list);
 
             $scope.SplitFields = {};
+
+            $scope.list_mode = 'serial';
+            $scope.listExamples = {
+                'serial' : " x,y,z... -> x,x, y,y, z,z ...",
+                'parallel' : " x,y,z... -> x,y,z... x,y,z...",
+                'split'    : " multiple values applied to respective splits",
+            }; 
+
+            $scope.listExample = $scope.listExamples[$scope.list_mode];
         }
 
         $scope.LoadPoints = [{ Id: '1', Text: 'loadPointA' },{ Id: '2', Text: 'loadPointB' }];        
@@ -84,8 +93,6 @@ function protocolController ($scope, $rootScope, $http, $q) {
         console.log('back');
         $scope.reload();
     }
-
-
 
     $scope.reset_Split_mode = function (fields) {
         
@@ -196,7 +203,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
 
         $scope.updateLookups();  // use lookup dropdowns to populate ng-model
 
-        if ($scope.Step.Target_format > 0) {
+        if ($scope.transfer_type) {
 
             var Transfer = { 
                 'target_format' : $scope.Step.Target_format,
@@ -213,16 +220,17 @@ function protocolController ($scope, $rootScope, $http, $q) {
             data['target_format'] = $scope.Step.Target_format;
 
             data['Sources'] = $scope.Map.Sources;
-            data['Targets'] = $scope.Map.Targets;
+            data['Targets'] = $scope.Map.Transfer;
 
-            data['Transfer'] = Transfer;
+            //data['Transfer'] = ;
         } 
 
         console.log("Send: " + JSON.stringify(data));
         console.log("Called: " + url);
 
         if (action == 'Test') {
-            console.log('Transfer: ' + JSON.stringify(Transfer));
+            console.log('Targets: ' + JSON.stringify(data['Targets']));
+
         }
         else {
             $http.post(url, data)
@@ -266,9 +274,6 @@ function protocolController ($scope, $rootScope, $http, $q) {
                 else if ($scope[key]) {
                     recordData[n][mapped] = $scope[key];
                 }
-                console.log(key + ' = ' + $scope[key] + ' or ' + $scope[key + '_split']);
-                console.log(n + ": Set " + key + ' = ' + mapped + ' TO ' + recordData[n][mapped]) 
-
             }
         }
         console.log('split Plate data: ' + JSON.stringify(recordData));
@@ -278,10 +283,11 @@ function protocolController ($scope, $rootScope, $http, $q) {
     /* Enable split distribution in parallel or in series */
     $scope.splitField = function splitField (field, separator) {
 
-        console.log("\n** Split ** " + field);
+        console.log("\n** Split ** " + field + ' : ' + $scope[field]);
+
         var input = $scope[field];
 
-        if (input) {
+        if (input && input.match(/,/)) {
             $scope[field + '_split'] = input;
 
             var prefix = $scope.Prefix(field);
@@ -297,7 +303,18 @@ function protocolController ($scope, $rootScope, $http, $q) {
             var splitExpr = new RegExp('\\s*' + separator + '\\s*', 'ig');
 
             var input_array = input.split(splitExpr);
-            
+  
+            var split = $scope['Split' + $scope.stepNumber];          
+            if (split > 1 ) {
+                console.log("Require split to be " + split);
+                if (input_array.length > 1 && input_array.length != split) {
+                    $scope.errMsg = "Multiple value count must match split count";
+                    $scope['form' + $scope.stepNumber].$invalid = true;
+                    console.log("FAIL");
+                }
+            }
+
+
             if (prefix && (input_array.length > 1) && (input_array[0] == '')) { input_array.shift() }  // remove first element 
 
             console.log('test: ' + JSON.stringify(input_array) );
@@ -356,16 +373,35 @@ function protocolController ($scope, $rootScope, $http, $q) {
             
             $scope.SplitFields[field] = array;
 
-            if (entered > 1) $scope.SplitTracking = true;  
+            if (entered > 1) $scope.ListTracking = true;  
   
             return array;
         }
-        else { console.log('no value...') }
+        else { console.log('not multiple values...') }
+
+        console.log("\n** SPLIT: " + $scope[field] + ' OR ' + $scope[field + '_split']);
+    }
+
+    $scope.reset_list_mode = function reset_list_mode ( mode ) {
+
+        if ($scope['Split' + $scope.stepNumber] > 1) {
+            $scope.list_mode = 'split';
+        }
+        else {
+            $scope.list_mode = mode;
+            // $scope.list_mode = $scope['list_mode' + $scope.stepNumber];
+        }
+
+        $scope.listExample = $scope.listExamples[$scope.list_mode];            
+        console.log($scope.list_mode + ' -> reset list example to ' + $scope.listExample);
     }
 
     $scope.distribute = function distribute () {
-        var targetKey = 'target_format' + $scope.stepNumber;
-        if ($scope[targetKey]) {
+        var targetKey = 'transfer_type' + $scope.stepNumber;
+
+        console.log("Transfer Type = " + $scope.Step.transfer_type);
+
+        if ($scope.Step.transfer_type) {
 
             var newMap = new wellMapper();
  
@@ -380,6 +416,9 @@ function protocolController ($scope, $rootScope, $http, $q) {
             );
             
             console.log("Distribution MAP: " + JSON.stringify(newMap));
+
+            console.log("map: " + JSON.stringify($scope.Map));
+
         }
         else {
             $scope.Map = {};
