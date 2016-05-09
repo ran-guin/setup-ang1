@@ -272,7 +272,7 @@ module.exports = {
 		}
 
 		var createString = "INSERT INTO " + table + " (" + fields.join(',') + ") VALUES " + Values.join(', ') + onDuplicate;
-		//console.log("\nInsert String: " + createString);
+		console.log("\nInsert String: " + createString);
 
 		Record.query(createString, function (err, result) {
 			if (err) { deferred.resolve({error : "Error creating new record(s): " + err}) }
