@@ -24,7 +24,7 @@ block content
     hr
     div(ng-app='myApp')
       div(ng-controller="CommonController")
-        div(ng-controller="WellController")
+        div(ng-controller="WellController" ng-init="#{init}")
           div(ng-controller='ProtocolController' ng-init="#{init}" ngcloak)
             
             p.bg-warning(style='padding:20px; margin:0px')
@@ -97,7 +97,8 @@ block content
                             - mandatory = true;
                             - pattern = "^[\\S]{1,}$"; 
 
-                          div(ng-if="Show['#{fld}']")
+                          div
+                            // remove this requirement (ng-if="Show['#{fld}']")
                             if attributes[fld]
                               - fType = attributes[fld];
 
@@ -106,13 +107,12 @@ block content
                             div.form-group
                               label.col-sm-2.control-label(for='#{fld}#{Snum}') #{alias}
                               div.col-sm-6
-                                input.input-lg.form-control(type='#{fType}' name="#{fld}#{Snum}" ng-required="#{mandatory}" ng-blur="splitField('#{fld}#{Snum}')" placeholder = "Enter #{alias}" id='#{fld}#{Snum}' ng-model='#{fld}#{Snum}' default='#{def}' force=1 data-error="You must enter a valid quantity")
-                                
+                                input.input-lg.form-control(type='#{fType}' name="#{fld}#{Snum}" ng-required="#{mandatory}" placeholder = "Enter #{alias}" id='#{fld}#{Snum}' ng-model='#{fld}#{Snum}' default='#{def}' force=1 data-error="You must enter a valid quantity" ng-blur="splitField('#{fld}#{Snum}')")
+
                                 div.help-block.with-errors(style='color:red' ng-show="form#{Snum}.#{fld}#{Snum}.$invalid" ng-model="#{fld}#{Snum}_errors") #{alias} is Mandatory
                               if fld.match(/_qty/)
                                 div.col-sm-2
-                                  span.lookup(id='Lookup-units' ng-init="loadLookup('units', '::#{fld}_units#{Snum}', 'units')") 
-                                b is = {{ #{fld}_units#{Snum} }}
+                                  span.lookup(id='Lookup-units' ng-init="loadLookup('units', '::#{fld}_units#{Snum}', 'units')")
                         hr
                         div.form-group
                           //div.col-sm-2 &nbsp;
@@ -125,6 +125,28 @@ block content
                             button.btn.btn-danger(type='button' ng-click="complete('Failed')") Failed Step
                           div.col-sm-2
                             button.btn.btn-primary(type='button' ng-click="repeat()" ng-disable="Step.Repeatable") Repeat Previous Step
+                        hr
+                        if Step.transfer_type
+                          div.form-group
+                            div.col-sm-4
+                              button.btn.btn-danger(type='button' ng-click="complete('Test')") Check Distribution
+                              p &nbsp;
+                              button.btn.btn-primary(type='button' ng-click="updateLookups()") Update Lookups 
+                            div.col-sm-4
+                              div comment: {{ comments }} = {{ comments1 }}
+                              div split: {{ Split#{Snum} }} {{ Split }}
+                              div qty  : {{ transfer_qty#{Snum} }}
+                              div units : {{ transfer_qty_units#{Snum} }} {{ transfer_qty_units#{Snum}_id }} = {{ transfer_qty_units#{Snum}_label }}
+                              div pack: {{ pack#{Snum} }}
+                              div distribute: {{ distribution_mode#{Snum} }}
+                            div.col-sm-4
+                              div target_format : {{ Step.Target_format }}
+                              div target_type :   {{ Step.Target_sample }}
+                              div type: {{ Step.transfer_type }}
+                              div focus reset: {{ Step.reset_focus }}
+                          div.form-group
+                            div.col-sm-12
+                              b {{ JSON.stringify(Map) }}
 
               hr
 
@@ -160,7 +182,6 @@ block content
             h3(ng-if="debug || 1") Debugging 
 
             hr
-
             b comment: {{ comments }}
             h5 Defaults: {{ Default }}
             h5 Att : {{ AttributePrompt }}
