@@ -227,11 +227,12 @@ module.exports = {
 					value = null;
 				}
 
+				var noQuote = 0;
 				if (typeof value == 'number') { value = value.toString() }
 
 				if (value == null) {}
 				else if (value.match(/^<user>$/i)) {
-					value = sails.config.userid; 
+					value = sails.config.payload.userid; 
 					console.log("replacing <user> with " + value);
 				}
 				else if (value.match(/^<increment>$/i)) {
@@ -240,8 +241,14 @@ module.exports = {
 					console.log("replacing <increment> with SQL ");
 				}
 				else if (value.match(/^<now>$/i)) {
-					value = '2016-01-01'; 
+					value = 'NOW()'; 
 					console.log("replacing <now> with " + value);
+					noQuote = 1;
+				}
+				else if (value.match(/^<today>$/i)) {
+					value = 'CURDATE()'; 
+					console.log("replacing <today> with " + value);
+					noQuote = 1;
 				}
 
 				if (resetData && resetData[fields[f]]) {
@@ -254,15 +261,18 @@ module.exports = {
 					if (resetValue == '<ID>') {
 						Vi.push(idField);
 					}
-					else if (resetValue == null) {
+					else if (resetValue == null) {					
 						Vi.push("\"" + value + "\"");
 					}
 					else {
 						Vi.push("\"" + resetValue + "\"");
 					}
 				}						
-				else if (value == null){
+				else if (value == null) {
 					Vi.push('null');					
+				}
+				else if (noQuote) {
+					Vi.push(value);
 				}
 				else {
 					Vi.push("\"" + value + "\"");
