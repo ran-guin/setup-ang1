@@ -66,15 +66,14 @@ module.exports = {
 
 				var prep_id = [ PrepResult.Prep.insertId ];
 				console.log("Prep IDS: " + JSON.stringify(prep_id));
-
-				if (data['Sources']) {
-
-					var transfer = data['Transfer'];
+				console.log("Targets: " + JSON.stringify(data['Targets']));
+				
+				if (data['Targets']) {
 
 					console.log('Sources: ' + JSON.stringify(data['Sources']));
 					promises.push( Container.execute_transfer( 
 						data['Sources'],
-						data['Transfer'],
+						data['Targets'],
 						{ 'prep_id' : prep_id } // test data
 					));
 
@@ -138,10 +137,11 @@ module.exports = {
 			Record.createNew('Prep', data['Prep'] )
 			.then (function (PrepResult) {
 				console.log("Added Prep: " + JSON.stringify(PrepResult));
-
 				var ids = [];
 				var prepId = PrepResult.insertId;  // Legacy
 				var added = PrepResult.affectedRows;
+
+				sails.config.message = sails.config.message + 'added prep ' + prepId;
 
 				for (var i=0; i<data['Plate'].length; i++) {
 					data['Plate'][i]['FK_Prep__ID'] = prepId;
@@ -152,7 +152,7 @@ module.exports = {
 				Record.createNew('Plate_Prep', data['Plate'] )
 				.then (function (PlatePrepResult) {				
 					console.log("Added Plate_Prep: " + JSON.stringify(PlatePrepResult));
-					console.log('transfer if necessary....');
+					console.log('transfer if necessary....' + JSON.stringify(data['Targets']));
 					
 					deferred.resolve({ Prep: PrepResult, Plate_Prep: PlatePrepResult});
 				})
