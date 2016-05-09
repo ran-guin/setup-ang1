@@ -53,7 +53,8 @@ module.exports.policies = {
       'create' : true,
       'login'  : true,
       'signup' : true,
-	 'dashboard'	: "sessionAuth",	
+      'home' : 'sessionAuth',
+	   'dashboard'	: "sessionAuth",	
 //      '*' : "sessionAuth"
   },
   
