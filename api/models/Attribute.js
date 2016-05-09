@@ -155,6 +155,7 @@ module.exports = {
 			var atts = Object.keys(data);
 			console.log("KEYS: " + JSON.stringify(atts));
 			console.log("IDS: " + JSON.stringify(ids));
+			console.log(JSON.stringify(sails.config));
 
 			var add = [];
 
@@ -166,6 +167,8 @@ module.exports = {
 					};
 					insertData['Attribute_Value'] = data[atts[i]];					
 					insertData['FK_' + model + '__ID'] = ids[j];
+					insertData['Set_DateTime'] = "<now>";
+					insertData['FK_Employee__ID'] = sails.config.payload.userid;
 
 					add.push(insertData);
 				}
