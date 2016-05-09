@@ -36,7 +36,7 @@ block content
                 b {{user}} &nbsp;
                 span {{ timestamp }} &nbsp; &nbsp;
             
-            div(ng-if="status != 'Completed'")      
+            div(ng-show="status != 'Completed'")      
               each Step,index in Steps
                 - var Snum = index+1;
            
@@ -68,20 +68,19 @@ block content
                         input(type='hidden' id = 'id' name='plate_ids' value="{{plate_list}}")
                         input(type='hidden' id='Plate_ID' name='Plate_ID' value='{{plate_list}}')
 
-                        div(ng-if="SplitTracking")
-                          // Show example for serial vs parallel distribution //
-                          div.col-sm-2 &nbsp;
-                          div.col-sm-10
-                            b Note: Expanding lists in: &nbsp;
-                            label
-                              input(type='radio' value = 'Serial' ng-model="split_mode#{Snum}" ng-click="reset_Split_mode()") 
-                              b &nbsp; Serial &nbsp;
-                            label
-                              input(type='radio' value = 'Parallel' ng-model="split_mode#{Snum}" ng-click="reset_Split_mode()")
-                              b &nbsp; Parallel &nbsp;
-                            span &nbsp; [ eg : 
-                              b {{ splitExample }}
-                              span ]
+                        div(ng-if="ListTracking")
+                          // Show example for handling input lists //
+                          div.form-group
+                            div.col-sm-2.control-label Expand Lists:
+                            div.col-sm-4
+                              label.btn.btn-default(type='radio' ng-model="list_mode#{Snum}" uib-btn-radio = 'serial' ng-click="reset_list_mode('serial')") 
+                                b &nbsp; Serially &nbsp;
+                              label.btn.btn-default(type='radio'  ng-model="list_mode#{Snum}" uib-btn-radio='parallel' ng-click="reset_list_mode('parallel')")
+                                b &nbsp; In Parallel &nbsp;
+                            div.col-sm-4
+                              span &nbsp; [ eg : 
+                                b {{ listExample }}
+                                span ]
 
                         each field,i in flds
                           - fld = field.replace('*','');
@@ -106,13 +105,36 @@ block content
 
                             div.form-group
                               label.col-sm-2.control-label(for='#{fld}#{Snum}') #{alias}
-                              div.col-sm-6
-                                input.input-lg.form-control(type='#{fType}' name="#{fld}#{Snum}" ng-required="#{mandatory}" placeholder = "Enter #{alias}" id='#{fld}#{Snum}' ng-model='#{fld}#{Snum}' default='#{def}' force=1 data-error="You must enter a valid quantity" ng-blur="splitField('#{fld}#{Snum}')")
+                              div.col-sm-4
+                                input.input-lg(type='#{fType}' name="#{fld}#{Snum}" ng-required="#{mandatory}" placeholder = "Enter #{alias}" id='#{fld}#{Snum}' ng-model='#{fld}#{Snum}' default='#{def}' force=1 data-error="You must enter a valid quantity" ng-blur="splitField('#{fld}#{Snum}')")
 
                                 div.help-block.with-errors(style='color:red' ng-show="form#{Snum}.#{fld}#{Snum}.$invalid" ng-model="#{fld}#{Snum}_errors") #{alias} is Mandatory
                               if fld.match(/_qty/)
                                 div.col-sm-2
                                   span.lookup(id='Lookup-units' ng-init="loadLookup('units', '::#{fld}_units#{Snum}', 'units')")
+                              // if fld == 'Split'
+                                div.col-sm-6(ng-show="Split#{Snum} > 1") 
+                                  label
+                                    input(type='radio' value = 'serial' ng-model="split_mode" ng-click="reset_split_mode()") 
+                                    b &nbsp; Serial &nbsp;
+                                  label
+                                    input(type='radio' value = 'parallel' ng-model="split_mode" ng-click="reset_split_mode()")
+                                    b &nbsp; Parallel &nbsp;
+                                  span &nbsp; [ eg : 
+                                    b {{ split_mode }} -> {{ splitExample }}
+                                    span ]
+                                  br
+                                  label
+                                    b Pack: &nbsp;
+                                    input(type='radio' value='packed' ng-model="pack_wells" ng-click="reset_pack_mode()") 
+                                    b &nbsp; Yes &nbsp;
+                                  label
+                                    input(type='radio' value='normal' ng-model="pack_wells" ng-click="reset_pack_mode()")
+                                    b &nbsp; No &nbsp;
+                                  span &nbsp; [ eg : 
+                                    b {{ pack_wells }} -> {{ packExample }}
+                                    span ]
+
                         hr
                         div.form-group
                           //div.col-sm-2 &nbsp;
@@ -127,13 +149,14 @@ block content
                             button.btn.btn-primary(type='button' ng-click="repeat()" ng-disable="Step.Repeatable") Repeat Previous Step
                         hr
                         if Step.transfer_type
-                          div.form-group
+                          div.form-group.alert-warning
+                            p &nbsp;
                             div.col-sm-4
                               button.btn.btn-danger(type='button' ng-click="complete('Test')") Check Distribution
                               p &nbsp;
                               button.btn.btn-primary(type='button' ng-click="updateLookups()") Update Lookups 
                             div.col-sm-4
-                              div comment: {{ comments }} = {{ comments1 }}
+                              div comment: {{ comments }} = {{ comments#{Snum} }}
                               div split: {{ Split#{Snum} }} {{ Split }}
                               div qty  : {{ transfer_qty#{Snum} }}
                               div units : {{ transfer_qty_units#{Snum} }} {{ transfer_qty_units#{Snum}_id }} = {{ transfer_qty_units#{Snum}_label }}
@@ -193,3 +216,7 @@ block content
             h5 Show: {{ Show }}
             h5 Fields: #{ JSON.stringify(flds) }
             h5 Attributes: #{JSON.stringify(attributes)}
+
+            hr
+            b #{sails.config.payload}
+            b #{ JSON.stringify(sails.config.payload) }
