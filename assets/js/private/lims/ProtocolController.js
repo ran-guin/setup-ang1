@@ -57,6 +57,8 @@ function protocolController ($scope, $rootScope, $http, $q) {
             $scope['target_format'] = 3;  // Test only 
             console.log("protocol initialization complete...");
             console.log('ids: ' + $scope.plate_ids + '=' + $scope.plate_list);
+
+            $scope.SplitFields = {};
         }
 
         $scope.LoadPoints = [{ Id: '1', Text: 'loadPointA' },{ Id: '2', Text: 'loadPointB' }];        
@@ -71,6 +73,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
     }
 
     $scope.forward = function forward() {
+
         $scope.stepNumber++;
         console.log('forward');
         $scope.reload();
@@ -137,7 +140,13 @@ function protocolController ($scope, $rootScope, $http, $q) {
         };
 
         $scope['plate_list_split'] = $scope.plate_list;  // test.. should be reverse split
-        var PlateData = $scope.splitData(PlateInfo, map);        
+        console.log("split Data to " + $scope.N + ' values');
+        var PlateData = $scope.splitData(PlateInfo, $scope.N, map);
+
+        console.log("load " + $scope.N + ' plate ids...');
+        for (var i=0; i<$scope.N; i++) {
+            PlateData[i]['FK_Plate__ID'] = $scope.Samples[i].id;
+        }       
 
         console.log("split " + $scope.input);
         console.log("PlateData: " + JSON.stringify(PlateData));
@@ -194,7 +203,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
                 'sample_type'   : $scope.Step.Target_sample,
                 'transfer_type' : $scope.Step.transfer_type,
                 'reset_focus'   : $scope.reset_focus,
-                'split'         : $scope.splitX,
+                'split'         : $scope.Split,
                 'pack'          : $scope.pack,
                 'distribution_mode' : $scope.distribution_mode,
             };
@@ -212,23 +221,146 @@ function protocolController ($scope, $rootScope, $http, $q) {
         console.log("Send: " + JSON.stringify(data));
         console.log("Called: " + url);
 
-        $http.post(url, data)
-        .then ( function (result) {
-            console.log("Step Saved");
-            console.log(JSON.stringify(result));
-            if ($scope.stepNumber < $scope.steps) {
-                console.log('completed... go to next step');
-                $scope.forward()
+        if (action == 'Test') {
+            console.log('Transfer: ' + JSON.stringify(Transfer));
+        }
+        else {
+            $http.post(url, data)
+            .then ( function (result) {
+                console.log("Step Saved");
+                console.log(JSON.stringify(result));
+                if ($scope.stepNumber < $scope.steps) {
+                    console.log('completed... go to next step');
+                    $scope.forward()
+                }
+                else {
+                    console.log('completed... done');
+                    $scope['status' + $scope.stepNumber] = 'Completed';
+                }
+
+                if (action == 'Debug') {
+                    $scope.errMsg = JSON.stringify(result,null,4);
+                }
+            });
+        }
+    }
+
+    /* Retrieve data from fields which are splittable ... eg may accept different values for each of N plate_ids based on comma-delimited list */
+    $scope.splitData = function ( input, N, map) {
+        var recordData = [];
+        for (var n=0; n<N; n++) {
+            recordData[n] = {};
+            for (var i=0; i< input.length; i++) {
+                var fld = input[i];
+                var key = fld + $scope.stepNumber;
+
+                var mapped = fld;  /* Enable option for mapping field to custom name */
+                if (map && map[fld]) {
+                    mapped = map[fld];
+                }
+                
+                if ($scope[key + '_split']) { 
+                    var splitV = $scope[key + '_split'].split(',');
+                    recordData[n][mapped] = splitV[n];
+                }
+                else if ($scope[key]) {
+                    recordData[n][mapped] = $scope[key];
+                }
+                console.log(key + ' = ' + $scope[key] + ' or ' + $scope[key + '_split']);
+                console.log(n + ": Set " + key + ' = ' + mapped + ' TO ' + recordData[n][mapped]) 
+
+            }
+        }
+        console.log('split Plate data: ' + JSON.stringify(recordData));
+        return recordData;
+    }
+
+    /* Enable split distribution in parallel or in series */
+    $scope.splitField = function splitField (field, separator) {
+
+        console.log("\n** Split ** " + field);
+        var input = $scope[field];
+
+        if (input) {
+            $scope[field + '_split'] = input;
+
+            var prefix = $scope.Prefix(field);
+            
+            if (prefix) { 
+                separator = prefix;
             }
             else {
-                console.log('completed... done');
-                $scope['status' + $scope.stepNumber] = 'Completed';
+                separator = ',';
             }
+            console.log("Split " + field + ' ON ' + separator + ' : ' + prefix);
 
-            if (action == 'Debug') {
-                $scope.errMsg = JSON.stringify(result,null,4);
+            var splitExpr = new RegExp('\\s*' + separator + '\\s*', 'ig');
+
+            var input_array = input.split(splitExpr);
+            
+            if (prefix && (input_array.length > 1) && (input_array[0] == '')) { input_array.shift() }  // remove first element 
+
+            console.log('test: ' + JSON.stringify(input_array) );
+
+            var split = $scope.Split || 1;
+            var Nx = $scope.N * split;
+            var entered = input_array.length;
+
+            var factor = Nx / entered;
+            var round = Math.round(factor);
+            
+            console.log("Array: " + JSON.stringify(input_array) + " x " + factor);
+     
+            if (factor == round) {
+                 $scope[field+'_errors'] = '';
+                 $scope.formDisabled  = false;
             }
-        });
+            else {
+                // $scope.errMsg = "# of entered values must be factor of " + $scope.N;
+                $scope[field+'_errors'] = "# of entered values must be factor of " + $scope.N;
+                $scope.formDisabled  = true;
+           }
+
+            var array = [];
+            var offset = 0;
+            var index = 0;
+
+            if ($scope.split_mode == 'Serial') {
+
+                for (var i=0; i<Nx; i++) {
+                     
+                    array[i] = input_array[index];
+                    offset++;
+                    if (offset >= round) {
+                        offset=0;
+                        index++;
+                    }
+ 
+                }
+            }
+            else {
+                for (var i=0; i<Nx; i++) {
+                    array[i] = input_array[index];
+
+                    index++;
+                    if (index >= entered) {
+                        index=0;
+                    }
+ 
+                }                
+            }
+     
+            $scope[field + '_split'] = array.join(','); 
+
+            console.log(field + ' split to: ' + JSON.stringify($scope[field+'_split']));
+            
+            $scope.SplitFields[field] = array;
+
+            if (entered > 1) $scope.SplitTracking = true;  
+  
+            return array;
+        }
+        else { console.log('no value...') }
     }
 
     $scope.distribute = function distribute () {

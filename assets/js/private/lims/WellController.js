@@ -15,6 +15,7 @@ function wellController ($scope, $rootScope, $http, $q ) {
 
     $scope.initialize = function initialize(Config) {
 
+        console.log("loaded Well Controller");
         console.log("CONFIG: " + JSON.stringify(Config));
 
         $scope.sources = Config['Sources'] || [];
@@ -31,10 +32,18 @@ function wellController ($scope, $rootScope, $http, $q ) {
         $scope.target_cols = $scope.target.cols || [1];
 
         $scope.fill_by = Config['fill_by'] || 'row';
-        $scope.split   = Config['splitX'] || 1;
-        $scope.pack   = Config['pack'] || 0;    // applicable only for splitting with parallel mode (if N wells pipetted together)
-        $scope.mode    = Config['mode'] || 'serial';  // serial or parallel...appliable only for split (eg A1, A1, A2, A2... or A1, A2... A1, A2...)
-    
+        $scope.Split   = Config['Split'] || 1;
+        $scope.pack_wells   = Config['pack'] || 0;    // applicable only for splitting with parallel mode (if N wells pipetted together)
+        $scope.split_mode    = Config['mode'] || 'parallel';  // serial or parallel...appliable only for split (eg A1, A1, A2, A2... or A1, A2... A1, A2...)
+        $scope.transfer_type = Config['transfer_type'] || 'Aliquot';
+
+        $scope.splitExamples = { 
+            'serial' : "[pack=1] A,B,C... -> A,A, B,B, C,C ...",
+            'parallel' : "[pack=0] A,B,C... -> A,B,C... A,B,C...",
+            'batch'    : "[pack=4] A,B,C,D, A,B,C,D, E,F,G,H, E,F,G,H..."
+        }; 
+        $scope.splitExample = $scope.splitExamples[$scope.split_mode];
+   
         console.log("INIT Map");
         $scope.redistribute();
     }
@@ -59,26 +68,14 @@ function wellController ($scope, $rootScope, $http, $q ) {
         }  
            
         // recalculate mapping //
-
-        var input = { 
-            samples : $scope.sources,
-            transfer : { 
-                type :  $scope.transfer_type,
-                sample_type: $scope.Sample_type,
-                format: $scope.Target_format, 
-                rows :  $scope.target_rows, 
-                cols :  $scope.target_cols,
-                fillBy: $scope.fill_by, 
-                pack:   $scope.pack,
-                qty:    $scope.transfer_qty,
-                qty_units: $scope.transfer_qty_units,
-            }
-        };
+        $scope.Map = $scope.newMap.distribute(
+            $scope.sources, 
+            { rows : $scope.target_rows, cols : $scope.target_cols},
+            { fillBy: $scope.fill_by, pack: $scope.pack_wells }
+        );
         
-        $scope.Map = $scope.newMap.distribute(input);
-        console.log("\nINPUT: " + JSON.stringify(input));        
+        console.log("Sources: " + JSON.stringify($scope.sources));
         console.log("NEW MAP: " + JSON.stringify($scope.Map));    
-
         // console.log(newMap.source_rows + " x " newMap.source_cols);
 
         console.log("NEW CMAP: " + JSON.stringify($scope.newMap.CMap));
@@ -108,6 +105,28 @@ function wellController ($scope, $rootScope, $http, $q ) {
         $scope.sources = $scope.sources_init;
     }
 
+    $scope.reset_split_mode = function reset_split_mode () {
+        if ($scope.split_mode == 'parallel') {
+            $scope.pack_wells = 0;  // packing off for parallel distribution
+
+            $scope.splitExample = $scope.splitExamples[$scope.split_mode];
+        }
+        else if ($scope.split_mode == 'serial') {
+            if ($scope.pack_wells == 0 ) { $scope.pack_wells = 1 }
+            // in serial mode samples are packed into available wells 
+            if ($scope.pack_wells > 1) {
+                $scope.splitExample = $scope.splitExamples['batch'];            
+            }
+            else {
+                $scope.splitExample = $scope.splitExamples[$scope.split_mode];            
+            }
+        }
+        else { console.log(" Unidentified split mode: " + $scope.split_mode) }
+
+        console.log($scope.pack_wells + ' reset split example to ' + $scope.splitExample);
+    }
+
+
     $scope.distribute = function distribute() {
         /** distribute source samples onto targets using various distribution options **/
         console.log('distribute');
@@ -118,8 +137,7 @@ function wellController ($scope, $rootScope, $http, $q ) {
             $scope.targets[i]['container'] = 'new';
         }
          
-        console.log("Targets: " + JSON.stringify($scope.targets));
-        
+        console.log("Targets: " + JSON.stringify($scope.targets));        
     }
 
     $scope.testXfer = function testXfer () {
@@ -193,6 +211,7 @@ function wellController ($scope, $rootScope, $http, $q ) {
     }
 
     $scope.resort = function resort() {
+        // deprecate .. use distribute in wellmapper.js
         var sources = $scope.sources;
 
         //var target_format_id = transfer_parameters['target_format_id'];
