@@ -72,7 +72,7 @@ module.exports.routes = {
   'GET /api/q': 'QueryController.query',
   'POST /api/search': 'QueryController.search',
 
-  'GET /': { view: 'customize/public' },
+  'GET /': { view: 'customize/public_home' },
   'GET /home': 'UserController.home',
 
   /* Generic Record control options */
