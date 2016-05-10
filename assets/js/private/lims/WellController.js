@@ -31,6 +31,9 @@ function wellController ($scope, $rootScope, $http, $q ) {
         $scope.target_rows = $scope.target.rows || ['A'];
         $scope.target_cols = $scope.target.cols || [1];
 
+        $scope.Max_Row = $scope.Max_Row || 'A';
+        $scope.Max_Col = $scope.Max_Col || 1;
+
         $scope.fill_by = Config['fill_by'] || 'row';
         $scope.Split   = Config['Split'] || 1;
         $scope.pack_wells   = Config['pack'] || 'normal';    // applicable only for splitting with parallel mode (if N wells pipetted together)
@@ -103,8 +106,11 @@ function wellController ($scope, $rootScope, $http, $q ) {
         // recalculate mapping //
         $scope.Map = $scope.newMap.distribute(
             $scope.sources, 
-            { rows : $scope.target_rows, cols : $scope.target_cols},
-            { fillBy: $scope.fill_by, pack: $scope.pack_wells }
+            { Max_Row : $scope.Max_Row, Max_Col : $scope.Max_Col},
+            { 
+                fillBy: $scope.fill_by, 
+                pack: $scope.pack_wells,
+            }
         );
         
         console.log("Sources: " + JSON.stringify($scope.sources));
