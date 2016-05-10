@@ -53,12 +53,15 @@ module.exports.policies = {
       'create' : true,
       'login'  : true,
       'signup' : true,
+      'logout' : true,
       'home' : 'sessionAuth',
-	   'dashboard'	: "sessionAuth",	
+	     'dashboard'	: "sessionAuth",	
 //      '*' : "sessionAuth"
   },
   
-  'lab_protocol' : {
+  //'lab_protocol' : 'sessionAuth",
+
+  'attribute' : {
       'list' : true,
       'create' :  true, // ['tokenAuthorized']
       'save' : true,
@@ -76,7 +79,7 @@ module.exports.policies = {
   },
 
   //'*' : ['sessionAuth'],
-  '*' : true,
+  '*' : 'sessionAuth',
 
   /***************************************************************************
   *                                                                          *
