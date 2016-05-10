@@ -16,7 +16,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
             $scope.steps = $scope.Steps.length;
 
             console.log("parsed: " + config['Samples'].constructor);
-            if (config['Samples'].constructor == 'String') {
+            if (config['Samples'].constructor === String) {
                 $scope.Samples = JSON.parse(config['Samples'])
             }
             else {
@@ -211,7 +211,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
                 'transfer_type' : $scope.Step.transfer_type,
                 'reset_focus'   : $scope.reset_focus,
                 'split'         : $scope.Split,
-                'pack'          : $scope.pack,
+                'pack'          : $scope.pack_wells,
                 'distribution_mode' : $scope.distribution_mode,
             };
 
@@ -220,7 +220,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
             data['target_format'] = $scope.Step.Target_format;
 
             data['Sources'] = $scope.Map.Sources;
-            data['Targets'] = $scope.Map.Transfer;
+            data['Targets'] = $scope.Map.Xfer;
 
             //data['Transfer'] = ;
         } 
@@ -372,9 +372,11 @@ function protocolController ($scope, $rootScope, $http, $q) {
             console.log(field + ' split to: ' + JSON.stringify($scope[field+'_split']));
             
             $scope.SplitFields[field] = array;
-
-            if (entered > 1) $scope.ListTracking = true;  
-  
+ 
+            if (entered > 1) { 
+                $scope['ListTracking' + $scope.stepNumber] = true;
+            }  
+   
             return array;
         }
         else { console.log('not multiple values...') }
@@ -401,6 +403,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
 
         console.log("Transfer Type = " + $scope.Step.transfer_type);
 
+        var Xfer = [];
         if ($scope.Step.transfer_type) {
 
             var newMap = new wellMapper();
@@ -408,16 +411,29 @@ function protocolController ($scope, $rootScope, $http, $q) {
             newMap.from($scope.Samples);
             $scope.newMap = newMap;
 
+            var qty = $scope['transfer_qty' + $scope.stepNumber];
+            if ( $scope['transfer_qty' + $scope.stepNumber + '_split']) {
+                qty = $scope['transfer_qty' + $scope.stepNumber + '_split'].split(',');
+            }  
+
+            console.log("QTY: " + JSON.stringify(qty));
+            console.log($scope.Step.transfer_type + $scope.Step.Target_sample);
             $scope.Map = $scope.newMap.distribute(
                 $scope.Samples, 
-                { format : $scope[targetKey]},
-                //{ rows : $scope.target_rows, cols : $scope.target_cols},
-                { fillBy: $scope.Options.fill_by, pack: $scope.Options.pack }
+                {
+                    format_id : $scope.Step.Target_format,
+                    transfer_type : $scope.Step.transfer_type,
+                    sample_type   : $scope.Step.Target_sample
+                },
+                { 
+                    qty : qty,
+                    qty_units : $scope['transfer_qty_units_id'],
+                    fillBy: $scope.fill_by, 
+                    pack: $scope.pack_wells,
+                }
             );
             
-            console.log("Distribution MAP: " + JSON.stringify(newMap));
-
-            console.log("map: " + JSON.stringify($scope.Map));
+            console.log("map: " + JSON.stringify($scope.Map.Xfer));
 
         }
         else {
