@@ -100,7 +100,10 @@ module.exports = {
 		console.log("Samples: " + JSON.stringify(Samples));
 
 
-		var q = "SELECT * FROM protocol_step where Lab_protocol = " + protocol;
+		var q = "SELECT * FROM protocol_step"
+			+ " LEFT JOIN Plate_Format ON Plate_Format_ID = Target_format"
+			+ " WHERE Lab_protocol = " + protocol
+			+ " GROUP BY protocol_step.id";
 
 		Record.query(q, function (err, result) {
 		    if (err) {
