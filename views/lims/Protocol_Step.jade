@@ -68,7 +68,7 @@ block content
                         input(type='hidden' id = 'id' name='plate_ids' value="{{plate_list}}")
                         input(type='hidden' id='Plate_ID' name='Plate_ID' value='{{plate_list}}')
 
-                        div(ng-if="ListTracking")
+                        div(ng-if="ListTracking#{Snum}")
                           // Show example for handling input lists //
                           div.form-group
                             div.col-sm-2.control-label Expand Lists:
