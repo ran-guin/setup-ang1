@@ -17,6 +17,27 @@ var xlsx = require('node-xlsx');
 
 module.exports = {
 	
+	history : function (req, res) {
+		var ids = req.param('ids');
+
+		var fields = ['Prep_Name as Step', 'Prep_DateTime as Completed', 'Prep_Comments as Comments'];
+		var flds = ['Step','Completed', 'Comments'];
+
+		var query = "SELECT " + fields.join(',') + " FROM Plate, Plate_Prep, Prep";
+		query = query + " WHERE FK_Plate__ID=Plate_ID AND FK_Prep__ID=Prep_ID AND Plate_ID IN (" + ids + ')';
+		console.log("Q: " + query);
+		Record.query_promise(query)
+		.then ( function (result) {
+			console.log("got data: " + JSON.stringify(result));
+
+			return res.render('customize/injectedData', { fields : flds, data : result, title: 'Sample History'});
+		})
+		.catch ( function (err) {
+			return res.json("error injecting data");
+		})
+
+	}, 
+
 	transfer : function (req, res ) {
 		console.log("CC transfer prompt");
 
