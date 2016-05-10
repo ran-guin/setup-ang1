@@ -56,7 +56,7 @@ module.exports = {
 
 			console.log(typeof ids + " = type: " + ids.constructor); 
 
-			if ( ids.constructor == 'String' ) { console.log("list"); plate_list = ids; ids = plate_list.split(/\s*,\s*/) }
+			if ( ids.constructor === String ) { console.log("list"); plate_list = ids; ids = plate_list.split(/\s*,\s*/) }
 			else { console.log("ARRAY"); plate_list = ids.join(',') }
 			Lab_protocol.savePrep(data)
 			.then ( function (PrepResult) {
@@ -67,12 +67,12 @@ module.exports = {
 				var prep_id = [ PrepResult.Prep.insertId ];
 				console.log("Prep IDS: " + JSON.stringify(prep_id));
 				console.log("Targets: " + JSON.stringify(data['Targets']));
-				
+
 				if (data['Targets']) {
 
 					console.log('Sources: ' + JSON.stringify(data['Sources']));
 					promises.push( Container.execute_transfer( 
-						data['Sources'],
+						ids,
 						data['Targets'],
 						{ 'prep_id' : prep_id } // test data
 					));
