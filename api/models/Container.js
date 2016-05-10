@@ -101,13 +101,30 @@ module.exports = {
 		//
 		// Input: 
 		//
-		// id: comma-delimited list of id(s)
+		// id: 
+		//   = comma-delimited list of id(s)
 		//  OR
-		// Sources: array of hashes [ { id, ...}. { id: } ...] - may contain other sample attributes
+		// 	 = array of ids
+		//  OR 
+		//   = array aof hashes: [ { id, ...}. { id: } ...] 
+		//             (hashes may contain other sample attributes such as position)
 		// 
 		// (optionally - if target format, size, position, or # of samples (via splitting) differs)
-		// Targets:  array of hashes: [{ source_index, source_id, source_position, target_index, target_position, volume, units, colour_code ?)},..]
-		// Options: hash : { prep: { prepdata }, user, timestamp, extraction_type, target_format, location }    
+		// Targets:  array of hashes: [{ 
+		//		batch_index, 
+		//		source_id, 
+		//		source_position, 
+		//		target_position,
+		//		transfer_type,
+		//		format_id,
+		//		sample_type,
+		//		colour_code ?)
+		//	},..]
+		// Options: hash : { 
+		//		volume: [single value or array]
+		//		prep: { prepdata }, 
+		// 		/* ?? user, timestamp, extraction_type, target_format, location }    
+		//	}
 		//
 		// Output:
 		//
@@ -124,25 +141,34 @@ module.exports = {
 		console.log("Executing Container Transfer ... ");
 		var deferred = q.defer();
 
-		if (sources && sources.length) {
+		if (sources) {
 			console.log("Sources: " + JSON.stringify(sources));
 
-			var ids = [];
+			var ids =[];
 			var volumes = [];
 
-			if ( typeof sources[0] == 'number' ) {
+			// allow input ids (first parameter) to be either:
+			//   - string "1,2,3"
+			//   - array [1,2,3]
+			//   - array of hashes [{id: 1}, {id: 2}..]
+			//
+			if ( sources.constructor === Array ) {
+				console.log("ids supplied as array");
 				ids = sources;
 			}
-			else if (typeof sources[0] == 'object' && sources[0]['id']) {
+			else if ( sources.constructor === String) {
+				console.log("ids supplied as string");
+				ids = sources.split(/\s*,\s*/);
+			}
+			else if (sources[0] && sources[0].constructor === Object && sources[0]['id']) {
+				console.log("ids supplied as hash");
 				for (var i=0; i<sources.length; i++) {
 					ids.push(sources[i]['id']);
 					var volume = sources[i]['volume'] || options['volume'];
 					volumes.push(volume);
 				}
 			}
-			else {
-				ids = sources.split(/\s*,\s*/);
-			}
+
 
 			console.log("IDS:" + JSON.stringify(ids));
 			console.log("Targets: " + JSON.stringify(targets));
@@ -151,7 +177,9 @@ module.exports = {
 			var resetData = {
 				'Plate_ID' : '',
 				'FKParent_Plate__ID' : '<id>',
-				'FK_Rack__ID' : '<NULL>', 
+				'FK_Rack__ID' : '<NULL>',
+				'Plate_Created' : '<now>',
+				'FK_Employee__ID' : '<user>' 
 			};
 
 			// Update Volumes if applicable (default to entire volume) 
@@ -168,7 +196,9 @@ module.exports = {
 			.then ( function (cloneData) {
 				console.log("\nCreated new record(s): " + JSON.stringify(cloneData));
 				var newIds = 'generated list of ids... eg 1,2,3'; // temp testing
+				
 				Barcode.printLabels('Plate', newIds);
+				
 				deferred.resolve(cloneData);
 				//return res.render('lims/WellMap', { sources: Sources, Targets: Targets, target: { wells: 96, max_row: 'A', max_col: 12 }, options : { split: 1 }});
 			})
