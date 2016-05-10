@@ -181,7 +181,7 @@ function wellMapper() {
     this.next_position = function (x, y, target_index) {
     	/* Get next available position */
         if (this.fill_by == 'Row') {
-            // console.log("fill by row to " + this.x_max + this.y_max);
+            console.log("fill by row to " + this.x_max + this.y_max);
             y++;
             if (y > this.y_max) {
                 y = 1;
@@ -213,39 +213,46 @@ function wellMapper() {
             }
 
         }
-        // console.log("next: " + x + y + ' [ ' + target_index + ' ]');
+        console.log("next: " + x + y + ' [ ' + target_index + ' ]');
         return { x: x, y: y, target_index: target_index};
     }
 
-    this.initialize = function ( Target ) {
+    this.initialize = function ( Target, Options ) {
        //var sources = [{ id: 1, type: 'blood', position: 'A1'}, { id : 2, type : 'blood', position : 'A2'}];
         
-        var rows = Target.rows || this.source_rows;  // unnecessary..
-        var cols = Target.cols || this.source_cols;
+        //var rows = Target.rows || this.source_rows;  // unnecessary..
+        //var cols = Target.cols || this.source_cols;
 
-        this.fill_by = Target.fillBy || 'Row';
-        this.pack = Target.pack || false;
-        this.preserve_position = ! this.pack; // unnecessary... 
-        this.split_mode = Target.split_mode || 'parallel';
+        if (!Options) { Options = {} }
 
-        this.x_min = Target.min_row || 'A';
-        this.x_max = Target.max_row || 'A';
-        this.y_min = Target.min_col || 1;
-        this.y_max = Target.max_col || 1;
+        this.fill_by = Options.fillBy || 'Row';
+        this.pack_wells    = Options.pack_wells || Options.pack || 0;
+        this.preserve_position = ! this.pack_wells; // unnecessary... 
+        this.split_mode = Options.split_mode || 'parallel';
+        this.preserve_batch = this.batch;
 
-        this.splitX = Target.split || Target.splitX || 1;
+        this.x_min = Target.Min_Row || 'A';
+        this.x_max = Target.Max_Row || 'A';
+        this.y_min = Target.Min_Col || 1;
+        this.y_max = Target.Max_Col || 1;
 
-        console.log("\nsplit = " + this.splitX + "\nfillBy = " + this.fill_by + "\npack = " + this.pack + "\nmode = " + this.split_mode + "\ntarget_size = " + this.x_max + this.y_max+ "\n");
+        this.target_format = Target.format_id;
+
+        this.splitX = Options.split || Options.splitX || 1;
+
+        console.log("Initialized:\nsplit = " + this.splitX + "\nfillBy = " + this.fill_by + "\npack = " + this.pack_wells + "\nmode = " + this.split_mode + "\ntarget_size = " + this.x_max + this.y_max+ "\n");
     }
 
-    this.distribute = function ( sources, Target ) {
+    this.distribute = function ( sources, Target, Options ) {
 /* 
         Input:
         
         sources: array of hashes - eg [ { id: 101, position: 'A1'}, { id: 102, position: 'A2'}]
-        target : hash of specs - eg { max_row : 'A', max_col: 1 } 
+        target : hash of specs - eg { Max_Row : 'A', Max_Col: 1 } 
         options: hash of options - eg { split : 2, mode: serial, pack: true }
 */
+
+        var Transfers = [];
 
         var targetMap = [];
         if (! Target) { Target = {} };
@@ -253,15 +260,19 @@ function wellMapper() {
             console.log("Missing Source or Target information");
             return {}
         }
+        if (!Options) { Options = {} }
 
         console.log("run distribute function... ");
         console.log(sources.length + " Sources: " + JSON.stringify(sources));
         console.log("Target: " + JSON.stringify(Target));
+        console.log("Options: " + JSON.stringify(Options));
 
-        this.initialize(Target);
+        this.initialize(Target, Options);
 
         var x = this.x_min;  
         var y = this.y_min;  
+
+        var Xfer = [];
 
         var Transfer = [];
         var Colour = [];
@@ -277,51 +288,99 @@ function wellMapper() {
         var repeat_set = 1;
         var repeat_wells = 1;
 
-        if ( ! this.pack ) {
-            // positions are static ... simply copy plates (x split if necessary)
+        var Lists = {};
+        if (Options.qty && Options.qty.constructor === Array) {
+            Lists['qty'] = Options.qty;
+            console.log("split qty to: " + JSON.stringify(Lists['qty']) );
         }
-        else {
 
-            if (this.split_mode === 'serial') { 
-                repeat_wells = this.splitX;
-            }
-            else { 
-                repeat_set = this.splitX;
-            }
+        if (this.split_mode === 'serial') { 
+            repeat_wells = this.splitX || 1;
+        }
+        else { 
+            repeat_set = this.splitX || 1;
+        }
 
-            for (var h=1; h<=repeat_set; h++) {  // only repeats when split in parallel mode
+        var batch_wells = this.pack_wells;
+        var target = 0;
 
-                for (var i=0; i<sources.length; ) {
+        if (! this.pack_wells) { batch_wells = 1 } // force to minimum ... 
+        console.log("loop " + repeat_set + "x" 
+            + sources.length + 'x' 
+            + batch_wells + 'x'
+            + repeat_wells);
 
-                    for (var j=1; j<=this.pack && i<sources.length; j++) {   // force use of consecutive wells if pack > 1 (even if in serial mode)
-                        for (var k=1; k<=repeat_wells && i<sources.length; k++) {
+        for (var h=0; h<repeat_set; h++) {  // only repeats when split in parallel mode
 
-                            var target_position = x + y.toString();
-                            
-                            if (! Transfer[target_index]) { Transfer[target_index] = {} }
-                            if (! Colour[target_index]) { Colour[target_index] = {} }
+            for (var i=0; i<sources.length; ) {
 
-                            console.log('box #' + target_index + '-' + target_position + ' = container #' + sources[i].id + ' from ' + sources[i].position);
+                for (var j=0; j<batch_wells && i<sources.length; j++) {   // force use of consecutive wells if pack > 1 (even if in serial mode)
+                    for (var k=0; k<repeat_wells && i<sources.length; k++) {
 
-                            Transfer[target_index][target_position] = sources[i];
-                            Colour[target_index][target_position] = this.rgbList[i];
-                            //rearray.push([sources[i], Container.position(sources[i]), targets[target_index], target_position]);
+                        var target_position;
+                        if (this.pack_wells) { 
+                            target_position = x + y.toString();
+                        }
+                        else {
+                            target_position = sources[i].position;
 
+                            if (this.split_mode == 'serial') {
+                                target_index = k;
+                            }
+                            else {
+                                target_index = h;
+                            }
+                        }
+
+                        console.log('box #' + target_index + '-' + target_position + ' = container #' + sources[i].id + ' from ' + sources[i].position);
+
+                        if (! Transfer[target_index]) { Transfer[target_index] = {} }
+                        if (! Colour[target_index]) { Colour[target_index] = {} }
+      
+                        Transfer[target_index][target_position] = sources[i];
+                        Colour[target_index][target_position] = this.rgbList[i];
+                        //rearray.push([sources[i], Container.position(sources[i]), targets[target_index], target_position]);
+
+                        Xfer.push({ 
+                            batch: target_index,
+                            source_id: sources[i].id,
+                            source_position: sources[i].position,
+                            target_position: target_position,
+                            qty: qty,
+                            qty_units: Options.qty_units, 
+                            target_format: Target.format_id,
+                            transfer_type: Target.transfer_type,
+                            sample_type: Target.sample_type,
+                        });
+
+                        // next...
+                        if (this.pack_wells) {
                             var next = this.next_position(x,y,target_index);
                             x = next.x;
                             y = next.y;
-                            target_index = next.target_index;
+                            target_index = next.target_index;                                
                         }
-                        i = i+1;
+                        else {
+
+                        }
+
+                        var qty = Options.qty;  // list or single val
+                        if ( Lists['qty'] ) { qty = Lists['qty'][target] }
+
+
+                        target++;
                     }
+                    i = i+1;
                 }
             }
-        }
+        } 
 
         this.Transfer = Transfer;
         this.TransferMap = Colour;
+        this.Xfer = Xfer;
 
-        return { Transfer : Transfer, TransferMap : Colour };
+        console.log("completed distribution... ");
+        return { Transfer : Transfer, TransferMap : Colour, Xfer: Xfer };
     }
 
     this.testFunction = function (number) {
@@ -329,16 +388,16 @@ function wellMapper() {
         return number*2;
     }
 
-    this.testMap = function (sources, Target) {
+    this.testMap = function (sources, Target, Options) {
         // used simply to generate easily testable strings showing sample distributions
         // this is used by unit tests below to test ordered list of ids, source positions, target_positions
 
-        var results = this.distribute(sources, Target);
+        var results = this.distribute(sources, Target, Options);
         
         var id_list = [];
         var position_list = [];
         var targets = [];
-
+/*
         for (var i=0; i<this.Transfer.length; i++) {
             var keys = Object.keys(this.Transfer[i]);
             for (var j=0; j<keys.length; j++) {
@@ -349,6 +408,17 @@ function wellMapper() {
                 targets.push(target_position);
             }
         }
+*/
+
+        console.log('Xfer: ' + JSON.stringify(this.Xfer));
+
+       for (var i=0; i<this.Xfer.length; i++) {
+            var transfer = this.Xfer[i];
+            id_list.push(transfer.source_id);
+            position_list.push(transfer.source_position);
+            targets.push(transfer.batch + '-' + transfer.target_position);
+        }
+
 
         return [ id_list.join(','), position_list.join(','), targets.join(',') ];
     }
@@ -362,7 +432,7 @@ describe('wellMapper()', function() {
  
     describe('* initialization', function () {
         var map = new wellMapper();
-        map.initialize( { min_col : 3, max_row : 'D', max_col : 7 } );
+        map.initialize( { Min_Col : 3, Max_Row : 'D', Max_Col : 7 } );
 
         it('simple initialization', function () {
             assert.equal('A', map.x_min);
@@ -376,7 +446,7 @@ describe('wellMapper()', function() {
     // quite extensive set of tests to ensure distribution of wells follows expectations
     describe('* distribute', function () {
 
-        var Target = { max_row : 'B', max_col : 3 };
+        var Target = { Max_Row : 'B',  Max_Col : 2 };
     
         var ids = [1,2,3,4,5,6]
         var positions = ['A1','A2','A3','B1','B2','B3'];
@@ -389,7 +459,7 @@ describe('wellMapper()', function() {
         describe('= default', function () {
 
             var map = new wellMapper();
-            var test1 = map.testMap(sources, { pack: 1, max_row : 'B', max_col : 2 });
+            var test1 = map.testMap(sources, { Max_Row : 'B', Max_Col : 2 }, { pack: 1});
 
             // target options:  transfer_qty, transfer_qty_units, format: N, sample_type: N, split: N, pack_wells: N, split_mode: serial/parallel,  
 
@@ -403,7 +473,7 @@ describe('wellMapper()', function() {
        describe('= parallel split', function () {
 
             var map = new wellMapper();
-            var test1 = map.testMap(sources, { pack: 1, split: 2, max_row : 'B', max_col : 2 });
+            var test1 = map.testMap(sources, {Max_Row : 'B', Max_Col : 2 }, { pack: 1, split: 2});
 
             // target options:  transfer_qty, transfer_qty_units, format: N, sample_type: N, split: N, pack_wells: N, split_mode: serial/parallel,  
 
@@ -417,7 +487,7 @@ describe('wellMapper()', function() {
         describe('= serial split', function () {
 
             var map = new wellMapper();
-            var test1 = map.testMap(sources, { pack: 1, split: 2, split_mode: 'serial', max_row : 'B', max_col : 2 });
+            var test1 = map.testMap(sources, {Max_Row:'B', Max_Col: 2}, { pack: 1, split: 2, split_mode: 'serial'});
 
             // target options:  transfer_qty, transfer_qty_units, format: N, sample_type: N, split: N, pack_wells: N, split_mode: serial/parallel,  
 
