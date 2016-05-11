@@ -1,0 +1,17 @@
+div#injected
+	h2 Title: #{title}
+		div.navbar-right
+			button.btn.btn-danger(type='button' onclick="document.getElementById('injected').innerHTML = ''") x
+	table.table-bordered(style='width:100%')
+		tr
+			thead
+				each field in fields
+					th.bg-primary(style="padding:4px")
+						b #{field}
+		each record,i in data
+			tr
+				each field in fields
+					td 
+						b #{record[field]}
+	p &nbsp;
+

@@ -17,6 +17,29 @@ app.controller('CommonController',
             if ($scope.confirmedPassword) { document.getElementById('confirm_password').style="color:green" }
         }
 
+    	$scope.injectData = function (url, element, data ) {
+    		var element = 'injectView';
+    		var el = document.getElementById('injectedData');
+    		if (el) {
+	    		$http.get(url)
+	            .then ( function (result) {
+	                console.log("Got API Data...");
+
+	                console.log(JSON.stringify(result));
+	                console.log(JSON.stringify(result.data));
+	                el.innerHTML = $scope.padded( result.data);
+	            })
+	            .catch ( function (err) {
+	            	console.log("Error getting injection data: " + err);
+	            });
+	        }
+    	}
+
+    	$scope.padded = function (view) {
+    		return view;
+    		//return "\n<div class='container' style='padding:20px'>\n" + view + "</div>\n";
+    	}
+
         // Automatically Load Lookup Files //
         $scope.loadLookup = function loadLookup(table, labels, prompt, condition) {
          

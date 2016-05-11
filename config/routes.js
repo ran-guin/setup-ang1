@@ -110,6 +110,8 @@ module.exports.routes = {
   'GET /xfer' : 'ContainerController.transfer',  
   'POST /xfer' : 'ContainerController.completeTransfer',
 
+  'GET /Container/history' : 'ContainerController.history',
+
   // Custom Pages 
 
   'GET /demo/protocol': 'DemoController.protocol',
