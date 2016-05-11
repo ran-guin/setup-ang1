@@ -149,12 +149,15 @@ module.exports = {
 
 		console.log("COMPLETE in LP controller: " + JSON.stringify(data));
 
-		q.when( Lab_protocol.complete(data) )
+		Lab_protocol.complete(data)
 		.then ( function (result) {
 			console.log("returned from Lab_protocol.complete method...");
-			return res.json(result);
+			//var merged_Messages = Record.merge_Messages([result);
+			// console.log('Merged messages: ' + JSON.stringify(merged_Messages));
+			return res.json(result);  
 		})
 		.catch ( function (err) {
+			console.log("error completing LP : " + JSON.stringify(err));
 			return res.json(err);
 		});
 	},
