@@ -126,10 +126,10 @@ block content
                                   br
                                   label
                                     b Pack: &nbsp;
-                                    input(type='radio' value='packed' ng-model="pack_wells" ng-click="reset_pack_mode()") 
+                                    input(type='radio' value=1 ng-model="pack_wells" ng-click="reset_pack_mode()") 
                                     b &nbsp; Yes &nbsp;
                                   label
-                                    input(type='radio' value='normal' ng-model="pack_wells" ng-click="reset_pack_mode()")
+                                    input(type='radio' value=0 ng-model="pack_wells" ng-click="reset_pack_mode()")
                                     b &nbsp; No &nbsp;
                                   span &nbsp; [ eg : 
                                     b {{ pack_wells }} -> {{ packExample }}
