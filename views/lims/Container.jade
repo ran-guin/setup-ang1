@@ -22,7 +22,7 @@ block content
             br
             h5 [ IDs: #{sampleList[0]} ... #{sampleList[Samples.length-1]} ] 
 
-          form(role='form' method='post' action="/Lab_protocol/run" enctype='form-data')
+          form(role='form' method='post' action="#{sails.config.root}/Lab_protocol/run" enctype='form-data')
             input(type = 'hidden' name='Samples' value='#{JSON.stringify(Samples)}')
             input(type='hidden' id = 'id' name='plate_ids' value="#{sampleList.join(',')}")
             input(type='hidden' id='Plate_ID' name='Plate_ID' value='#{ids}')
@@ -40,7 +40,7 @@ block content
                 td(style='width:30%; vertical-align:middle')
                   button.btn.btn-lg.btn-success(type='submit' ng-disabled=0) Run Protocol 
 
-          form(role='form' method = 'post' action= "/transfer")
+          form(role='form' method = 'post' action= "#{sails.config.root}/transfer")
             input(type = 'hidden' name='Samples' value='#{JSON.stringify(Samples)}')
             input(type='hidden' id = 'id' name='plate_ids' value="#{sampleList.join(',')}")
             input(type='hidden' id='Plate_ID' name='Plate_ID' value='#{ids}')

@@ -20,7 +20,7 @@
         if (session.authenticated)
           a.btn.btn-default.navbar-btn.navbar-right(href='/session/destroy') sign-out
         if (!session.authenticated) 
-          form.navbar-form.navbar-right(action='/login')
+          form.navbar-form.navbar-right(action='#{sails.config.root}/login')
             div.form-group
               input.form-control(type='text', placeholder='Email', name='email')
             div.form-group
