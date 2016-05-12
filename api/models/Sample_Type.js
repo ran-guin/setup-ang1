@@ -7,6 +7,7 @@
 
 module.exports = {
 
+	tableName: 'Sample_Type',
  	migrate: 'safe',
 	/* LEGACY */
 
