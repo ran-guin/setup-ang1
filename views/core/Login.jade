@@ -1,7 +1,7 @@
 extends ../customize/publicLayout
 block content
   div.container(style="width:300px")
-    form.form-signin(action='/login', method='POST')
+    form.form-signin(action='#{sails.config.root}/login', method='POST')
 
       if session && session.flash && session.flash.err
         ul.alert.alert-danger
