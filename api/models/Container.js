@@ -9,6 +9,7 @@ var q = require('q');
 
 module.exports = {
 
+	tableName: 'Plate',
 	migrate: 'safe',
 	attributes: {
 

@@ -17,7 +17,7 @@
 					hr
 					b Access: #{ session.payload.access }
 					hr
-					a(href="/logout")
+					a(href="#{sails.config.root}/logout")
 						button.btn.btn-danger(type="submit") Logout
 					div#insideModal
 				div.modal-footer

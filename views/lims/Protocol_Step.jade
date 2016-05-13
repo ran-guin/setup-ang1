@@ -173,7 +173,7 @@ block content
 
               hr
 
-              form.form-horizontal(role="form" data-toggle="validator" method='post' action="/scan-barcode")
+              form.form-horizontal(role="form" data-toggle="validator" method='post' action="#{sails.config.root}/scan-barcode")
                 input(type = 'hidden' name='Samples' value='{{Samples}}')
                 input(type='hidden' id = 'id' name='plate_ids' value="{{plate_list}}")
                 input(type='hidden' name='model' value='Plate')
@@ -185,7 +185,7 @@ block content
               p.bg-success(style='padding:20px') 
                 b Protocol {{ status }}
 
-              form(role='form' method='post' action="/Lab_protocol/run" enctype='form-data')
+              form(role='form' method='post' action="#{sails.config.root}/Lab_protocol/run" enctype='form-data')
                 input(type = 'hidden' name='Samples' value='{{Samples}}')
                 input(type='hidden' id = 'id' name='plate_ids' value="{{plate_list}}")
                 input(type='hidden' id='Plate_ID' name='Plate_ID' value='{{plate_list}}')

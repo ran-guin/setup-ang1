@@ -7,9 +7,6 @@
 
 module.exports = {
 
-  tableName : 'Grp',
-  migrate : 'safe',
-
   attributes: {
   	name : { type: 'string'},
   	access : { type: 'string'},

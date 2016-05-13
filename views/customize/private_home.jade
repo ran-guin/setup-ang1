@@ -13,7 +13,7 @@ block content
     if message
       div.alert.alert-warning #{message}
     br            
-    form.form-inline(role='form' method='post' action="/scan-barcode")       
+    form.form-inline(role='form' method='post' action="#{sails.config.root}/scan-barcode")       
       div.form-group.has-success.has-feedback
         //label.control-label(for='barcode') Scan Barcode &nbsp;
         div.input-group
@@ -25,7 +25,7 @@ block content
 
     hr 
     
-    form.form-inline(role='form' method='post' action="/search")       
+    form.form-inline(role='form' method='post' action="#{sails.config.root}/search")       
       div.form-group.has-success.has-feedback
         div.input-group
           span.input-group-addon

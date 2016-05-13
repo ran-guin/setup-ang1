@@ -17,7 +17,7 @@ block content
             
         include ./../core/errorMsg.jade
 
-        form(role='form' name='adminForm' method='post' action="/record/list" enctype='form-data')
+        form(role='form' name='adminForm' method='post' action="#{sails.config.root}/record/list" enctype='form-data')
           input(type='hidden' name='test' value='testval')
           span.dropdown(id='model')
 
