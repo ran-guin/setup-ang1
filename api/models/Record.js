@@ -26,6 +26,60 @@ module.exports = {
 		return deferred.promise;	
 	},
 
+	cast_to : function (input, target, hashKey ) {
+
+		var returnVal;
+		if ( target.match(/array/i) ) {		
+			returnVal = [];
+			if (input && input.constructor === Array) {
+
+				if (hashKey && input[0].constructor === Object && input[0][hashKey]) {
+					for (var i=0; i<input.length; i++) {
+						returnVal.push(input[i][hashKey]);
+					}
+				}
+				else { returnVal = input }
+			}
+			else if (input && input.constructor === String) {
+				returnVal = input.split(/\s*,\s*/);
+			}
+		}
+		else if (! input) { console.log("Nothing to cast") }
+		else { console.log("Logic not yet supplied for target type: " + target) }
+
+		return returnVal;
+	},
+
+	merge_Messages: function (results, merged) {
+		// retrieve results from multiple promises - primarily intended to retrieve messages / errors / warnings
+		// eg console.log( merged_Results(results, messages).join("\n"));
+		
+		var attributes = ['message', 'warning', 'error'];
+		if (!merged) { merged = {} }
+
+		for (var i=0; i<results.length; i++) {
+			for (var j=0; j<attributes.length; j++) {
+				var att = attributes[j];
+				var atts = att + 's';
+				var found = results[i][att] || results[i][atts];
+				if (found) {
+					if (!merged[atts]) { merged[atts] = [] }
+						// test ... also account for string value ... replace with array ... 
+					if ( found.constructor === Array ) {
+						for (k=0; k<found.length; k++) {
+							merged[atts].push(found[k]);   
+						}
+					}
+					else {
+						merged[atts].push(found);
+					}
+				}
+			}
+		}
+		console.log(JSON.stringify(merged));
+		return merged;
+	},
+
 	grab: function (table, condition) {
 		// Wrapper for simple extract (similar to waterline findOne but not dependent upon waterline format)
 		
@@ -71,6 +125,7 @@ module.exports = {
 			// console.log("\nHeaders: " + headers);
 			Record.createNew(table, data, {}, { NULL : "\\N" } )
 			.then ( function (added) {
+				sails.config.messages('added ' + table + ' record(s)');
 				deferred.resolve(added);
 			})
 			.catch ( function (err) {
@@ -122,6 +177,8 @@ module.exports = {
 	},
 
 	clone : function (table, ids, resetData, options) {
+
+		ids = Record.cast_to(ids, 'array', 'id');
 		var id_list = ids.join(',');
 		console.log("CLONING " + id_list);
 
@@ -149,7 +206,7 @@ module.exports = {
 
 					for (var i=0; i<resetFields.length; i++) {
 						var value = resetData[resetFields[i]];
-						if (typeof value == 'object')  {
+						if (value.constructor === Array)  {
 							value = resetData[resetFields[i]][index];
 						}
 						else if ( value == '<id>' ) {
@@ -180,7 +237,7 @@ module.exports = {
 						Attribute.clone(table, ids, target_ids)
 						.then (function (data1) {
 							console.log("attribute update: " + JSON.stringify(data1));
-							deferred.resolve({ data: data, created: newResponse, attributes: data1});
+							deferred.resolve({ data: data, insertIds: target_ids, created: newResponse, attributes: data1});
 						})
 						.catch ( function (err2) {
 							deferred.reject({error :err2, table: table, ids: ids, target_ids: target_ids});
@@ -201,6 +258,16 @@ module.exports = {
 		return deferred.promise;
 
 	},
+
+	update : function (model, ids, data) {
+		console.log("Update " + model + ": " + ids);
+		console.log(JSON.stringify(data));
+
+		var deferred = q.defer();
+		deferred.resolve({ warnings: 'Need to add method... '});
+
+		return deferred.promise;
+	},	
 
 	createNew : function (table, Tdata, resetData) {
 		// Bypass waterline create method to enable insertion into models in non-standard format //
@@ -296,4 +363,3 @@ module.exports = {
 	},
 
 };
-
