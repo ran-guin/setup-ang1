@@ -17,10 +17,14 @@ app.controller('CommonController',
             if ($scope.confirmedPassword) { document.getElementById('confirm_password').style="color:green" }
         }
 
-    	$scope.injectData = function (url, element, data ) {
-    		var element = 'injectView';
-    		var el = document.getElementById('injectedData');
+    	$scope.injectData = function (url, element, ids ) {
+    		if (! element) { element = 'injectedData' }
+
+            if (ids) { url = url + '?ids=' + ids }
+
+    		var el = document.getElementById(element);
     		if (el) {
+                console.log("Calling: " + url);
 	    		$http.get(url)
 	            .then ( function (result) {
 	                console.log("Got API Data...");
@@ -28,12 +32,32 @@ app.controller('CommonController',
 	                console.log(JSON.stringify(result));
 	                console.log(JSON.stringify(result.data));
 	                el.innerHTML = $scope.padded( result.data);
+                    //el.html($scope.padded( result.data));
+                    $scope.injected = true;
 	            })
 	            .catch ( function (err) {
-	            	console.log("Error getting injection data: " + err);
+	            	console.log("Error getting injection data: " + JSON.stringify(err));
 	            });
 	        }
+            else {
+                console.log("element: " + element + ' NOT FOUND !');
+            }
     	}
+
+        $scope.injectedAlready = function () {
+            var element = 'injected';
+            var el = document.getElementById(element);
+            if (el && el.innerHTML.length ) { return true }
+            else { return false }
+        }
+
+        $scope.uninjectData = function () {
+            var element = 'injected';  // matches id of element in injectedData view
+            var el = document.getElementById(element);
+            if (el) { el.innerHTML = '' }
+            else { console.log("could not close " + element) }
+            $scope.injected = false;
+        }
 
     	$scope.padded = function (view) {
     		return view;
