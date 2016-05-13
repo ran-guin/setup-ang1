@@ -23,24 +23,11 @@ function protocolController ($scope, $rootScope, $http, $q) {
                 $scope.Samples = config['Samples'] || {};   // array of sample info                
             }
 
+            $scope.warning = "Already Completed";
+
             $scope.Options = config['Options'] || {};   
 
-            $scope.plate_list = config['plate_ids'];  // simple comma-delimited list
-            $scope.plate_ids = $scope.plate_list.split(',');
-     
-            $scope.N = $scope.plate_ids.length;
-            
-            if ($scope.Samples[0] && $scope.Samples[0]['container_format']) {
-                $scope.container_format = $scope.Samples[0]['container_format'];
-            }
-            else { $scope.container_format = 'undefined' }
-
-            if ($scope.Samples[0] && $scope.Samples[0]['sample_type']) {
-                $scope.sample_type = $scope.Samples[0]['sample_type'];
-            }
-            else { $scope.sample_type = 'undefined' }
-
-            console.log("Samples: " + $scope.plate_list);
+            $scope.load_Sample_info();
 
             $scope.Attributes = config['Attributes'];
 
@@ -81,7 +68,36 @@ function protocolController ($scope, $rootScope, $http, $q) {
 
     }
 
-    $scope.forward = function forward() {
+    $scope.load_Sample_info = function load_Sample_info () {
+
+        var ids = [];
+        for (var i=0; i<$scope.Samples.length; i++) {
+            if ($scope.Samples[i].id) { ids.push($scope.Samples[i].id) }
+        }
+        $scope.plate_list = ids.join(',');
+        $scope.plate_ids  = ids;
+
+        $scope.N = $scope.plate_ids.length;
+        
+        if ($scope.Samples[0] && $scope.Samples[0]['container_format']) {
+            $scope.container_format = $scope.Samples[0]['container_format'];
+        }
+        else { $scope.container_format = 'undefined' }
+
+        if ($scope.Samples[0] && $scope.Samples[0]['sample_type']) {
+            $scope.sample_type = $scope.Samples[0]['sample_type'];
+        }
+        else { $scope.sample_type = 'undefined' }
+
+        console.log("Samples: " + $scope.plate_list);
+
+    }
+
+    $scope.forward = function forward(action) {
+
+        var state = action || 'Completed';
+
+        $scope['status' + $scope.stepNumber] = state;
 
         $scope.stepNumber++;
         console.log('forward');
@@ -117,6 +133,9 @@ function protocolController ($scope, $rootScope, $http, $q) {
     }
 
     $scope.complete = function complete (action) {
+
+        $scope.uninjectData();
+
         // complete step (if validated)
         $scope.action = action;
 
@@ -205,22 +224,41 @@ function protocolController ($scope, $rootScope, $http, $q) {
 
         if ($scope.transfer_type) {
 
-            var Transfer = { 
-                'target_format' : $scope.Step.Target_format,
+            var Target = { 
+                'format' : $scope.Step.Target_format,
                 'sample_type'   : $scope.Step.Target_sample,
                 'transfer_type' : $scope.Step.transfer_type,
+            };
+
+
+            var qty = $scope['transfer_qty' + $scope.stepNumber];
+            if ( $scope['transfer_qty' + $scope.stepNumber + '_split']) {
+                qty = $scope['transfer_qty' + $scope.stepNumber + '_split'].split(',');
+            }  
+
+            var Options = {
                 'reset_focus'   : $scope.reset_focus,
                 'split'         : $scope.Split,
                 'pack'          : $scope.pack_wells,
                 'distribution_mode' : $scope.distribution_mode,
-            };
+                'qty'               : qty,
+                'qty_units'     : $scope['transfer_qty_units' + $scope.stepNumber ],
+            }
 
-            $scope.distribute();  // change to promise (test.. )
-            
-            data['target_format'] = $scope.Step.Target_format;
+            console.log("Distribute: ");
+            console.log("Target: " + JSON.stringify(Target));
+            console.log("Options: " + JSON.stringify(Options));
 
-            data['Sources'] = $scope.Map.Sources;
-            data['Targets'] = $scope.Map.Xfer;
+            // Define Data ...
+
+            data['Sources'] = $scope.Map.Samples;
+ 
+            var Map = $scope.distribute($scope.Samples, Target, Options);  // change to promise (test.. )
+            //data['Targets'] = $scope.Map.Xfer;
+            data['CustomData'] = Map.Xfer;
+
+            data['Target'] = Target;
+            data['Transfer_Options'] = Options;
 
             //data['Transfer'] = ;
         } 
@@ -235,15 +273,29 @@ function protocolController ($scope, $rootScope, $http, $q) {
         else {
             $http.post(url, data)
             .then ( function (result) {
-                console.log("Step Saved");
+                console.log("\n **** Step Posted Successfully ***");
                 console.log(JSON.stringify(result));
+
+                if ($scope.transfer_type && ! $scope.reset_focus) {
+                    console.log("Focus on new samples");
+                    var promiseResults = result.data;
+                    for (var i=0; i<promiseResults.length; i++) {
+                        if (promiseResults[i].Samples) {
+                            console.log("Found regenerated sample list..." + i);
+                            console.log( JSON.stringify(promiseResults[i].Samples) );
+                            $scope.Samples = promiseResults[i].Samples;
+            
+                            $scope.load_Sample_info();
+                        }
+                    }
+                }
+
                 if ($scope.stepNumber < $scope.steps) {
                     console.log('completed... go to next step');
-                    $scope.forward()
+                    $scope.forward(action)
                 }
                 else {
-                    console.log('completed... done');
-                    $scope['status' + $scope.stepNumber] = 'Completed';
+                    $scope.status = 'Completed';
                 }
 
                 if (action == 'Debug') {
@@ -398,40 +450,20 @@ function protocolController ($scope, $rootScope, $http, $q) {
         console.log($scope.list_mode + ' -> reset list example to ' + $scope.listExample);
     }
 
-    $scope.distribute = function distribute () {
+    $scope.distribute = function distribute (Sources, Target, Options) {
         var targetKey = 'transfer_type' + $scope.stepNumber;
 
         console.log("Transfer Type = " + $scope.Step.transfer_type);
 
         var Xfer = [];
-        if ($scope.Step.transfer_type) {
+        if (Target) {
 
             var newMap = new wellMapper();
  
-            newMap.from($scope.Samples);
+            newMap.from(Sources);
             $scope.newMap = newMap;
 
-            var qty = $scope['transfer_qty' + $scope.stepNumber];
-            if ( $scope['transfer_qty' + $scope.stepNumber + '_split']) {
-                qty = $scope['transfer_qty' + $scope.stepNumber + '_split'].split(',');
-            }  
-
-            console.log("QTY: " + JSON.stringify(qty));
-            console.log($scope.Step.transfer_type + $scope.Step.Target_sample);
-            $scope.Map = $scope.newMap.distribute(
-                $scope.Samples, 
-                {
-                    format_id : $scope.Step.Target_format,
-                    transfer_type : $scope.Step.transfer_type,
-                    sample_type   : $scope.Step.Target_sample
-                },
-                { 
-                    qty : qty,
-                    qty_units : $scope['transfer_qty_units_id'],
-                    fillBy: $scope.fill_by, 
-                    pack: $scope.pack_wells,
-                }
-            );
+            $scope.Map = $scope.newMap.distribute(Sources, Target, Options);
             
             console.log("map: " + JSON.stringify($scope.Map.Xfer));
 
@@ -440,6 +472,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
             $scope.Map = {};
             console.log("distribution N/A");
         }
+        return $scope.Map;
     }
 
     $scope.showErrors = function showErrors() {
