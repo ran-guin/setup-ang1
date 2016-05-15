@@ -237,10 +237,10 @@ function protocolController ($scope, $rootScope, $http, $q) {
             }  
 
             var Options = {
-                'reset_focus'   : $scope.reset_focus,
-                'split'         : $scope.Split,
+                'reset_focus'   : $scope.Step.reset_focus,
+                'split'         : $scope['Split' + $scope.stepNumber],
                 'pack'          : $scope.pack_wells,
-                'distribution_mode' : $scope.distribution_mode,
+                'distribution_mode' : $scope['distribution_mode' + $scope.stepNumber],
                 'qty'               : qty,
                 'qty_units'     : $scope['transfer_qty_units' + $scope.stepNumber ],
             }
