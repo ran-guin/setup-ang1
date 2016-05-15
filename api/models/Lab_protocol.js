@@ -69,7 +69,7 @@ module.exports = {
 				console.log("\nPrep ID: (just inserted)" + JSON.stringify(prep_id));
 				console.log("Target: (supplied by POST) " + JSON.stringify(data['Target']));
 
-				if (data['Target']) {
+				if (data['Target'] && data['Target']['transfer_type']) {
 
 					console.log('call Container.execute_transfer from Lab_protocol Model');
 					promises.push( Container.execute_transfer( 
