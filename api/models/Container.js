@@ -9,7 +9,6 @@ var q = require('q');
 
 module.exports = {
 
-	tableName: 'Plate',
 	migrate: 'safe',
 	attributes: {
 
@@ -20,12 +19,14 @@ module.exports = {
 		var alias = { 
 			'id' : 'Plate_ID',
 			'Parent' : 'FKParent_Plate__ID',
-			'volume' : 'Current_Volume',
-			'volume_units' : 'Current_Volume_Units',
+			'qty' : 'Current_Volume',
+			'qty_units' : 'Current_Volume_Units',
 			'sample_type'  : 'FK_Sample_Type__ID',
 			'format' : 'FK_Plate_Format__ID',
 			'created' : 'Plate_Created',
 			'location' : 'FK_Rack__ID',
+			'target_format' : 'FK_Plate_Format__ID',
+			'target_sample' : 'FK_Sample_Type__ID',
 		}
 
 		var field = alias[name];
@@ -53,16 +54,64 @@ module.exports = {
 
 	loadData : function (ids) {
 
-		var id_list;
-		if (ids == undefined) { id_list = '' }
-		else { id_list = ids.join(',') }
+		var include = 'prep, position, attributes';
+
+		ids = Record.cast_to(ids, 'array');
+		id_list = ids.join(',');
 
 		var deferred = q.defer();
 
 		//var fields = 'Plate_ID as id, Sample_Type as sample_type, Plate_Format_Type as container_format';
 		//var query = 'SELECT ' + fields + " FROM Plate LEFT JOIN Sample_Type ON FK_Sample_Type__ID=Sample_Type_ID LEFT JOIN Plate_Format ON FK_Plate_Format__ID=Plate_Format_ID WHERE Plate_ID IN (" + id_list + ')';
-		var fields = "Plate_ID as id, Sample_Type as sample_type, Sample_Type_ID as sample_type_id, Plate_Format_Type as container_format, Plate_Format_ID as container_format_id, case WHEN Rack_Type='Slot' THEN Rack_Name ELSE NULL END as position";
-		var query = 'SELECT ' + fields + " FROM Plate LEFT JOIN Sample_Type ON FK_Sample_Type__ID=Sample_Type_ID LEFT JOIN Plate_Format ON FK_Plate_Format__ID=Plate_Format_ID LEFT JOIN Rack ON Plate.FK_Rack__ID=Rack_ID WHERE Plate_ID IN (" + id_list + ')';
+		
+		var tables = ['Plate'];
+
+		var fields = [
+			'Plate_ID as id', 
+			'Sample_Type.Sample_Type as sample_type', 
+			'Sample_Type_ID as sample_type_id', 
+			'Plate_Format_Type as container_format', 
+			'Plate_Format_ID as container_format_id',
+			'Current_Volume as qty',
+			'Current_Volume_Units as qty_units',
+		];
+
+		var left_joins = [
+			'Sample_Type ON FK_Sample_Type__ID=Sample_Type_ID',
+			'Plate_Format ON FK_Plate_Format__ID=Plate_Format_ID'
+		];
+
+		var conditions = [
+			'Plate_ID IN (' + id_list + ')'
+		];
+
+
+		if ( include.match(/prep/) ) {
+			left_joins.push('Prep ON FKLast_Prep__ID=Prep_ID');
+			left_joins.push('lab_protocol ON Prep.FK_Lab_Protocol__ID=lab_protocol.id');
+
+			fields.push("FK_Lab_Protocol__ID as last_protocol_id")
+			fields.push("lab_protocol.name as last_protocol");
+			fields.push("Prep.Prep_Name as last_step");
+			fields.push("CASE WHEN Prep.Prep_Name like 'Completed %' THEN 'Completed' WHEN Prep.Prep_Name IS NULL THEN 'N/A' ELSE 'In Process' END as protocol_status");
+		}
+
+		if ( include.match(/position/) ) {
+			left_joins.push('Rack ON Plate.FK_Rack__ID=Rack_ID');
+			fields.push ("case WHEN Rack_Type='Slot' THEN Rack_Name ELSE NULL END as position");
+		}
+
+		if ( include.match(/attribute/) ) {
+			fields.push("GROUP_CONCAT( CONCAT(Attribute_Name,'=',Attribute_Value) SEPARATOR '; ') as attributes");
+			left_joins.push('Plate_Attribute ON Plate_Attribute.FK_Plate__ID=Plate_ID');
+			left_joins.push('Attribute ON Plate_Attribute.FK_Attribute__ID=Attribute_ID');
+		}
+
+		var query = 'SELECT ' + fields.join(',') + ' FROM (' + tables.join(',') + ')';
+		if (left_joins) { query = query + ' LEFT JOIN ' + left_joins.join(' LEFT JOIN ') }
+		if (conditions) { query = query + ' WHERE ' + conditions.join(' AND ') }
+
+		query = query + ' GROUP BY Plate_ID';
 
 		console.log("SQL: " + query);
 	    Record.query(query, function (err, result) {
@@ -71,7 +120,7 @@ module.exports = {
 	    		deferred.reject("Error: " + err);
 	    	}
 	    	else {
-	    		console.log("DATA: " + JSON.stringify(result));
+	    		console.log("Loaded DATA: " + JSON.stringify(result));
 	    		deferred.resolve(result);
 	    	}
 
@@ -98,7 +147,7 @@ module.exports = {
 
 	},
 
-	execute_transfer : function (sources, targets, options) {
+	execute_transfer : function (ids, target, options, CustomData) {
 		//
 		// Input: 
 		//
@@ -116,13 +165,13 @@ module.exports = {
 		//		source_id, 
 		//		source_position, 
 		//		target_position,
-		//		transfer_type,
-		//		format_id,
+		//		target_format,
 		//		sample_type,
 		//		colour_code ?)
 		//	},..]
 		// Options: hash : { 
-		//		volume: [single value or array]
+		//		transfer_type,
+		//		qty: [single value or array]
 		//		prep: { prepdata }, 
 		// 		/* ?? user, timestamp, extraction_type, target_format, location }    
 		//	}
@@ -135,45 +184,25 @@ module.exports = {
 		// New Plate records x N
 		//  + New MUL Plate records if applicable
 		//
-		// Updates Source Plate volumes
+		// Updates Source Plate qtys
 		// 
 		// Returns: create data hash for new Plates.... (need to be able to reset samples attribute within Protocol controller (angular)
 
 		console.log("Executing Container Transfer ... ");
 		var deferred = q.defer();
 
-		if (sources) {
-			console.log("Sources: " + JSON.stringify(sources));
-
-			var ids =[];
-			var volumes = [];
-
+		if (ids) {
 			// allow input ids (first parameter) to be either:
 			//   - string "1,2,3"
 			//   - array [1,2,3]
 			//   - array of hashes [{id: 1}, {id: 2}..]
 			//
-			if ( sources.constructor === Array ) {
-				console.log("ids supplied as array");
-				ids = sources;
-			}
-			else if ( sources.constructor === String) {
-				console.log("ids supplied as string");
-				ids = sources.split(/\s*,\s*/);
-			}
-			else if (sources[0] && sources[0].constructor === Object && sources[0]['id']) {
-				console.log("ids supplied as hash");
-				for (var i=0; i<sources.length; i++) {
-					ids.push(sources[i]['id']);
-					var volume = sources[i]['volume'] || options['volume'];
-					volumes.push(volume);
-				}
-			}
 
-
-			console.log("IDS:" + JSON.stringify(ids));
-			console.log("Targets: " + JSON.stringify(targets));
-			console.log("Options: " + JSON.stringify(options));
+			console.log("\n*** Container.execute_transfer: ***")
+			console.log("input IDS:" + JSON.stringify(ids));
+			console.log("input Target: " + JSON.stringify(target));
+			console.log("input Options: " + JSON.stringify(options));
+			console.log("input CustomData: " + JSON.stringify(CustomData));
 
 			var resetData = {
 				'Plate_ID' : '',
@@ -183,25 +212,103 @@ module.exports = {
 				'FK_Employee__ID' : '<user>' 
 			};
 
-			// Update Volumes if applicable (default to entire volume) 
-			if (options.volume) {
-				resetData['Current_Volume'] = options.volume;
-				resetData['Current_Volume_Units'] = options.volume_units;
+			// Update Volumes if applicable (default to entire qty) 
+			if (options.qty) {
+				resetData['Current_Volume'] = options.qty;
+				resetData['Current_Volume_Units'] = options.qty_units;
 
-				console.log("track removal of " + options.volume + options.volume_units);
-				//Container.updateVolume(ids, -options.volume, options.volume_units, { prep : options.prep_id});
+				console.log("track removal of " + options.qty + options.qty_units);
+				//Container.updateVolume(ids, -options.qty, options.qty_units, { prep : options.prep_id});
 			}
 
+			if (options.prep) {
+				resetData['FKLast_Prep__ID'] = options.prep;
+			}
+			if (options.transfer_type === 'Pre-Print') {
+				resetData['Plate_Status'] = 'Pre-Printed';
+			}
+
+			if (target.sample_type) {
+				resetData['FK_Sample_Type__ID'] = target.sample_type;
+			}
+
+			if (target.format) {
+				resetData['FK_Plate_Format__ID'] = target.format;
+			}
+
+			var custom_ids = [];
+			if (CustomData) {
+
+				var resetKeys = Object.keys(CustomData[0]);
+/*
+				for (var i=0; i<CustomData.length; i++) {
+					custom_ids.push(CustomData[i].source_id);
+				}
+*/
+				for (var i=1; i<resetKeys.length; i++) {
+					var key = resetKeys[i];
+					var list = Record.cast_to(CustomData, 'Array', key);
+					var field = Container.alias(key)
+					if (field) { resetData[field] = list }
+					if (key == 'source_id') { custom_ids = list }
+				}
+				console.log("regenerated id list: " + custom_ids + '. Reset:  ' + JSON.stringify(resetData));
+
+				// Set ResetData to ResetData[source_id][field] = (array of values for each source_id cloned ... )
+			}
+			else {
+				custom_ids = ids;
+			}
+
+			console.log("\n*** Clone Plates *** Reset: " + JSON.stringify(resetData));
+
 			// Add new records to Database //
-			Record.clone('Plate', ids, resetData, { id: Container.alias('id') })
+			Record.clone('Plate', custom_ids, resetData, { id: Container.alias('id') })
 			.then ( function (cloneData) {
+
+				var returnVal = { Cloned: cloneData };
+
 				console.log("\nCreated new record(s): " + JSON.stringify(cloneData));
-				var newIds = 'generated list of ids... eg 1,2,3'; // temp testing
+				var newIds = cloneData.insertIds;    //'generated list of ids... eg 1,2,3'; // temp testing
 				
 				Barcode.printLabels('Plate', newIds);
 				
-				deferred.resolve(cloneData);
-				//return res.render('lims/WellMap', { sources: Sources, Targets: Targets, target: { wells: 96, max_row: 'A', max_col: 12 }, options : { split: 1 }});
+				var promises = [];
+
+				if (options.transfer_type != 'Pre-Print') {
+					promises.push( Container.loadData(newIds) );
+				}
+
+				if (options.transfer_type === 'Transfer') {
+//					promises.push( Record.update('Plate',ids, { Plate_Status: 'Thrown Out', FK_Rack__ID: Rack.garbage() } ));  test
+				}	
+
+				//if (options.solution_qty) {
+					console.log("\n*** Need to add solution quantities if applicable ...");
+				//}
+				
+				q.all(promises)
+				.then ( function (results) {
+					var Samples;
+
+					if (target.transfer_type != 'Pre-Print') { 
+						returnVal['Samples'] = results[0];
+					}
+
+					sails.config.messages.push('Executed Transfer');
+
+					console.log("executed transfer: " + JSON.stringify(returnVal));
+					var messages = Record.merge_Messages(results);
+					console.log("\n*** Merged Messages: " + JSON.stringify(messages) );
+
+					deferred.resolve(returnVal);
+				})
+				.catch ( function (err) {
+					console.log("encountered error executing Container Promises");
+					returnVal['Error'] = 'Promise errors: ' + JSON.stringify(err);
+					deferred.reject(returnVal);
+				});
+
 			})
 			.catch ( function (cloneError) {
 				console.log("Cloning Error: " + cloneError);
@@ -209,7 +316,7 @@ module.exports = {
 				//return res.render('lims/WellMap', { sources: Sources, errorMsg: "cloning Error"});
 			});
 		}
-		else { deferred.reject({error: "No transfer sources indicated"}) }
+		else { deferred.reject({error: "No ids to transfer indicated"}) }
 
 		return deferred.promise;
 	},
@@ -221,14 +328,14 @@ module.exports = {
 		// input parameters: id [], target_format_id, prep_id, target_size, target_rows, target_cols
 		var ids = sources[0].id;   // test
 
-		var target_format_id = target.Format.id;
-		var prep_id = options.Prep.id;
+		var target_format_id = target.format;
+		var prep_id = options.prep_id;
 		var target_size = target.size || 1;
 
 		var target_dimensions = target.size.split('\s*x\s*');  // 8 x 12 -> [8,12]
 
-		var rows = target.rows || ['A'];
-		var cols = target.cols || [1];
+		var rows = target.Max_Row || ['A'];
+		var cols = target.Max_Col || [1];
 
 		var x_min = rows[0];
 		var x_max = rows[rows.length-1];
@@ -341,7 +448,7 @@ module.exports = {
 		//
 		// id: comma-delimited list of id(s)
 		// Sources: array of hashes [ { id, ...}. { id: } ...] - may contain other sample attributes
-		// Targets:  array of hashes: [{ source_index, source_id, source_position, target_index, target_position, volume, units, colour_code ?)},..]
+		// Targets:  array of hashes: [{ source_index, source_id, source_position, target_index, target_position, qty, units, colour_code ?)},..]
 		// Options: hash : { prep: { prepdata }, user, timestamp, extraction_type, target_format, location }    
 		//
 		// Output:
@@ -352,7 +459,7 @@ module.exports = {
 		// New Plate records x N
 		//  + New MUL Plate records if applicable
 		//
-		// Updates Source Plate volumes
+		// Updates Source Plate qtys
 		// 
 		// Returns: create data hash for new Plates.... (need to be able to reset samples attribute within Protocol controller (angular)
 		
@@ -375,7 +482,7 @@ module.exports = {
 			var target_rows = Set.target_rows;
 
 			// ? for (var i=0; i<Sources.length; i++) {
-			var input = ['volume', 'volume_units'];
+			var input = ['qty', 'qty_units'];
 
 			var optional_input = Object.keys(Set);
 
@@ -405,9 +512,12 @@ module.exports = {
 					var fld = Container.alias(input[j]) || input[j];
 					var val = Targets[i][input[j]] || Set[input[j]] || null;
 					resetData[thisId][fld] = val;
+					console.log("Reset " + input[j] + ' / ' + fld + ' -> ' + val);
 				}
-				console.log("Clone sample: id=" + thisId + "; reset: " + JSON.stringify(resetData));
+				console.log("\n*** Clone sample: id=" + thisId );
 			}
+
+			console.log("\n*** RESET: " + JSON.stringify(resetData));
 
 			Record.clone('Plate', clone_ids, resetData, { id: 'Plate_ID' })
 			.then ( function (cloneData) {
