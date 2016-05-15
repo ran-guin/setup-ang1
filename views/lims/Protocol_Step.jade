@@ -164,12 +164,12 @@ block content
                               p &nbsp;
                               button.btn.btn-primary(type='button' ng-click="updateLookups()") Update Lookups 
                             div.col-sm-4
-                              div comment: {{ comments }} = {{ comments#{Snum} }}
-                              div split: {{ Split#{Snum} }} {{ Split }}
-                              div qty  : {{ transfer_qty#{Snum} }}
-                              div units : {{ transfer_qty_units#{Snum} }} {{ transfer_qty_units#{Snum}_id }} = {{ transfer_qty_units#{Snum}_label }}
-                              div pack: {{ pack#{Snum} }}
-                              div distribute: {{ distribution_mode#{Snum} }}
+                              div comment: {{ comments }} = {{ comments#{Snum} }} (dynamic)
+                              div split: {{ Split#{Snum} }} {{ Split }} (dynamic)
+                              div qty  : {{ transfer_qty#{Snum} }} (dynamic)
+                              div units : {{ transfer_qty_units#{Snum} }} {{ transfer_qty_units#{Snum}_id }} = {{ transfer_qty_units#{Snum}_label }} (dynamic)
+                              div pack: {{ pack_wells }} (static)
+                              div distribute: {{ distribution_mode#{Snum} }} (dynamic)
                             div.col-sm-4
                               div target_format : {{ Step.Target_format }}
                               div target_type :   {{ Step.Target_sample }}
