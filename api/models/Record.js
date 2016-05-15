@@ -31,9 +31,9 @@ module.exports = {
 		var returnVal;
 		if ( target.match(/array/i) ) {		
 			returnVal = [];
+			console.log("casting " + JSON.stringify(input) + ' to ' + target);
 			if (input && input.constructor === Array) {
-
-				if (hashKey && input[0].constructor === Object && input[0][hashKey]) {
+				if (hashKey && input[0] && input[0].constructor === Object && input[0][hashKey]) {
 					for (var i=0; i<input.length; i++) {
 						returnVal.push(input[i][hashKey]);
 					}
@@ -206,7 +206,7 @@ module.exports = {
 
 					for (var i=0; i<resetFields.length; i++) {
 						var value = resetData[resetFields[i]];
-						if (value.constructor === Array)  {
+						if (value && value.constructor === Array)  {
 							value = resetData[resetFields[i]][index];
 						}
 						else if ( value == '<id>' ) {
