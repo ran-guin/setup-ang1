@@ -32,10 +32,18 @@ block content
               b {{N}} x 
               b(style='color:red') {{sample_type}} 
               b in {{container_format}}
+              span &nbsp;
+
+              button.btn.btn-primary.btn-sm(type='button' ng-show='!injectedAlready()' ng-click="injectData('/Container/summary','injectedInfo', plate_ids)") ?
+              button.btn.btn-danger.btn-sm(type='button' ng-show='injectedAlready()' ng-click='uninjectData()') x    
+
               span.navbar.navbar-right 
                 b {{user}} &nbsp;
                 span {{ timestamp }} &nbsp; &nbsp;
             
+            div#injectedInfo
+              //include Sample_Summary.jade
+
             div(ng-show="status != 'Completed'")      
               each Step,index in Steps
                 - var Snum = index+1;
@@ -126,10 +134,10 @@ block content
                                   br
                                   label
                                     b Pack: &nbsp;
-                                    input(type='radio' value='packed' ng-model="pack_wells" ng-click="reset_pack_mode()") 
+                                    input(type='radio' value=1 ng-model="pack_wells" ng-click="reset_pack_mode()") 
                                     b &nbsp; Yes &nbsp;
                                   label
-                                    input(type='radio' value='normal' ng-model="pack_wells" ng-click="reset_pack_mode()")
+                                    input(type='radio' value=0 ng-model="pack_wells" ng-click="reset_pack_mode()")
                                     b &nbsp; No &nbsp;
                                   span &nbsp; [ eg : 
                                     b {{ pack_wells }} -> {{ packExample }}
@@ -180,27 +188,10 @@ block content
                 div
                   button.btn.btn-danger(type='submit') Exit Protocol              
 
-
             div(ng-if="status=='Completed'")
-              p.bg-success(style='padding:20px') 
-                b Protocol {{ status }}
-
-              form(role='form' method='post' action="#{sails.config.root}/Lab_protocol/run" enctype='form-data')
-                input(type = 'hidden' name='Samples' value='{{Samples}}')
-                input(type='hidden' id = 'id' name='plate_ids' value="{{plate_list}}")
-                input(type='hidden' id='Plate_ID' name='Plate_ID' value='{{plate_list}}')
-
-                table.table
-                  tr
-                    td(style='width:30%')
-                      h2 Run Another Protocol: 
-                    td(style='width:40%; vertical-align:middle')
-                      span.lookup(id='Lookup-lab_protocol' ng-init="loadLookup('lab_protocol','','','Select Protocol',\"(Container_format IS NULL OR Container_format = '" + Samples[0].container_format_id + "') AND ( Sample_type IS NULL OR Sample_type = '" + Samples[0].sample_type_id + "')\")" )
-                    td(style='width:30%; vertical-align:middle')
-                      button.btn.btn-success.form-control(type='submit' ng-disabled=0) Run Protocol 
-              
-                hr
-                include uploadMatrix.jade
+              include ContainerOptions.jade 
+              include uploadMatrix.jade
+              hr
 
             h3(ng-if="debug || 1") Debugging 
 

@@ -15,6 +15,10 @@ module.exports = {
   		Rack_Alias : { type : 'stirng' },
   		FK_Equipment__ID : { model : 'equipment'},
   		FKParent_Rack__ID : { model : 'rack'}
-  	}	
+    },
+
+    garbage : function () {
+      return 1;  // test 
+    }	
 };
 

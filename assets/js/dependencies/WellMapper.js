@@ -236,7 +236,7 @@ function wellMapper() {
         this.y_min = Target.Min_Col || 1;
         this.y_max = Target.Max_Col || 1;
 
-        this.target_format = Target.format_id;
+        this.target_format = Target.format;
 
         this.splitX = Options.split || Options.splitX || 1;
 
@@ -276,6 +276,7 @@ function wellMapper() {
 
         var Transfer = [];
         var Colour = [];
+
         var target_index = 0;
         var target_position = this.x_min + this.y_min.toString();
 
@@ -301,11 +302,12 @@ function wellMapper() {
             repeat_set = this.splitX || 1;
         }
 
-        var batch_wells = this.pack_wells;
+        var batch_wells = 1;
+        if (this.pack_wells > 1) { batch_wells = this.pack_wells }
+
         var target = 0;
 
-        if (! this.pack_wells) { batch_wells = 1 } // force to minimum ... 
-        console.log("loop " + repeat_set + "x" 
+        console.log("looping " + repeat_set + "x" 
             + sources.length + 'x' 
             + batch_wells + 'x'
             + repeat_wells);
@@ -341,16 +343,19 @@ function wellMapper() {
                         Colour[target_index][target_position] = this.rgbList[i];
                         //rearray.push([sources[i], Container.position(sources[i]), targets[target_index], target_position]);
 
+                        var qty = Options.qty;  // list or single val
+                        if ( Lists['qty'] ) { qty = Lists['qty'][target] }
+
                         Xfer.push({ 
                             batch: target_index,
                             source_id: sources[i].id,
                             source_position: sources[i].position,
                             target_position: target_position,
                             qty: qty,
-                            qty_units: Options.qty_units, 
-                            target_format: Target.format_id,
-                            transfer_type: Target.transfer_type,
-                            sample_type: Target.sample_type,
+                            //qty_units: Options.qty_units, 
+                            //target_format: Target.format,
+                            //transfer_type: Target.transfer_type,
+                            //sample_type: Target.sample_type,
                         });
 
                         // next...
@@ -363,10 +368,6 @@ function wellMapper() {
                         else {
 
                         }
-
-                        var qty = Options.qty;  // list or single val
-                        if ( Lists['qty'] ) { qty = Lists['qty'][target] }
-
 
                         target++;
                     }
@@ -424,79 +425,3 @@ function wellMapper() {
     }
 }
 
-/* Unit Tests */
-
-var assert = require('chai').assert;
-
-describe('wellMapper()', function() {
- 
-    describe('* initialization', function () {
-        var map = new wellMapper();
-        map.initialize( { Min_Col : 3, Max_Row : 'D', Max_Col : 7 } );
-
-        it('simple initialization', function () {
-            assert.equal('A', map.x_min);
-            assert.equal('D', map.x_max);
-            assert.equal(3,   map.y_min);
-            assert.equal(7,   map.y_max);
-
-        });
-    });
-
-    // quite extensive set of tests to ensure distribution of wells follows expectations
-    describe('* distribute', function () {
-
-        var Target = { Max_Row : 'B',  Max_Col : 2 };
-    
-        var ids = [1,2,3,4,5,6]
-        var positions = ['A1','A2','A3','B1','B2','B3'];
-
-        var sources = [];
-        for (var i=0; i<6; i++) {
-            sources.push( { id: ids[i], position: positions[i] });
-        }
-
-        describe('= default', function () {
-
-            var map = new wellMapper();
-            var test1 = map.testMap(sources, { Max_Row : 'B', Max_Col : 2 }, { pack: 1});
-
-            // target options:  transfer_qty, transfer_qty_units, format: N, sample_type: N, split: N, pack_wells: N, split_mode: serial/parallel,  
-
-            it('simple 1 to 1 default transfer', function () {
-              assert.equal('1,2,3,4,5,6', test1[0]);
-              assert.equal('A1,A2,A3,B1,B2,B3', test1[1]);
-              assert.equal('0-A1,0-A2,0-B1,0-B2,1-A1,1-A2', test1[2])
-            });
-        });
-
-       describe('= parallel split', function () {
-
-            var map = new wellMapper();
-            var test1 = map.testMap(sources, {Max_Row : 'B', Max_Col : 2 }, { pack: 1, split: 2});
-
-            // target options:  transfer_qty, transfer_qty_units, format: N, sample_type: N, split: N, pack_wells: N, split_mode: serial/parallel,  
-
-            it('parallel split: A,B,C.. A,B,C', function () {
-              assert.equal('1,2,3,4,5,6,1,2,3,4,5,6', test1[0]);
-              assert.equal('A1,A2,A3,B1,B2,B3,A1,A2,A3,B1,B2,B3', test1[1]);
-              assert.equal('0-A1,0-A2,0-B1,0-B2,1-A1,1-A2,1-B1,1-B2,2-A1,2-A2,2-B1,2-B2', test1[2])
-            });
-        });
-
-        describe('= serial split', function () {
-
-            var map = new wellMapper();
-            var test1 = map.testMap(sources, {Max_Row:'B', Max_Col: 2}, { pack: 1, split: 2, split_mode: 'serial'});
-
-            // target options:  transfer_qty, transfer_qty_units, format: N, sample_type: N, split: N, pack_wells: N, split_mode: serial/parallel,  
-
-            it('serial split: A,A,B,B,C,C...', function () {
-              assert.equal('1,1,2,2,3,3,4,4,5,5,6,6', test1[0]);
-              assert.equal('A1,A1,A2,A2,A3,A3,B1,B1,B2,B2,B3,B3', test1[1]);
-              assert.equal('0-A1,0-A2,0-B1,0-B2,1-A1,1-A2,1-B1,1-B2,2-A1,2-A2,2-B1,2-B2', test1[2])
-            });
-        });
-
-    });
-});

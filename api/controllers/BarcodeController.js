@@ -37,13 +37,6 @@ module.exports = {
 			console.log("IDS: " + JSON.stringify(ids));
 			var Protocols = Lab_protocol.list({ 'Plate' : ids} );
 
-			// test data only... //
-			var target_formats = [
-				{ id : 1, format : '96-well Beckman Coulter'}, 
-				{ id : 2, format : 'Data Matrix Tube'}, 
-				{ id : 3, format : 'Epindorf Tube'}
-			];
-
 			Container.loadData(ids)
 			.then (function (data) {
 

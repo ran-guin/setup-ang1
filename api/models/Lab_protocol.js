@@ -47,17 +47,18 @@ module.exports = {
 
 		var deferred = q.defer();
 
-		console.log("COMPLETE ALL STEPS: " + JSON.stringify(data));
+		console.log("\n*** COMPLETE Lab Protocol: " + JSON.stringify(data));
+		
+		var ids = data['ids'] || data['plate_ids'];  // array version of same list ...
+		console.log("\n* IDS: " + JSON.stringify(ids));
 
-		var plate_list = '';
-		console.log('get ids...');
-		var ids = data['ids'] || data['plate_ids'];  // array version of same list ... 
-		if (ids && ids.length > 0 && ids != 'undefined') {
+		ids = Record.cast_to(ids, 'array');
+		var plate_list = ids.join(',');
 
-			console.log(typeof ids + " = type: " + ids.constructor); 
+		console.log("\n* IDS: " + JSON.stringify(ids) + ' : ' + JSON.stringify(plate_list));
 
-			if ( ids.constructor === String ) { console.log("list"); plate_list = ids; ids = plate_list.split(/\s*,\s*/) }
-			else { console.log("ARRAY"); plate_list = ids.join(',') }
+		if (ids.length > 0) {
+
 			Lab_protocol.savePrep(data)
 			.then ( function (PrepResult) {
 
@@ -65,16 +66,17 @@ module.exports = {
 				console.log("Added Single Prep: " + JSON.stringify(PrepResult));
 
 				var prep_id = [ PrepResult.Prep.insertId ];
-				console.log("Prep IDS: " + JSON.stringify(prep_id));
-				console.log("Targets: " + JSON.stringify(data['Targets']));
+				console.log("\nPrep ID: (just inserted)" + JSON.stringify(prep_id));
+				console.log("Target: (supplied by POST) " + JSON.stringify(data['Target']));
 
-				if (data['Targets']) {
+				if (data['Target']) {
 
-					console.log('Sources: ' + JSON.stringify(data['Sources']));
+					console.log('call Container.execute_transfer from Lab_protocol Model');
 					promises.push( Container.execute_transfer( 
 						ids,
-						data['Targets'],
-						{ 'prep_id' : prep_id } // test data
+						data['Target'],
+						data['Transfer_Options'], // test data
+						data['CustomData']
 					));
 
 				}
@@ -85,17 +87,21 @@ module.exports = {
 				console.log("save attributes to plates: " + plate_list + '; prep: ' + prep_id);
 
 				promises.push( Attribute.save('Plate', ids, data["Plate_Attribute"]) );
-				promises.push( Attribute.save('Prep', prep_id, data["Prep_Attribute"]) );
+				//promises.push( Attribute.save('Prep', prep_id, data["Prep_Attribute"]) );
 				
-				promises.push( Container.saveLastPrep(ids, prep_id[0]) );
+				//promises.push( Container.saveLastPrep(ids, prep_id[0]) );
 
 				q.all( promises )
 				.then ( function (Qdata) {
-					console.log("ALL PROMISES COMPLETE: " + JSON.stringify(Qdata));
+					sails.config.messages.push('Saved step...');
 					deferred.resolve(Qdata);
 				})
 				.catch ( function (Qerr) {
-					console.log("Error Completing all actions: " + JSON.stringify(Qerr));
+					sails.config.warnings.push('There was a glitch somewhere in the step saving process');
+					console.log("Error Completing all actions: ");
+					//for (var i=0; i<Qerr.length; i++) {
+						console.log("\n** " + i + " Error: " + JSON.stringify(Qerr));
+					//} 
 					deferred.reject({ error : "Error completing all actions: " + JSON.stringify(Qerr)}) ;
 				});
 			})
@@ -141,7 +147,7 @@ module.exports = {
 				var prepId = PrepResult.insertId;  // Legacy
 				var added = PrepResult.affectedRows;
 
-				sails.config.message = sails.config.message + 'added prep ' + prepId;
+				sails.config.messages.push('added Prep: ' + prepId);
 
 				for (var i=0; i<data['Plate'].length; i++) {
 					data['Plate'][i]['FK_Prep__ID'] = prepId;
@@ -157,6 +163,7 @@ module.exports = {
 					deferred.resolve({ Prep: PrepResult, Plate_Prep: PlatePrepResult});
 				})
 				.catch (function (err) {
+					sails.config.errors.push('Error creating Plate record ' + err);
 					deferred.reject("Error creating Plate record: " + err);
 					//return res.send("ERROR creating Plate record: " + err)
 				})
