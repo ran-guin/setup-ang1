@@ -1,0 +1,38 @@
+// standard input variables: 
+//    - plate_ids (array); 
+//    - Samples   (array of hashes)
+
+form(role='form' method='post' action="/Lab_protocol/run" enctype='form-data')
+  input(type = 'hidden' name='Samples' value='#{JSON.stringify(Samples)}')
+  input(type='hidden' id = 'id' name='plate_ids' value="#{plate_ids}")
+  input(type='hidden' id='Plate_ID' name='Plate_ID' value='#{ids}')
+  table.table
+    tr
+      td(style='width:30%')
+        h2 Continue Protocol: 
+      td(style='width:40%; vertical-align:middle')
+        //- init = "loadLookup('lab_protocol','','','Select Protocol',\"(Container_format IS NULL OR Container_format = '" + Samples[0].container_format_id + "')\")";
+
+        - init = "loadLookup('lab_protocol','','Select Protocol',\"(Container_format IS NULL OR Container_format = '" + Samples[0].container_format_id + "') AND ( Sample_type IS NULL OR Sample_type = '" + Samples[0].sample_type_id + "')\")";
+
+
+        span.lookup(id='Lookup-lab_protocol' ng-init="#{init}")
+      td(style='width:30%; vertical-align:middle')
+        button.btn.btn-lg.btn-success(type='submit' ng-disabled=0) Run Protocol 
+
+form(role='form' method = 'post' action= "/transfer")
+  input(type = 'hidden' name='Samples' value='#{JSON.stringify(Samples)}')
+  input(type='hidden' id = 'id' name='plate_ids' value="#{plate_ids}")
+  input(type='hidden' id='Plate_ID' name='Plate_ID' value='#{ids}')
+
+  table.table
+    tr
+      td(style='width:30%')
+        h2 Transfer To: 
+      td(style='width:40%; vertical-align:middle')
+          span.lookup(id='Lookup-Plate_Format' ng-init="loadLookup('Plate_Format', 'Plate_Format_ID:Plate_Format_Type', 'Select Target Format')") 
+
+          // b &nbsp; Split X: 
+          // input(name='split' type='text' size='5px')
+      td(style='width:30%; vertical-align:middle')
+          button.btn.btn-lg.btn-success(type='submit' ng-click="updateLookups") Transfer Samples
