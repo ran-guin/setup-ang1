@@ -38,6 +38,20 @@ module.exports = {
 
 	}, 
 
+	summary : function (req, res) { 
+		var ids = req.param('ids');
+
+		var flds = ['id', 'container_format', 'sample_type', 'qty', 'qty_units', 'attributes'];
+
+		Container.loadData(ids)
+		.then (function (result) {
+			return res.render('customize/injectedData', { fields : flds, data : result, title: 'Sample Info'});		
+		})
+		.catch ( function (err) {
+			return res.json("error injecting Sample Info");
+		});
+	},
+
 	transfer : function (req, res ) {
 		console.log("CC transfer prompt");
 
