@@ -111,6 +111,7 @@ module.exports.routes = {
   'POST /xfer' : 'ContainerController.completeTransfer',
 
   'GET /Container/history' : 'ContainerController.history',
+  'GET /Container/summary' : 'ContainerController.summary',
 
   // Custom Pages 
 
