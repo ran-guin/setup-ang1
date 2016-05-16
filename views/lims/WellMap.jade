@@ -13,7 +13,7 @@ block content
         div(ng-controller='WellController', ng-init="#{init}")
           if errorMsg 
             h2(style='color:red') Error: #{errorMsg}
-          form.form-horizontal(role='form' method='post' action="/transfer")
+          form.form-horizontal(role='form' method='post' action="#{sails.config.root}/transfer")
             p &nbsp;
             if target
               h2 Transfer Samples to #{target.Plate_Format_Type}
