@@ -28,7 +28,7 @@ block content
                         button.btn.btn-primary.form-control(type='button' ng-click="save()" ng-disable="! Name") Save Lab Protocol
 
                       p &nbsp;    
-                    form.form-horizontal(role="form" method='post' action="/Lab_protocol/save")
+                    form.form-horizontal(role="form" method='post' action="#{sails.config.root}/Lab_protocol/save")
 
                       div.form-group
                         label-control.col-sm-2(for='name') Name

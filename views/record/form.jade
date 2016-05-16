@@ -10,7 +10,7 @@ block content
 
             include ./../core/errorMsg.jade
             p &nbsp;
-            form.form-horizontal(role='form' action='/record/save', method='POST')
+            form.form-horizontal(role='form' action='#{sails.config.root}/record/save', method='POST')
 
                     each field,i in fields
                         - var fld = field['Field'];
