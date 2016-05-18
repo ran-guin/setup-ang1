@@ -289,11 +289,60 @@ function wellMapper() {
         var repeat_set = 1;
         var repeat_wells = 1;
 
-        var Lists = {};
-        if (Options.qty && Options.qty.constructor === Array) {
-            Lists['qty'] = Options.qty;
-            console.log("split qty to: " + JSON.stringify(Lists['qty']) );
+        var List = {};
+        var Static = {};
+
+        var options = Object.keys(Options);
+
+        for (var i=0; i<options.length; i++) {
+            var opt = Options[options[i]];
+            if (opt && opt.constructor === Array) {
+                List[options[i]] = [];
+                if (this.splitX > 1) {
+                    if (this.split_mode === 'serial') {
+                        for (k=0; k<sources.length; k++) {
+                            for (j=0; j<this.splitX; j++) {
+                                List[options[i]].push(opt[j]);
+                            }
+                        }
+                    }
+                    else {
+                        for (j=0; j<this.splitX; j++) {
+                            for (k=0; k<sources.length; k++) {
+                                List[options[i]].push(opt[j]);
+                            }
+                        }
+                    }
+                }
+                else {
+                    var repeat = sources.length / opt.length;
+                    if (this.split_mode === 'serial') {
+                        for (j=0; j<opt.length;j++) {
+                            for (k=0; k<repeat; k++) {
+                                List[options[i]].push(opt[j]);
+                            }
+                        }                        
+                    }
+                    else {                // (this.split_mode === 'serial') {
+                        for (k=0; k<repeat; k++) {
+                            for (j=0; j<opt.length;j++) {
+                                List[options[i]].push(opt[j]);
+                            }
+                        }                        
+                    }                    
+                }
+
+                console.log("\n* Split " + options[i] + " to: " + JSON.stringify(List[options[i]]) );
+            }
+            else {
+                // single value only 
+                Static[options[i]] = opt;
+                console.log("\n* Static " + options[i] + ' = ' + opt);
+            }
         }
+
+        var lists = Object.keys(List);
+        var statics = Object.keys(Static);
 
         if (this.split_mode === 'serial') { 
             repeat_wells = this.splitX || 1;
@@ -343,20 +392,26 @@ function wellMapper() {
                         Colour[target_index][target_position] = this.rgbList[i];
                         //rearray.push([sources[i], Container.position(sources[i]), targets[target_index], target_position]);
 
-                        var qty = Options.qty;  // list or single val
-                        if ( Lists['qty'] ) { qty = Lists['qty'][target] }
-
-                        Xfer.push({ 
+                        var XferData = { 
                             batch: target_index,
                             source_id: sources[i].id,
                             source_position: sources[i].position,
                             target_position: target_position,
-                            qty: qty,
-                            //qty_units: Options.qty_units, 
-                            //target_format: Target.format,
-                            //transfer_type: Target.transfer_type,
-                            //sample_type: Target.sample_type,
-                        });
+                        };
+
+                        // Add Static Values (single values entered)
+                        for (var l=0; l<statics.length; l++) {
+                            var opt = statics[l];
+                            XferData[opt] = Static[opt];
+                        }
+
+                        // Add multiplexed values (comma-delimited list entered)
+                        for (var m=0; m<lists.length; m++) {
+                            var opt = lists[m];
+                             XferData[opt] = List[opt][target];
+                        }
+
+                        Xfer.push(XferData);
 
                         // next...
                         if (this.pack_wells) {
