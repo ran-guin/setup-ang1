@@ -214,7 +214,7 @@ module.exports = {
 
 			// Update Volumes if applicable (default to entire qty) 
 			if (options.qty) {
-				resetData['Current_Volume'] = options.qty;
+				//resetData['Current_Volume'] = options.qty;
 				resetData['Current_Volume_Units'] = options.qty_units;
 
 				console.log("track removal of " + options.qty + options.qty_units);
@@ -237,8 +237,10 @@ module.exports = {
 			}
 
 			var custom_ids = [];
+			//var customReset = {};
 			if (CustomData) {
 
+				console.log("Custom Data: ");
 				var resetKeys = Object.keys(CustomData[0]);
 /*
 				for (var i=0; i<CustomData.length; i++) {
@@ -248,12 +250,35 @@ module.exports = {
 				for (var i=1; i<resetKeys.length; i++) {
 					var key = resetKeys[i];
 					var list = Record.cast_to(CustomData, 'Array', key);
-					var field = Container.alias(key)
-					if (field) { resetData[field] = list }
+
+					console.log("check for alias for " + key);
 					if (key == 'source_id') { custom_ids = list }
+					else {
+						var field = Container.alias(key);
+						console.log("Alias = " + field);
+						if (field) { 
+							for (var j=0; j<CustomData.length; j++) {
+								var ref = CustomData[j]['source_id'];
+								var reset = CustomData[j][key];
+
+								if (! resetData[field] ) { resetData[field] = {} }
+								
+								if (resetData[field][ref] && resetData[field][ref].constructor === String ) {
+									resetData[field][ref] = [resetData[field][ref], reset];
+								}
+								else if (resetData[field][ref] && resetData[field][ref].constructor === Array) {
+									resetData[field][ref].push(reset);
+								} 
+								else { resetData[field][ref] = reset }
+
+								console.log(field + ' : ' + ref + '=' + JSON.stringify(resetData[field][ref]) );
+							}
+							console.log("Reset Custom Data: " + field + ' = ' + resetData[field] );
+						}
+					}
 				}
 				console.log("regenerated id list: " + custom_ids + '. Reset:  ' + JSON.stringify(resetData));
-
+				//console.log("Custom: " + JSON.stringify(customReset));
 				// Set ResetData to ResetData[source_id][field] = (array of values for each source_id cloned ... )
 			}
 			else {
@@ -311,8 +336,8 @@ module.exports = {
 
 			})
 			.catch ( function (cloneError) {
-				console.log("Cloning Error: " + cloneError);
-				deferred.reject({error: cloneError});
+				console.log("Cloning Error: " + JSON.stringify(cloneError));
+				deferred.reject( {error: cloneError});
 				//return res.render('lims/WellMap', { sources: Sources, errorMsg: "cloning Error"});
 			});
 		}
@@ -517,7 +542,7 @@ module.exports = {
 				console.log("\n*** Clone sample: id=" + thisId );
 			}
 
-			console.log("\n*** RESET: " + JSON.stringify(resetData));
+			console.log("\n*** Clone RESET: " + JSON.stringify(resetData));
 
 			Record.clone('Plate', clone_ids, resetData, { id: 'Plate_ID' })
 			.then ( function (cloneData) {
