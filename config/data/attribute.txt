@@ -57,3 +57,4 @@ Attribute_ID	Attribute_Name	Attribute_Format	Attribute_Type	FK_Grp__ID	Inherited
 63	Thaw_Temp		Int	3	Yes	Plate		
 64	Untracked_Thaw_Count		Int	3	Yes	Source		
 65	Untracked_Thaw_Count		Int	3	Yes	Plate		
+66	Matrix_Barcode		Int	3	Yes	Plate		
