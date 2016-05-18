@@ -34,15 +34,21 @@ block content
               b in {{container_format}}
               span &nbsp;
 
-              button.btn.btn-primary.btn-sm(type='button' ng-show='!injectedAlready()' ng-click="injectData('/Container/summary','injectedInfo', plate_ids)") ?
+              button.btn.btn-primary.btn-sm(type='button' ng-show="!injectedAlready()" ng-click="injectData('/Container/summary','', plate_ids)") ?
               button.btn.btn-danger.btn-sm(type='button' ng-show='injectedAlready()' ng-click='uninjectData()') x    
 
               span.navbar.navbar-right 
+
+                button.btn.btn-primary.btn-sm(type='button' ng-show="!injectedAlready('injectedHistory')" ng-click="injectData('/Container/history','injectedHistory', plate_ids)") History
+                button.btn.btn-danger.btn-sm(type='button' ng-show="injectedAlready('injectedHistory')" ng-click="uninjectData('injectedHistory')") x    
+                span &nbsp; &nbsp; &nbsp; &nbsp;
+
                 b {{user}} &nbsp;
                 span {{ timestamp }} &nbsp; &nbsp;
             
-            div#injectedInfo
-              //include Sample_Summary.jade
+            div#injectedData
+
+            div#injectedHistory
 
             div(ng-show="status != 'Completed'")      
               each Step,index in Steps
@@ -148,7 +154,7 @@ block content
                           //div.col-sm-2 &nbsp;
                           label.col-sm-1 ..
                           div.col-sm-3
-                            button.btn.btn-success(type='submit' ng-disabled="form#{Snum}.$invalid") Completed Step
+                            button.btn.btn-success(type='submit' ng-click="updateLookups()" ng-disabled="form#{Snum}.$invalid") Completed Step
                           div.col-sm-2
                             button.btn.btn-warning(type='button' ng-click="complete('Skipped')") Skip Step
                           div.col-sm-2
