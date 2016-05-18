@@ -7,6 +7,7 @@
 
 var q = require('q');
 var fs = require('fs');
+var _ = require('underscore');
 
 module.exports = {
 
@@ -180,7 +181,9 @@ module.exports = {
 
 		ids = Record.cast_to(ids, 'array', 'id');
 		var id_list = ids.join(',');
-		console.log("CLONING " + id_list);
+		console.log("Cloning: " + id_list);
+		console.log("* RESET: " + JSON.stringify(resetData));
+		console.log("* Options: " + JSON.stringify(options));
 
 		var deferred = q.defer();
 
@@ -189,6 +192,7 @@ module.exports = {
 
 		var query = "SELECT * from " + table + " WHERE " + idField + ' IN (' + id_list + ')';	
 		console.log("q: " + query);
+		console.log("\nReset: " + JSON.stringify(resetData));
 
 		Record.query(query, function (err, result) {
 
@@ -199,32 +203,60 @@ module.exports = {
 			}
 			else {
 				var data = result;
-			
-				var resetFields = Object.keys(resetData);	
+				var sourceData = {};
+
 				for (var index=0; index<result.length; index++) {
 					var id = result[index][idField];
 
-					for (var i=0; i<resetFields.length; i++) {
-						var value = resetData[resetFields[i]];
-						if (value && value.constructor === Array)  {
-							value = resetData[resetFields[i]][index];
-						}
-						else if ( value == '<id>' ) {
-							value = id;
-						}
-						else {
-							value = resetData[resetFields[i]];
-						}
-
-						data[index][resetFields[i]] = value;
-						console.log('** RESET ' + resetFields[i] + ' to ' + value);
-					}
+					sourceData[id] = data[index];
 				}
 
-				console.log("\nNew Record: " + JSON.stringify(data));
-				console.log("Reset: " + JSON.stringify(resetData));
+				var newData = [];
+				var resetFields = Object.keys(resetData);	
 
-				Record.createNew(table, data)
+				console.log("Cloning " + ids.length + ' records');
+				
+				var Index = {};
+				for (var i=0; i<ids.length; i++) {
+					var id = ids[i];
+
+					if (Index[id] === undefined ) { Index[id] = 0 }
+					else { Index[id]++ }
+
+					var addData = _.clone(sourceData[id]);
+					for (var j=0; j<resetFields.length; j++) {
+						var value = resetData[resetFields[j]] || '';
+						console.log(Index[id] + " v: " + resetFields[j] + ' = ' + value);
+						var setValue = value;
+
+
+						if (value && value.constructor === Object && value[id] )  {
+							if (value[id].constructor === Array ) {
+								setValue = value[id][Index[id]];  // multiple values supplied ... one for each duplicate ... 
+							}
+							else {
+								setValue = value[id];
+							}
+						}
+						else if ( value == '<id>' ) {
+							setValue = id;
+						}
+						else if (value.constructor === String ) {
+							setValue = value;
+							console.log('(constant)');
+						}
+
+						addData[resetFields[j]] = setValue;
+						console.log(id + ': ** Record RESET ' + resetFields[j] + ' to ' + setValue);
+					}
+
+					console.log(id + " Cloned : " + JSON.stringify(addData));
+					newData.push(addData);
+				}
+
+				console.log("\nNew Data: " + JSON.stringify(newData));
+
+				Record.createNew(table, newData)
 				.then (function (newResponse) {
 					var target_id = newResponse.insertId;
 					var target_count = newResponse.affectedRows;
