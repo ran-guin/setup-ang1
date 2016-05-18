@@ -21,14 +21,23 @@ block content
             b #{Samples.length} x #{Samples[0].container_format}(s) containing #{Samples[0].sample_type}
          
             span &nbsp; &nbsp;
-            button.btn.btn-primary.btn-sm(type='button' ng-show='!injectedAlready()' ng-click="injectData('/Container/summary','injectedInfo', plate_ids)") ?
+            button.btn.btn-primary.btn-sm(type='button' ng-show='!injectedAlready()' ng-click="injectData('/Container/summary','', plate_ids)") ?
             button.btn.btn-danger.btn-sm(type='button' ng-show='injectedAlready()' ng-click='uninjectData()') x    
+
+            span.navbar.navbar-right 
+
+              button.btn.btn-primary.btn-sm(type='button' ng-show="!injectedAlready('injectedHistory')" ng-click="injectData('/Container/history','injectedHistory', plate_ids)") Prep History
+              button.btn.btn-danger.btn-sm(type='button' ng-show="injectedAlready('injectedHistory')" ng-click="uninjectData('injectedHistory')") x    
+              span &nbsp; &nbsp;
             br
             h5 [ IDs: #{sampleList[0]} ... #{sampleList[Samples.length-1]} ] &nbsp; &nbsp;
-               
-          div#injectedInfo
-            //include Sample_Summary
 
+
+              
+          div#injectedData
+
+          div#injectedHistory
+ 
           include ContainerOptions.jade 
 
           include uploadMatrix.jade
