@@ -36,8 +36,8 @@ function wellController ($scope, $rootScope, $http, $q ) {
 
         $scope.fill_by = Config['fill_by'] || 'row';
         $scope.Split   = Config['Split'] || 1;
-        $scope.pack_wells   = Config['pack'] || 'normal';    // applicable only for splitting with parallel mode (if N wells pipetted together)
-        $scope.split_mode    = Config['mode'] || 'parallel';  // serial or parallel...appliable only for split (eg A1, A1, A2, A2... or A1, A2... A1, A2...)
+        $scope.pack_wells   = Config['pack'] || '0';   // applicable only for splitting with parallel mode (if N wells pipetted together)
+        $scope.split_mode    = Config['mode'] || '1';  // serial or parallel...appliable only for split (eg A1, A1, A2, A2... or A1, A2... A1, A2...)
         $scope.transfer_type = Config['transfer_type'] || 'Aliquot';
         
         $scope.splitExamples = { 
@@ -48,9 +48,10 @@ function wellController ($scope, $rootScope, $http, $q ) {
         };             
         $scope.splitExample = $scope.splitExamples[$scope.split_mode];
 
-        $scope.packExamples = { 
-            'packed' : " samples packed into first available wells",
-            'normal' : " samples copied into similar well position",
+        $scope.packExamples = {
+            'batch'  : "samples packed into available wells in groups", 
+            'packed' : "samples packed into first available wells",
+            'copy' : " samples copied into similar well position",
         };             
         $scope.packExample = $scope.packExamples[$scope.pack_mode];
 
@@ -60,12 +61,16 @@ function wellController ($scope, $rootScope, $http, $q ) {
     }
 
     $scope.reset_pack_mode = function reset_split_mode () {
-        if ($scope['pack_wells'] == 'packed') {
+        if ($scope['pack_wells'] > 1 ) {
+            $scope.pack_mode = 'batch';
+        }
+        else if ($scope['pack_wells']) {
             $scope.pack_mode = 'packed';
         }
         else {
-            $scope.pack_mode = 'normal';
+            $scope.pack_mode = 'copy';
         }
+
         console.log($scope['pack_wells'] + " : set example to " + $scope.pack_mode );
         console.log(JSON.stringify($scope.packExamples));
 
