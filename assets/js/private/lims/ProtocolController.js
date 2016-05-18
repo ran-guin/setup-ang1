@@ -236,13 +236,15 @@ function protocolController ($scope, $rootScope, $http, $q) {
                 qty = $scope['transfer_qty' + $scope.stepNumber + '_split'].split(',');
             }  
 
+            console.log("Q = " + JSON.stringify(qty));
+
             var Options = {
                 'reset_focus'   : $scope.Step.reset_focus,
                 'split'         : $scope['Split' + $scope.stepNumber],
                 'pack'          : $scope.pack_wells,
                 'distribution_mode' : $scope['distribution_mode' + $scope.stepNumber],
                 'qty'               : qty,
-                'qty_units'     : $scope['transfer_qty_units' + $scope.stepNumber ],
+                'qty_units'     : $scope['transfer_qty_units' + $scope.stepNumber + '_label'],
             }
 
             console.log("Distribute: ");
@@ -371,7 +373,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
 
             console.log('test: ' + JSON.stringify(input_array) );
 
-            var split = $scope.Split || 1;
+            var split = $scope['Split' + $scope.stepNumber] || 1;
             var Nx = $scope.N * split;
             var entered = input_array.length;
 
