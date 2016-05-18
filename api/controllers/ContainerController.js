@@ -19,6 +19,7 @@ module.exports = {
 	
 	history : function (req, res) {
 		var ids = req.param('ids');
+		var element = req.param('element') || 'injectedHistory';  // match default in CommonController
 
 		var fields = ['Prep_Name as Step', 'Prep_DateTime as Completed', 'Prep_Comments as Comments'];
 		var flds = ['Step','Completed', 'Comments'];
@@ -30,7 +31,7 @@ module.exports = {
 		.then ( function (result) {
 			console.log("got data: " + JSON.stringify(result));
 
-			return res.render('customize/injectedData', { fields : flds, data : result, title: 'Sample History'});
+			return res.render('customize/injectedData', { fields : flds, data : result, title: 'Sample History', element: element});
 		})
 		.catch ( function (err) {
 			return res.json("error injecting data");
@@ -40,12 +41,13 @@ module.exports = {
 
 	summary : function (req, res) { 
 		var ids = req.param('ids');
+		var element = req.param('element') || 'injectedData';   // match default in CommonController
 
 		var flds = ['id', 'container_format', 'sample_type', 'qty', 'qty_units', 'attributes'];
 
 		Container.loadData(ids)
 		.then (function (result) {
-			return res.render('customize/injectedData', { fields : flds, data : result, title: 'Sample Info'});		
+			return res.render('customize/injectedData', { fields : flds, data : result, title: 'Sample Info', element: element});		
 		})
 		.catch ( function (err) {
 			return res.json("error injecting Sample Info");
@@ -127,6 +129,8 @@ module.exports = {
 	},
 
 	uploadMatrix : function (req, res) {
+
+		var MatrixAttribute_ID = 66;
 		// Expects 8 rows of 12 columns (A1..H12) //
 	    res.setTimeout(0);
 
@@ -177,7 +181,7 @@ module.exports = {
 
 				var warning;
 				if (rows > Samples.length) {
-					warning = applied + " applicable records supplied, but only " + Samples.length + " Samples";
+					warning = applied + " Matrix tubes scanned, but only " + Samples.length + " current Samples found";
 				}
 				else if (Samples.length > rows) {
 					warning = Samples.length + " active Samples, but data only found for " + applied;
@@ -207,12 +211,15 @@ module.exports = {
 				console.log("Data: " + JSON.stringify(data));
 
 				var plate_ids = req.body.plate_ids;
-				var attribute = 3;  // test
+				var attribute = MatrixAttribute_ID;
 
 				Attribute.uploadAttributes('Plate', attribute, data)
 				.then ( function (resp) {
 					var message;
-					if (resp.affectedRows) { message = resp.affectedRows + " added" }
+					var warning = resp.error;
+
+					if (resp.affectedRows) { message = resp.affectedRows + " Matrix barcodes associated with samples" }
+					
 					return res.render('lims/Container', { Samples : Samples, plate_ids: ids, warningMsg: warning, message: message});					
 				})	
 				.catch ( function (err) {
