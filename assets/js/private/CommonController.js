@@ -20,7 +20,9 @@ app.controller('CommonController',
     	$scope.injectData = function (url, element, ids ) {
     		if (! element) { element = 'injectedData' }
 
-            if (ids) { url = url + '?ids=' + ids }
+            url = url + '?element=' + element;
+            if (ids) { url = url + '&ids=' + ids }
+
 
     		var el = document.getElementById(element);
     		if (el) {
@@ -33,7 +35,7 @@ app.controller('CommonController',
 	                console.log(JSON.stringify(result.data));
 	                el.innerHTML = $scope.padded( result.data);
                     //el.html($scope.padded( result.data));
-                    $scope.injected = true;
+                    $scope[element]  = true;
 	            })
 	            .catch ( function (err) {
 	            	console.log("Error getting injection data: " + JSON.stringify(err));
@@ -44,19 +46,24 @@ app.controller('CommonController',
             }
     	}
 
-        $scope.injectedAlready = function () {
-            var element = 'injected';
+        $scope.injectedAlready = function (element) {
+            if (! element) { element = 'injectedData' }
             var el = document.getElementById(element);
-            if (el && el.innerHTML.length ) { return true }
-            else { return false }
+
+            if (el && el.innerHTML.length ) { returnVal = true }
+            else { returnVal = false }
+
+            // console.log("check " + element + ' = ' + returnVal + ':' + el.innerHTML.length)
+            
+            return returnVal;
         }
 
-        $scope.uninjectData = function () {
-            var element = 'injected';  // matches id of element in injectedData view
+        $scope.uninjectData = function (element) {
+            if (! element) { element = 'injectedData' }
             var el = document.getElementById(element);
             if (el) { el.innerHTML = '' }
             else { console.log("could not close " + element) }
-            $scope.injected = false;
+            $scope[element] = false;
         }
 
     	$scope.padded = function (view) {
