@@ -1,7 +1,7 @@
-div#injected
+div(id="injected#{element}")
 	h2 #{title}
 		div.navbar-right
-			button.btn.btn-danger.btn-sm(type='button' onclick="document.getElementById('injected').innerHTML = ''") Close
+			button.btn.btn-danger.btn-sm(type='button' onclick="document.getElementById('#{element}').innerHTML = ''") Close
 	table.table-bordered(style='width:100%')
 		tr
 			thead
