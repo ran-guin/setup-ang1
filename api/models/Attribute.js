@@ -209,6 +209,8 @@ module.exports = {
 			upload[i]['FK_' + model + '__ID'] = data[i][0];
 			upload[i]['Attribute_Value'] = data[i][1];
 			upload[i]['FK_Attribute__ID'] = attribute;
+			upload[i]['FK_Employee__ID'] = sails.config.payload.userid;
+			upload[i]['Set_DateTime'] = '<now>';
 		}
 
 		Record.createNew( table, upload )
