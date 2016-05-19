@@ -19,4 +19,4 @@ Sucrose Extraction	1	Active	Sucrose DNA extraction from RBC/WBC samples	NULL	NUL
 Gender_Test	41	Active	Track Gender Test Results for Samples	NULL	NULL	2	19	NULL	NULL
 DNA_Quantification	41	Active	Update DNA Quantification information	NULL	NULL	2	20	NULL	NULL
 Test Protocol	0	Active	Test input 	NULL	NULL	0	21	NULL	NULL
-DNA Extraction	41	Active	DNA Extraction Protocol	NULL	4	0	22	2016-05-05 00:00:00	0000-00-00 00:00:00
+DNA Extraction	41	Active	DNA Extraction Protocol	NULL	4	0	22	2016-05-05 00:00:00	2016-05-05
