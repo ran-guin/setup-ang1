@@ -10,8 +10,8 @@ block content
 
     hr 
 
-    if message
-      div.alert.alert-warning #{message}
+    include ./../core/errorMsg.jade
+
     br            
     form.form-inline(role='form' method='post' action="#{sails.config.root}/scan-barcode")       
       div.form-group.has-success.has-feedback
