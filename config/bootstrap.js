@@ -20,7 +20,7 @@ module.exports.bootstrap = function(cb) {
 
   // sails.sql_helper = require('./../custom_modules/sql-helper.js');
 
-	sails.config.root = process.env.LITMUS_ROOT;
+	sails.config.root = process.env.LITMUS_ROOT || '';
 
 	var models = Object.keys(sails.models);
 
@@ -117,7 +117,8 @@ function initialize_table (Model) {
 
 	var deferred = q.defer();
 	var table = Model.tableName;
-		
+	
+	//console.log("\n** " + table);
 	Record.query_promise("SELECT count(*) as count FROM " + table)
 	.then ( function (result) {
 
@@ -147,10 +148,12 @@ function initialize_table (Model) {
 			else {
 				load_custom_data(Model)
 				.then (function (msg) {
+					//console.log('loaded custom ' + table + ' data');
 					deferred.resolve(msg);
 				})
 				.catch (function (err) {
-					deferred.reject(msg);
+					console.log("error loading custom data: " + err);
+					deferred.reject(err);
 				});
 			}
 		}
@@ -182,7 +185,8 @@ function load_custom_data (Model) {
 		deferred.resolve();
 	})
 	.catch ( function (err) {
-
+		// console.log("could not load " + file);
+		// console.log(err);
 		deferred.resolve();
 	});	
 

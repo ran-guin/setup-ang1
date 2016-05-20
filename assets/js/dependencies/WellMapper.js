@@ -244,13 +244,13 @@ function wellMapper() {
     }
 
     this.distribute = function ( sources, Target, Options ) {
-/* 
-        Input:
-        
-        sources: array of hashes - eg [ { id: 101, position: 'A1'}, { id: 102, position: 'A2'}]
-        target : hash of specs - eg { Max_Row : 'A', Max_Col: 1 } 
-        options: hash of options - eg { split : 2, mode: serial, pack: true }
-*/
+//
+//        Input:
+//        
+//        sources: array of hashes - eg [ { id: 101, position: 'A1'}, { id: 102, position: 'A2'}]
+//        target : hash of specs - eg { Max_Row : 'A', Max_Col: 1 } 
+//        options: hash of options - eg { split : 2, mode: serial, pack: true }
+//
 
         var Transfers = [];
 
@@ -439,10 +439,137 @@ function wellMapper() {
         return { Transfer : Transfer, TransferMap : Colour, Xfer: Xfer };
     }
 
-    this.testFunction = function (number) {
-        console.log('ok');
-        return number*2;
+/*
+    this.split_list = function split_list (field, input, options) {
+        
+        if (!options) { options = {} }
+ //
+ //       split = this.splitX; // $scope['Split' + $scope.stepNumber] || 1;
+ //       N = $scope.N;
+ //       prefix = $scope.Prefix(field);
+ //       split_mode = this.split_mode;  //$scope['split_mode' + $scope.stepNumber]
+
+
+        var prefix = options.prefix;                    // optional prefix characters for interpretting/separating multiple barcodes
+        var N        = options.count;
+        var split    = options.split || this.splitX;                  // splitting each source into N targets
+        var split_mode = options.split_mode || this.split_mode || 'parallel';  // serial=A,A,B,B,C,C; parallel = A,B,C,A,B,C
+    
+        var errors = [];
+        var disable = false;
+        var list = '';
+        var array = [];
+        var isList = false;
+
+//
+//    $scope[field + _split] = input
+//
+        var Nx = N * split;
+
+        if (input && input.match(/,/)) {
+            //$scope[field + '_split'] = input;
+
+            //var prefix = $scope.Prefix(field);
+            
+            if (prefix) { 
+                separator = prefix;
+            }
+            else {
+                separator = ',';
+            }
+            console.log("Split " + field + ' ON ' + separator + ' : ' + prefix);
+
+            var splitExpr = new RegExp('\\s*' + separator + '\\s*', 'ig');
+
+            var input_array = input.split(splitExpr);
+  
+            //var split = $scope['Split' + $scope.stepNumber];          
+            if (split > 1 ) {
+                console.log("Require split to be " + split);
+                if (input_array.length > 1 && input_array.length != split) {
+                    //$scope.errMsg = "Multiple value count must match split count";
+                    //$scope['form' + $scope.stepNumber].$invalid = true;
+                    errors.push("Multiple value count must match split count");
+                    disable = true;
+                    console.log("FAIL");
+                }
+            }
+
+
+            if (prefix && (input_array.length > 1) && (input_array[0] == '')) { input_array.shift() }  // remove first element 
+
+            console.log('test: ' + JSON.stringify(input_array) );
+
+
+            var entered = input_array.length;
+
+            var factor = Nx / entered;
+            var round = Math.round(factor);
+            
+            console.log("Array: " + JSON.stringify(input_array) + " x " + factor);
+     
+            if (factor == round) {
+                 //$scope[field+'_errors'] = '';
+                 //$scope.formDisabled  = false;
+                errors = [];
+                disable = false;
+            }
+            else {
+                errors.push("# of entered values must be factor of " + N);
+                disable = true;
+                //$scope[field+'_errors'] = "# of entered values must be factor of " + $scope.N;
+                //$scope.formDisabled  = true;
+           }
+
+            var array = [];
+            var offset = 0;
+            var index = 0;
+
+            if (split_mode.match(/Serial/i) {
+                for (var i=0; i<Nx; i++) {
+                    array[i] = input_array[index];
+                    offset++;
+                    if (offset >= round) {
+                        offset=0;
+                        index++;
+                    }
+                }
+            }
+            else {
+                for (var i=0; i<Nx; i++) {
+                    array[i] = input_array[index];
+
+                    index++;
+                    if (index >= entered) {
+                        index=0;
+                    }
+ 
+                }                
+            }
+     
+            //$scope[field + '_split'] = array.join(','); 
+            list = array.join(',');
+
+            console.log(field + ' split to: ' + JSON.stringify(list));
+            
+            //$scope.SplitFields[field] = array;
+ 
+            if (entered > 1) { 
+                //$scope['ListTracking' + $scope.stepNumber] = true;
+                isList = true;
+            }  
+            else {
+                isList = false;
+            }
+   
+            return array;
+        }
+        else { console.log('not multiple values...') }
+
+        console.log(input + '->' + list);
+        //console.log("\n** SPLIT: " + $scope[field] + ' OR ' + $scope[field + '_split']);   
     }
+*/
 
     this.testMap = function (sources, Target, Options) {
         // used simply to generate easily testable strings showing sample distributions

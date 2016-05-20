@@ -162,7 +162,8 @@ block content
                           div.col-sm-2
                             button.btn.btn-primary(type='button' ng-click="repeat()" ng-disable="Step.Repeatable") Repeat Previous Step
                         hr
-                        if Step.transfer_type
+
+                        // if Step.transfer_type
                           div.form-group.alert-warning
                             p &nbsp;
                             div.col-sm-4
@@ -199,7 +200,7 @@ block content
               include uploadMatrix.jade
               hr
 
-            h3(ng-if="debug || 1") Debugging 
+            h3(ng-if="debug") Debugging 
 
             hr
             b comment: {{ comments }}

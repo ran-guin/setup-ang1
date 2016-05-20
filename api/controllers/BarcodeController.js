@@ -13,68 +13,60 @@ module.exports = {
 
 		var model = req.body.model;
 		//var alt_param = model.toLowerCase + '_ids';
-		var ids;
+		var ids = [];
 
 		var barcode = req.body.barcode;
 
 		console.log("Scan: " + JSON.stringify(req.body));
 
-		var Scanned = {};
-		if (barcode) { 
-			Scanned = Barcode.parse(barcode);
-			if (Scanned['Plate'] && Scanned['Plate'].length > 0) {
-				model = 'Plate';
-				ids = Scanned['Plate'];
-			}
-		}
+		Barcode.interpret(barcode)
+		.then ( function (Scanned) {
+			if (Scanned['Plate'].length) {
+				var ids = Scanned['Plate'];
+				Container.loadData(ids)
+				.then (function (data) {
 
-		if (model == 'Plate') {
-			if (! ids && req.body['ids'] || req.body['plate_ids']) { 
-				var id_list = req.body['ids'] || req.body['plate_ids'];
-				ids = id_list.split(/\s*,\s*/);
-			}
+					var errorMsg;
+					var warningMsg;
 
-			console.log("IDS: " + JSON.stringify(ids));
-			var Protocols = Lab_protocol.list({ 'Plate' : ids} );
+					var sampleList = [];
+					if (data.length == 0) {
+						errorMsg = "expecting ids: " + ids.join(', ') + "<P>... but No Containers Found (?)";
+					}	
+					else {
+						for (var i=0; i<data.length; i++) {
+							sampleList.push(data[i].id);
+						}
+					}	
 
-			Container.loadData(ids)
-			.then (function (data) {
-
-				var errorMsg;
-				var warningMsg;
-
-				var sampleList = [];
-				if (data.length == 0) {
-					errorMsg = "expecting ids: " + ids.join(', ') + "<P>... but No Containers Found (?)";
-				}	
-				else {
-					for (var i=0; i<data.length; i++) {
-						sampleList.push(data[i].id);
+					if (sampleList.length < ids.length) { 
+						warningMsg = "Scanned " + ids.length + " records but only found " + sampleList.length;
 					}
-				}	
 
-				if (sampleList.length < ids.length) { 
-					warningMsg = "Scanned " + ids.length + " records but only found " + sampleList.length;
-				}
-
-				console.log('render....');
-				return res.render('lims/Container', { 
-					plate_ids: sampleList.join(','), 
-					//protocols : Protocols, 
-					Samples: data , 
-					//sampleList : sampleList,
-					warningMsg: warningMsg,
-					errorMsg : errorMsg,
-					//target_formats : target_formats 
-				} );
-			})
-			.catch ( function (err) {
-				return res.send("Error: " + err);
-			});
-	    }
-	    else { 
-	    	return res.send("Error: Unrecognized barcode");
-	    }
+					return res.render('lims/Container', { 
+						plate_ids: ids.join(','), 
+						//protocols : Protocols, 
+						Samples: data , 
+						//sampleList : sampleList,
+						message : 'loaded Matrix Tube(s)',
+						warningMsg: warningMsg,
+						errorMsg : errorMsg,
+						//target_formats : target_formats 
+					});
+				})
+				.catch (function (err) {
+					return res.render('customize/private_home', {errorMsg: JSON.stringify(err) });
+				});				
+			}
+			else {
+		    	var errors = Scanned['Errors'];
+		    	errors.push("Unrecognized barcode: " + barcode); 
+		    	return res.render("customize/private_home", { errors: errors });
+		    }
+		})
+		.catch ( function (err) {
+			res.render('customize/private_home', { errors: ['Error interpretting barcode: ' + barcode]} );
+		});
 
 	},
 

@@ -5,6 +5,8 @@
 * @docs        :: http://sailsjs.org/#!documentation/models
 */
 
+var q = require('q');
+
 module.exports = {
 
   attributes: {
@@ -99,12 +101,56 @@ module.exports = {
   		}
   	}
 
-  	if (barcode != '') { errors.push("Unrecognized string in barcode: " + barcode) }
-	 
-	if (errors.length) { console.log("Errors: " + JSON.stringify(errors)) }
+    if (barcode != '') { errors.push("Unrecognized string in barcode: " + barcode) }
+  	Scanned['Unformatted'] = barcode;
 
-  	return Scanned;
+  	if (errors.length) { console.log("Errors: " + JSON.stringify(errors)) }
+    Scanned['Errors'] = errors;
+
+    return Scanned;
+  },
+
+  interpret : function (barcode) {
+    var Scanned = {};
+
+    var deferred = q.defer();
+    
+    if (barcode) { 
+      Scanned = Barcode.parse(barcode);
+
+      if (Scanned['Unformatted'] && Scanned['Unformatted'].length && ! Scanned['Unformatted'].match(/a-zA-Z/) ) {
+        console.log("** Matrix Barcode: ");
+
+        var barcodes = barcode.split(/^.{10}/);
+        console.log("List: " + JSON.stringify(barcodes));
+        
+        var query = "Select FK_Plate__ID from Plate_Attribute,Attribute WHERE FK_Attribute__ID = Attribute_ID "
+          + " AND Attribute_Name='Matrix_Barcode'"
+          + " AND Attribute_Value = '" + barcode + "'"; 
+        console.log(query);
+
+        deferred.resolve(Scanned);
+
+        Record.query_promise(q)
+        .then ( function (result) {
+          if (result.length) {
+            console.log("R: " + JSON.stringify(result));
+            Scanned['Plate'].push(result[0]['FK_Plate__ID']);
+            //deferred.resolve(Scanned);
+          }
+            deferred.resolve(Scanned);
+        });
+
+      }
+      else {
+        deferred.resolve(Scanned);
+      }
+    }
+    else {
+      deferred.resolve(Scanned);
+    }
+
+    return deferred.promise;
   }
-
 };
 

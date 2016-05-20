@@ -70,25 +70,31 @@ module.exports = {
 		Record.query(query, function (err, attributeData){
 			if (err) { deferred.reject("Error retrieving attributes: " + err) }
 			else {
-				console.log("attributes: " + attributeData);
-				var insert = [];
-				for (var i=0; i<attributeData.length; i++) {
-					var att = attributeData[i];
-					var target = Map[att.reference_id];
-								
-					var insertion = '(' + target + ',' + att.id + ",'" + att.value + "')"; 
-					insert.push(insertion);	
-				}
-				var sqlInsert = insertPrefix + insert.join(',');
-				console.log(sqlInsert);
-
-				Record.query(sqlInsert, function (insertError, attUpdate){
-					console.log("Update attributes " + sqlInsert);
-					if (insertError) { deferred.reject("error updating attributes: " + insertError) }
-					else {
-						deferred.resolve({attributes: attUpdate});
+				if (attributeData.length) {
+					console.log(attributeData.length + " attributes: " + attributeData);
+					var insert = [];
+					for (var i=0; i<attributeData.length; i++) {
+						var att = attributeData[i];
+						var target = Map[att.reference_id];
+									
+						var insertion = '(' + target + ',' + att.id + ",'" + att.value + "')"; 
+						insert.push(insertion);	
 					}
-				});
+					var sqlInsert = insertPrefix + insert.join(',');
+					console.log(sqlInsert);
+
+					Record.query(sqlInsert, function (insertError, attUpdate){
+						console.log("Update attributes " + sqlInsert);
+						if (insertError) { deferred.reject("error updating attributes: " + insertError) }
+						else {
+							deferred.resolve({attributes: attUpdate});
+						}
+					});
+				}
+				else {
+					console.log("no attributes to transfer");
+					deferred.resolve({attributes: {} });
+				}
 			}
 		})
 		return deferred.promise;

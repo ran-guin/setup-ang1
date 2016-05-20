@@ -131,14 +131,15 @@ module.exports = {
 	uploadMatrix : function (req, res) {
 
 		var MatrixAttribute_ID = 66;
+
 		// Expects 8 rows of 12 columns (A1..H12) //
 	    res.setTimeout(0);
 
 	    var ids = req.body.ids || req.body.plate_ids;
+
 	    var Samples = JSON.parse(req.body.Samples);
 
-	    console.log("Samples: ");
-	    console.log(Samples);
+	    console.log("IDS: " + JSON.stringify(ids));
 
 	    req.file('MatrixFile')
 	    .upload({
@@ -191,6 +192,7 @@ module.exports = {
 				var data = [];
 				var errors = [];
 				for (var i=0; i<Samples.length; i++) {
+					console.log("Sample #" + i + ": " + JSON.stringify(Samples[i]));
 					var id = Samples[i].id;
 					var position = Samples[i].position;
 					if (position) {
@@ -206,26 +208,39 @@ module.exports = {
 						errors.push("No position for sample #" + i + ' : ' + id);
 					}					
 				}
-				console.log("Errors: " + JSON.stringify(errors));
-				console.log("Map: " + JSON.stringify(map));
-				console.log("Data: " + JSON.stringify(data));
 
-				var plate_ids = req.body.plate_ids;
-				var attribute = MatrixAttribute_ID;
+				if (errors.length) {
+					console.log("Errors: " + JSON.stringify(errors));
+					return res.render('lims/Container', { 
+						plate_ids: ids, 
+						//protocols : Protocols, 
+						Samples: Samples, 
+						//sampleList : sampleList,
+						warningMsg: warning,
+						errorMsg : errors.join(','),
+						//target_formats : target_formats 
+					} );
+				}
+				else {
+					console.log("Map: " + JSON.stringify(map));
+					console.log("Data: " + JSON.stringify(data));
 
-				Attribute.uploadAttributes('Plate', attribute, data)
-				.then ( function (resp) {
-					var message;
-					var warning = resp.error;
+					var plate_ids = req.body.plate_ids;
+					var attribute = MatrixAttribute_ID;
 
-					if (resp.affectedRows) { message = resp.affectedRows + " Matrix barcodes associated with samples" }
-					
-					return res.render('lims/Container', { Samples : Samples, plate_ids: ids, warningMsg: warning, message: message});					
-				})	
-				.catch ( function (err) {
-					return res.json({error : err, attribute: attribute, data: data});
-				})
-					
+					Attribute.uploadAttributes('Plate', attribute, data)
+					.then ( function (resp) {
+						var message;
+						var warning = resp.error;
+
+						if (resp.affectedRows) { message = resp.affectedRows + " Matrix barcodes associated with samples" }
+						
+						return res.render('lims/Container', { Samples : Samples, plate_ids: ids, warningMsg: warning, message: message});					
+					})	
+					.catch ( function (err) {
+						return res.json({error : err, attribute: attribute, data: data});
+					});
+				}		
 				
 	     	}
 	    });

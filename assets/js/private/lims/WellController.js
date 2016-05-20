@@ -35,16 +35,16 @@ function wellController ($scope, $rootScope, $http, $q ) {
         $scope.Max_Col = $scope.Max_Col || 1;
 
         $scope.fill_by = Config['fill_by'] || 'row';
-        $scope.Split   = Config['Split'] || 1;
-        $scope.pack_wells   = Config['pack'] || '0';   // applicable only for splitting with parallel mode (if N wells pipetted together)
-        $scope.split_mode    = Config['mode'] || '1';  // serial or parallel...appliable only for split (eg A1, A1, A2, A2... or A1, A2... A1, A2...)
+        $scope.splitX   = Config['Split'] || 1;
+        $scope.pack_wells   = Config['pack'] || 0;   // applicable only for splitting with parallel mode (if N wells pipetted together)
+        $scope.split_mode    = Config['mode'] || 'parallel';  // serial or parallel...appliable only for split (eg A1, A1, A2, A2... or A1, A2... A1, A2...)
         $scope.transfer_type = Config['transfer_type'] || 'Aliquot';
         
         $scope.splitExamples = { 
             'serial' : "[pack=1] A1, A2 -> A1, A1, A2, A2 ...",
-            'parallel' : "[pack=0] A1, A2... -> A1, A2,... A1, A2...",
+            'parallel' : "[pack=1] A1, A2... -> A1, A2,... A1, A2...",
             'batch'    : "[pack=2] A1,B1,C1,D1 ->  A1,B1, A1,B1, C1,D1, C1,D1...",
-            'split'    : " multiple values applied to respective splits",
+            'split'    : "when samples are split, multiple entries are always applied to respective splits",
         };             
         $scope.splitExample = $scope.splitExamples[$scope.split_mode];
 

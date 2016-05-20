@@ -117,10 +117,13 @@ module.exports = {
 			f.forEach ( function (row) {
 				var elements = row.split(/\t/);
 				var record = {};
-				for (var i=0; i<elements.length; i++) {
-					record[headers[i]] = elements[i];
+
+				if (elements[0]) {
+					for (var i=0; i<elements.length; i++) {
+						record[headers[i]] = elements[i];
+	 				}
+	 				data.push(record);
 	 			}
-	 			data.push(record);
 			})
 			console.log("* Added " + data.length + " custom records in " + table);
 			// console.log("\nHeaders: " + headers);
@@ -130,8 +133,8 @@ module.exports = {
 				deferred.resolve(added);
 			})
 			.catch ( function (err) {
-				var msg = "Error adding data to " + table + ":\n" + JSON.stringify(data);
-				deferred.reject(msg);
+				var msg = "Error adding data to " + table + ":\n" + JSON.stringify(err);
+				deferred.reject(err);
 			});
 		} 
 		catch (e) {
