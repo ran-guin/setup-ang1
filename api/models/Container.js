@@ -107,11 +107,7 @@ module.exports = {
 			left_joins.push('Attribute ON Plate_Attribute.FK_Attribute__ID=Attribute_ID');
 		}
 
-		var query = 'SELECT ' + fields.join(',') + ' FROM (' + tables.join(',') + ')';
-		if (left_joins) { query = query + ' LEFT JOIN ' + left_joins.join(' LEFT JOIN ') }
-		if (conditions) { query = query + ' WHERE ' + conditions.join(' AND ') }
-
-		query = query + ' GROUP BY Plate_ID';
+		var query = Record.build_query({tables: tables, fields: fields, left_joins: left_joins, conditions: conditions, group: ['Plate_ID'] })
 
 		console.log("SQL: " + query);
 	    Record.query(query, function (err, result) {
