@@ -5,6 +5,8 @@
 * @docs        :: http://sailsjs.org/#!documentation/models
 */
 
+var q = require('q');
+
 module.exports = {
 	tableName: 'Rack',
 	// ** LEGACY **/
