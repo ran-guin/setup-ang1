@@ -41,20 +41,20 @@ Attribute_ID	Attribute_Name	Attribute_Format	Attribute_Type	FK_Grp__ID	Inherited
 47	260_280_Ratio		Decimal	8	Yes	Plate	Editable	NULL
 48	Gender_Test_Result		ENUM('M','F','U')	8	Yes	Plate	Editable	NULL
 49	Concentration_ng_per_ul		Decimal	8	Yes	Plate	Editable	NULL
-50	Qiagen_Kit_Lot_Number		varchar	3	Yes	Plate	Editable	
+50	Qiagen_Kit_Lot_Number		varchar	3	Yes	Plate	Editable	NULL	NULL
 51	DNA_Wash_Cycles		Int	3	Yes	Plate	Editable	
-52	DNA_230		Decimal	3	Yes	Plate		
-53	DNA_260		Decimal	3	Yes	Plate		
-54	DNA_280		Decimal	3	Yes	Plate		
-55	DNA_320		Decimal	3	Yes	Plate		
-56	DNA_260_280_Adj		Decimal	3	Yes	Plate		
-57	DNA_Conc_UV		Decimal	3	Yes	Plate		
-58	DNA_UV_Batch		Decimal	3	Yes	Plate		
-59	DNA_Conc_Picogreen		Decimal	3	Yes	Plate		
-60	DNA_Conc_Picogreen_Batch		Text	3	Yes	Plate		
-61	DNA_PCR_BGLOBIN_Batch		Text	3	Yes	Plate		
-62	DNA_PCR_BGLOBIN		Int	3	Yes	Plate		
-63	Thaw_Temp		Int	3	Yes	Plate		
-64	Untracked_Thaw_Count		Int	3	Yes	Source		
-65	Untracked_Thaw_Count		Int	3	Yes	Plate		
-66	Matrix_Barcode		Int	3	Yes	Plate		
+52	DNA_230		Decimal	3	Yes	Plate	Editable	
+53	DNA_260		Decimal	3	Yes	Plate	Editable	
+54	DNA_280		Decimal	3	Yes	Plate	Editable	
+55	DNA_320		Decimal	3	Yes	Plate	Editable	
+56	DNA_260_280_Adj		Decimal	3	Yes	Plate	Editable	
+57	DNA_Conc_UV		Decimal	3	Yes	Plate	Editable	
+58	DNA_UV_Batch		Decimal	3	Yes	Plate	Editable	
+59	DNA_Conc_Picogreen		Decimal	3	Yes	Plate	Editable	
+60	DNA_Conc_Picogreen_Batch		Text	3	Yes	Plate	Editable	
+61	DNA_PCR_BGLOBIN_Batch		Text	3	Yes	Plate	Editable	
+62	DNA_PCR_BGLOBIN		Int	3	Yes	Plate	Editable	
+63	Thaw_Temp		Int	3	Yes	Plate	Editable	
+64	Untracked_Thaw_Count		Int	3	Yes	Source	Editable	
+65	Untracked_Thaw_Count		Int	3	Yes	Plate	Editable	
+66	Matrix_Barcode		Int	3	Yes	Plate	Editable	
