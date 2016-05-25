@@ -113,6 +113,8 @@ module.exports.routes = {
   'GET /Container/history' : 'ContainerController.history',
   'GET /Container/summary' : 'ContainerController.summary',
 
+  'POST /Rack/boxData' : 'RackController.boxData',
+
   // Custom Pages 
 
   'GET /demo/protocol': 'DemoController.protocol',
