@@ -607,3 +607,79 @@ function wellMapper() {
     }
 }
 
+/* Unit Tests */
+
+var assert = require('chai').assert;
+
+describe('wellMapper()', function() {
+ 
+    describe('* initialization', function () {
+        var map = new wellMapper();
+        map.initialize( { Min_Col : 3, Max_Row : 'D', Max_Col : 7 } );
+
+        it('simple initialization', function () {
+            assert.equal('A', map.x_min);
+            assert.equal('D', map.x_max);
+            assert.equal(3,   map.y_min);
+            assert.equal(7,   map.y_max);
+
+        });
+    });
+
+    // quite extensive set of tests to ensure distribution of wells follows expectations
+    describe('* distribute', function () {
+
+        var Target = { Max_Row : 'B',  Max_Col : 2 };
+    
+        var ids = [1,2,3,4,5,6]
+        var positions = ['A1','A2','A3','B1','B2','B3'];
+
+        var sources = [];
+        for (var i=0; i<6; i++) {
+            sources.push( { id: ids[i], position: positions[i] });
+        }
+
+        describe('= default', function () {
+
+            var map = new wellMapper();
+            var test1 = map.testMap(sources, { Max_Row : 'B', Max_Col : 2 }, { pack: 1});
+
+            // target options:  transfer_qty, transfer_qty_units, format: N, sample_type: N, split: N, pack_wells: N, split_mode: serial/parallel,  
+
+            it('simple 1 to 1 default transfer', function () {
+              assert.equal('1,2,3,4,5,6', test1[0]);
+              assert.equal('A1,A2,A3,B1,B2,B3', test1[1]);
+              assert.equal('0-A1,0-A2,0-B1,0-B2,1-A1,1-A2', test1[2])
+            });
+        });
+
+       describe('= parallel split', function () {
+
+            var map = new wellMapper();
+            var test1 = map.testMap(sources, {Max_Row : 'B', Max_Col : 2 }, { pack: 1, split: 2});
+
+            // target options:  transfer_qty, transfer_qty_units, format: N, sample_type: N, split: N, pack_wells: N, split_mode: serial/parallel,  
+
+            it('parallel split: A,B,C.. A,B,C', function () {
+              assert.equal('1,2,3,4,5,6,1,2,3,4,5,6', test1[0]);
+              assert.equal('A1,A2,A3,B1,B2,B3,A1,A2,A3,B1,B2,B3', test1[1]);
+              assert.equal('0-A1,0-A2,0-B1,0-B2,1-A1,1-A2,1-B1,1-B2,2-A1,2-A2,2-B1,2-B2', test1[2])
+            });
+        });
+
+        describe('= serial split', function () {
+
+            var map = new wellMapper();
+            var test1 = map.testMap(sources, {Max_Row:'B', Max_Col: 2}, { pack: 1, split: 2, split_mode: 'serial'});
+
+            // target options:  transfer_qty, transfer_qty_units, format: N, sample_type: N, split: N, pack_wells: N, split_mode: serial/parallel,  
+
+            it('serial split: A,A,B,B,C,C...', function () {
+              assert.equal('1,1,2,2,3,3,4,4,5,5,6,6', test1[0]);
+              assert.equal('A1,A1,A2,A2,A3,A3,B1,B1,B2,B2,B3,B3', test1[1]);
+              assert.equal('0-A1,0-A2,0-B1,0-B2,1-A1,1-A2,1-B1,1-B2,2-A1,2-A2,2-B1,2-B2', test1[2])
+            });
+        });
+
+    });
+});
