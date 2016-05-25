@@ -15,6 +15,38 @@ module.exports = {
 
 	},
 
+	build_query: function (options) {
+
+		if (!options) { 
+			console.log("cannot build query without options");
+			return '';
+		}
+		
+		if (! options.fields || ! options.fields[0]) {
+			console.log("no fields requested");
+			return '';
+		}
+
+		var tables = options.tables || options.table;
+		var fields = options.fields;
+		var left_joins = options.left_joins;
+		var groupBy    = options.group;
+
+		var conditions = options.conditions;
+		
+		var query = 'SELECT ' + fields.join(',');
+
+		if (tables) { query = query + ' FROM (' + tables.join(',') + ')' }
+		
+		if (left_joins) { query = query + ' LEFT JOIN ' + left_joins.join(' LEFT JOIN ') }
+		if (conditions) { query = query + ' WHERE ' + conditions.join(' AND ') }
+
+		if (groupBy) { query = query + ' GROUP BY ' + groupBy.join(',') }
+		
+		console.log("built query: " + query);
+		return query;
+	},
+
 	query_promise: function (query) {
 		// Wrapper for standard Record.query returning a promise //	
 		var deferred = q.defer();
