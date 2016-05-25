@@ -127,7 +127,13 @@ function wellController ($scope, $rootScope, $http, $q ) {
         );
         
         console.log("Sources: " + JSON.stringify($scope.sources));
-        console.log("NEW MAP: " + JSON.stringify($scope.Map));    
+        console.log("NEW MAP: " + JSON.stringify($scope.Map));
+        console.log("Xfer: ");
+        if ($scope.Map.Xfer) {
+            for (var i=0; i<$scope.Map.Xfer.length; i++) {
+                console.log(i = ': ' + JSON.stringify($scope.Map.Xfer));
+            } 
+        }
         // console.log(newMap.source_rows + " x " newMap.source_cols);
 
         console.log("NEW CMAP: " + JSON.stringify($scope.newMap.CMap));
@@ -137,20 +143,30 @@ function wellController ($scope, $rootScope, $http, $q ) {
     $scope.source_by_Col = function source_by_Col () {
         $scope.byCol = true;
         $scope.byRow = false;
+        $scope.fill_by = 'column';
         //$scope.sources = _.sortByNat($scope.sources, 'position');
-        $scope.sources = _.sortByNat($scope.sources, function(sample) { 
-            var string = sample.container.toString() + '_' + sample.position;
-            return string;
-        });
+
+        if (! $scope.ordered) {
+            $scope.sources = _.sortByNat($scope.sources, function(sample) {
+                var batch = sample.batch || 0; 
+                var string = batch.toString() + '_' + sample.position.substring(1,3) + '_' + sample.position.substring(0,1);
+                return string;
+            });
+        }
     }
 
     $scope.source_by_Row = function source_by_Row () {
         $scope.byCol = false;
         $scope.byRow = true;
-        $scope.sources = _.sortByNat($scope.sources, function(sample) { 
-            var string = sample.container.toString() + '_' + sample.position.substring(1,3) + '_' +sample.position.substring(0,1);
-            return string;
-        });
+        $scope.fill_by = 'row';
+        
+        if (! $scope.ordered) {
+            $scope.sources = _.sortByNat($scope.sources, function(sample) { 
+                var batch = sample.batch || 0;
+                var string = batch.toString() + '_' + sample.position;
+                return string;
+            });
+        }
     }
 
     $scope.reset_sources = function reset_sources () {
