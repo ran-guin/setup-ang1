@@ -42,11 +42,11 @@ module.exports = {
 		}
 	},
 
-	custom_defaults : [
-		pack 		:  	false,
-		pack_wells 	: 0,
+	custom_defaults : {
+		pack 		:  false,
+		pack_wells 	:  0,
 		fill_by 	: 'row',
 		split_mode	: 'parallel'
-	];
+	},
 };
 
