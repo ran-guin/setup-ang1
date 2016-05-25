@@ -38,7 +38,7 @@ block content
             
               div.col-sm-4
                 b &nbsp; Split X: 
-                input.input-lg(name='splitX' ng-model='splitX' type='number' size='5' tooltip="example")
+                input.input-lg(name='splitX' ng-model='splitX' type='text' size='3' default='1' tooltip="example")
 
             //p &nbsp;
               b Into: 
@@ -69,11 +69,39 @@ block content
                   b {{ split_mode }} : {{ splitExample }}
                   span ]
 
-              p &nbsp;
+            p &nbsp;
+              div(ng-show="split_mode != 'serial'")
+                b Pack/Transfer into available wells: 
+                input(type='radio' value = '1' ng-model='pack' ng-change='pack_wells()') 
+                b Yes &nbsp;
+                input(type='radio' value = '0' ng-model='pack' ng-change='pack_wells()') 
+                b No &nbsp;            
               div(ng-show="split_mode == 'serial'")
-                b Pack/Transfer samples in groups of: 
+                b Pack/Transfer into available wells in groups of: 
                 label
-                  input.input-lg(type='number' size="10" ng-model="pack_wells" ng-change="reset_split_mode()") 
+                  input.input-lg(name='pack_wells' type='text' size=6 ng-model="pack_wells") 
+
+            p &nbsp;
+              div.col-sm-4
+                b Target (optional): 
+                  label
+                    input.input(type='radio' value = 'Existing' ng-model="box_target")
+                    b &nbsp; Existing Box &nbsp;
+                  label
+                    input(type='radio' value = 'New' ng-model="box_target")
+                    b &nbsp; New Box &nbsp;   
+              div.col-sm-4
+                div(ng-show="box_target=='New'")                
+                  div.form-group
+                    input(type='radio' value = 'tube' ng-model='box_size') 
+                    b tube &nbsp;
+                    input(type='radio' value = '9x9' ng-model='box_size') 
+                    b 9x9 &nbsp;            
+                    input(type='radio' value = '8x12' ng-model='box_size') 
+                    b 8x12 &nbsp;
+                div(ng-show="box_target=='Existing'")
+                  input.input-lg(type='text' name='target_rack' size=6 ng-model='target_rack' ng-change="loadRack('Plate')" placeholder='Scan Loc#')            
+
             hr
 
             button.btn.btn-lg.btn-primary(type='button' ng-click="updateLookups(); redistribute()") Distribute
@@ -164,5 +192,6 @@ block content
               tr(ng-repeat="colour in colours") 
                   td(ng-repeat="hue in colourMap[colour]" style="background-color:#" + "{{hue}}" ) {{hue}}
 
+            b {{ Transfer }}
             hr
             b {{ sources }}
