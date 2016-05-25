@@ -119,26 +119,28 @@ module.exports = {
       Scanned = Barcode.parse(barcode);
 
       if (Scanned['Unformatted'] && Scanned['Unformatted'].length && ! Scanned['Unformatted'].match(/a-zA-Z/) ) {
-        console.log("** Matrix Barcode: ");
+        console.log("** Matrix Barcode Detected ** " + Scanned['Unformatted']);
 
-        var barcodes = barcode.split(/^.{10}/);
-        console.log("List: " + JSON.stringify(barcodes));
+        var Mbarcodes = Scanned['Unformatted'].match(/.{10}/);
+        console.log("List: " + JSON.stringify(Mbarcodes));
         
         var query = "Select FK_Plate__ID from Plate_Attribute,Attribute WHERE FK_Attribute__ID = Attribute_ID "
           + " AND Attribute_Name='Matrix_Barcode'"
-          + " AND Attribute_Value = '" + barcode + "'"; 
+          + " AND Attribute_Value IN ('" + Mbarcodes.join("','") + "')"; 
         console.log(query);
 
-        deferred.resolve(Scanned);
-
-        Record.query_promise(q)
+        Record.query_promise(query)
         .then ( function (result) {
           if (result.length) {
             console.log("R: " + JSON.stringify(result));
-            Scanned['Plate'].push(result[0]['FK_Plate__ID']);
-            //deferred.resolve(Scanned);
-          }
+            Scanned['Plate'].push(result[0]['FK_Plate__ID']);   // need to adjust slightly to accept multiple scanned barcodes ... 
             deferred.resolve(Scanned);
+          }
+          deferred.resolve(Scanned);
+        })
+        .catch (function (err) {
+            console.log("Error checking for Matrix Barcode");
+            deferred.reject(err);
         });
 
       }
