@@ -178,6 +178,36 @@ function wellMapper() {
 
     },
 
+    this.next_available = function (x, y, target_index) {
+        var next = this.next_position(x,y,target_index);
+        var position = next.x + next.y.toString();
+ 
+        if (this.target_boxes.length) {           
+            var available_list = this.available[this.target_boxes[next.target_index]];
+
+
+            if (available_list) {
+                
+                var tried = 0;
+                while ( tried <= 96 && available_list.indexOf(position) < 0 ) {
+                    console.log(position + " not available in box #" + JSON.stringify(this.target_boxes) );
+                    //console.log(next.target_index + " : " + JSON.stringify(available_list) + ' available in ' + JSON.stringify(this.target_boxes) );
+                    next = this.next_position(x,y,target_index);
+                    position = next.x + next.y.toString();
+                    available_list = this.available[this.target_boxes[next.target_index]];
+                    tried++;
+                }
+                return next;  // first available well for target 
+            }
+            else { 
+                return next;  // no specified list of available wells for this target
+            }
+        }
+        else {
+            return next;      // no target boxes supplied
+        }
+    },
+
     this.next_position = function (x, y, target_index) {
     	/* Get next available position */
         if (this.fill_by == 'Row') {
@@ -241,6 +271,10 @@ function wellMapper() {
         this.splitX = Options.split || Options.splitX || 1;
 
         console.log("Initialized:\nsplit = " + this.splitX + "\nfillBy = " + this.fill_by + "\npack = " + this.pack_wells + "\nmode = " + this.split_mode + "\ntarget_size = " + this.x_max + this.y_max+ "\n");
+    
+
+        this.target_boxes = Options.target_boxes || [];       // target box ids 
+        this.available = Options.available || {};   // hash of available wells keyed on target box ids
     }
 
     this.distribute = function ( sources, Target, Options ) {
@@ -249,7 +283,15 @@ function wellMapper() {
 //        
 //        sources: array of hashes - eg [ { id: 101, position: 'A1'}, { id: 102, position: 'A2'}]
 //        target : hash of specs - eg { Max_Row : 'A', Max_Col: 1 } 
-//        options: hash of options - eg { split : 2, mode: serial, pack: true }
+//        options: hash of options - eg { 
+//                  split : 2, 
+//                    mode: serial, 
+//                    pack: true, 
+//                    pack_wells: 8, 
+//                    qty: [array or static value], 
+//                    fill_by: column, 
+//                    target_boxes: [4]
+//                }
 //
 
         var Transfers = [];
@@ -295,9 +337,17 @@ function wellMapper() {
         var options = Object.keys(Options);
 
         for (var i=0; i<options.length; i++) {
+            console.log(i);
             var opt = Options[options[i]];
+
+            if (opt && opt.constructor === String && opt.match(/,/) ){
+                opt = opt.split(/\s*,\s*/);
+            }
+
+            console.log(options[i] + ":" + opt);
             if (opt && opt.constructor === Array) {
                 List[options[i]] = [];
+                console.log("options length = " + opt.length);
                 if (this.splitX > 1) {
                     if (this.split_mode === 'serial') {
                         for (k=0; k<sources.length; k++) {
@@ -314,8 +364,9 @@ function wellMapper() {
                         }
                     }
                 }
-                else {
+                else if (opt.length > 1) {
                     var repeat = sources.length / opt.length;
+                    console.log("repeat x " + repeat);
                     if (this.split_mode === 'serial') {
                         for (j=0; j<opt.length;j++) {
                             for (k=0; k<repeat; k++) {
@@ -331,16 +382,21 @@ function wellMapper() {
                         }                        
                     }                    
                 }
+                else {
+                    Static[options[i]] = opt[0];
+                    console.log("only one value in array - set to static value: " + opt[0]);
+                }
 
                 console.log("\n* Split " + options[i] + " to: " + JSON.stringify(List[options[i]]) );
             }
             else {
                 // single value only 
                 Static[options[i]] = opt;
-                console.log("\n* Static " + options[i] + ' = ' + opt);
+                console.log("\n* Static " + options[i] + ' = ' + JSON.stringify(opt));
             }
         }
 
+        console.log("Lists");
         var lists = Object.keys(List);
         var statics = Object.keys(Static);
 
@@ -415,7 +471,7 @@ function wellMapper() {
 
                         // next...
                         if (this.pack_wells) {
-                            var next = this.next_position(x,y,target_index);
+                            var next = this.next_available(x,y,target_index);
                             x = next.x;
                             y = next.y;
                             target_index = next.target_index;                                
@@ -439,7 +495,6 @@ function wellMapper() {
         return { Transfer : Transfer, TransferMap : Colour, Xfer: Xfer };
     }
 
-/*
     this.split_list = function split_list (field, input, options) {
         
         if (!options) { options = {} }
@@ -449,10 +504,9 @@ function wellMapper() {
  //       prefix = $scope.Prefix(field);
  //       split_mode = this.split_mode;  //$scope['split_mode' + $scope.stepNumber]
 
-
-        var prefix = options.prefix;                    // optional prefix characters for interpretting/separating multiple barcodes
-        var N        = options.count;
-        var split    = options.split || this.splitX;                  // splitting each source into N targets
+        var prefix   = options.prefix;                    // optional prefix characters for interpretting/separating multiple barcodes
+        var N        = options.count  || 1;
+        var split    = options.split || this.splitX || 1;                  // splitting each source into N targets
         var split_mode = options.split_mode || this.split_mode || 'parallel';  // serial=A,A,B,B,C,C; parallel = A,B,C,A,B,C
     
         var errors = [];
@@ -467,10 +521,12 @@ function wellMapper() {
         var Nx = N * split;
 
         if (input && input.match(/,/)) {
+            
             //$scope[field + '_split'] = input;
 
             //var prefix = $scope.Prefix(field);
             
+            var separator;
             if (prefix) { 
                 separator = prefix;
             }
@@ -496,10 +552,9 @@ function wellMapper() {
             }
 
 
-            if (prefix && (input_array.length > 1) && (input_array[0] == '')) { input_array.shift() }  // remove first element 
+            if (prefix && (input_array.length > 1) && (input_array[0] == '') ) { input_array.shift() }  // remove first element 
 
             console.log('test: ' + JSON.stringify(input_array) );
-
 
             var entered = input_array.length;
 
@@ -525,7 +580,8 @@ function wellMapper() {
             var offset = 0;
             var index = 0;
 
-            if (split_mode.match(/Serial/i) {
+
+            if ( split_mode.match(/Serial/) ) {
                 for (var i=0; i<Nx; i++) {
                     array[i] = input_array[index];
                     offset++;
@@ -563,13 +619,14 @@ function wellMapper() {
             }
    
             return array;
+            
+            
         }
         else { console.log('not multiple values...') }
 
         console.log(input + '->' + list);
         //console.log("\n** SPLIT: " + $scope[field] + ' OR ' + $scope[field + '_split']);   
     }
-*/
 
     this.testMap = function (sources, Target, Options) {
         // used simply to generate easily testable strings showing sample distributions
