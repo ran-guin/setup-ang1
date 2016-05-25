@@ -44,7 +44,7 @@
   "scripts": {
     "debug": "node debug app.js",
     "start": "node app.js",
-    "test": "mocha --recursive --reporter spec -t 5000"
+    "test": "mocha --recursive --reporter spec -t 5000 test/integration"
   },
   "main": "app.js",
   "repository": {
