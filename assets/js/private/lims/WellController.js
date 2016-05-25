@@ -55,6 +55,9 @@ function wellController ($scope, $rootScope, $http, $q ) {
         };             
         $scope.packExample = $scope.packExamples[$scope.pack_mode];
 
+        // initialize variables to track available wells if applicable in target boxes.
+        $scope.target_boxes = [];
+        $scope.available = {};
 
         console.log("INIT Map");
         $scope.redistribute();
@@ -115,6 +118,11 @@ function wellController ($scope, $rootScope, $http, $q ) {
             { 
                 fillBy: $scope.fill_by, 
                 pack: $scope.pack_wells,
+                split: $scope.splitX,
+                target_boxes: $scope.target_boxes,
+                available: $scope.available,
+                qty: $scope.transfer_qty,
+                qty_units : $scope.transfer_qty_label,
             }
         );
         
@@ -160,6 +168,29 @@ function wellController ($scope, $rootScope, $http, $q ) {
         }
          
         console.log("Targets: " + JSON.stringify($scope.targets));        
+    }
+
+    $scope.loadRack = function (model) {
+        // get available wells 
+        var rack_id = $scope.target_rack;
+        console.log("Load rack " + rack_id);
+        if (rack_id) {
+            var data = { id: rack_id };
+            console.log("SEND: " + JSON.stringify(data));
+
+            $http.post("/Rack/boxData", data)
+            .then (function (returnData) {
+                console.log("rack data: " + JSON.stringify(returnData));
+
+                // define target boxes (only handles one for now ... )
+                $scope.target_boxes = [rack_id];
+                $scope.available[rack_id] = returnData.available_wells;
+            })
+            .catch (function (err) {
+                console.log("Error loading Rack info: " + JSON.stringify(err) );
+            });
+        }
+
     }
 
     $scope.testXfer = function testXfer () {
