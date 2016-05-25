@@ -151,6 +151,10 @@ block content
               tr
                 td(style='width:50%')
                   h2 Source Samples:
+                  ul
+                    li(ng-repeat="source in sources")
+                      b id={{source.id}} posn={{source.position}}
+
                   table
                     tr
                       th &nbsp;
@@ -161,6 +165,9 @@ block content
                         span(data-toggle="tooltip" title="{{sources[$parent.$index*source_cols.length + $index].id}}") &nbsp; &nbsp; &nbsp;
                 td(style='width:50%')
                   h2 Target Samples:
+                  ul
+                    li(ng-repeat="xfer in Map.Xfer")
+                      b {{xfer.source_position}} -> {{xfer.target_position}} : id={{xfer.source_id}} [ {{xfer.qty}} {{xfer.qty_units}}]
 
                   - var i = 0;
                   each plate in targets
