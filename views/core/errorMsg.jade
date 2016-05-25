@@ -1,7 +1,8 @@
 if message || sails.config.message
   p &nbsp;
   div.alert.alert-success
-    i.fa.fa-check 
+    i.fa.fa-check
+    span &nbsp; 
     strong
       if message
         span #{message}
@@ -10,7 +11,6 @@ if message || sails.config.message
         b #{sails.config.message}
           a(href="#" class="close" data-dismiss="alert" aria-label="close") &times;
 if errors || errorMsg || sails.config.errorMsg
-  p &nbsp;
   div.alert.alert-danger
     i.fa.fa-warning 
     strong &nbsp; Error: &nbsp;
@@ -23,7 +23,6 @@ if errors || errorMsg || sails.config.errorMsg
     a(href="#" class="close" data-dismiss="alert" aria-label="close") &times;
 
 if warnings || warningMsg || sails.config.warningMsg
-  p &nbsp;
   div.alert.alert-warning
     i.fa.fa-warning 
     strong 
