@@ -20,9 +20,10 @@ module.exports = {
 			type : 'boolean',
 			defaultsTo : false,
 		},
-		input_options : { type : 'string'},
+		input_options : { type : 'string'},  // may include split or hidden options:  pack_wells / fill_by / split_mode
 		input_format : { type : 'string'},
 		input_defaults : { type : 'string'},
+		custom_settings : { type : 'string'}, // reset custom_defaults as specified eg: 'pack_wells=8; fill_by=column; split_mode=serial; '
 
 		prompt : { 
 			type : 'boolean',
@@ -39,6 +40,13 @@ module.exports = {
 			type : 'boolean',
 			defaultsTo: false,
 		}
-	}  
+	},
+
+	custom_defaults : [
+		pack 		:  	false,
+		pack_wells 	: 0,
+		fill_by 	: 'row',
+		split_mode	: 'parallel'
+	];
 };
 
