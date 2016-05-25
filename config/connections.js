@@ -40,12 +40,20 @@ module.exports.connections = {
   * Run: npm install sails-mysql                                             *
   *                                                                          *
   ***************************************************************************/
-  mysqlDB: {
+  testDB: {
     adapter: 'sails-mysql',
     host:     process.env.MYSQL_HOST,
-    user:     process.env.DEFAULT_MYSQL_USER,
-    password: process.env.DEFAULT_MYSQL_PASSWORD,
-    database: process.env.DEFAULT_MYSQL_DATABASE
+    user:     process.env.MYSQL_USER,
+    password: process.env.MYSQL_PASSWORD,
+    database: process.env.MYSQL_DATABASE
+  },
+  
+  productionDB: {
+    adapter: 'sails-mysql',
+    host:     process.env.TEST_MYSQL_HOST,
+    user:     process.env.TEST_MYSQL_USER,
+    password: process.env.TEST_MYSQL_PASSWORD,
+    database: process.env.TEST_MYSQL_DATABASE
   },
 
   /***************************************************************************

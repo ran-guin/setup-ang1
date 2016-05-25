@@ -76,4 +76,4 @@ Mix & Digest	22	3	Suspend pellet in FG2 buffer/protease, invert 3 times, heat at
 Precipitate & Centrifuge	22	4	Precipitate DNA with isopropanol and centrifuge @2000 xg for 3 min		0	0	0	location			1	NULL	41	0	94	2016-04-18 07:00:00	2016-04-18 07:00:00
 Wash Pellet	22	5	Wash DNA Pellet with 70% ethanol		0	0	0	DNA_Wash_Cycles		2	1	NULL	41	0	95	2016-04-18 07:00:00	2016-04-18 07:00:00
 Suspend DNA in buffer	22	6	Suspend DNA in 300 ul of TE pH 8.0 buffer		0	0	0	solution:solution_qty			1	NULL	41	0	96	2016-04-18 07:00:00	2016-04-18 07:00:00
-Transfer DNA to 0.5 ml Matrix Tube	22	7			27	0	0	location:comments		0.3 ml	1	Transfer	41	0	97	2016-04-18 07:00:00	2016-04-18 07:00:00
+Transfer DNA to 0.5 ml Matrix Tube	22	7			27	0	0	transfer_qty:location:comments		0.3 ml	1	Transfer	41	0	97	2016-04-18 07:00:00	2016-04-18 07:00:00
