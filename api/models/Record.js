@@ -31,6 +31,8 @@ module.exports = {
 		var fields = options.fields;
 		var left_joins = options.left_joins;
 		var groupBy    = options.group;
+		var orderBy    = options.order;
+		var limit      = options.limit;
 
 		var conditions = options.conditions;
 		
@@ -42,7 +44,9 @@ module.exports = {
 		if (conditions) { query = query + ' WHERE ' + conditions.join(' AND ') }
 
 		if (groupBy) { query = query + ' GROUP BY ' + groupBy.join(',') }
-		
+		if (orderBy) { query = query + ' ORDER BY ' + orderBy.join(',') }
+		if (limit) { query = query + ' LIMIT ' + limit }
+
 		console.log("built query: " + query);
 		return query;
 	},
