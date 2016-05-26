@@ -56,7 +56,10 @@ module.exports = {
 		var deferred = q.defer();
 
 		Record.query(query, function (err, result) {
-			if (err) { deferred.reject(err) }
+			if (err) { 
+				console.log("query promise error: " + err);
+				deferred.reject(err);
+			}
 			else { deferred.resolve(result) }
 		});
 
@@ -264,12 +267,16 @@ module.exports = {
 
 					var addData = _.clone(sourceData[id]);
 					for (var j=0; j<resetFields.length; j++) {
-						var value = resetData[resetFields[j]] || '';
-						console.log(Index[id] + " v: " + resetFields[j] + ' = ' + value);
+						var value = resetData[resetFields[j]];
+
 						var setValue = value;
 
-
-						if (value && value.constructor === Object && value[id] )  {
+						if (value === undefined) { setValue = value }
+						else if (value && value.constructor === Array ) {
+							if (value.length == 1) { setValue = value[0] }
+							else { setValue = value[i] }
+						}
+						else if (value && value.constructor === Object && value[id] )  {
 							if (value[id].constructor === Array ) {
 								setValue = value[id][Index[id]];  // multiple values supplied ... one for each duplicate ... 
 							}
@@ -277,23 +284,35 @@ module.exports = {
 								setValue = value[id];
 							}
 						}
-						else if ( value == '<id>' ) {
-							setValue = id;
-						}
-						else if (value.constructor === String ) {
+						else {
 							setValue = value;
-							console.log('(constant)');
+						}
+						
+						if (setValue && setValue.constructor === String) {
+
+							if (setValue == '<id>') { setValue = id }
+
+							else {	
+								var parentRefs = setValue.match(/<PARENT\..*>/i);
+								if (parentRefs) {
+									for (var k=0; k<parentRefs.length; k++) {
+										var ref = parentRefs[k].replace(/^<PARENT\./i,'').replace(/>$/,'');
+
+										var val = sourceData[id][ref];
+										setValue = setValue.replace(parentRefs[k], val);
+									}
+								}
+							}
 						}
 
-						addData[resetFields[j]] = setValue;
-						console.log(id + ': ** Record RESET ' + resetFields[j] + ' to ' + setValue);
+						//if (value != undefined) { 
+							addData[resetFields[j]] = setValue;
+						//}
 					}
 
-					console.log(id + " Cloned : " + JSON.stringify(addData));
+					console.log(table + ' ' + id + " Cloned : " + JSON.stringify(addData));
 					newData.push(addData);
 				}
-
-				console.log("\nNew Data: " + JSON.stringify(newData));
 
 				Record.createNew(table, newData)
 				.then (function (newResponse) {
@@ -335,7 +354,7 @@ module.exports = {
 		console.log(JSON.stringify(data));
 
 		var deferred = q.defer();
-		deferred.resolve({ warnings: 'Need to add method... also store change history if applicable'});
+		deferred.resolve({ warnings: 'Need to add method... '});
 
 		return deferred.promise;
 	},	
@@ -346,10 +365,10 @@ module.exports = {
 		var deferred = q.defer();
 		//console.log("\ncreate new record(s) in " + table);
 
-		if (Tdata == 'undefined') { deferred.reject('no data'); return deferred.promise }
+		if (Tdata === undefined) { deferred.reject('no data'); return deferred.promise }
 
 		var data = [];
-		if (Tdata.length == undefined) { data = [Tdata] }
+		if (Tdata.constructor === Object) { data = [Tdata] }
 		else { data = Tdata }
 
 		var fields = Object.keys(data[0]);
@@ -357,41 +376,54 @@ module.exports = {
 		var Values = [];
 		var onDuplicate = '';
 
+		console.log("insertion data: " + JSON.stringify(data));
+		
 		for (var index=0; index<data.length; index++) {
 			var Vi = [];
 			for (var f=0; f<fields.length; f++) {
 				var value = data[index][fields[f]];
-				if (value === 'NULL') {
+				if (value === 'NULL' ||  value === undefined) {
 					value = null;
 				}
-
+			
 				var noQuote = 0;
 				if (typeof value == 'number') { value = value.toString() }
 
-				if (value == null) {}
-				else if (value.match(/^<user>$/i)) {
-					value = sails.config.payload.userid; 
-					console.log("replacing <user> with " + value);
+				if (value === null) { }			
+				else if (value.constructor === String) {
+					if (value.match(/^<user>$/i)) {
+						value = sails.config.payload.userid; 
+						console.log("replacing <user> with " + value);
+					}
+					else if (value.match(/^<increment>$/i)) {
+						value = 1;
+						onDuplicate = " ON DUPLICATE KEY UPDATE " + fields[f] + "=" + fields[f] + " + 1";
+						console.log("replacing <increment> with SQL ");
+					}
+					else if (value.match(/^<now>$/i)) {
+						value = 'NOW()'; 
+						console.log("replacing <now> with " + value);
+						noQuote = 1;
+					}
+					else if (value.match(/^<today>$/i)) {
+						value = 'CURDATE()'; 
+						console.log("replacing <today> with " + value);
+						noQuote = 1;
+					}
+					else if (value.match(/^<.*>$/)) {
+						value = value.replace(/^</,'');
+						value = value.replace(/>$/,'');
+						console.log("SQL statement detected: " + value);
+						noQuote = 1;
+					}
 				}
-				else if (value.match(/^<increment>$/i)) {
-					value = 1;
-					onDuplicate = " ON DUPLICATE KEY UPDATE " + fields[f] + "=" + fields[f] + " + 1";
-					console.log("replacing <increment> with SQL ");
-				}
-				else if (value.match(/^<now>$/i)) {
-					value = 'NOW()'; 
-					console.log("replacing <now> with " + value);
-					noQuote = 1;
-				}
-				else if (value.match(/^<today>$/i)) {
-					value = 'CURDATE()'; 
-					console.log("replacing <today> with " + value);
-					noQuote = 1;
+				else if (value && value.constructor === Date) {
+					value = JSON.stringify(value);
+					noQuote=1;
 				}
 
 				if (resetData && resetData[fields[f]]) {
 					var resetValue = resetData[fields[f]];
-					console.log("** RESET (std) " + fields[f] + " to " + resetValue); 
 
 					if (resetValue == '<NULL>') {
 						Vi.push('null');
@@ -420,16 +452,19 @@ module.exports = {
 		}
 
 		var createString = "INSERT INTO " + table + " (" + fields.join(',') + ") VALUES " + Values.join(', ') + onDuplicate;
-		console.log("\nInsert String: " + createString);
+		console.log("\nNew Insert String: " + createString);
 
-		Record.query(createString, function (err, result) {
-			if (err) { deferred.resolve({error : "Error creating new record(s): " + err}) }
-			else {
-				var insertId = result.insertId;
-				deferred.resolve(result);
-			}
+		Record.query_promise(createString)
+		.then ( function (result) {
+			var insertId = result.insertId;
+			deferred.resolve(result);
+		})
+		.catch ( function (err) {
+			console.log("Cloning error: " + err);
+			deferred.reject({error : "Error creating new record(s): " + err}) 
+
 		});
-		
+
 		return deferred.promise;
 	},
 
