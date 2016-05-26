@@ -331,7 +331,7 @@ module.exports = {
 		console.log(JSON.stringify(data));
 
 		var deferred = q.defer();
-		deferred.resolve({ warnings: 'Need to add method... '});
+		deferred.resolve({ warnings: 'Need to add method... also store change history if applicable'});
 
 		return deferred.promise;
 	},	
