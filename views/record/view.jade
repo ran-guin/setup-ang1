@@ -2,7 +2,9 @@ extends ./../customize/privateLayout
 block content
   div.container
     form
-        h2 selected '#{table}' Record(s)
+        h2 {table} Record(s)
+        h4 ID: #{id} 
+            a(href="/record/edit/#{table}/#{id}") Edit
 
         - var debug = 0;
 
