@@ -43,8 +43,8 @@ module.exports = {
 		if (left_joins) { query = query + ' LEFT JOIN ' + left_joins.join(' LEFT JOIN ') }
 		if (conditions) { query = query + ' WHERE ' + conditions.join(' AND ') }
 
-		if (groupBy) { query = query + ' GROUP BY ' + groupBy.join(',') }
-		if (orderBy) { query = query + ' ORDER BY ' + orderBy.join(',') }
+		if (groupBy && groupBy.length) { query = query + ' GROUP BY ' + groupBy.join(',') }
+		if (orderBy && orderBy.length) { query = query + ' ORDER BY ' + orderBy.join(',') }
 		if (limit) { query = query + ' LIMIT ' + limit }
 
 		console.log("built query: " + query);
