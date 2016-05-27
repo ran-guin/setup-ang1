@@ -17,7 +17,13 @@ module.exports = {
 		wells : { type : 'integer' },
 		description : { type : 'string' }
 */
-	}
+	},
+
+	alias: {
+		'id' : 'Plate_Format_ID',
+		'name' : 'Plate_Format_Type'
+	},
+
 
 };
 
