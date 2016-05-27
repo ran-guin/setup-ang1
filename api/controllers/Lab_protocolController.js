@@ -74,7 +74,6 @@ module.exports = {
 					var name = result[i]['name'];
 					var id   = result[i]['id'];
 					
-					console.log('include ' + name);
 					List.push({id : id, name: name});
 			}
 
