@@ -209,7 +209,7 @@ module.exports = {
 			}
 
 			else {
-				console.log("Found " + result.length + " active Protocols");
+				console.log("Found " + result.length + " Active Protocols");
 
 				for (var i=0; i<result.length; i++) {
 					var name = result[i]['Lab_Protocol_Name'];
