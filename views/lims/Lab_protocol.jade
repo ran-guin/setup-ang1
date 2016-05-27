@@ -1,17 +1,16 @@
 extends ./../customize/privateLayout
 block content
 
-  .header
-    h1(id="main-title" class="container") BC Generations 
   div.container
-    h3 List of the Steps:
-      ul
-        each step,i in steps
-          - name = step.name;
-          - message = step.message;
-          
-          li 
-            a(href="/Lab_protocol/#{name}") #{name} 
-              i [ #{message} ] 
+    h3 Protocol Steps:
+    ul
+      each step,i in steps
+        - name = step.name;
+        - id   = step.id;
+        - message = step.message;
+        
+        li 
+          a(href="/record/view/protocol_step/#{id}") #{name} 
+            i [ #{message} ] 
 
       
