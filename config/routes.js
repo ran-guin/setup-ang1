@@ -87,6 +87,8 @@ module.exports.routes = {
   'GET /record/edit/:model/:id': 'RecordController.edit',
   'POST /record/edit/:model/:id': 'RecordController.update',
 
+  'POST /record/save' : 'RecordController.save',
+
   'GET /lookup/:table/:fields' : 'RecordController.lookup',
   'GET /lookup/:table' : 'RecordController.lookup',
   'GET /attribute/:model/:attribute' : 'AttributeController.prompt',
