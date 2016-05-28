@@ -13,7 +13,7 @@ app.factory('CommonFactory', function($rootScope, $http){
     var model = options.model || table;
     var elementId    = options.elementId || table;   // optional elementId to replace table 
 
-    var prompt = options.prompt || 'Select';
+    var prompt = options.prompt;
     var def = options.default;
     var condition = options.condition || '';
     console.log("URL: " + url);
