@@ -9,6 +9,8 @@ module.exports = {
 
 	migrate: 'safe',
 	tableName: 'Plate_Format',
+	tableAlias: 'Container Format',
+	
 	/** LEGACY **/
 
 	attributes: {
@@ -23,6 +25,8 @@ module.exports = {
 		'id' : 'Plate_Format_ID',
 		'name' : 'Plate_Format_Type'
 	},
+
+	lookupCondition : "Plate_Format_Status = 'Active'",
 
 
 };
