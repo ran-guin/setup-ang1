@@ -72,7 +72,9 @@ app.controller('CommonController',
     	}
 
         // Automatically Load Lookup Files //
-        $scope.loadLookup = function loadLookup(table, labels, prompt, condition) {
+        $scope.loadLookup = function loadLookup(model, labels, prompt, condition) {
+
+            var table = model;
          
         	var url = "/lookup/" + table + '/';
 
