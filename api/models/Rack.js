@@ -24,7 +24,7 @@ module.exports = {
 
   subtypes : ['Shelf','Rack','Box','Slot'],
 
-  sizes : {
+  wells : {
     '1x1' : ['A1'],
     '9x9' : [
       'A1', 'A2', 'A3', 'A4', 'A5', 'A6', 'A7', 'A8', 'A9',
