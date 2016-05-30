@@ -76,7 +76,7 @@ module.exports = {
 
 			console.log("BODY: " + JSON.stringify(req.body));
 			Sources = JSON.parse(req.body.Samples);
-			target_format_id = req.body['Plate_Format-id'];
+			target_format_id = req.body['container_format-id'];
 			split = req.body.split;
 		}
 		else { 
@@ -113,9 +113,11 @@ module.exports = {
 		Record.query_promise("SELECT * FROM Plate_Format WHERE Plate_Format_ID = " + target_format_id)
 		.then ( function (result) {
 			if (result.length == 1) {
+
+				var sizes = Object.keys(Rack.wells);
 				return res.render(
 					'lims/WellMap', 
-					{ sources: Sources, target: result[0], options : { split : split } }
+					{ sources: Sources, target: result[0], options : { split : split }, sizes: sizes, wells: Rack.wells }
 				);
 			}
 			else {
