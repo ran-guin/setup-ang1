@@ -110,19 +110,24 @@ function wellController ($scope, $rootScope, $http, $q ) {
 
             $scope.newMap = newMap;
         }  
-           
+
         // recalculate mapping //
         $scope.Map = $scope.newMap.distribute(
             $scope.sources, 
-            { Max_Row : $scope.Max_Row, Max_Col : $scope.Max_Col},
-            { 
-                fillBy: $scope.fill_by, 
-                pack: $scope.pack_wells,
-                split: $scope.splitX,
-                target_boxes: $scope.target_boxes,
-                available: $scope.available,
+            {
                 qty: $scope.transfer_qty,
                 qty_units : $scope.transfer_qty_label,
+            },
+            { 
+                Max_Row : $scope.Max_Row, 
+                Max_Col : $scope.Max_Col,
+                fillBy : $scope.fill_by, 
+                pack : $scope.pack,
+                pack_wells : $scope.pack_wells,
+                split : $scope.splitX,
+                target_size : $scope.box_size,
+                target_boxes : $scope.target_boxes,
+                available : $scope.available,
             }
         );
         
@@ -137,6 +142,8 @@ function wellController ($scope, $rootScope, $http, $q ) {
         // console.log(newMap.source_rows + " x " newMap.source_cols);
 
         console.log("NEW CMAP: " + JSON.stringify($scope.newMap.CMap));
+        console.log("Source Colour Map: " + JSON.stringify($scope.Map.SourceColours))
+        console.log("Target Colour Map: " + JSON.stringify($scope.Map.ColourMap))
 
     }
 
@@ -189,6 +196,8 @@ function wellController ($scope, $rootScope, $http, $q ) {
     $scope.loadRack = function (model) {
         // get available wells 
         var rack_id = $scope.target_rack;
+        var size    = $scope.target_size;
+
         console.log("Load rack " + rack_id);
         if (rack_id) {
             var data = { id: rack_id };
@@ -204,6 +213,15 @@ function wellController ($scope, $rootScope, $http, $q ) {
             })
             .catch (function (err) {
                 console.log("Error loading Rack info: " + JSON.stringify(err) );
+            });
+        } 
+        else if (size) {
+            $http.get('/Rack/wells')
+            .then ( function (wells) {
+                $scope.available['0'] = wells; 
+            })
+            .catch ( function (wells) {
+                console.log("Error retrieving available wells");
             });
         }
 
