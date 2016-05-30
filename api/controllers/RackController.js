@@ -34,5 +34,46 @@ module.exports = {
 		return deferred.promise;
 	},
 
+	wells: function (req, res) {
+		var size = req.param('size');
+		var fillBy = req.param('fillBy') || 'row';
+
+		var wellMap = Rack.wells;
+		var wells = [];
+		if (size && wellMap[size] && fillBy.match(/row/i) ) {
+			for (var i=0; i<wellMap[size].length; i++) {
+				for (j=0; j<wellMap[size][i].length; j++) {
+					wells.push(wellMap[size][i][j]);
+					console.log(i+j);
+				}
+			}
+			console.log("wells: " + wells.join(','));
+		}
+		else if (size && wellMap[size]) {			
+			console.log(JSON.stringify(wellMap));
+			for (var i=0; i<wellMap[size][0].length; i++) {
+				for (j=0; j<wellMap[size].length; j++) {
+					wells.push(wellMap[size][j][i]);
+					console.log(i+j);
+				}
+			}
+			console.log("Wells: " + wells.join(','));
+		}
+		else {
+			console.log("no size or mapping");
+			wells = ['A1'];
+		}
+
+
+		console.log("Retrieved: " + JSON.stringify(wells));
+		if (wellMap[size]) { 
+			return res.json(wells); 
+		}
+		else {
+			console.log("Could not retrieve wells for: " + size );
+			return res.json(wells);
+		}
+	}
+
 };
 
