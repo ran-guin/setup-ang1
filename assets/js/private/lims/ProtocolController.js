@@ -224,11 +224,6 @@ function protocolController ($scope, $rootScope, $http, $q) {
 
         if ($scope.transfer_type) {
 
-            var Target = { 
-                'format' : $scope.Step.Target_format,
-                'sample_type'   : $scope.Step.Target_sample,
-                'transfer_type' : $scope.Step.transfer_type,
-            };
 
 
             var qty = $scope['transfer_qty' + $scope.stepNumber];
@@ -237,14 +232,20 @@ function protocolController ($scope, $rootScope, $http, $q) {
             }  
 
             console.log("Q = " + JSON.stringify(qty));
+            
+            var Target = { 
+                'format' : $scope.Step.Target_format,
+                'sample_type'   : $scope.Step.Target_sample,
+                'qty'               : qty,
+                'qty_units'     : $scope['transfer_qty_units' + $scope.stepNumber + '_label'],
+            };
 
             var Options = {
+                'transfer_type' : $scope.Step.transfer_type,
                 'reset_focus'   : $scope.Step.reset_focus,
                 'split'         : $scope['Split' + $scope.stepNumber],
                 'pack'          : $scope.pack_wells,
                 'distribution_mode' : $scope['distribution_mode' + $scope.stepNumber],
-                'qty'               : qty,
-                'qty_units'     : $scope['transfer_qty_units' + $scope.stepNumber + '_label'],
             }
 
             console.log("Distribute: ");
