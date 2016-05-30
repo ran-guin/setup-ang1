@@ -57,7 +57,8 @@ module.exports = {
 
 		Record.query(query, function (err, result) {
 			if (err) { 
-				console.log("query promise error: " + err);
+				console.log("query promise error: " + query);
+				console.log(err);
 				deferred.reject(err);
 			}
 			else { deferred.resolve(result) }
@@ -457,6 +458,7 @@ module.exports = {
 		Record.query_promise(createString)
 		.then ( function (result) {
 			var insertId = result.insertId;
+			sails.config.messages.push(table + ' record added: ' + insertId);
 			deferred.resolve(result);
 		})
 		.catch ( function (err) {
