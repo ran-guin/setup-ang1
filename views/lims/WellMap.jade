@@ -77,11 +77,11 @@ block content
               div.col-sm-6
                 div(ng-show="box_target=='New'")                
                   div.form-group
-                    input(type='radio' value = 'tube' ng-model='box_size') 
+                    input(type='radio' value = 'tube' ng-model='box_size' ng-click="update_target_size()") 
                     b &nbsp; Tube &nbsp;
-                    input(type='radio' value = '9x9' ng-model='box_size') 
+                    input(type='radio' value = 'ix9' ng-model='box_size' ng-click="update_target_size()") 
                     b &nbsp; 9x9 &nbsp;            
-                    input(type='radio' value = '8x12' ng-model='box_size') 
+                    input(type='radio' value = 'Hx12' ng-model='box_size' ng-click="update_target_size()") 
                     b &nbsp; 8x12 &nbsp;
                 div(ng-show="box_target == 'Existing'")
                   input.input-lg(type='text' name='target_rack' size=12 ng-model='target_rack' ng-change="loadRack('Plate')" placeholder='-- Scan Loc# --')
@@ -121,6 +121,8 @@ block content
               tr
                 td(style='width:50%')
                   h2 Source Samples:
+                  include SourceMap.jade
+                  hr
                   ul
                     li(ng-repeat="source in sources")
                       b id={{source.id}} posn={{source.position}}
@@ -135,6 +137,8 @@ block content
                         span(data-toggle="tooltip" title="{{sources[$parent.$index*source_cols.length + $index].id}}") &nbsp; &nbsp; &nbsp;
                 td(style='width:50%')
                   h2 Target Samples:
+                  include TargetMap.jade
+                  hr
                   ul
                     li(ng-repeat="xfer in Map.Xfer")
                       b {{xfer.source_position}} -> {{xfer.target_position}} : id={{xfer.source_id}} [ {{xfer.qty}} {{xfer.qty_units}}]
