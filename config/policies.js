@@ -39,6 +39,10 @@ module.exports.policies = {
 	'*' : true,
   },
  
+  'rack' : { 
+    'wells' : true, 
+  }, 
+
   /*
   session: {
       'create' : true,
