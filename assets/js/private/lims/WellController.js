@@ -59,6 +59,8 @@ function wellController ($scope, $rootScope, $http, $q ) {
         $scope.target_boxes = [];
         $scope.available = {};
 
+        console.log("SIZES: " + JSON.stringify($scope.sizes));
+
         console.log("INIT Map");
         $scope.redistribute();
     }
@@ -93,6 +95,10 @@ function wellController ($scope, $rootScope, $http, $q ) {
     }
 
     $scope.redistribute = function redistribute () {
+
+        $scope.updateLookups();
+        $scope.loadWells();
+
         if (! $scope.newMap) {
             // initiate mapping //
             var newMap = new wellMapper();
@@ -147,6 +153,7 @@ function wellController ($scope, $rootScope, $http, $q ) {
 
     }
 
+    // Fill for sources only ... may not be necessary ... 
     $scope.source_by_Col = function source_by_Col () {
         $scope.byCol = true;
         $scope.byRow = false;
@@ -193,13 +200,14 @@ function wellController ($scope, $rootScope, $http, $q ) {
         console.log("Targets: " + JSON.stringify($scope.targets));        
     }
 
-    $scope.loadRack = function (model) {
+    $scope.loadWells = function (model) {
         // get available wells 
         var rack_id = $scope.target_rack;
-        var size    = $scope.target_size;
+        var size    = $scope.box_size;
+        var fill_by = $scope.fill_by;
 
-        console.log("Load rack " + rack_id);
         if (rack_id) {
+            console.log("Load rack " + rack_id);
             var data = { id: rack_id };
             console.log("SEND: " + JSON.stringify(data));
 
@@ -216,9 +224,12 @@ function wellController ($scope, $rootScope, $http, $q ) {
             });
         } 
         else if (size) {
-            $http.get('/Rack/wells')
+            console.log("choose size: " + size);
+            $http.get('/Rack/wells?size=' + size + '&fillBy=' + fill_by)
             .then ( function (wells) {
-                $scope.available['0'] = wells; 
+                console.log("loaded wells: " + JSON.stringify(wells));
+                $scope.available['0'] = wells.data;
+                console.log("GOT : " + JSON.stringify($scope.available)); 
             })
             .catch ( function (wells) {
                 console.log("Error retrieving available wells");
