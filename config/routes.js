@@ -82,9 +82,9 @@ module.exports.routes = {
   'POST /record/list' : 'RecordController.list',    
   'GET /record/view/:model/:id' : 'RecordController.view',
   
-  'GET /record/add/:model': 'RecordController.new',
-  'POST /record/add/:model': 'RecordController.add',
-  'GET /record/edit/:model/:id': 'RecordController.edit',
+  'GET /record/add/:model': 'RecordController.form',
+  'POST /record/add/:model': 'RecordController.save',
+  'GET /record/edit/:model/:id': 'RecordController.form',
   'POST /record/edit/:model/:id': 'RecordController.update',
 
   'POST /record/save' : 'RecordController.save',
