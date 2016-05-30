@@ -14,7 +14,7 @@ module.exports = {
 
 	// eg model access control, field descriptions .... anything not handled intrisically by the existing model 
 
-
+/*
 	new: function (req, res) { 
 		var model = req.param('model');
 
@@ -47,7 +47,7 @@ module.exports = {
 				var Fields = [];
 				for (var i=0; i<result.length; i++) {
 					var fld = result[i]['Field'];
-					var type = result[i]['Type'];
+					var type = result[i]['Type'] || 'undefined';
 					var options = [];
 					var lookup = {};
 
@@ -58,6 +58,11 @@ module.exports = {
 	                            type = 'enum';
 	                          	options = recordModel.attributes[fld]['enum'];
 	                        } 
+	                        else if (recordModel.attributes[fld]['type'] == 'boolean') {
+	                            type = 'boolean';
+	                          	//options = recordModel.attributes[fld]['enum'];
+	                        } 
+
 	                    }
 	                    else if (recordModel.attributes[fld]['collection']) {
 	                        type = 'list link';
@@ -82,7 +87,7 @@ module.exports = {
 			}
 		);
 	},
-
+/*
 	add: function (req, res) {
 		
 		var table;
@@ -114,10 +119,96 @@ module.exports = {
 			console.log('Data: ' + JSON.stringify(data));
 		});
 	},
+*/
 
-	edit: function (req, res) {
-		console.log("Edit...");
-		return res.send("EDIT FORM");
+	// same as new ... should combine... 
+	form: function (req, res) {
+		var model = req.param('model');
+
+		console.log("Edit " + model);
+		// Record specific data 
+		var table = req.param('table') || model;
+		var id    = req.param('id');
+		var condition = req.param('condition') || '1';
+
+		if (id) { condition = condition + " AND " + table + '.id' + "=" + id }
+
+		//
+			
+		console.log("retrieving " + model + ' model');
+		var table = sails.models[model].tableName || model;
+
+		Record.query("desc " + table, 
+			function (err, result) {
+				if (err) {
+					return res.negotiate(err);
+	     		}
+
+				if (!result) {
+					console.log('no record results');
+					return res.send('');
+				}
+
+				if ( sails.models[model] && sails.models[model]['attributes']['role'] && sails.models[model]['attributes']['role']['xdesc']) {
+					console.log('load extra info...' + sails.models[model]['attributes']['role']['xdesc'])
+				}
+
+				var recordModel;
+				console.log("check for model: " + model + " : " + table);
+				if (sails.models[model]) {
+					console.log(model + ' Access: ' + sails.models[model]['access']);
+					console.log("MODEL:cp  " + sails.models[model]);
+					recordModel = sails.models[model];
+				}
+
+				var Fields = [];
+				for (var i=0; i<result.length; i++) {
+					var fld = result[i]['Field'];
+					var type = result[i]['Type'] || 'undefined';
+					var options = [];
+					var lookup = {};
+
+					console.log("Field: " + fld + ": " + type);
+					if (recordModel && recordModel.attributes  && recordModel.attributes[fld]) {
+					    if (recordModel.attributes[fld]['type']) {
+	                        if (recordModel.attributes[fld]['enum']) {
+	                            type = 'enum';
+	                          	options = recordModel.attributes[fld]['enum'];
+	                        } 
+	                        else if (recordModel.attributes[fld]['type'] == 'boolean') {
+	                            type = 'boolean';
+	                          	//options = recordModel.attributes[fld]['enum'];
+	                        } 
+	                    }
+	                    else if (recordModel.attributes[fld]['collection']) {
+	                        type = 'list link';
+	                    }
+	                    else if (recordModel.attributes[fld]['model']) {
+	                        type = 'lookup';
+	                        options.lookup = recordModel.attributes[fld]['model'];
+
+//	                        var refmodel = recordModel.attributes[fld]['model'];
+//	                       	if (refmodel && sails.models[refmodel]) {
+//	                        	options.lookup = sails.models[refmodel].tableName || refmodel;
+//	                        }
+
+	                    	lookup = {'1' : '123', '2' : '456'};	
+						} 
+					}
+
+					if (fld == 'id' || fld == 'createdAt' || fld == 'updatedAt') {
+						type = 'Hidden'
+					}
+
+					Fields.push({'Field' : fld, 'Type' : type, 'Options' : options, 'Lookup' : lookup});
+				}
+
+				var access = '';   // store access permissions in database ? ... or in model ... 
+				var data = { table: table, fields: Fields, access: access, action: 'Add'};
+				console.log("Render form with " + JSON.stringify(data));
+				res.render('record/form', data);
+			}
+		);
 	},
 	
 	update: function (req, res) {
@@ -125,23 +216,52 @@ module.exports = {
 	},
 
 	lookup: function (req, res) {
-		var table = req.param('table');
-		var fields = req.param('fields') || '';
-		var prompt = req.param('prompt') || 'Select:';
+
+		var model = req.param('model') || req.param('table');
+		//var fields = req.param('fields') || '';
+		var prompt = req.param('prompt');
 		var condition = req.param('condition') || 1;
 		var defaultTo = req.param('default') || 'ml';
 
+		var table = model;
+		var idField = 'id';
+		var nameField = 'name';
+		var identifier = table;
+
+		if (sails.models[model]) {
+			var Mod = sails.models[model];
+			if (Mod.tableName) { table = Mod.tableName }
+
+			if (Mod.lookupCondition) {
+				condition = condition + ' AND ' + Mod.lookupCondition;
+			}
+
+			if (Mod.alias) {
+				idField = Mod.alias.id || 'id';
+				nameField = Mod.alias.name || 'name';	
+
+				console.log(table + " Set idField to alias: " + idField);	
+			}  
+
+			
+			if (!prompt) { 
+				if (Mod.tableAlias) { prompt = '-- Select ' + Mod.tableAlias + ' --' }
+				else { prompt = '-- Select ' + model }
+			}
+		}
+
 		console.log('generate ' + table + ' lookup');
+		/*
 		fields = fields + '::';  // extend to ensure array has at least elements..
 
 		console.log("LABELS: " + fields);
 		var extract = fields.split(':');
-		var idField = extract[0] || 'id';
-		var nameField = extract[1] || 'name';
-		var identifier = extract[2] || table;
+		
+*/
 
 		var select = idField + ' as id, ' + nameField + ' as label';
 		var query = "Select " + select + " from " + table + " WHERE " + condition;
+
 		console.log("Lookup Query: " + query);
 
 		Record.query(query, function (err, result) {
@@ -214,7 +334,7 @@ module.exports = {
 				if (!fields) { fields = Object.keys(result[0]) }
 				console.log("Fields: " + fields.join(','));
 
-				return res.render('record/view', { table : table, fields : fields, data : result });
+				return res.render('record/view', { table : table, id: id, fields : fields, data : result });
 			}
 			else {
 				return res.send("No data");
@@ -250,6 +370,13 @@ module.exports = {
 			return res.json(results);
 		});
 
+	},
+
+	save : function (req, res) {
+		var body = req.body;
+
+		console.log("SAVE BODY: " + body);
+		return res.json(body);
 	}
 	
 };
