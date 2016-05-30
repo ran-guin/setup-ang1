@@ -1,0 +1,24 @@
+
+h4 source Map
+table
+	tr
+		td(style='height:5px; width: 5px; padding:2px; background-color: #F66')
+			
+
+- var rows = ['A','B','C','D','E','F','G','H'];
+- var cols = [1,2,3,4,5,6,7,8,9.10,11,12];
+div(ng-if="Map.Transfer && Map.ColourMap")
+		// div(ng-repeat="transfer in Map.Transfer") source_batches
+		table.table-bordered
+			each row in rows
+				tr
+					each col in cols
+						td					
+							div(ng-if="Map.SourceColours['#{row}#{col}']")
+								div.wellmap( style="background-color:#{{ Map.SourceColours['#{row}#{col}'] }}")
+									span #{row}#{col}
+									span.tooltip {{ transfer['#{row}#{col}']['id'] }}
+							div(ng-if="! Map.SourceColours['#{row}#{col}']")
+								div.wellmap(style='background-color: #666')
+									span &nbsp;	
+b map: {{ Map.SourceColours }}	
