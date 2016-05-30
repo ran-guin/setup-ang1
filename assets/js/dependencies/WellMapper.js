@@ -143,8 +143,8 @@ function wellMapper() {
         this.rgbList = rgbList;
 
         this.Map = Map;
- 
-        return { Map : Map, list : rgbList, colours : colours }
+
+        return { Map : Map, list : rgbList, colours : colours, colourMap: CMap }
     },
 
     this.staticMap = function() {
@@ -178,7 +178,39 @@ function wellMapper() {
 
     },
 
-    this.next_available = function (x, y, target_index) {
+    this.next_available = function (target_index) {
+
+        console.log("box #" + target_index + " contains ");
+        console.log(JSON.stringify(this.available));
+
+        if (! this.target_count[target_index]) { this.target_count[target_index] = 0 }
+        
+        if (this.available[target_index] && this.available[target_index].length > this.target_count[target_index]) {
+            this.target_count[target_index]++;
+        }
+        else {
+            target_index++;
+            this.target_count[target_index] = 1;
+        }
+
+        this.total_target_count++;
+
+        console.log(target_index + ": " + JSON.stringify(this.target_count));
+
+        if (this.available[target_index]) {
+            var next = this.available[target_index][this.target_count[target_index]];
+            console.log("Next :  " + target_index + " = " + next);
+
+            var x = next;
+            if (x) { var y = next.replace(x,'') }
+
+            console.log(target_index + ':' + x + y )
+            return { x: x, y: y, target_index: target_index};
+        }
+        else { console.log('next box not defined'); return { x: 'A', y: 1, target_index: target_index } }
+    },
+
+    this.old_next_available = function (x, y, target_index) {
         var next = this.next_position(x,y,target_index);
         var position = next.x + next.y.toString();
  
@@ -210,7 +242,7 @@ function wellMapper() {
 
     this.next_position = function (x, y, target_index) {
     	/* Get next available position */
-        if (this.fill_by == 'Row') {
+        if (this.fill_by.match(/row/i)) {
             console.log("fill by row to " + this.x_max + this.y_max);
             y++;
             if (y > this.y_max) {
@@ -227,7 +259,7 @@ function wellMapper() {
             }
         }
         else {
-            // console.log("fill by col to " + this.x_max + this.y_max);
+            console.log("fill by col to " + this.x_max + this.y_max);
             if (x == this.x_max) {
                 x=this.x_min;
                 if (y >= this.y_max) {
@@ -248,7 +280,7 @@ function wellMapper() {
     }
 
     this.initialize = function ( Target, Options ) {
-       //var sources = [{ id: 1, type: 'blood', position: 'A1'}, { id : 2, type : 'blood', position : 'A2'}];
+        //var sources = [{ id: 1, type: 'blood', position: 'A1'}, { id : 2, type : 'blood', position : 'A2'}];
         
         //var rows = Target.rows || this.source_rows;  // unnecessary..
         //var cols = Target.cols || this.source_cols;
@@ -261,20 +293,37 @@ function wellMapper() {
         this.split_mode = Options.split_mode || 'parallel';
         this.preserve_batch = this.batch;
 
-        this.x_min = Target.Min_Row || 'A';
-        this.x_max = Target.Max_Row || 'A';
-        this.y_min = Target.Min_Col || 1;
-        this.y_max = Target.Max_Col || 1;
+        this.x_min = Options.Min_Row || 'A';
+        this.y_min = Options.Min_Col || 1;
 
+        this.available = Options.available;
+        this.target_count = {};
+
+        if (Options.available) {
+            this.available = Options.available;
+        }
+        else if (Options.target_size) {
+            var dims = Options.target_size.split('x');
+            if (dims.length == 2) {
+                this.x_max = dims[0];
+                this.y_mzx = 1 * dims[1];
+            }
+            this.available['0'] = ['A1','B1','C1','D1','A2'];
+        }
+        else {
+            this.x_max = Options.Max_Row || 'A';
+            this.y_max = Options.Max_Col || 1;
+        }
+        
         this.target_format = Target.format;
 
         this.splitX = Options.split || Options.splitX || 1;
 
         console.log("Initialized:\nsplit = " + this.splitX + "\nfillBy = " + this.fill_by + "\npack = " + this.pack_wells + "\nmode = " + this.split_mode + "\ntarget_size = " + this.x_max + this.y_max+ "\n");
-    
+        console.log("Available" + JSON.stringify(this.available)); 
 
         this.target_boxes = Options.target_boxes || [];       // target box ids 
-        this.available = Options.available || {};   // hash of available wells keyed on target box ids
+        //this.available = Options.available || {};   // hash of available wells keyed on target box ids
     }
 
     this.distribute = function ( sources, Target, Options ) {
@@ -282,7 +331,7 @@ function wellMapper() {
 //        Input:
 //        
 //        sources: array of hashes - eg [ { id: 101, position: 'A1'}, { id: 102, position: 'A2'}]
-//        target : hash of specs - eg { Max_Row : 'A', Max_Col: 1 } 
+//        target : hash of specs - eg { Max_Row : 'A', Max_Col: 1 }  
 //        options: hash of options - eg { 
 //                  split : 2, 
 //                    mode: serial, 
@@ -318,6 +367,8 @@ function wellMapper() {
 
         var Transfer = [];
         var Colour = [];
+        var SourceColours = {};
+        var TargetColours = {};
 
         var target_index = 0;
         var target_position = this.x_min + this.y_min.toString();
@@ -420,6 +471,7 @@ function wellMapper() {
         for (var h=0; h<repeat_set; h++) {  // only repeats when split in parallel mode
 
             for (var i=0; i<sources.length; ) {
+                SourceColours[sources[i].position] = this.rgbList[i];
 
                 for (var j=0; j<batch_wells && i<sources.length; j++) {   // force use of consecutive wells if pack > 1 (even if in serial mode)
                     for (var k=0; k<repeat_wells && i<sources.length; k++) {
@@ -471,7 +523,7 @@ function wellMapper() {
 
                         // next...
                         if (this.pack_wells) {
-                            var next = this.next_available(x,y,target_index);
+                            var next = this.next_available(target_index);
                             x = next.x;
                             y = next.y;
                             target_index = next.target_index;                                
@@ -492,7 +544,7 @@ function wellMapper() {
         this.Xfer = Xfer;
 
         console.log("completed distribution... ");
-        return { Transfer : Transfer, TransferMap : Colour, Xfer: Xfer };
+        return { Transfer : Transfer, ColourMap : Colour, Xfer: Xfer, SourceColours : SourceColours };
     }
 
     this.split_list = function split_list (field, input, options) {
