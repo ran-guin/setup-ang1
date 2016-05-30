@@ -4,7 +4,7 @@ block content
   - Rows = ['A','B','C'];
   - Cols = [1,2,3,4]
   - targets = [];
-  - config = { Sources : sources, Target : target, Options : options };
+  - config = { Sources : sources, Target : target, Options : options, sizes : sizes};
   - var init = "initialize(" + JSON.stringify(config) + ")";
   
   div.container
@@ -77,14 +77,11 @@ block content
               div.col-sm-6
                 div(ng-show="box_target=='New'")                
                   div.form-group
-                    input(type='radio' value = 'tube' ng-model='box_size' ng-click="update_target_size()") 
-                    b &nbsp; Tube &nbsp;
-                    input(type='radio' value = 'ix9' ng-model='box_size' ng-click="update_target_size()") 
-                    b &nbsp; 9x9 &nbsp;            
-                    input(type='radio' value = 'Hx12' ng-model='box_size' ng-click="update_target_size()") 
-                    b &nbsp; 8x12 &nbsp;
+                    each size in sizes
+                      input(type='radio' value = '#{size}' ng-model='box_size' ng-click="redistribute()") 
+                      b &nbsp; #{size} &nbsp;
                 div(ng-show="box_target == 'Existing'")
-                  input.input-lg(type='text' name='target_rack' size=12 ng-model='target_rack' ng-change="loadRack('Plate')" placeholder='-- Scan Loc# --')
+                  input.input-lg(type='text' name='target_rack' size=12 ng-model='target_rack' ng-change="redistribute()" placeholder='-- Scan Loc# --')
                 div(ng-show="box_target != 'Existing' && box_target != 'New'")
                   span &nbsp;   
             
@@ -102,15 +99,17 @@ block content
                     // splitX > 1")
                     b Fill By {{ fill_by }} : 
                     label
-                      input(type='radio' value = 'row' ng-model="fill_by" ng-click="reset_fill_by()") 
+                      input(type='radio' value = 'row' ng-model="fill_by" ng-click="redistribute();") 
+                      // reset_fill_by(); 
                       b &nbsp; Row &nbsp;
                     label
-                      input(type='radio' value = 'column' ng-model="fill_by" ng-click="reset_fill_by();")
+                      input(type='radio' value = 'column' ng-model="fill_by" ng-click="redistribute();")
                       b &nbsp; Column &nbsp;
 
+            hr
             div.col-sm-4 &nbsp;
             div.col-sm-4
-              button.btn.btn-lg.btn-primary.form-control(type='button' ng-click="updateLookups(); redistribute()") Distribute
+              button.btn.btn-lg.btn-primary(type='button' ng-click="redistribute()") Distribute
             div.col-sm-4 &nbsp;
 
             p &nbsp;
