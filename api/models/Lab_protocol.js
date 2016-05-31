@@ -68,10 +68,11 @@ module.exports = {
 				var prep_id = [ PrepResult.Prep.insertId ];
 				console.log("\nPrep ID: (just inserted)" + JSON.stringify(prep_id));
 				console.log("Target: (supplied by POST) " + JSON.stringify(data['Target']));
+				console.log("Options: " + JSON.stringify(data['Transfer_Options']));
 
-				if (data['Target'] && data['Target']['transfer_type']) {
+				if (data['Target'] && data['Transfer_Options'] && data['Transfer_Options']['transfer_type']) {
 
-					console.log('call Container.execute_transfer from Lab_protocol Model');
+					console.log('\n*** call Container.execute_transfer from Lab_protocol Model');
 					promises.push( Container.execute_transfer( 
 						ids,
 						data['Target'],
@@ -87,9 +88,9 @@ module.exports = {
 				console.log("save attributes to plates: " + plate_list + '; prep: ' + prep_id);
 
 				promises.push( Attribute.save('Plate', ids, data["Plate_Attribute"]) );
-				//promises.push( Attribute.save('Prep', prep_id, data["Prep_Attribute"]) );
+				promises.push( Attribute.save('Prep', prep_id, data["Prep_Attribute"]) );
 				
-				//promises.push( Container.saveLastPrep(ids, prep_id[0]) );
+				promises.push( Record.update('Plate', ids, {'FKLast_Prep__ID' : prep_id[0] } ) );
 
 				q.all( promises )
 				.then ( function (Qdata) {
@@ -140,33 +141,49 @@ module.exports = {
 		else if (data && data['Prep']) {
 			console.log("Send Prep data: " + JSON.stringify(data['Prep']));
 
-			Record.createNew('Prep', data['Prep'] )
-			.then (function (PrepResult) {
-				console.log("Added Prep: " + JSON.stringify(PrepResult));
-				var ids = [];
-				var prepId = PrepResult.insertId;  // Legacy
-				var added = PrepResult.affectedRows;
+			var promises = [];
+			promises.push( Record.createNew('Prep', data['Prep'] ) );
 
-				sails.config.messages.push('added Prep: ' + prepId);
+			// if completed ...
+			promises.push( Record.createNew('Prep',{ Prep_Name : 'Completed Protocol', Prep_DateTime : '<now>', FK_Employee__ID : '<user>'}) );
 
-				for (var i=0; i<data['Plate'].length; i++) {
-					data['Plate'][i]['FK_Prep__ID'] = prepId;
-				}
-			
-				console.log("Send Plate data: " + JSON.stringify(data['Plate']));
+			//Record.createNew('Prep', data['Prep'] )
+			q.all(promises)
+			.then (function (result) {
+				for (var i=0; i< result.length; i++) {
+					var PrepResult = result[0];
+					console.log("Added Prep: " + JSON.stringify(PrepResult));
+					var ids = [];
+					var prepId = PrepResult.insertId;  // Legacy
+					var added = PrepResult.affectedRows;
 
-				Record.createNew('Plate_Prep', data['Plate'] )
-				.then (function (PlatePrepResult) {				
-					console.log("Added Plate_Prep: " + JSON.stringify(PlatePrepResult));
-					console.log('transfer if necessary....' + JSON.stringify(data['Targets']));
-					
-					deferred.resolve({ Prep: PrepResult, Plate_Prep: PlatePrepResult});
+					sails.config.messages.push('added Prep: ' + prepId);
+
+					for (var i=0; i<data['Plate'].length; i++) {
+						data['Plate'][i]['FK_Prep__ID'] = prepId;
+					}
+				
+					console.log("Send Plate data: " + JSON.stringify(data['Plate']));
+
+					var promises2 = [];
+					promises2.push( Record.createNew('Plate_Prep', data['Plate'] ) )
+
+				});
+
+				q.all(promises2)
+				//Record.createNew('Plate_Prep', data['Plate'] )
+				.then (function (result2) {
+					for (var i=0; i<result2.length; i++) {					
+						console.log("Added Plate_Prep: " + JSON.stringify(result2[i]));
+					}
+					deferred.resolve({ Prep: result, Plate_Prep: result2});
 				})
 				.catch (function (err) {
 					sails.config.errors.push('Error creating Plate record ' + err);
 					deferred.reject("Error creating Plate record: " + err);
 					//return res.send("ERROR creating Plate record: " + err)
-				})
+				});
+
 			})
 			.catch ( function (err) {
 				deferred.reject("Error creating Prep record: " + err);
