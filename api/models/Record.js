@@ -95,24 +95,24 @@ module.exports = {
 		// retrieve results from multiple promises - primarily intended to retrieve messages / errors / warnings
 		// eg console.log( merged_Results(results, messages).join("\n"));
 		
-		var attributes = ['message', 'warning', 'error'];
+		var message_types = ['message', 'warning', 'error'];
 		if (!merged) { merged = {} }
 
 		for (var i=0; i<results.length; i++) {
-			for (var j=0; j<attributes.length; j++) {
-				var att = attributes[j];
-				var atts = att + 's';
-				var found = results[i][att] || results[i][atts];
+			for (var j=0; j<message_types.length; j++) {
+				var mType = message_types[j];
+				var mTypes = mType + 's';
+				var found = results[i][mType] || results[i][mTypes];
 				if (found) {
-					if (!merged[atts]) { merged[atts] = [] }
+					if (!merged[mTypes]) { merged[mTypes] = [] }
 						// test ... also account for string value ... replace with array ... 
 					if ( found.constructor === Array ) {
 						for (k=0; k<found.length; k++) {
-							merged[atts].push(found[k]);   
+							merged[mTypes].push(found[k]);   
 						}
 					}
 					else {
-						merged[atts].push(found);
+						merged[mTypes].push(found);
 					}
 				}
 			}
@@ -355,7 +355,39 @@ module.exports = {
 		console.log(JSON.stringify(data));
 
 		var deferred = q.defer();
-		deferred.resolve({ warnings: 'Need to add method... '});
+		
+		var list = ids.join(',');
+		
+		var query = "UPDATE " + model;
+		
+		if (data) {
+			var fields = Object.keys(data);
+			var Set = [];
+			for (var i=0; i<fields.length; i++) {
+				
+				//reformat_data(data[fields[i]]);
+
+				Set.push(fields[i] + " = '" + data[fields[i]] + "'");
+			}
+			if (Set.length) {
+				query = query + " SET " + Set.join(',');
+			}			
+			query = query + " WHERE Plate_ID IN (" + list + ")";
+			
+			Record.query_promise( query )
+			.then (function (result) {
+				deferred.resolve(result);				
+			})
+			.catch ( function (err) {
+				console.log("Query Error: " + query);
+				deferred.reject("Error updating last prep id: " + err);
+			});
+
+		}
+		else {
+			console.log("nothing to update");
+			deferred.resolve();
+		}
 
 		return deferred.promise;
 	},	
