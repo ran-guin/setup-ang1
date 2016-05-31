@@ -35,22 +35,22 @@ module.exports = {
 	},
 
 	saveLastPrep : function (plates, prep_id) {
-		var deferred = q.defer();
-		
-		var list = plates.join(',');
-		
-		var query = "UPDATE Plate SET FKLast_Prep__ID = "
-			+ prep_id + " WHERE Plate_ID IN (" + list + ")";
+			var deferred = q.defer();
 			
-		Record.query( query, function (err, result) {	
-			if (err) { deferred.reject("Error updating last prep id: " + err) }
-			else {
-				console.log("set last prep id to " + prep_id + ' for ' + list);
-				deferred.resolve(result);
-			}
-		});
+			var list = plates.join(',');
+			
+			var query = "UPDATE Plate SET FKLast_Prep__ID = "
+				+ prep_id + " WHERE Plate_ID IN (" + list + ")";
+				
+			Record.query( query, function (err, result) {	
+				if (err) { deferred.reject("Error updating last prep id: " + err) }
+				else {
+					console.log("set last prep id to " + prep_id + ' for ' + list);
+					deferred.resolve(result);
+				}
+			});
 
-		return deferred.promise;
+			return deferred.promise;
 	},
 
 	loadData : function (ids) {
@@ -79,7 +79,7 @@ module.exports = {
 
 		var left_joins = [
 			'Sample_Type ON FK_Sample_Type__ID=Sample_Type_ID',
-			'Plate_Format ON FK_Plate_Format__ID=Plate_Format_ID'
+			'Plate_Format ON FK_Plate_Format__ID=Plate_Format_ID',
 		];
 
 		var conditions = [
@@ -90,16 +90,21 @@ module.exports = {
 		if ( include.match(/prep/) ) {
 			left_joins.push('Prep ON FKLast_Prep__ID=Prep_ID');
 			left_joins.push('lab_protocol ON Prep.FK_Lab_Protocol__ID=lab_protocol.id');
+			left_joins.push('protocol_step ON protocol_step.Lab_protocol=lab_protocol.id AND Prep_Name=protocol_step.name');
 
 			fields.push("FK_Lab_Protocol__ID as last_protocol_id")
 			fields.push("lab_protocol.name as last_protocol");
+			fields.push("MAX(protocol_step.step_number) as last_step_number");
 			fields.push("Prep.Prep_Name as last_step");
 			fields.push("CASE WHEN Prep.Prep_Name like 'Completed %' THEN 'Completed' WHEN Prep.Prep_Name IS NULL THEN 'N/A' ELSE 'In Process' END as protocol_status");
 		}
 
 		if ( include.match(/position/) ) {
-			left_joins.push('Rack ON Plate.FK_Rack__ID=Rack_ID');
-			fields.push ("case WHEN Rack_Type='Slot' THEN Rack_Name ELSE NULL END as position");
+			left_joins.push('Rack ON Plate.FK_Rack__ID=Rack.Rack_ID');
+			left_joins.push('Rack AS Box ON Rack.FKParent_Rack__ID=Box.Rack_ID');
+			fields.push ("case WHEN Box.Rack_Type='Box' THEN Box.Rack_ID ELSE NULL END as box_id");
+			fields.push ("case WHEN Box.Rack_Type='Box' THEN Box.Capacity ELSE NULL END as box_size");
+			fields.push ("case WHEN Rack.Rack_Type='Slot' THEN Rack_Name ELSE NULL END as position");
 		}
 
 		if ( include.match(/attribute/) ) {
@@ -202,7 +207,7 @@ module.exports = {
 			console.log("input CustomData: " + JSON.stringify(CustomData));
 
 			var resetData = {
-				'Plate_ID' : '',
+				'Plate_ID' : null,
 				'FKParent_Plate__ID' : '<id>',
 				'FK_Rack__ID' : '<NULL>',
 				'Plate_Created' : '<now>',
