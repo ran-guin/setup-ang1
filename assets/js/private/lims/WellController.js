@@ -26,6 +26,8 @@ function wellController ($scope, $rootScope, $http, $q ) {
         $scope.source_init = $scope.sources;
         $scope.target  = Config['Target'] || {};
         $scope.options = Config['Options'];
+        $scope.sizes   = Config['sizes'];
+        $scope.size    = Config['size'] || $scope.sizes[0];
 
         $scope.map = Config['map'] || {}; 
         $scope.target_rows = $scope.target.rows || ['A'];
@@ -97,6 +99,14 @@ function wellController ($scope, $rootScope, $http, $q ) {
     $scope.redistribute = function redistribute () {
 
         $scope.updateLookups();
+
+        if ($scope.fill_by.match(/row/i)) { 
+            $scope.source_by_Row();
+        }
+        else { 
+            $scope.source_by_Col();
+        }
+        
         $scope.loadWells();
 
         if (! $scope.newMap) {
@@ -131,7 +141,7 @@ function wellController ($scope, $rootScope, $http, $q ) {
                 pack : $scope.pack,
                 pack_wells : $scope.pack_wells,
                 split : $scope.splitX,
-                target_size : $scope.box_size,
+                target_size : $scope.target_size,
                 target_boxes : $scope.target_boxes,
                 available : $scope.available,
             }
@@ -166,6 +176,7 @@ function wellController ($scope, $rootScope, $http, $q ) {
                 var string = batch.toString() + '_' + sample.position.substring(1,3) + '_' + sample.position.substring(0,1);
                 return string;
             });
+            console.log($scope.ordered + " : S: " + JSON.stringify($scope.sources) );
         }
     }
 
@@ -180,6 +191,7 @@ function wellController ($scope, $rootScope, $http, $q ) {
                 var string = batch.toString() + '_' + sample.position;
                 return string;
             });
+            console.log($scope.ordered + " : S: " + JSON.stringify($scope.sources) );
         }
     }
 
@@ -203,7 +215,7 @@ function wellController ($scope, $rootScope, $http, $q ) {
     $scope.loadWells = function (model) {
         // get available wells 
         var rack_id = $scope.target_rack;
-        var size    = $scope.box_size;
+        var size    = $scope.target_size;
         var fill_by = $scope.fill_by;
 
         if (rack_id) {
