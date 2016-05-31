@@ -58,7 +58,7 @@ module.exports = {
 		var source_list = sources.join(',');
 		var fields = 'FK_' + table + '__ID as reference_id, FK_Attribute__ID as id, Attribute_Name name, Attribute_Type type, Attribute_Value as value';
 		var query = "SELECT " + fields + " FROM " + table + '_Attribute, Attribute'
-			+ " WHERE FK_Attribute__ID=Attribute_ID AND FK_" + table + '__ID IN (' + source_list + ')';
+			+ " WHERE FK_Attribute__ID=Attribute_ID AND Inherited='Yes' AND FK_" + table + '__ID IN (' + source_list + ')';
 
 		var insertPrefix = "INSERT INTO " + table + '_Attribute (FK_' + table + '__ID, FK_Attribute__ID, Attribute_Value) VALUES ';
 
