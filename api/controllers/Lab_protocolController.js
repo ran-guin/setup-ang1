@@ -92,53 +92,27 @@ module.exports = {
 
 		console.log("BODY: " + JSON.stringify(req.body));
 
-		var protocol = req.body['lab_protocol-id'];
-		console.log("protocol: " + protocol);
-
+		var protocol = req.body['lab_protocol-label'];
+		var protocol_id = req.body['lab_protocol-id'];
 		var Samples = JSON.parse(req.body.Samples);
+
 		console.log("Samples: " + JSON.stringify(Samples));
 
+		Protocol_step.loadSteps(protocol_id)
+		.then ( function (data) {
 
-		var q = "SELECT * FROM protocol_step"
-			+ " LEFT JOIN Plate_Format ON Plate_Format_ID = Target_format"
-			+ " WHERE Lab_protocol = " + protocol
-			+ " GROUP BY protocol_step.id";
 
-		Record.query(q, function (err, result) {
-		    if (err) {
+	    	data['protocol']  = { id: protocol_id, name: protocol };
+	    	data['plate_ids'] = plate_ids;
+	    	data['Samples']   = Samples;
 
-		        console.log("ASYNC Error in q post request: " + err);
-		        console.log("Q: " + q);
-		        return res.negotiate(err);
-		    }
-
-		    if (!result) {
-		        console.log('no results');
-		        return res.send('');
-		    }
-
-		    Lab_protocol.input_list( result )
-		    .then ( function (inputList) {
-		    	console.log('globals:' + JSON.stringify(sails.config.globals));		    	
-		    	console.log('session:' + JSON.stringify(req.session));
-
-		    	var send = { 
-		    		plate_ids : plate_ids, 
-		    		Steps : result, 
-		    		Samples: Samples, 
-		    		// fields: inputList['input'], 
-		    		attributes: inputList.attributes,
-		    	};
-
-		    	console.log("SEND: " + JSON.stringify(send));
-		    	return res.render('lims/Protocol_Step', send);
-		    })
-		    .catch ( function (err) {
-		    	console.log("ERROR: " + err);
-		    	return res.json({ error : 'Error encountered: ' + err});
-		    });
-
-		});
+			console.log("SEND: " + JSON.stringify(data));
+			return res.render('lims/Protocol_Step', data);
+		})
+	    .catch ( function (err) {
+	    	console.log("ERROR: " + err);
+	    	return res.json({ error : 'Error encountered: ' + err});
+	    });							
 
 	},	
 
@@ -153,7 +127,11 @@ module.exports = {
 			console.log("returned from Lab_protocol.complete method...");
 			//var merged_Messages = Record.merge_Messages([result);
 			// console.log('Merged messages: ' + JSON.stringify(merged_Messages));
-			return res.json(result);  
+
+			var returnVal = Record.wrap_result(result);
+
+			console.log("\n* MSG: " + sails.config.messages.join(',') );
+			return res.json( returnVal );  
 		})
 		.catch ( function (err) {
 			console.log("error completing LP : " + JSON.stringify(err));
