@@ -12,7 +12,7 @@ block content
     //    - Steps      (array of hashes)
     //    - attributes (array of hashes)
 
-    - var configParams = { plate_ids: plate_ids, Samples: Samples, Steps : Steps, Attributes: attributes };
+    - var configParams = { protocol: protocol, plate_ids: plate_ids, Samples: Samples, Steps : Steps, Attributes: attributes };
 
     - var init = "initialize(" + JSON.stringify(configParams) + ")";
 
@@ -27,30 +27,13 @@ block content
         div(ng-controller="WellController" ng-init="#{init}")
           div(ng-controller='ProtocolController' ng-init="#{init}" ngcloak)
             
-            p.bg-warning(style='padding:20px; margin:0px')
-              span Active Samples: 
-              b {{N}} x 
-              b(style='color:red') {{sample_type}} 
-              b in {{container_format}}
-              span &nbsp;
-
-              button.btn.btn-primary.btn-sm(type='button' ng-show="!injectedAlready()" ng-click="injectData('/Container/summary','', plate_ids)") ?
-              button.btn.btn-danger.btn-sm(type='button' ng-show='injectedAlready()' ng-click='uninjectData()') x    
-
-              span.navbar.navbar-right 
-
-                button.btn.btn-primary.btn-sm(type='button' ng-show="!injectedAlready('injectedHistory')" ng-click="injectData('/Container/history','injectedHistory', plate_ids)") History
-                button.btn.btn-danger.btn-sm(type='button' ng-show="injectedAlready('injectedHistory')" ng-click="uninjectData('injectedHistory')") x    
-                span &nbsp; &nbsp; &nbsp; &nbsp;
-
-                b {{user}} &nbsp;
-                span {{ timestamp }} &nbsp; &nbsp;
-            
-            div#injectedData
-
-            div#injectedHistory
+            include ActiveSamples.jade
 
             div(ng-show="status != 'Completed'")      
+              h2 {{ protocol.name }}
+
+              include ./../core/angularMessages.jade
+
               each Step,index in Steps
                 - var Snum = index+1;
            
@@ -218,3 +201,10 @@ block content
             hr
             b #{sails.config.payload}
             b #{ JSON.stringify(sails.config.payload) }
+
+            hr
+            b Config Messages:
+            br
+            b #{sails.config.messages}
+            h3 angular messages: 
+            b {{ messages }}
