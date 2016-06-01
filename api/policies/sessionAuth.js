@@ -13,6 +13,10 @@ module.exports = function(req, res, next) {
   // or if this is the last policy, the controller
   if (req.session.authenticated) {
     console.log("session authenticated");
+    sails.config.messages = [];  // clear messages 
+    sails.config.warnings = [];  // clear messages 
+    sails.config.errors = [];  // clear messages 
+    console.log('clear messages...');
     console.log("Payload: " + JSON.stringify(req.session.payload));
     return next();
   }
