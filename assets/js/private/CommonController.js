@@ -9,6 +9,30 @@ app.controller('CommonController',
         // Support Basic Password Validation and Confirmation
         // usage: ng-model='repeat' ng-key-up="compare(repeat)"
         
+
+        $scope.messages = [];
+        $scope.warnings = [];
+        $scope.errors   = [];
+        $scope.parse_messages = function ( result ) {
+
+            if (result && result.data) {
+
+                // below clears current messages if no new messages generated
+                if (result.messages) { $scope.messages = result.messages }
+                if (result.warnings) { $scope.warnings = result.warnings }
+                if (result.errors)     { $scope.errors = result.errors }
+
+                console.log("Actual result" + JSON.stringify(result));
+                console.log("Parsed messages: " + $scope.messages.join(',') );
+                
+                return result.data;
+            }
+            else {
+                console.log("Not is formatted form");
+                return result;
+            }
+        }
+
         $scope.passwordValidation = /^[a-zA-Z]\w{3,14}$/;
         $scope.confirmedPassword = false;
         $scope.compare = function (repeatEntry) {
