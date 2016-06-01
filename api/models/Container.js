@@ -57,6 +57,8 @@ module.exports = {
 
 		var include = 'prep, position, attributes';
 
+		sails.config.messages.push("Loaded Plate Data...");
+
 		ids = Record.cast_to(ids, 'array');
 		id_list = ids.join(',');
 
@@ -122,7 +124,7 @@ module.exports = {
 	    		deferred.reject("Error: " + err);
 	    	}
 	    	else {
-	    		console.log("Loaded DATA: " + JSON.stringify(result));
+	    		// console.log("Loaded DATA: " + JSON.stringify(result));
 	    		deferred.resolve(result);
 	    	}
 
@@ -289,61 +291,121 @@ module.exports = {
 
 			console.log("\n*** Clone Plates *** Reset: " + JSON.stringify(resetData));
 
-			// Add new records to Database //
-			Record.clone('Plate', custom_ids, resetData, { id: Container.alias('id') })
-			.then ( function (cloneData) {
+			Container.retrieve_PrePrinted(ids)
+			.then (function (retrieved) {
+				if (retrieved) {
+					// pre-printed plates salvaged
 
-				var returnVal = { Cloned: cloneData };
+					// set to Active ...
+					
+					// if transfer, throw out ids ...
 
-				console.log("\nCreated new record(s): " + JSON.stringify(cloneData));
-				var newIds = cloneData.insertIds;    //'generated list of ids... eg 1,2,3'; // temp testing
-				
-				Barcode.printLabels('Plate', newIds);
-				
-				var promises = [];
-
-				if (options.transfer_type != 'Pre-Print') {
-					promises.push( Container.loadData(newIds) );
+					deferred.resolve(retrieved);
 				}
+				else {
+					// clone new plates 
+					// Add new records to Database //
+					Record.clone('Plate', custom_ids, resetData, { id: Container.alias('id') })
+					.then ( function (cloneData) {
 
-				if (options.transfer_type === 'Transfer') {
-//					promises.push( Record.update('Plate',ids, { Plate_Status: 'Thrown Out', FK_Rack__ID: Rack.garbage() } ));  test
-				}	
+						var returnVal = { Cloned: cloneData };
 
-				//if (options.solution_qty) {
-					console.log("\n*** Need to add solution quantities if applicable ...");
-				//}
-				
-				q.all(promises)
-				.then ( function (results) {
-					var Samples;
+						console.log("\nCreated new record(s): " + JSON.stringify(cloneData));
+						var newIds = cloneData.insertIds;    //'generated list of ids... eg 1,2,3'; // temp testing
+						
+						Barcode.printLabels('Plate', newIds);
+						
+						var promises = [];
 
-					if (target.transfer_type != 'Pre-Print') { 
-						returnVal['Samples'] = results[0];
-					}
+						if ( options.reset_focus ) {
+							console.log("retaining focus on current samples");
+						}
+						else {
+							promises.push( Container.loadData(newIds) );
+						}
 
-					sails.config.messages.push('Executed Transfer');
+						if (options.transfer_type === 'Transfer') {
+							promises.push( Record.update('Plate',ids, { Plate_Status: 'Thrown Out', FK_Rack__ID: Rack.garbage() } )); 
+						}	
 
-					console.log("executed transfer: " + JSON.stringify(returnVal));
-					var messages = Record.merge_Messages(results);
-					console.log("\n*** Merged Messages: " + JSON.stringify(messages) );
+						//if (options.solution_qty) {
+							console.log("\n*** Need to add solution quantities if applicable ...");
+						//}
+						
+						q.all(promises)
+						.then ( function (results) {
+							var Samples;
 
-					deferred.resolve(returnVal);
-				})
-				.catch ( function (err) {
-					console.log("encountered error executing Container Promises");
-					returnVal['Error'] = 'Promise errors: ' + JSON.stringify(err);
-					deferred.reject(returnVal);
-				});
+							if ( !options.reset_focus ) { 
+								returnVal['Samples'] = results[0];
+							}
 
+							sails.config.messages.push('Executed Transfer : ' + options.transfer_type);
+
+							console.log("executed transfer: " + JSON.stringify(returnVal));
+							var messages = Record.merge_Messages(results);
+							console.log("\n*** Merged Messages: " + JSON.stringify(messages) );
+
+							deferred.resolve(returnVal);
+						})
+						.catch ( function (err) {
+							console.log("encountered error executing Container Promises");
+							returnVal['Error'] = 'Promise errors: ' + JSON.stringify(err);
+							deferred.reject(returnVal);
+						});
+
+					})
+					.catch ( function (cloneError) {
+						console.log("Cloning Error: " + JSON.stringify(cloneError));
+						deferred.reject( {error: cloneError});
+						//return res.render('lims/WellMap', { sources: Sources, errorMsg: "cloning Error"});
+					});
+				}
 			})
-			.catch ( function (cloneError) {
-				console.log("Cloning Error: " + JSON.stringify(cloneError));
-				deferred.reject( {error: cloneError});
-				//return res.render('lims/WellMap', { sources: Sources, errorMsg: "cloning Error"});
+			.catch (function (err) {
+				deferred.reject("Error retrieving pre-printed plates: " + err);
 			});
+
 		}
 		else { deferred.reject({error: "No ids to transfer indicated"}) }
+
+		return deferred.promise;
+	},
+
+	retrieve_PrePrinted : function retrievePrePrint(ids) {
+		// returns { Samples : <data> } if pre-printed samples retrieved ... 
+		var deferred = q.defer();
+
+		var query = "Select Plate_ID as id from Plate WHERE Plate_ID IN (" + ids.join(',') + ") AND Plate_Status = 'Pre-Printed'";
+		Record.query_promise(query)
+		.then ( function (target_list) {
+			console.log("check for pre-printed plates: " + query);
+			console.log(JSON.stringify(target_list));
+
+			if (target_list.length == 0) {
+				deferred.resolve();
+			}
+			else {
+				var targets = [];
+				for (var i=0; i<target_list.length; i++) {
+					targets.push(target_list[i]['id']);
+				}
+				Container.loadData(targets)
+				.then (function (reloaded) {
+					if (ids.length && ids.length != targets.length) { 
+						sails.config.warnings.push("list of retrieved pre-printed plates is shorter than expected!");
+					}
+					deferred.resolve({ Samples : reloaded });
+				})
+				.catch (function (err) {
+					deferred.reject({ error: "problem reloading samples: " + targets.join(',') + " : " + err});
+				});
+			}
+		})
+		.catch ( function (err) {
+			console.log("could not retrieve pre-printed plates " + err);
+			deferred.reject(err);
+		})
 
 		return deferred.promise;
 	},
