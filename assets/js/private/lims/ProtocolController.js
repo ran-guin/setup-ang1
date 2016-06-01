@@ -14,6 +14,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
             console.log("loaded protocol steps");
             $scope.Steps = config['Steps'];
             $scope.steps = $scope.Steps.length;
+            $scope.protocol = config['protocol'];
 
             console.log("parsed: " + config['Samples'].constructor);
             if (config['Samples'].constructor === String) {
@@ -210,20 +211,31 @@ function protocolController ($scope, $rootScope, $http, $q) {
             }
         }
 
+        var status = 'In Process';
+        if ( $scope.stepNumber >= $scope.steps ) { status = 'Complete' }
+
         var data =  {
             'ids': $scope.plate_ids,
             'Prep' : PrepData,
             'Plate' : PlateData,
             'Plate_Attribute' : PlateAttributes,
             'Prep_Attribute'  : PrepAttributes,
+            'status' : status,
         };
 
         console.log("\nDATA: " + JSON.stringify(data));
 
         $scope.updateLookups();  // use lookup dropdowns to populate ng-model
 
-        if ($scope.transfer_type) {
+        console.log("Transfer ? : " + $scope.Step.transfer_type +  ' = ' + $scope.transfer_type);
+        if ($scope.Step.transfer_type) {
 
+            var Target = { 
+                'format' : $scope.Step.Target_format,
+                'sample_type'   : $scope.Step.Target_sample,
+                'qty'               : qty,
+                'qty_units'     : $scope['transfer_qty_units' + $scope.stepNumber + '_label'],
+            };
 
 
             var qty = $scope['transfer_qty' + $scope.stepNumber];
@@ -232,13 +244,6 @@ function protocolController ($scope, $rootScope, $http, $q) {
             }  
 
             console.log("Q = " + JSON.stringify(qty));
-            
-            var Target = { 
-                'format' : $scope.Step.Target_format,
-                'sample_type'   : $scope.Step.Target_sample,
-                'qty'               : qty,
-                'qty_units'     : $scope['transfer_qty_units' + $scope.stepNumber + '_label'],
-            };
 
             var Options = {
                 'transfer_type' : $scope.Step.transfer_type,
@@ -254,9 +259,10 @@ function protocolController ($scope, $rootScope, $http, $q) {
 
             // Define Data ...
 
-            data['Sources'] = $scope.Map.Samples;
  
             var Map = $scope.distribute($scope.Samples, Target, Options);  // change to promise (test.. )
+ 
+            data['Sources'] = $scope.Map.Samples;
             //data['Targets'] = $scope.Map.Xfer;
             data['CustomData'] = Map.Xfer;
 
@@ -275,13 +281,22 @@ function protocolController ($scope, $rootScope, $http, $q) {
         }
         else {
             $http.post(url, data)
-            .then ( function (result) {
+            .then ( function (returnVal) {
+                var result = $scope.parse_messages(returnVal.data);
+
                 console.log("\n **** Step Posted Successfully ***");
                 console.log(JSON.stringify(result));
 
-                if ($scope.transfer_type && ! $scope.reset_focus) {
-                    console.log("Focus on new samples");
-                    var promiseResults = result.data;
+                if ($scope.Step.transfer_type && ! $scope.Step.reset_focus && result.Samples) {
+                    console.log("Focus on " + result.Samples.length + " new Sample records ");
+
+                    $scope.Samples = result.Samples;
+                    $scope.load_Sample_info();
+                    /*
+                    var promiseResults = result;
+                    
+                    // console.log("\n** Retrieved: " + promiseResults);
+
                     for (var i=0; i<promiseResults.length; i++) {
                         if (promiseResults[i].Samples) {
                             console.log("Found regenerated sample list..." + i);
@@ -290,7 +305,14 @@ function protocolController ($scope, $rootScope, $http, $q) {
             
                             $scope.load_Sample_info();
                         }
+                        else {
+                            console.log("no sample info in result: " + i);
+                        }
                     }
+                    */
+                }
+                else if ($scope.Step.transfer_type) {
+                    console.log("RETAINED focus " + $scope.Step.reset_focus);
                 }
 
                 if ($scope.stepNumber < $scope.steps) {
