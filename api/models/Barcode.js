@@ -32,6 +32,7 @@ module.exports = {
   printLabels : function (model, ids) {
     var msg = "Print " + model + " Labels: " + ids
     sails.config.messages.push(msg);
+    console.log(msg);
     return { message: msg };
   },
 
@@ -122,26 +123,31 @@ module.exports = {
         console.log("** Matrix Barcode Detected ** " + Scanned['Unformatted']);
 
         var Mbarcodes = Scanned['Unformatted'].match(/.{10}/);
-        console.log("List: " + JSON.stringify(Mbarcodes));
-        
-        var query = "Select FK_Plate__ID from Plate_Attribute,Attribute WHERE FK_Attribute__ID = Attribute_ID "
-          + " AND Attribute_Name='Matrix_Barcode'"
-          + " AND Attribute_Value IN ('" + Mbarcodes.join("','") + "')"; 
-        console.log(query);
+        if (Mbarcodes) {
+          console.log("List: " + JSON.stringify(Mbarcodes));
+          
+          var query = "Select FK_Plate__ID from Plate_Attribute,Attribute WHERE FK_Attribute__ID = Attribute_ID "
+            + " AND Attribute_Name='Matrix_Barcode'"
+            + " AND Attribute_Value IN ('" + Mbarcodes.join("','") + "')"; 
+          console.log(query);
 
-        Record.query_promise(query)
-        .then ( function (result) {
-          if (result.length) {
-            console.log("R: " + JSON.stringify(result));
-            Scanned['Plate'].push(result[0]['FK_Plate__ID']);   // need to adjust slightly to accept multiple scanned barcodes ... 
+          Record.query_promise(query)
+          .then ( function (result) {
+            if (result.length) {
+              console.log("R: " + JSON.stringify(result));
+              Scanned['Plate'].push(result[0]['FK_Plate__ID']);   // need to adjust slightly to accept multiple scanned barcodes ... 
+              deferred.resolve(Scanned);
+            }
             deferred.resolve(Scanned);
-          }
-          deferred.resolve(Scanned);
-        })
-        .catch (function (err) {
-            console.log("Error checking for Matrix Barcode");
-            deferred.reject(err);
-        });
+          })
+          .catch (function (err) {
+              console.log("Error checking for Matrix Barcode");
+              deferred.reject(err);
+          });
+        }
+        else {
+          deferred.reject("Unidentified barcode string: " + Scanned['Unformatted']);
+        }
 
       }
       else {
