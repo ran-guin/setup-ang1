@@ -15,6 +15,18 @@ module.exports = {
 
 	},
 
+	wrap_result : function (result) {
+		// append config messages to result returned via api
+
+		var data = {};
+		data['data'] = result;
+		data['messages'] = sails.config.messages;
+		data['warnings'] = sails.config.warnings;
+		data['errors']   = sails.config.errors;
+
+		return data;
+	},
+
 	build_query: function (options) {
 
 		if (!options) { 
@@ -394,7 +406,7 @@ module.exports = {
 
 	createNew : function (table, Tdata, resetData) {
 		// Bypass waterline create method to enable insertion into models in non-standard format //
-		
+		var debug = 0;
 		var deferred = q.defer();
 		//console.log("\ncreate new record(s) in " + table);
 
@@ -426,27 +438,27 @@ module.exports = {
 				else if (value.constructor === String) {
 					if (value.match(/^<user>$/i)) {
 						value = sails.config.payload.userid; 
-						console.log("replacing <user> with " + value);
+						if (debug) console.log("replacing <user> with " + value);
 					}
 					else if (value.match(/^<increment>$/i)) {
 						value = 1;
 						onDuplicate = " ON DUPLICATE KEY UPDATE " + fields[f] + "=" + fields[f] + " + 1";
-						console.log("replacing <increment> with SQL ");
+						if (debug) console.log("replacing <increment> with SQL ");
 					}
 					else if (value.match(/^<now>$/i)) {
 						value = 'NOW()'; 
-						console.log("replacing <now> with " + value);
+						if (debug) console.log("replacing <now> with " + value);
 						noQuote = 1;
 					}
 					else if (value.match(/^<today>$/i)) {
 						value = 'CURDATE()'; 
-						console.log("replacing <today> with " + value);
+						if (debug) console.log("replacing <today> with " + value);
 						noQuote = 1;
 					}
 					else if (value.match(/^<.*>$/)) {
 						value = value.replace(/^</,'');
 						value = value.replace(/>$/,'');
-						console.log("SQL statement detected: " + value);
+						if (debug) { console.log("SQL statement detected: " + value) }
 						noQuote = 1;
 					}
 				}
