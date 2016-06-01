@@ -60,45 +60,57 @@ module.exports = {
 		if (ids.length > 0) {
 
 			Lab_protocol.savePrep(data)
-			.then ( function (PrepResult) {
+			.then ( function (result) {
 
 				var promises = [];
-				console.log("Added Single Prep: " + JSON.stringify(PrepResult));
+				console.log("Added Single Prep: " + JSON.stringify(result));
 
-				var prep_id = [ PrepResult.Prep.insertId ];
-				console.log("\nPrep ID: (just inserted)" + JSON.stringify(prep_id));
+				var preps_added = result.Prep.length;  // may be 2 if "Completed Protocol" Update record is added ... 
+				
+				var lastPrepResult = result.Prep[preps_added - 1];
+				var last_prep_id = [ lastPrepResult.insertId ];
+				
+				var firstPrepResult = result.Prep[0];
+				var first_prep_id = [ firstPrepResult.insertId ];
+
+				console.log("\nPrep ID: (just inserted)" + last_prep_id );
 				console.log("Target: (supplied by POST) " + JSON.stringify(data['Target']));
 				console.log("Options: " + JSON.stringify(data['Transfer_Options']));
+				console.log("Custom: " + JSON.stringify(data['CustomData']));
 
+				var transferred;
 				if (data['Target'] && data['Transfer_Options'] && data['Transfer_Options']['transfer_type']) {
-
 					console.log('\n*** call Container.execute_transfer from Lab_protocol Model');
 					promises.push( Container.execute_transfer( 
 						ids,
 						data['Target'],
-						data['Transfer_Options'], // test data
+						data['Transfer_Options'], // test data}
+
 						data['CustomData']
 					));
 
+					transferred = promises.length;
 				}
 				else {
-					console.log("No Prep Name in data: " + JSON.stringify(data));
+					console.log("Not a transfer step..." + JSON.stringify(data));
 				}
 				
-				console.log("save attributes to plates: " + plate_list + '; prep: ' + prep_id);
+				console.log("save attributes to plates: " + plate_list + '; prep: ' + first_prep_id);
 
 				promises.push( Attribute.save('Plate', ids, data["Plate_Attribute"]) );
-				promises.push( Attribute.save('Prep', prep_id, data["Prep_Attribute"]) );
+				promises.push( Attribute.save('Prep', first_prep_id, data["Prep_Attribute"]) );
 				
-				promises.push( Record.update('Plate', ids, {'FKLast_Prep__ID' : prep_id[0] } ) );
+				promises.push( Record.update('Plate', ids, {'FKLast_Prep__ID' : last_prep_id } ) );
 
 				q.all( promises )
 				.then ( function (Qdata) {
-					sails.config.messages.push('Saved step...');
-					deferred.resolve(Qdata);
+					// sails.config.messages.push('Saved step...');
+			
+					if (transferred) { deferred.resolve(Qdata[transferred-1]) }
+					else { deferred.resolve(result) }
 				})
 				.catch ( function (Qerr) {
-					sails.config.warnings.push('There was a glitch somewhere in the step saving process');
+					// sails.config.warnings.push('There was a glitch somewhere in the step saving process');
 					console.log("Error Completing all actions: ");
 					//for (var i=0; i<Qerr.length; i++) {
 						console.log("\n** " + i + " Error: " + JSON.stringify(Qerr));
@@ -144,20 +156,32 @@ module.exports = {
 			var promises = [];
 			promises.push( Record.createNew('Prep', data['Prep'] ) );
 
-			// if completed ...
-			promises.push( Record.createNew('Prep',{ Prep_Name : 'Completed Protocol', Prep_DateTime : '<now>', FK_Employee__ID : '<user>'}) );
+			if (data['status'] && data['status'].match(/complete/i)) {
+				// Add update record to Prep table indicating that the protocol has been completed ... 
+				var lab_protocol_id = data['Prep']['FK_Lab_Protocol__ID'];
+				promises.push( 
+					Record.createNew('Prep',{ 
+						Prep_Name : 'Completed Protocol', 
+						Prep_Action: 'Update', 
+						FK_Lab_Protocol__ID: lab_protocol_id, 
+						Prep_DateTime : '<now>', 
+						FK_Employee__ID : '<user>'
+					}) 
+				);
+			}
 
 			//Record.createNew('Prep', data['Prep'] )
 			q.all(promises)
 			.then (function (result) {
 				for (var i=0; i< result.length; i++) {
+					console.log("Added Prep(s): " + JSON.stringify(result));
+
 					var PrepResult = result[0];
-					console.log("Added Prep: " + JSON.stringify(PrepResult));
 					var ids = [];
 					var prepId = PrepResult.insertId;  // Legacy
 					var added = PrepResult.affectedRows;
 
-					sails.config.messages.push('added Prep: ' + prepId);
+					// sails.config.messages.push('added Prep: ' + prepId);
 
 					for (var i=0; i<data['Plate'].length; i++) {
 						data['Plate'][i]['FK_Prep__ID'] = prepId;
@@ -168,7 +192,7 @@ module.exports = {
 					var promises2 = [];
 					promises2.push( Record.createNew('Plate_Prep', data['Plate'] ) )
 
-				});
+				}
 
 				q.all(promises2)
 				//Record.createNew('Plate_Prep', data['Plate'] )
@@ -179,7 +203,7 @@ module.exports = {
 					deferred.resolve({ Prep: result, Plate_Prep: result2});
 				})
 				.catch (function (err) {
-					sails.config.errors.push('Error creating Plate record ' + err);
+					// sails.config.errors.push('Error creating Plate record ' + err);
 					deferred.reject("Error creating Plate record: " + err);
 					//return res.send("ERROR creating Plate record: " + err)
 				});
@@ -271,86 +295,6 @@ module.exports = {
 		}
 		return cb(null, { 'Plate' : Plate_attributes, 'Prep' : Prep_attributes });
 
-	},
-
-	'input_list' : function (query_result) {
-		// returns { input: [array of input strings], attributes: [array of attributes] }
-		var deferred = q.defer();
-
-		var Input = [];
-		var Attributes = [];
-
-		var inputArray = [];
-		var Plate_attributes = [];
-		var Prep_attributes = [];
-
-		var deferred = q.defer();
-
-		var staticInput = ['Split', 'Prep_Comments'];
-
-		console.log("QR: " + JSON.stringify(query_result));
-
-		var list = [];
- 		for (i=0; i<query_result.length; i++) {
-			var input = query_result[i]['input_options'];
-			if (input) { 				var stepInput = input.split(':');
-				list = _.union(list, stepInput);
-			}
-		}
-
-		console.log("List: " + list.join(','));
-		var ordered = ['transfer_qty','Split','solution','solution_qty','equipment'];
-		var last    = ['location','comments'];
-		var orderedList = [];
-		var attributeList = [];
-		// reorder list in standard order for normal input //
-
-		var Included = {};
-		for (var i=0; i<ordered.length; i++) {
-			if ( list.indexOf(ordered[i]) > 0 ) {
-				orderedList.push(ordered[i])
-				Included[ordered[i]] = 1;
-			}
-		}
-		for (var i=0; i<list.length; i++) {
-			if ( Included[list[i]]) {
-				console.log('already included ' + list[i]);
-			}
-			else if ( last.indexOf(list[i]) > 0 ) { 
-				console.log('moving to back: ' + list[i]);
-			}
-			else {
-				attributeList.push(list[i]);
-				orderedList.push(list[i]);
-			}
-		}
-
-		for (var i=0; i<last.length; i++) {
-			if ( list.indexOf(last[i]) ) {
-				orderedList.push(last[i])
-				Included[last[i]] = 1;
-			}
-		}
-
-		console.log("Reordered List: " + orderedList.join(', '));
-		// Legacy fields specified //
-		var fields = "Attribute_ID as id, Attribute_Class as model, Attribute_Name as name, Attribute_Type as type, Attribute_Format as format"; // legacy 
-		var query = 'SELECT ' + fields + " FROM Attribute WHERE Attribute_Class IN ('Plate','Prep') AND Attribute_Name IN ('" 
-			+ attributeList.join("','")
-			+ "')";
-
-		console.log("SQL: " + query);
-
-		Record.query(query, function (err, attributeData) {
-			if (err) { deferred.reject("error looking for Attributes") }
-			else {
-				console.log("Attributes: " + JSON.stringify(attributeData))
-				deferred.resolve({ 'input' : orderedList, 'attributes' : attributeData});
-			}
-		});
-
-		console.log("Union: " + JSON.stringify(list));
-		return deferred.promise;
 	},
 };
 
