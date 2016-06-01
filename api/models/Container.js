@@ -104,7 +104,7 @@ module.exports = {
 			left_joins.push('Rack AS Box ON Rack.FKParent_Rack__ID=Box.Rack_ID');
 			fields.push ("case WHEN Box.Rack_Type='Box' THEN Box.Rack_ID ELSE NULL END as box_id");
 			fields.push ("case WHEN Box.Rack_Type='Box' THEN Box.Capacity ELSE NULL END as box_size");
-			fields.push ("case WHEN Rack.Rack_Type='Slot' THEN Rack_Name ELSE NULL END as position");
+			fields.push ("case WHEN Rack.Rack_Type='Slot' THEN Rack.Rack_Name ELSE NULL END as position");
 		}
 
 		if ( include.match(/attribute/) ) {
