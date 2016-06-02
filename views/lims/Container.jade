@@ -43,11 +43,12 @@ block content
           include uploadMatrix.jade
 
         if debug || 1
-          hr
-          h2.alert.alert-warning Debugging Information:  (hidden in production)
-          b session: #{JSON.stringify(session)} 
-          BR
-          b Samples: #{JSON.stringify(Samples)}
-          BR
-          b IDs: #{JSON.stringify(sampleList)}
-          hr
+          div.alert.alert-danger
+            a(href="#" onclick="return false;" class="close" data-dismiss="alert" aria-label="close") &times;
+            h2 Debugging Information:  (hidden in production)
+            b session: #{JSON.stringify(session)} 
+            BR
+            b Samples: #{JSON.stringify(Samples)}
+            BR
+            b IDs: #{JSON.stringify(sampleList)}
+            hr
