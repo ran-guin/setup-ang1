@@ -93,7 +93,9 @@ module.exports.routes = {
   'GET /lookup/:table' : 'RecordController.lookup',
   'GET /attribute/:model/:attribute' : 'AttributeController.prompt',
 
+  'GET /remote_login' : 'Remote_login.validate',
   'POST /remote_login' : 'Remote_login.validate',
+  'GET /remote_login/test' : 'Remote_login.test',
   'POST /remote_login/test' : 'Remote_login.test',
 
   'GET /admin' : 'UserController.admin',
@@ -106,6 +108,8 @@ module.exports.routes = {
   * for configuration options and examples.                                  *
   *                                                                          *
   ***************************************************************************/
+  'POST /alDente_protocol' : 'Remote_login.protocol',
+  
   'POST /uploadMatrix' : 'ContainerController.uploadMatrix',
   'POST /transfer' : 'ContainerController.transfer',
 
