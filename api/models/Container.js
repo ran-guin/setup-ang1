@@ -390,6 +390,12 @@ module.exports = {
 				for (var i=0; i<target_list.length; i++) {
 					targets.push(target_list[i]['id']);
 				}
+
+				if (ids.length && ids.length != targets.length) { 
+					sails.config.warnings.push("list of retrieved pre-printed plates is shorter than expected!");
+				}
+				deferred.resolve({});
+				/*
 				Container.loadData(targets)
 				.then (function (reloaded) {
 					if (ids.length && ids.length != targets.length) { 
@@ -400,6 +406,7 @@ module.exports = {
 				.catch (function (err) {
 					deferred.reject({ error: "problem reloading samples: " + targets.join(',') + " : " + err});
 				});
+				*/
 			}
 		})
 		.catch ( function (err) {
