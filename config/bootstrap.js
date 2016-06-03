@@ -21,6 +21,9 @@ module.exports.bootstrap = function(cb) {
   // sails.sql_helper = require('./../custom_modules/sql-helper.js');
 
 	sails.config.root = process.env.LITMUS_ROOT || '';
+	sails.config.messages = [];
+	sails.config.warnings = [];
+	sails.config.errors = [];
 
 	var models = Object.keys(sails.models);
 
