@@ -57,7 +57,7 @@ module.exports = {
 
 		var include = 'prep, position, attributes';
 
-		sails.config.messages.push("Loaded Plate Data...");
+//		sails.config.messages.push("Loaded Plate Data...");
 
 		ids = Record.cast_to(ids, 'array');
 		id_list = ids.join(',');
@@ -124,6 +124,17 @@ module.exports = {
 	    		deferred.reject("Error: " + err);
 	    	}
 	    	else {
+
+	    		for (var i=0; i<result.length; i++) {
+	    			if (
+	    				result[i].protocol_status == 'In Process' 
+	    				&&  result[i].last_step.match(/^(Aliquot|Extract|Transfer|Pre-Print) /)
+	    				&& ! result[i].last_step.match(/ out to /) 
+	    				) {
+	    					// differentiate internal transfer steps from later (inapplicable) steps 
+	    					result[i].protocol_status = 'Completed Transfer';
+	    			}
+	    		}
 	    		// console.log("Loaded DATA: " + JSON.stringify(result));
 	    		deferred.resolve(result);
 	    	}
