@@ -68,6 +68,10 @@ function protocolController ($scope, $rootScope, $http, $q) {
             $scope.Options = config['Options'] || {};   
 
             $scope.Attributes = config['Attributes'];
+            $scope.attribute_list = [];
+            if ($scope.Attributes ) { 
+                $scope.attribute_list = Object.keys($scope.Attributes);
+            }
 
             $scope.user = 'Ran';  // TEMP
             $scope.PrepFields = [];
@@ -221,8 +225,8 @@ function protocolController ($scope, $rootScope, $http, $q) {
 
         if (action != 'Skipped') {
             // Load Attribute Data 
-            for (var i=0; i<$scope.Attributes.length; i++) {
-                var att = $scope.Attributes[i];
+            for (var i=0; i<$scope.attribute_list.length; i++) {
+                var att = $scope.Attributes[ $scope.attribute_list[i] ];
                 var key = att.name + $scope.stepNumber;
                 if (att.type == 'Count' && att.model == 'Plate') { 
                     $scope[key] = '<increment>';
