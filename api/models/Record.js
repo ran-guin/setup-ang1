@@ -337,7 +337,7 @@ module.exports = {
 							var nextId = target_id + i;
 							target_ids.push(nextId);
 						}
-						Attribute.clone(table, ids, target_ids)
+						Attribute.clone(table, ids, target_ids, resetData, options)
 						.then (function (data1) {
 							console.log("attribute update: " + JSON.stringify(data1));
 							deferred.resolve({ data: data, insertIds: target_ids, created: newResponse, attributes: data1});
