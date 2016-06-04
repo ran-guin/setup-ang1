@@ -88,18 +88,19 @@ block content
                           - pattern = formats[i];
                           - def     = defaults[i];
 
-                          - var attr_index = attributes.indexOf(fld);
+                          if attributes[alias]
+                            - fType = attributes[alias].type
+                            if fType === 'Count'
+                              - fType = 'hidden'
+                            // - var attr_index = attributes.indexOf(fld);
 
                           if (fld != field)
                             - mandatory = true;
                             - pattern = "^[\\S]{1,}$"; 
 
-                          div
-                            // remove this requirement (ng-if="Show['#{fld}']")
-                            if attributes[fld]
-                              - fType = attributes[fld];
-
-                            // Prompt for this field //
+                          if fType === 'hidden' 
+                            input(type='hidden' name='#{fld}#{Snum}' id='#{fld}#{Snum}' ng-model='#{fld}#{Snum}' force=1)
+                          else 
 
                             div.form-group
                               label.col-sm-2.control-label(for='#{fld}#{Snum}') #{alias}
