@@ -1,7 +1,7 @@
 
 /* Designed to be used with loadLookup, which dynmically injects HTML for dropdown table */ 
 $(document).on("click", ".dropdown-menu li a", function() {
-	var label = $(this).text() || '';
+	var label = $(this).attr('label') || $(this).text() || '';
 	var id = $(this).attr('value') || '';
 	var value = $(this).data('value');
 
