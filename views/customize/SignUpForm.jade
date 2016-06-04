@@ -1,16 +1,18 @@
 div(ng-app='myApp')
-      // div(ng-controller="FancyFormController")
+  div(ng-controller="SharedController")
+    div(ng-controller="FancyFormController")
       form(role='form' method='post' action="#{sails.config.root}/signup")
         .form-group
           label(for='user')
             i.fa.fa-user
             |  Username
-          input#user.input-lg.form-control(name='user' type='text' required ng-model='user' ng-click="testUnique('user','user','name')" placeholder='-- Enter Username --' default='' value="" force=1)
+          input#user.input-lg.form-control(name='user' type='text' required ng-model='user' ng-blur="testUnique('user','user','name')" placeholder='-- Enter Username --' default='' value="" force=1)
+          span.alert-danger(ng-show='user_errors') {{user_errors}}
         .form-group
           label(for='email')
             i.fa.fa-email
             |  Email
-          input#email.input-lg.form-control(name='email' type='text', ng-model='email' placeholder='-- Enter Email --' default='' value="" force=1)
+          input#email.input-lg.form-control(name='email' type='text', ng-model='email' ng-blur="testUnique('email','user','email')" placeholder='-- Enter Email --' default='' value="" force=1)
         .form-group
           label(for='pwd')
             i.fa.fa-eye
@@ -21,8 +23,6 @@ div(ng-app='myApp')
             i.fa.fa-eye
             |  Confirm Password
           input#pwd2.input-lg.form-control(name='confirm_password' type='password' ng-model='confirm_password' placeholder='-- Confirm password --')                
-        button.btn.btn-lg.btn-default.btn-success.btn-block(type='submit')
+        button.btn.btn-lg.btn-default.btn-success.btn-block(type='submit' ng-disabled="custom_disable")
           fa.fa.fa-power-off
           |  Submit 
-        hr
-        button.btn(type='button' ng-click="testUnique('user','user','name')") TEST
