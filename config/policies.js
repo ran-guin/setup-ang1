@@ -58,7 +58,7 @@ module.exports.policies = {
       'login'  : true,
       'signup' : true,
       'logout' : true,
-      'home' : 'sessionAuth',
+      'home' : true,   // sessionAuth',
 	     'dashboard'	: "sessionAuth",	
 //      '*' : "sessionAuth"
   },
@@ -84,6 +84,11 @@ module.exports.policies = {
 
   //'*' : ['sessionAuth'],
   '*' : 'sessionAuth',
+
+  'container': {
+    'history' : true,
+    'summary' : true,
+  }
 
   /***************************************************************************
   *                                                                          *
