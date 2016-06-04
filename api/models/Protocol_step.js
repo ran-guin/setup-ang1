@@ -54,6 +54,7 @@ module.exports = {
 
 	parse_last_step : function (data) {
 
+		console.log("parse last step details...");
 		var last_step = {};
 		var warningMsg;
 		if (data[0] && data[0].last_protocol_id) {
@@ -203,8 +204,13 @@ module.exports = {
 
 		Record.query_promise(query)
 		.then (function (attributeData) {
+			var Atts = {};
+			for (var i=0; i<attributeData.length; i++) {
+				var att = attributeData[i].name;
+				Atts[att] = attributeData[i];
+			}
 			console.log("Attributes: " + JSON.stringify(attributeData))
-			deferred.resolve({ 'input' : orderedList, 'attributes' : attributeData});
+			deferred.resolve({ 'input' : orderedList, 'attributes' : Atts});
 		})
 		.catch (function (err) {
 			deferred.reject("error looking for Attributes"); 
