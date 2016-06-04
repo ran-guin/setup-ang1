@@ -23,7 +23,8 @@ block content
 
     hr
     div(ng-app='myApp')
-      div(ng-controller="CommonController")
+      div(ng-controller="SharedController")
+       div(ng-controller="FancyFormController")
         div(ng-controller="WellController" ng-init="#{init}")
           div(ng-controller='ProtocolController' ng-init="#{init}" ngcloak)
             
