@@ -51,7 +51,7 @@ module.exports = {
 		var ids = req.param('ids');
 		var element = req.param('element') || 'injectedData';   // match default in CommonController
 
-		var flds = ['id', 'container_format', 'sample_type', 'qty', 'qty_units', 'attributes'];
+		var flds = ['Parent', 'id', 'container_format', 'sample_type', 'qty', 'qty_units', 'attributes'];
 
 		Container.loadData(ids)
 		.then (function (result) {
