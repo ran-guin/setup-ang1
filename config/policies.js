@@ -73,6 +73,7 @@ module.exports.policies = {
 
 //  '*': ['tokenAuthorized'],
   'remote_login' : {
+    '*' : true,
     'test' : true,
     'validate' : true,
   },

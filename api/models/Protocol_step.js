@@ -81,44 +81,50 @@ module.exports = {
 		return { last_step: last_step, warning: warningMsg };
 	},
 
-	'loadSteps' : function (protocol_id) {
+	'loadSteps' : function (prot) {
 		
 		var deferred = q.defer();
 
-		if (protocol_id) {
+		var protocol;
+		var protocol_id;
+		var subselect;
+		if (prot.match(/[a-zA-Z]/)) {
+			protocol = prot;
+			subselect = "(SELECT id from lab_protocol where name like '" + prot + "')";
+		}
+		else { 
+			protocol_id = prot || 0;
+			subselect = protocol_id;
+		}
 
-			var query = "SELECT * FROM protocol_step"
-				+ " LEFT JOIN Plate_Format ON Plate_Format_ID = Target_format"
-				+ " WHERE Lab_protocol = " + protocol_id
-				+ " GROUP BY protocol_step.id"
-				+ " ORDER BY protocol_step.step_number";
+		var query = "SELECT * FROM protocol_step"
+			+ " LEFT JOIN Plate_Format ON Plate_Format_ID = Target_format"
+			+ " WHERE Lab_protocol = " + subselect
+			+ " GROUP BY protocol_step.id"
+			+ " ORDER BY protocol_step.step_number";
 
+		console.log("\n** Protocol Step : " + query);
+		Record.query_promise(query)
+		.then ( function (stepData) {
+			Protocol_step.parse_steps( stepData )
+			.then ( function ( data ) {
+				if (! protocol_id && stepData.length) { protocol_id = stepData[0]['Lab_protocol'] }
+				var send = { 
+		    		Steps : stepData, 
+		    		attributes: data.attributes,
+		    		protocol: { id: protocol_id, name: protocol }
+		    	};
 
-			console.log("\n** Protocol Step : " + query);
-			Record.query_promise(query)
-			.then ( function (stepData) {
-				Protocol_step.parse_steps( stepData )
-				.then ( function ( data ) {
-
-					var send = { 
-			    		Steps : stepData, 
-			    		attributes: data.attributes,
-			    	};
-
-					deferred.resolve(send);
-				})
-				.catch ( function (err) {
-					deferred.reject(err);
-				});
-
+				deferred.resolve(send);
 			})
 			.catch ( function (err) {
 				deferred.reject(err);
-			});		
-		}
-		else {
-			deferred.reject("no protocol defined");
-		}
+			});
+
+		})
+		.catch ( function (err) {
+			deferred.reject(err);
+		});		
 
 		return deferred.promise;
 	},

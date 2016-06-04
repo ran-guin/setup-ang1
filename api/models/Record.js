@@ -502,7 +502,13 @@ module.exports = {
 		Record.query_promise(createString)
 		.then ( function (result) {
 			var insertId = result.insertId;
-			sails.config.messages.push(table + ' record added: ' + insertId);
+			var added    = result.affectedRows;
+
+			var msg = added + ' ' + table + ' record(s) added: id(s) from ' + insertId;
+			if (sails.models[table] && sails.models[table].tableType && sails.models[table].taableType.match/lookup/i) { }
+			else if (sails.config.debug) { sails.config.messages.push(msg) }
+			else { sails.config.messages.push(msg) }
+			
 			deferred.resolve(result);
 		})
 		.catch ( function (err) {

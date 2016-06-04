@@ -10,111 +10,141 @@ var q = require('q');
 var request = require('request');
 
 module.exports = {
-	
+
+	validate: function (req, res) {
+		var table = req.param('model');	
+		var test  = req.param('test') || 'Count(*)';
+		var value = req.param('value') || '';
+		var field = req.param('field') || 'name';
+
+		var query = "SELECT " + test + " FROM " + table + " WHERE " + field + " LIKE '%" + value + "%'";
+		console.log("Query: " + query);
+			Record.query_promise(query)
+			.then ( function (result) {
+				return res.json(result);
+			})
+			.catch (function (err) {
+				console.log(err);
+				return res.json(err);
+			});	
+	},
+
 	test : function ( req, res ) {
-		
-		var session;
-		if (req.body  && req.body.Session) { 
-			console.log("BODY: " + JSON.stringify(req.body));
-			session = req.body.Session;
-		}
-		else if (req.param) { session = req.param('Session') }
 
-		var url = "http://bcgdev5/bcg/cgi-bin/alDente.pl";
-		
-		var testid = 1;
-		var testname = 'vivocongusto@gmail.com';
+			var user = { id: 3, name: 'Ran'};
+			
+          console.log("access granted: ");
+          var payload = User.payload(user);
+          
+          if ( req.param('Debug') ) { payload['Debug'] = true; }
 
-		console.log("test session: " + session);
-		var login_url = url + "?Session=" + session;
+          // session authorization
+          req.session.authenticated = true;
+          req.session.payload = payload;
 
-		return res.send( { userid: testid, username: testname, login_url : login_url } );
+          // token authorization 
+          payload['token'] = jwToken.issueToken(payload); 
+          req.headers.authorization = "Bearer [" + payload['token'] + ']';
+
+          sails.config.payload = payload;
+          sails.config.messages = [];
+          sails.config.warnings = [];
+          sails.config.errors   = [];
+
+          return res.render('customize/private_home', payload);
 	},
 
-	validate : function ( req, res ) {
-		// validate user based on externally verified user (assumes security of external site)
-		var input = req.body;
-		console.log("Validate: " + JSON.stringify(input));
+	protocol : function ( req, res) {
+		console.log("run Protocol on Litmus");
 
-		//var url = "http://bcgdev5/bcg/cgi-bin/alDente.pl";
-		var url = "http://localhost:5167/remote_login/test?Session=" + input.Session;
+		var body = {};
+		if (req.body) { body = req.body }
 
-		var timestamp = '2016-08-08';
+		var session = body.alDente_session;
+		console.log("Check session: " + session);
 
-		if (input && input.Session) {
-			console.log('post request...' + url);
-			request.post( url , {Session : input.Session}, function (err, result) {
-				if (err) { res.send("Error requesting remote login") }
-				else if (result && result.body) {			
-					var json = JSON.parse(result.body);
-					console.log("Returned: " + JSON.stringify(json));
+		User.alDente_verification(session)
+		.then ( function (payload) {
+			payload['token'] = jwToken.issueToken(payload); 
+			console.log("\n** alDente Session Info: " + JSON.stringify(payload));
 
-					var userid = json.userid;
-					var username = json.username;
-					var remote_login = json.login_url;
+			console.log("\n** Session Authorized");			
+			// session authorization
+			req.session.authenticated = true;
+			req.session.payload = payload;
 
-					console.log('user: ' + userid + ' = ' + username + ' : ' + remote_login);
+			// token authorization 
+			req.headers.authorization = "Bearer [" + payload['token'] + ']';
 
-	   				// Try to look up user using the provided email address
-	    			User.findOne({ id: userid}, function foundUser(err, user) {
+			sails.config.payload = payload;
+			sails.config.messages = [];
+			sails.config.warnings = [];
+			sails.config.errors   = [];
 
-						if (err) return res.negotiate(err);
+          	var remote_login = payload.remote_login;
 
-						if (!user || (user == 'undefined') ) { 
-							return res.render("customize/public_login", 
-								{ error: "Unrecognized User: " + username + '/' + userid }
-							);
-						}
-						else {
-							console.log("remote access granted");
-							var payload = User.payload(user, 'Login Access (TBD)');
-							payload['remote_login'] = remote_login;
-							// session authorization
-							req.session.authenticated = true;
-							req.session.payload = payload;
+            console.log("Body: " + JSON.stringify(body));
+            // Run Protocol (similar process as in Lab_protocol.run)
 
-							// token authorization 
-							payload['token'] = jwToken.issueToken(payload); 
-							req.headers.authorization = "Bearer [" + payload['token'] + ']';
+	        var protocol = body['Lab Protocol'];
+			var id_list  = body['Plate_ID'];
+			var set      = body['Plate_Set_Number'];
 
-							sails.config.payload = payload;
+           	if (protocol && id_list && set) { 
+				var ids = id_list.split(',');
+				console.log("load data for ids: " + id_list);
+				Container.loadData(ids)
+				.then ( function (data) {
+					var Samples = data;
+					console.log("Samples: " + JSON.stringify(Samples));	
 
-							console.log("Create remote login record");
-							
-							Record.createNew('remote_login', { 
-								User: userid, 
-								timestamp : timestamp, 
-								url : remote_login,
-							})
-							.then ( function (result) {
-									console.log("Created remote login record");
-									payload['message'] = " Access granted via remote UI ";
-									res.render("customize/private_home", payload);
-							})
-							.catch ( function (err) {
-								console.log("Error recording remote_login record");
-								payload['message'] = "Error storing return login link";
-								res.render("customize/private_home", payload);
-							});
+					Protocol_step.loadSteps(protocol)
+					.then ( function (data) {
+				    	data['plate_ids'] = ids;
+				    	data['Samples']   = Samples;
+				    	data['payload']   = payload;
 
-/*							.exec (function createRL (err, result) {
-								if (err) { res.send({ Error : 'failed to create remote login'}) }
-								else {
-									console.log("Created remote login record");
-									res.render("customize/private_home", payload);
-								}
-							});
+						console.log("SEND: " + JSON.stringify(data));
+						return res.render('lims/Protocol_Step', data);
+					})
+				    .catch ( function (err) {
+				    	console.log("ERROR: " + err);
+				    	return res.json({ error : 'Error encountered: ' + err});
+				    });							
+				})
+				.catch ( function (err) {
+					var msg = "Error loading ids: " + ids;
+					return res.json({ error : msg })
+				});
+			}
+			else {
+				return res.json( {error: 'unexpected input', body: body});
+			}
+	/*
+            Record.createNew('remote_login', { 
+              User: '<user>', 
+              timestamp : '<now>', 
+              url : remote_login,
+            })
+            .then ( function (result) {
+                console.log("Created remote login record");
+                payload['message'] = " Access granted via remote UI ";
+                res.render("customize/private_home", payload);
+            })
+            .catch ( function (err) {
+				console.log("Error recording remote_login record");
+				payload['message'] = "Error storing return login link";
+				res.render("customize/private_home", payload);
+            });
 */
-			        	}
-			        });
-	    		}
-			});
-		}	
-		else {
-			res.send("No Session supplied");
-		}
-	},
+		})
+		.catch ( function (err) {
+			console.log('verification error: ' + err);
+			return res.json({body: body, error: err});
+		});
 
+	},
+	
 	connect : function ( req, res ) {
 		// return connection url for remote login 
 		var deferred = q.defer();
