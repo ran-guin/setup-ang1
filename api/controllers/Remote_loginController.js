@@ -13,11 +13,11 @@ module.exports = {
 
 	validate: function (req, res) {
 		var table = req.param('model');	
-		var test  = req.param('test') || 'Count(*)';
+		var test  = req.param('test') || 'Count(*) as count';
 		var value = req.param('value') || '';
 		var field = req.param('field') || 'name';
 
-		var query = "SELECT " + test + " FROM " + table + " WHERE " + field + " LIKE '%" + value + "%'";
+		var query = "SELECT " + test + " FROM " + table + " WHERE " + field + " LIKE '" + value + "'";
 		console.log("Query: " + query);
 			Record.query_promise(query)
 			.then ( function (result) {
