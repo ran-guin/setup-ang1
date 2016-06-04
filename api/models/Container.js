@@ -77,6 +77,7 @@ module.exports = {
 			'Plate_Format_ID as container_format_id',
 			'Current_Volume as qty',
 			'Current_Volume_Units as qty_units',
+			'FKParent_Plate__ID as Parent',
 		];
 
 		var left_joins = [
@@ -316,7 +317,8 @@ module.exports = {
 				else {
 					// clone new plates 
 					// Add new records to Database //
-					Record.clone('Plate', custom_ids, resetData, { id: Container.alias('id') })
+					options['id'] = Container.alias('id');
+					Record.clone('Plate', custom_ids, resetData, options)
 					.then ( function (cloneData) {
 
 						var returnVal = { Cloned: cloneData };
