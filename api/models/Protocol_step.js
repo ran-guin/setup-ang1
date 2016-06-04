@@ -51,6 +51,35 @@ module.exports = {
 		split_mode	: 'parallel'
 	},
 
+	parse_last_step : function (data) {
+
+		var last_step = {};
+		var warningMsg;
+		if (data[0] && data[0].last_protocol_id) {
+			// Retrieve last step performed on current plate(s)
+			var protocol_ids = _.uniq( _.pluck(data, 'last_protocol_id') );
+			var names = _.uniq( _.pluck(data, 'last_step') );
+			var numbers = _.uniq( _.pluck(data, 'last_step_number') );
+			var statuses = _.uniq( _.pluck(data, 'protocol_status') );
+
+			if (protocol_ids.length > 1) {
+				var protocols = _.uniq( _.pluck(data, 'last_protocol_id') );								
+				warningMsg = "Samples appear to be at different stages of pipeline: " + protocols.join(' AND ');
+			}
+			else if (numbers.length > 1) {
+				warningMsg = "Samples appear to be at different stages of the last protocol: " + steps.join(' AND ');
+				last_step = { protocol_id : protocol_ids[0]}
+			}
+			else {
+				var protocols = _.uniq( _.pluck(data, 'last_protocol') );
+				last_step = { protocol: protocols[0], protocol_id : protocol_ids[0], number: numbers[0], name: names[0], status: statuses[0] }
+			}
+
+			console.log("Last Step: " + JSON.stringify(last_step));
+		}
+		else { console.log("No last step data") }
+		return { last_step: last_step, warning: warningMsg };
+	},
 
 	'loadSteps' : function (protocol_id) {
 		
