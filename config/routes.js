@@ -97,6 +97,9 @@ module.exports.routes = {
   'POST /remote_login' : 'Remote_login.validate',
   'GET /remote_login/test' : 'Remote_login.test',
   'POST /remote_login/test' : 'Remote_login.test',
+  
+  'GET /remote_login/validate' : 'Remote_login.validate',
+  'POST /remote_login/validate' : 'Remote_login.validate',
 
   'GET /admin' : 'UserController.admin',
   /***************************************************************************
