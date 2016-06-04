@@ -6,6 +6,7 @@
 */
 
 var q = require('q');
+var _ = require('underscore-node');
 
 module.exports = {
 	
@@ -57,6 +58,8 @@ module.exports = {
 		var warningMsg;
 		if (data[0] && data[0].last_protocol_id) {
 			// Retrieve last step performed on current plate(s)
+
+			console.log("get last step details...");
 			var protocol_ids = _.uniq( _.pluck(data, 'last_protocol_id') );
 			var names = _.uniq( _.pluck(data, 'last_step') );
 			var numbers = _.uniq( _.pluck(data, 'last_step_number') );
