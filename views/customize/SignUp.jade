@@ -9,25 +9,7 @@
             i.fa.fa-lock.fa
             |  &nbsp; Register
         .modal-body
-          form(role='form' method='post' action="#{sails.config.root}/signup")
-            .form-group
-              label(for='user')
-                i.fa.fa-user
-                |  Email
-              input#email.input-lg.form-control(name='email' type='text', placeholder='-- Enter Email --' default='' value="" force=1)
-            .form-group
-              label(for='pwd')
-                i.fa.fa-eye
-                |  Password
-              input#pwd.input-lg.form-control(name='password' type='password', default='' placeholder='-- Enter password --' force=1)
-            .form-group
-              label(for='pwd2')
-                i.fa.fa-eye
-                |  Confirm Password
-              input#pwd2.input-lg.form-control(name='confirm_password' type='password', placeholder='-- Confirm password --')                
-            button.btn.btn-lg.btn-default.btn-success.btn-block(type='submit')
-              fa.fa.fa-power-off
-              |  Submit 
+          include SignUpForm.jade
         .modal-footer
           button.btn.btn-default.btn-danger.pull-left(type='submit', data-dismiss='modal')
             i.fa.fa-remove
