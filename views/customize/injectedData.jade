@@ -19,7 +19,7 @@ div(id="injected#{element}")
 			tr
 				each field in fields
 					- var key = alias[field] || field;
-					td
+					td(style='padding:10px')
 						b !{record[key]}
 		p &nbsp;
 
