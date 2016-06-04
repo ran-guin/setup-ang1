@@ -10,12 +10,9 @@ function protocolController ($scope, $rootScope, $http, $q) {
 
     $scope.initialize = function (config) {
 
-        if (config && config['Steps']) { 
-            console.log("loaded protocol steps");
-            $scope.Steps = config['Steps'];
-            $scope.steps = $scope.Steps.length;
-            $scope.protocol = config['protocol'];
-
+        if (config && config['Samples']) {
+            // both protocol tracking and standard Container page 
+ 
             console.log("parsed: " + config['Samples'].constructor);
             if (config['Samples'].constructor === String) {
                 $scope.Samples = JSON.parse(config['Samples'])
@@ -23,12 +20,52 @@ function protocolController ($scope, $rootScope, $http, $q) {
             else {
                 $scope.Samples = config['Samples'] || {};   // array of sample info                
             }
+ 
+            $scope.load_Sample_info();
+
+            $scope.last_step = config['last_step'];
+      }
+
+        if (config && config['Steps']) { 
+            console.log("loaded protocol steps");
+            $scope.Steps = config['Steps'];
+            $scope.steps = $scope.Steps.length;
+            $scope.protocol = config['protocol'];
+
+
+            if ($scope.last_step && $scope.last_step.protocol && $scope.protocol && $scope.last_step.protocol == $scope.protocol.name) {
+                console.log("noted last step: " + JSON.stringify($scope.last_step));
+                for (var i=0; i<$scope.Steps.length; i++) {
+                    if ($scope.Steps[i].step_number === $scope.last_step.number) {
+                        if (i >= $scope.Steps.length-2) {
+                            console.log("Already completed last step ...");
+                            $scope.warnings.push('Already completed this step');
+                        }
+                        else if ( $scope.last_step.status === 'Completed Protocol') {
+                            $scope.messages.push("Completed '" + $scope.last_step.protocol + "' protocol");
+                        }
+                        else if ( $scope.last_step.status === 'Completed Transfer') {
+                            $scope.stepNumber = i+1;
+                            $scope.messages.push("already completed '" + $scope.last_step.name + "' ... repeat if required or fetch target samples to continue protocol");
+                        }
+                        else {
+                            $scope.stepNumber = i+2;
+                            console.log("point to next step if applicable");
+                            $scope.messages.push("already completed: '" + $scope.last_step.name + "' ... continuing to next step");
+                        }
+                        i = $scope.Steps.length; // stop here.. 
+                    }
+                }
+            }
+            else {
+                console.log("Last Step : " + JSON.stringify($scope.last_step));
+                console.log("Protocol: " + JSON.stringify($scope.protocol));
+                $scope.messages.push("Starting new protocol");
+            }
 
             $scope.warning = "Already Completed";
 
             $scope.Options = config['Options'] || {};   
-
-            $scope.load_Sample_info();
 
             $scope.Attributes = config['Attributes'];
 
@@ -91,7 +128,6 @@ function protocolController ($scope, $rootScope, $http, $q) {
         else { $scope.sample_type = 'undefined' }
 
         console.log("Samples: " + $scope.plate_list);
-
     }
 
     $scope.forward = function forward(action) {
