@@ -46,7 +46,7 @@ module.exports = {
 							warningMsg = "Scanned " + ids.length + " records but only found " + sampleList.length;
 						}
 
-						var get_last_step = Protocol_Step.parse_last_step(data);
+						var get_last_step = Protocol_step.parse_last_step(data);
 						var last_step = get_last_step.last_step;
 						if (get_last_step.warning) { warningMsg = get_last_step.warning }
 
