@@ -1,4 +1,5 @@
 div(id="injected#{element}")
+	- var alias = {};
 	h2 #{title}
 		div.navbar-right
 			button.btn.btn-danger.btn-sm(type='button' onclick="document.getElementById('#{element}').innerHTML = ''") Close
@@ -6,12 +7,19 @@ div(id="injected#{element}")
 		tr
 			thead
 				each field in fields
+					- var key = field.match(/ as \w+$/)
+					if key && key.length
+						- label = key[0].replace(' as ','');
+						- alias[field] = label;
+					else 
+						- label = field;
 					th.bg-primary(style="padding:4px")
-						b #{field}
+						b #{label}
 		each record,i in data
 			tr
 				each field in fields
+					- var key = alias[field] || field;
 					td 
-						b #{record[field]}
+						b #{record[key]}
 	p &nbsp;
 
