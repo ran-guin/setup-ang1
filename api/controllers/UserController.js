@@ -54,7 +54,7 @@ module.exports = {
 
     console.log("BODY: " + JSON.stringify(req.body));
     
-    var tryuser = req.body.user || req.body.email || req.param('user');
+    var tryuser = req.body.user || req.body.email;
     var pwd = req.body.password || req.param('password');
 
     console.log('attempt login by ' + tryuser);
@@ -64,9 +64,9 @@ module.exports = {
     // Try to look up user using the provided email address
     // User.findOne({
 
-      var query = "SELECT user.id, user.name, encryptedPassword, email, group_concat(distinct access) as access from user left join grp_members__user_groups ON user.id = user_groups LEFT JOIN grp ON grp_members=grp.id WHERE email ='" 
-        + tryuser 
-        + "' GROUP BY user.id";
+      var query = "SELECT user.id, user.name, encryptedPassword, email, group_concat(distinct access) as access from user left join grp_members__user_groups ON user.id = user_groups LEFT JOIN grp ON grp_members=grp.id "
+      + " WHERE email ='" + tryuser + "' OR user.name = '" + tryuser + "'" 
+      + " GROUP BY user.id";
 
       console.log("Q: " + query);
       Record.query(query, function (err, results) {
@@ -151,8 +151,8 @@ module.exports = {
    */
   signup: function(req, res) {
 
-    var email = req.body.user || req.body.email;
-    var user = req.body.user || email;
+    var user = req.body.user ;
+    var email = req.body.email ;
 
     var pwd = req.body.password;
     var pwd2 = req.body.confirm_password;
@@ -215,6 +215,8 @@ module.exports = {
 
               var token = jwToken.issueToken(payload);
               
+              sails.config.messages.push("Generated new user... you many now log in");
+
               console.log('Generated new user: ' + JSON.stringify(payload));
               console.log("Token issued: " + token);
               
