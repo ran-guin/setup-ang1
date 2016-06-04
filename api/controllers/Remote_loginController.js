@@ -10,7 +10,25 @@ var q = require('q');
 var request = require('request');
 
 module.exports = {
-	
+
+	validate: function (req, res) {
+		var table = req.param('model');	
+		var test  = req.param('test') || 'Count(*)';
+		var value = req.param('value') || '';
+		var field = req.param('field') || 'name';
+
+		var query = "SELECT " + test + " FROM " + table + " WHERE " + field + " LIKE '%" + value + "%'";
+		console.log("Query: " + query);
+			Record.query_promise(query)
+			.then ( function (result) {
+				return res.json(result);
+			})
+			.catch (function (err) {
+				console.log(err);
+				return res.json(err);
+			});	
+	},
+
 	test : function ( req, res ) {
 
 			var user = { id: 3, name: 'Ran'};
