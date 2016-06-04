@@ -3,12 +3,12 @@ form(role='form' method='post' action="#{sails.config.root}/login")
     label(for='usrname')
       i.fa.fa-user
       |  Username
-    input#email.input-lg.form-control(name='email' type='text', placeholder='-- Enter email --')
+    input#email.input-lg.form-control(name='email' type='text' default='' force=1 placeholder='-- Enter email or username --')
   .form-group
     label(for='psw')
       i.fa.fa-eye
       |  Password
-    input#password.input-lg.form-control(name='password' type='password', placeholder='-- Enter password --')
+    input#password.input-lg.form-control(name='password' type='password' default='' force=1 placeholder='-- Enter password --')
   .checkbox
     label
       input(type='checkbox', name='remember' value='', checked='')
