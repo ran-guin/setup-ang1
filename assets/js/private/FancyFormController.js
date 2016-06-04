@@ -8,20 +8,31 @@ app.controller('FancyFormController',
         // Support Basic Password Validation and Confirmation
         // usage: ng-model='repeat' ng-key-up="compare(repeat)"
 
-	$scope.custom_disable = false;
+        $scope.custom_disable = false;
 
         $scope.testUnique = function (element, model, field) {
             console.log("CHECK UNIQUENESS");
-            var url = "/remote_login/validate?model=" + model + '&value=' + $scope[element];
+            
+            if (! field) { field = element }   // default to same name as element 
+
+            var url = "/remote_login/validate?model=" + model + '&value=' + $scope[element] + '&field=' + field;
             console.log("URL: " + url); 
-	    $http.get(url)
+            $http.get(url)
             .then ( function (result) {
-                if (result[0] && result[0].count) {
-			$scope.warnings.push("not unique");
-			$scope.custom_disable = true; 
-		}
-		else { $scope.custom_disable = false }
-	    })
+                console.log("Got " + JSON.stringify(result.data));
+                if (result.data && result.data[0] && result.data[0].count) {
+                    var msg = $scope[element] + " is already used.  (" + element + " must be unique) ";
+                    $scope.warnings.push(msg);
+                    $scope[element + '_errors'] = msg;
+                    $scope.custom_disable = true; 
+                    console.log("Conflict");
+        		}
+        		else { 
+                    console.log("no conflict"); 
+                    $scope[element + '_errors'] = false;
+                    $scope.custom_disable = false;
+                }
+    	    })
             .catch ( function (err) {
                 $scope.warnings.push('could not confirm uniqueness');
             })
