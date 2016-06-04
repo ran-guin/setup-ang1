@@ -110,7 +110,7 @@ module.exports = {
 		}
 
 		if ( include.match(/attribute/) ) {
-			fields.push("GROUP_CONCAT( CONCAT(Attribute_Name,'=',Attribute_Value) SEPARATOR '; ') as attributes");
+			fields.push("GROUP_CONCAT( CONCAT(Attribute_Name,'=',Attribute_Value) SEPARATOR ';<BR>') as attributes");
 			left_joins.push('Plate_Attribute ON Plate_Attribute.FK_Plate__ID=Plate_ID');
 			left_joins.push('Attribute ON Plate_Attribute.FK_Attribute__ID=Attribute_ID');
 		}
