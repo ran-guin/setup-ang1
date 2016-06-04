@@ -12,43 +12,33 @@ block content
   p &nbsp;
   div.container
      div(ng-app='myApp')
-      div(ng-controller="CommonController" ng-init="plate_ids = '#{plate_ids}'")
-        
-        include ./../core/errorMsg.jade
+      div(ng-controller="SharedController")
+        div(ng-controller="FancyFormController")
+          div(ng-controller="ProtocolController" ng-init="#{init}")
+          
+            include ./../core/errorMsg.jade
 
-        if Samples.length
-          div.alert.alert-info
-            b #{Samples.length} x #{Samples[0].container_format}(s) containing #{Samples[0].sample_type}
-         
-            span &nbsp; &nbsp;
-            button.btn.btn-primary.btn-sm(type='button' ng-show='!injectedAlready()' ng-click="injectData('/Container/summary','', plate_ids)") ?
-            button.btn.btn-danger.btn-sm(type='button' ng-show='injectedAlready()' ng-click='uninjectData()') x    
-
-            span.navbar.navbar-right 
-
-              button.btn.btn-primary.btn-sm(type='button' ng-show="!injectedAlready('injectedHistory')" ng-click="injectData('/Container/history','injectedHistory', plate_ids)") Prep History
-              button.btn.btn-danger.btn-sm(type='button' ng-show="injectedAlready('injectedHistory')" ng-click="uninjectData('injectedHistory')") x    
-              span &nbsp; &nbsp;
-            br
-            h5 [ IDs: #{sampleList[0]} ... #{sampleList[Samples.length-1]} ] &nbsp; &nbsp;
-
-
+            if Samples.length
               
-          div#injectedData
+              include ActiveSamples.jade
 
-          div#injectedHistory
- 
-          include ContainerOptions.jade 
+              if last_step && last_step.protocol
+                p &nbsp;
+                u Progress: 
+                b #{last_step.protocol} [ #{last_step.status} ]
+                br 
+                span (completed '#{last_step.name}')  
+     
+              include ContainerOptions.jade 
 
-          include uploadMatrix.jade
+              include uploadMatrix.jade
 
-        if debug || 1
-          div.alert.alert-danger
-            a(href="#" onclick="return false;" class="close" data-dismiss="alert" aria-label="close") &times;
-            h2 Debugging Information:  (hidden in production)
-            b session: #{JSON.stringify(session)} 
-            BR
-            b Samples: #{JSON.stringify(Samples)}
-            BR
-            b IDs: #{JSON.stringify(sampleList)}
-            hr
+            if debug || 1
+              hr
+              h2.alert.alert-warning Debugging Information:  (hidden in production)
+              b session: #{JSON.stringify(session)} 
+              BR
+              b Samples: #{JSON.stringify(Samples)}
+              BR
+              b IDs: #{JSON.stringify(sampleList)}
+              hr
