@@ -51,9 +51,10 @@ module.exports = {
 
 	},
 
-	clone : function (table, sources, targets) {
+	clone : function (table, sources, targets, resetData, options) {
+		var split = options.split || 1;
 		var deferred = q.defer();
-		console.log('clone attributes for ' + table + 'record(s): ' + targets.join(',' ));
+		console.log('clone attributes for ' + table + ' Record(s): ' + targets.join(',' ));
 
 		var source_list = sources.join(',');
 		var fields = 'FK_' + table + '__ID as reference_id, FK_Attribute__ID as id, Attribute_Name name, Attribute_Type type, Attribute_Value as value';
@@ -63,22 +64,36 @@ module.exports = {
 		var insertPrefix = "INSERT INTO " + table + '_Attribute (FK_' + table + '__ID, FK_Attribute__ID, Attribute_Value) VALUES ';
 
 		var Map = {};
+		var split_index = {};
 		for (var i=0; i<sources.length; i++) {
-			Map[sources[i]] = targets[i];
+			if ( ! split_index[sources[i]] ) { 
+				split_index[sources[i]] = 0;
+				Map[sources[i]] = [];
+			}
+
+			Map[sources[i]][split_index[sources[i]]] = targets[i];
+			split_index[sources[i]]++;
 		}
 
+		var target_index
+
+		console.log("Map: " + JSON.stringify(Map));
+
 		Record.query(query, function (err, attributeData){
+			console.log("Attribute Data: " + JSON.stringify(attributeData));
 			if (err) { deferred.reject("Error retrieving attributes: " + err) }
 			else {
 				if (attributeData.length) {
-					console.log(attributeData.length + " attributes: " + attributeData);
+					console.log(attributeData.length + " attributes: " + attributeData + " x " + split);
 					var insert = [];
-					for (var i=0; i<attributeData.length; i++) {
-						var att = attributeData[i];
-						var target = Map[att.reference_id];
-									
-						var insertion = '(' + target + ',' + att.id + ",'" + att.value + "')"; 
-						insert.push(insertion);	
+					for (j=0; j< split; j++) {
+						for (var i=0; i<attributeData.length; i++) {
+							var att = attributeData[i];
+							var target = Map[att.reference_id][j];
+										
+							var insertion = '(' + target + ',' + att.id + ",'" + att.value + "')"; 
+							insert.push(insertion);	
+						}
 					}
 					var sqlInsert = insertPrefix + insert.join(',');
 					console.log(sqlInsert);
