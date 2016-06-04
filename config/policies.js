@@ -54,11 +54,11 @@ module.exports.policies = {
   },
 
   user: {
-      'create' : true,
-      'login'  : true,
-      'signup' : true,
-      'logout' : true,
-      'home' : true,   // sessionAuth',
+      'create' : 'reset',
+      'login'  : 'reset',
+      'signup' : 'reset',
+      'logout' : 'reset',
+      'home' : 'reset',   // sessionAuth',
 	     'dashboard'	: "sessionAuth",	
 //      '*' : "sessionAuth"
   },
