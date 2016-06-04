@@ -1,8 +1,26 @@
 div(ng-if="messages && messages.length")
   div.alert.alert-success
+    a(href="#" class="close" data-dismiss="alert" aria-label="close") &times;
     ul
       li(ng-repeat="msg in messages")
         i.fa.fa-check
         span &nbsp;
         b {{msg}}
+
+div(ng-if="warnings && warnings.length")
+  div.alert.alert-warning
     a(href="#" class="close" data-dismiss="alert" aria-label="close") &times;
+    ul
+      li(ng-repeat="warning in warnings")
+        i.fa.fa-question
+        span &nbsp;
+        b {{warning}}
+
+div(ng-if="errors && errors.length")
+  div.alert.alert-danger
+    a(href="#" class="close" data-dismiss="alert" aria-label="close") &times;
+    ul
+      li(ng-repeat="err in errors")
+        i.fa.fa-warning
+        span &nbsp;
+        b {{err}}
