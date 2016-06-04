@@ -21,17 +21,25 @@ module.exports = {
 		var ids = req.param('ids');
 		var element = req.param('element') || 'injectedHistory';  // match default in CommonController
 
-		var fields = ['Prep_Name as Step', 'Prep_DateTime as Completed', 'Prep_Comments as Comments'];
-		var flds = ['Step','Completed', 'Comments'];
+		var fields = ['Prep_Name as Step', 'Prep_DateTime as Completed', 'Employee_Name as Completed_By'];
+		fields.push("CASE WHEN Attribute_ID IS NULL THEN '' ELSE GROUP_CONCAT( CONCAT(Attribute_Name,'=',Attribute_Value) SEPARATOR '; ') END as attributes");
+		fields.push('Prep_Comments as Comments');
 
 		var query = "SELECT " + fields.join(',') + " FROM Plate, Plate_Prep, Prep";
-		query = query + " WHERE FK_Plate__ID=Plate_ID AND FK_Prep__ID=Prep_ID AND Plate_ID IN (" + ids + ')';
+
+		query = query + " LEFT JOIN Prep_Attribute ON Prep.Prep_ID=Prep_Attribute.FK_Prep__ID";
+		query = query + " LEFT JOIN Employee ON Prep.FK_Employee__ID=Employee_ID";
+		query = query + " LEFT JOIN Attribute ON Prep_Attribute.FK_Attribute__ID=Attribute_ID";
+		
+		query = query + " WHERE FK_Plate__ID=Plate_ID AND Plate_Prep.FK_Prep__ID=Prep_ID AND Plate_ID IN (" + ids + ')';
+		query = query + " GROUP BY Prep_ID DESC, Plate_ID";
+
 		console.log("Q: " + query);
 		Record.query_promise(query)
 		.then ( function (result) {
 			console.log("got data: " + JSON.stringify(result));
 
-			return res.render('customize/injectedData', { fields : flds, data : result, title: 'Sample History', element: element});
+			return res.render('customize/injectedData', { fields : fields, data : result, title: 'Sample History', element: element});
 		})
 		.catch ( function (err) {
 			return res.json("error injecting data");
