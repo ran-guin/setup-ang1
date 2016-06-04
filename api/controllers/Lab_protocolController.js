@@ -98,6 +98,10 @@ module.exports = {
 
 		console.log("Samples: " + JSON.stringify(Samples));
 
+		var get_last_step = Protocol_step.parse_last_step(Samples);
+		var last_step = get_last_step.last_step;
+		if (get_last_step.warning) { warningMsg = get_last_step.warning }
+
 		Protocol_step.loadSteps(protocol_id)
 		.then ( function (data) {
 
@@ -105,6 +109,7 @@ module.exports = {
 	    	data['protocol']  = { id: protocol_id, name: protocol };
 	    	data['plate_ids'] = plate_ids;
 	    	data['Samples']   = Samples;
+	    	data['last_step'] = last_step;
 
 			console.log("SEND: " + JSON.stringify(data));
 			return res.render('lims/Protocol_Step', data);
