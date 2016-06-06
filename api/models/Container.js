@@ -218,7 +218,7 @@ module.exports = {
 			console.log("input IDS:" + JSON.stringify(ids));
 			console.log("input Target: " + JSON.stringify(target));
 			console.log("input Options: " + JSON.stringify(options));
-			console.log("input CustomData: " + JSON.stringify(CustomData));
+			if (CustomData) { console.log("input CustomData: " + JSON.stringify(CustomData[0]) + '...') }
 
 			var resetData = {
 				'Plate_ID' : null,
@@ -267,11 +267,9 @@ module.exports = {
 					var key = resetKeys[i];
 					var list = Record.cast_to(CustomData, 'Array', key);
 
-					console.log("check for alias for " + key);
 					if (key == 'source_id') { custom_ids = list }
 					else {
 						var field = Container.alias(key);
-						console.log("Alias = " + field);
 						if (field) { 
 							for (var j=0; j<CustomData.length; j++) {
 								var ref = CustomData[j]['source_id'];
@@ -286,10 +284,7 @@ module.exports = {
 									resetData[field][ref].push(reset);
 								} 
 								else { resetData[field][ref] = reset }
-
-								console.log(field + ' : ' + ref + '=' + JSON.stringify(resetData[field][ref]) );
 							}
-							console.log("Reset Custom Data: " + field + ' = ' + resetData[field] );
 						}
 					}
 				}
@@ -323,7 +318,9 @@ module.exports = {
 
 						var returnVal = { Cloned: cloneData };
 
-						console.log("\nCreated new record(s): " + JSON.stringify(cloneData));
+						if (cloneData.data) {
+							console.log("\nCreated new record(s) from execute transfer: " + JSON.stringify(cloneData.data[0] + '...'));
+						}
 						var newIds = cloneData.insertIds;    //'generated list of ids... eg 1,2,3'; // temp testing
 						
 						Barcode.printLabels('Plate', newIds);
@@ -355,7 +352,7 @@ module.exports = {
 
 							sails.config.messages.push('Executed Transfer : ' + options.transfer_type);
 
-							console.log("executed transfer: " + JSON.stringify(returnVal));
+							console.log("executed transfer: "); //  + JSON.stringify(returnVal));
 							var messages = Record.merge_Messages(results);
 							console.log("\n*** Merged Messages: " + JSON.stringify(messages) );
 
@@ -630,7 +627,9 @@ module.exports = {
 
 			Record.clone('Plate', clone_ids, resetData, { id: 'Plate_ID' })
 			.then ( function (cloneData) {
-				console.log("\nCreated new record(s): " + JSON.stringify(cloneData));
+				if (cloneData && cloneData.data) {
+					console.log("\nCreated new record(s) from transfer: " + JSON.stringify(cloneData.data[0] + '...'));
+				}
 				return res,json(cloneData);
 				//return res.render('lims/WellMap', { sources: Sources, Targets: Targets, target: { wells: 96, max_row: 'A', max_col: 12 }, options : { split: 1 }});
 			})
