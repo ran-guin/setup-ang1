@@ -133,7 +133,7 @@ app.controller('FancyFormController',
 
             if (el2) {
                 $scope[lookup + '_label'] = el2.value;
-                console.log('sync label to  ' + el2.value);
+                console.log('sync ' + lookup + '_label to  ' + el2.value);
             }
             else {
                 console.log("Warning: Could not find " + model + " element to synchronize");
