@@ -6,6 +6,7 @@
 */
 
 var q = require('q');
+var bwipjs = require('bwip-js');
 
 module.exports = {
 
@@ -29,8 +30,50 @@ module.exports = {
   	}
   },
 
+  testPrint : function (barcode, printer) {
+
+    var Printer = require('node-printer');
+    var options = { media: 'Custom.200x600mm', n:3 };
+
+    console.log("testPrint...");
+
+    var Plist = Printer.list();
+    console.log(Plist);
+
+    var printer = new Printer(printer);
+
+    var test = printer.printText('Hello');
+
+    var barcode_image = bwipjs.toBuffer({bcid: 'code128', text: barcode});
+
+    var job = printer.printBuffer(buffer);
+
+
+
+  },
+
+  testPrint2 : function (barcode, printer) {
+
+/*
+      printer.printDirect({data:"print from Node.JS buffer" 
+      // or simple String: "some text"
+      //, printer:'Foxit Reader PDF Printer' // printer name, if missing then will print to default printer
+      , type: 'RAW' // type: RAW, TEXT, PDF, JPEG, .. depends on platform
+      , success:function(jobID){
+        console.log("sent to printer with ID: "+jobID);
+      }
+      , error:function(err){console.log(err);}
+    });
+ */
+  },
+
+
   printLabels : function (model, ids) {
-    var msg = "Print " + model + " Labels: " + ids
+    var msg = "Print " + model + " Labels: " + ids[0] +  '..' + ids[ids.length-1];
+    console.log(msg);
+
+    Barcode.testPrint('123','z4m-6')
+
     sails.config.messages.push(msg);
     console.log(msg);
     return { message: msg };
@@ -54,7 +97,7 @@ module.exports = {
   	}
 
   	for (var i=0; i< classes.length; i++) {
-  		var regex = new RegExp(P[classes[i]] + '\\d+', 'ig');
+  		var regex = new RegExp(P[classes[i]] + '\\d+\,?\s*', 'ig');
   		var range = new RegExp(P[classes[i]] + '\\d+\\s*\-\s*' + P[classes[i]] + '\\d+', 'ig');
 
   		Scanned[classes[i]] = [];
