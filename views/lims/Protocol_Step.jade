@@ -30,10 +30,10 @@ block content
             
             include ActiveSamples.jade
 
+            include ./../core/angularMessages.jade
+
             div(ng-show="status != 'Completed'")      
               h2 {{ protocol.name }}
-
-              include ./../core/angularMessages.jade
 
               each Step,index in Steps
                 - var Snum = index+1;
