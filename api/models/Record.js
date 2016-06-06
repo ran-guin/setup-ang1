@@ -84,7 +84,7 @@ module.exports = {
 		var returnVal;
 		if ( target.match(/array/i) ) {		
 			returnVal = [];
-			console.log("casting " + JSON.stringify(input) + ' to ' + target);
+			// console.log("casting " + JSON.stringify(input) + ' to ' + target);
 			if (input && input.constructor === Array) {
 				if (hashKey && input[0] && input[0].constructor === Object && input[0][hashKey]) {
 					for (var i=0; i<input.length; i++) {
@@ -227,7 +227,7 @@ module.exports = {
 
 	      	data.push(Ndata);
 	    }
-	    console.log("RETURN: " + JSON.stringify(data));
+	    console.log("joined data: " + JSON.stringify(data));
 	    //deferred.resolve(data);
 	    return data;
 	},
@@ -323,7 +323,10 @@ module.exports = {
 						//}
 					}
 
-					console.log(table + ' ' + id + " Cloned : " + JSON.stringify(addData));
+					if (i==0) {
+						console.log(table + ' ' + id + " Cloned : " + JSON.stringify(addData));
+					}
+					
 					newData.push(addData);
 				}
 
@@ -421,7 +424,7 @@ module.exports = {
 		var Values = [];
 		var onDuplicate = '';
 
-		console.log("insertion data: " + JSON.stringify(data));
+		console.log("insertion data: " + JSON.stringify(data[0] + '...'));
 		
 		for (var index=0; index<data.length; index++) {
 			var Vi = [];
@@ -497,7 +500,7 @@ module.exports = {
 		}
 
 		var createString = "INSERT INTO " + table + " (" + fields.join(',') + ") VALUES " + Values.join(', ') + onDuplicate;
-		console.log("\nNew Insert String: " + createString);
+		console.log("\nInsert example: \nINSERT INTO " + table + " (" + fields.join(',') + ") VALUES " + Values[0] + onDuplicate);
 
 		Record.query_promise(createString)
 		.then ( function (result) {
