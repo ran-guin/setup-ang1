@@ -22,7 +22,7 @@ module.exports = {
 		var Plate_attributes = [];
 		var Prep_attributes = [];
 
-		console.log(message + " Input: " + JSON.stringify(input));
+		console.log(message + " Input: " + JSON.stringify(input[0]) + '...');
 		for (j=0; j<input.length; j++) {
 			var att1 = input[j].replace('Plate_Attribute=','');
 			var att2 = input[j].replace('Prep_Attribute=','');
@@ -45,7 +45,7 @@ module.exports = {
 
 		Attribute.query(q, function (err, result) {
 		// Attribute.findOne({ 'Attribute_Class': Aclass, 'Attribute_Name': attribute})    // findOne probably requires standard id field ... 
-			console.log("got result: " + JSON.stringify(result));
+			//console.log("got result: " + JSON.stringify(result));
 			return cb(null, result);
 		});
 
@@ -80,11 +80,10 @@ module.exports = {
 		console.log("Map: " + JSON.stringify(Map));
 
 		Record.query(query, function (err, attributeData){
-			console.log("Attribute Data: " + JSON.stringify(attributeData));
+			console.log("Attribute Data: " + JSON.stringify(attributeData[0]) + '...');
 			if (err) { deferred.reject("Error retrieving attributes: " + err) }
 			else {
 				if (attributeData.length) {
-					console.log(attributeData.length + " attributes: " + attributeData + " x " + split);
 					var insert = [];
 					for (j=0; j< split; j++) {
 						for (var i=0; i<attributeData.length; i++) {
@@ -96,10 +95,8 @@ module.exports = {
 						}
 					}
 					var sqlInsert = insertPrefix + insert.join(',');
-					console.log(sqlInsert);
 
 					Record.query(sqlInsert, function (insertError, attUpdate){
-						console.log("Update attributes " + sqlInsert);
 						if (insertError) { deferred.reject("error updating attributes: " + insertError) }
 						else {
 							deferred.resolve({attributes: attUpdate});
@@ -162,9 +159,6 @@ module.exports = {
 
 		var attModel = model + '_Attribute';   // Legacy
 
-		console.log(model + " ids: " + JSON.stringify(ids));
-		console.log(model + ' Attributes: ' + JSON.stringify(data));
-		
 		if (! data 
 			|| data == 'undefined' 
 			|| Object.keys(data) == 'undefined' 
@@ -176,7 +170,6 @@ module.exports = {
 			var atts = Object.keys(data);
 			console.log("KEYS: " + JSON.stringify(atts));
 			console.log("IDS: " + JSON.stringify(ids));
-			console.log(JSON.stringify(sails.config));
 
 			var add = [];
 
@@ -195,11 +188,10 @@ module.exports = {
 				}
 			}
 
-			console.log(model + " Att data: " + JSON.stringify(add));
+			console.log(model + " Att data: " + JSON.stringify(add[0]) + '...');
 
 			Record.createNew(attModel, add )
 			.then (function (AttResult) {
-				console.log("Added " + model + " Attribute: " + JSON.stringify(AttResult));
 				deferred.resolve(AttResult);
 			})
 			.catch ( function (err) {
@@ -221,7 +213,6 @@ module.exports = {
 
 		console.log("Upload Attributes: ");
 		console.log("model = " + model + "; attribute = " + attribute);
-		console.log(JSON.stringify(data));
 
 		var upload = [];
 		var table = model + '_Attribute';
@@ -234,9 +225,11 @@ module.exports = {
 			upload[i]['Set_DateTime'] = '<now>';
 		}
 
+		console.log("upload: " + upload[0] + '...');
+
 		Record.createNew( table, upload )
 		.then ( function (result) {
-			console.log("\nupload results: " + JSON.stringify(result));
+			// console.log("\nupload results: " + JSON.stringify(result));
 			deferred.resolve(result);			
 		})
 		.catch ( function (err) {
