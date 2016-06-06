@@ -270,20 +270,19 @@ function protocolController ($scope, $rootScope, $http, $q) {
         console.log("Transfer ? : " + $scope.Step.transfer_type +  ' = ' + $scope.transfer_type);
         if ($scope.Step.transfer_type) {
 
-            var Target = { 
-                'format' : $scope.Step.Target_format,
-                'sample_type'   : $scope.Step.Target_sample,
-                'qty'               : qty,
-                'qty_units'     : $scope['transfer_qty_units' + $scope.stepNumber + '_label'],
-            };
-
-
             var qty = $scope['transfer_qty' + $scope.stepNumber];
             if ( $scope['transfer_qty' + $scope.stepNumber + '_split']) {
                 qty = $scope['transfer_qty' + $scope.stepNumber + '_split'].split(',');
             }  
+            var qty_units = $scope['units_label'];
+            console.log("Q = " + JSON.stringify(qty) + ' ' + qty_units;
 
-            console.log("Q = " + JSON.stringify(qty));
+            var Target = { 
+                'format' : $scope.Step.Target_format,
+                'sample_type'   : $scope.Step.Target_sample,
+                'qty'           : qty,
+                'qty_units'     : qty_units,
+            };
 
             var Options = {
                 'transfer_type' : $scope.Step.transfer_type,
@@ -400,11 +399,10 @@ function protocolController ($scope, $rootScope, $http, $q) {
     /* Enable split distribution in parallel or in series */
     $scope.splitField = function splitField (field, separator) {
 
-        console.log("\n** Split ** " + field + ' : ' + $scope[field]);
-
         var input = $scope[field];
 
         if (input && input.match(/,/)) {
+            console.log("\n** Split ** " + field + ' : ' + $scope[field]);
             $scope[field + '_split'] = input;
 
             var prefix = $scope.Prefix(field);
@@ -493,12 +491,13 @@ function protocolController ($scope, $rootScope, $http, $q) {
             if (entered > 1) { 
                 $scope['ListTracking' + $scope.stepNumber] = true;
             }  
+
+            console.log("\n** SPLIT: " + $scope[field] + ' OR ' + $scope[field + '_split']);
    
             return array;
         }
         else { console.log('not multiple values...') }
 
-        console.log("\n** SPLIT: " + $scope[field] + ' OR ' + $scope[field + '_split']);
     }
 
     $scope.reset_list_mode = function reset_list_mode ( mode ) {
