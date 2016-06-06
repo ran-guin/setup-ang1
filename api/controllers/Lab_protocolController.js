@@ -96,7 +96,7 @@ module.exports = {
 		var protocol_id = req.body['lab_protocol-id'];
 		var Samples = JSON.parse(req.body.Samples);
 
-		console.log("Samples: " + JSON.stringify(Samples));
+		console.log("Samples: " + JSON.stringify(Samples[0]) + '...');
 
 		var get_last_step = Protocol_step.parse_last_step(Samples);
 		var last_step = get_last_step.last_step;
@@ -111,7 +111,7 @@ module.exports = {
 	    	data['Samples']   = Samples;
 	    	data['last_step'] = last_step;
 
-			console.log("SEND: " + JSON.stringify(data));
+			//console.log("SEND Protocol Step Completion Data: " + JSON.stringify(data));
 			return res.render('lims/Protocol_Step', data);
 		})
 	    .catch ( function (err) {

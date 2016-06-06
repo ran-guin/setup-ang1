@@ -268,8 +268,8 @@ module.exports = {
 			if (err) {
 				return res.send("ERROR: " + err);
 			}
-			console.log("Lookup: " + JSON.stringify(result));
-			//return res.send(result);
+			
+			//console.log("Lookup: " + JSON.stringify(result));
 			return res.render('core/lookup', { table : table, identifier : identifier, data : result, prompt: prompt, defaultTo: defaultTo });
 		});
 	},
