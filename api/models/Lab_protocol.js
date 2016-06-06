@@ -187,19 +187,17 @@ module.exports = {
 						data['Plate'][i]['FK_Prep__ID'] = prepId;
 					}
 				
-					console.log("Send Plate data: " + JSON.stringify(data['Plate']));
-
 					var promises2 = [];
 					promises2.push( Record.createNew('Plate_Prep', data['Plate'] ) )
 
 				}
+				
+				console.log("Added Plate: " + JSON.stringify(data['Plate'][0] + '...'));
 
 				q.all(promises2)
 				//Record.createNew('Plate_Prep', data['Plate'] )
 				.then (function (result2) {
-					for (var i=0; i<result2.length; i++) {					
-						console.log("Added Plate_Prep: " + JSON.stringify(result2[i]));
-					}
+					console.log("Added Plate_Prep: " + JSON.stringify(result2[0] + '...'));
 					deferred.resolve({ Prep: result, Plate_Prep: result2});
 				})
 				.catch (function (err) {
