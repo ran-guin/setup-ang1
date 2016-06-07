@@ -71,7 +71,8 @@ module.exports = {
 
 		var split;
 		var sources = [];
-		var target_format_id = 0;
+
+		console.log("BODY" + JSON.stringify(req.body));
 
 		if (req.body) {
 			var samples = req.body['Samples'];
@@ -82,59 +83,27 @@ module.exports = {
 			Target  = target;
 			Options = JSON.parse(options);
 
+			var ids = [];
+			for (var i=0; i<Sources.length; i++) {
+				ids.push(Sources[i].id);
+			}
+
 			console.log("BODY: " + JSON.stringify(req.body));
 			Sources = JSON.parse(req.body.Samples);
-			target_format_id = req.body['container_format-id'];
-			split = req.body.split;
-		}
-		else { 
-			console.log("use test data for now...")
-			// TEST DATA
-			var starter = 200;
-			var container = 1000;
+			var target_size = req.body['Capacity_label'] || 1;
 
-			target_format_id = 4;
-
-			for (var i=0; i<8; i++) {
-
-				var sources = [];
-				var posn = i*12 + starter;
-				sources.push( 	{ id : posn, position : 'A1', container : container },
-								{ id : posn+1, position : 'A2', container : container },
-								{ id : posn+2, position : 'A3', container : container },
-								{ id : posn+3, position : 'B1', container : container },
-								{ id : posn+4, position : 'B2', container : container },
-								{ id : posn+5, position : 'B3', container : container },
-								{ id : posn+6, position : 'C1', container : container },
-								{ id : posn+7, position : 'C2', container : container },
-								{ id : posn+8, position : 'C3', container : container },
-								{ id : posn+9, position : 'D1', container : container },
-								{ id : posn+10, position : 'D2', container : container },
-								{ id : posn+11, position : 'D3', container : container }
-				);
-				container++;
-			}
-			Sources = sources;
-			Target = { Format : { id : target_format_id }, rows : ['A','B'] }
-		}
-
-		Record.query_promise("SELECT * FROM Plate_Format WHERE Plate_Format_ID = " + target_format_id)
-		.then ( function (result) {
-			if (result.length == 1) {
-
-				var sizes = Object.keys(Rack.wells);
-				return res.render(
+			var sizes = Object.keys(Rack.wells);
+				
+			console.log("target_size: " + target_size);
+			return res.render(
 					'lims/WellMap', 
-					{ sources: Sources, target: result[0], options : { split : split }, sizes: sizes, wells: Rack.wells }
-				);
-			}
-			else {
-				return res.json("unspecified target format: " + JSON.stringify(result));
-			}
-		})
-		.catch ( function (err) {
-			return res.json(err);
-		})
+					{ Samples: Sources, plate_ids: ids, options : { split : split }, target_size: target_size, sizes: sizes, wells: Rack.wells }
+			);
+		}
+		else {
+			return res.json('invalid input');
+		}
+
 
 	},
 
