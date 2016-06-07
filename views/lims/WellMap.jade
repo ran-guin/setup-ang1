@@ -4,15 +4,18 @@ block content
   - Rows = ['A','B','C'];
   - Cols = [1,2,3,4]
   - targets = [];
-  - config = { Sources : sources, Target : target, Options : options, sizes : sizes};
+  - config = { Samples : Samples, Target : target, Options : options, sizes : sizes};
   - var init = "initialize(" + JSON.stringify(config) + ")";
   
   div.container
     div(ng-app='myApp')
-      div(ng-controller="CommonController")
+     div(ng-controller="SharedController")
+      div(ng-controller="FancyFormController")
         div(ng-controller='WellController', ng-init="#{init}")
           if errorMsg 
             h2(style='color:red') Error: #{errorMsg}
+
+          include ActiveSamples
 
           form.form-horizontal(role='form' method='post' action="#{sails.config.root}/transfer")
             p &nbsp;
@@ -65,30 +68,15 @@ block content
             div.form-group
               div.col-sm-6
                 b Target (optional): 
-                  label
-                    input.input(type='radio' value = 'Existing' ng-model="box_target")
-                    b &nbsp; Existing Box &nbsp;
-                  label
-                    input(type='radio' value = 'New' ng-model="box_target")
-                    b &nbsp; New Box &nbsp;   
-                  label
-                    input(type='radio' value = 'No' ng-model="box_target")
-                    b &nbsp; No Target Box &nbsp;  
+                div
+                  input.input-lg(type='text' name='target_rack' size=12 ng-model='target_rack' ng-change="validate_target(); redistribute();" placeholder='-- Scan Loc# --')
               div.col-sm-6
-                div(ng-show="box_target=='New'")                
-                  div.form-group
-                    each size in sizes
-                      input(type='radio' value = '#{size}' ng-model='target_size' ng-click="redistribute()") 
-                      b &nbsp; #{size} &nbsp;
-                div(ng-show="box_target == 'Existing'")
-                  input.input-lg(type='text' name='target_rack' size=12 ng-model='target_rack' ng-change="redistribute()" placeholder='-- Scan Loc# --')
-                div(ng-show="box_target != 'Existing' && box_target != 'New'")
-                  span &nbsp; {{ target_size }}  
+                span.lookup(id='Lookup-container_format' ng-init="loadLookup('container_format','', 'Select Target Format')") 
             
             p &nbsp;
             div.form-group
               div.col-sm-6
-                div(ng-show="split_mode != 'serial'")
+                div
                   b Pack into available wells: 
                   input(type='radio' value = '1' ng-model='pack' ng-change='pack_wells()') 
                   b &nbsp; Yes &nbsp;
@@ -105,6 +93,8 @@ block content
                     label
                       input(type='radio' value = 'column' ng-model="fill_by" ng-click="redistribute();")
                       b &nbsp; Column &nbsp;
+                  div(ng-show="!pack")
+                    b samples retaining original box/rack positions
 
             hr
             div.col-sm-4 &nbsp;
@@ -123,7 +113,7 @@ block content
                   include SourceMap.jade
                   hr
                   ul
-                    li(ng-repeat="source in sources")
+                    li(ng-repeat="source in Samples")
                       b id={{source.id}} posn={{source.position}}
 
                   table
@@ -133,7 +123,7 @@ block content
                     tr(ng-repeat="row in source_rows")
                       td {{ row }}
                       td(ng-repeat="col in source_cols" style="background-color:#{{ rgbList[ $parent.$index*source_cols.length + $index ] }}" ) 
-                        span(data-toggle="tooltip" title="{{sources[$parent.$index*source_cols.length + $index].id}}") &nbsp; &nbsp; &nbsp;
+                        span(data-toggle="tooltip" title="{{Samples[$parent.$index*source_cols.length + $index].id}}") &nbsp; &nbsp; &nbsp;
                 td(style='width:50%')
                   h2 Target Samples: [ size: {{ target_size }}]
                   include TargetMap.jade
@@ -163,10 +153,10 @@ block content
                                   b 0
 
             hr
-            h2 Input Parameters:  [{{ sources.length }} samples]
+            h2 Input Parameters:  [{{ Samples.length }} samples]
             h4 
               b Samples: 
-              span {{ sources[0] }}, {{ sources[1] }} ...{{ sources[sources.length-1] }}
+              span {{ Samples[0] }}, {{ Samples[1] }} ...{{ Samples[Samples.length-1] }}
               p &nbsp;
               b Target: {{ target }}
 
@@ -195,7 +185,7 @@ block content
             span &nbsp; &nbsp;
             button(type='button' ng-click="source_by_Row()") Pick Rows First
             span &nbsp; &nbsp;
-            button(type='button' ng-click="reset_sources()") Reset Source Order
+            button(type='button' ng-click="reset_Samples()") Reset Source Order
 
             hr
             
@@ -216,4 +206,4 @@ block content
 
             b {{ Transfer }}
             hr
-            b {{ sources }}
+            b {{ Samples }}
