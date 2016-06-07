@@ -275,7 +275,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
                 qty = $scope['transfer_qty' + $scope.stepNumber + '_split'].split(',');
             }  
             var qty_units = $scope['units_label'];
-            console.log("Q = " + JSON.stringify(qty) + ' ' + qty_units;
+            console.log("Q = " + JSON.stringify(qty) + ' ' + qty_units);
 
             var Target = { 
                 'format' : $scope.Step.Target_format,
