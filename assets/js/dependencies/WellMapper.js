@@ -551,7 +551,7 @@ function wellMapper() {
             return callback(null, { Transfer : Transfer, TargetColours : TargetColours, Xfer: Xfer, SourceColours : SourceColours });
         }
         else {
-            console.log(callback.constructor + " no call back .. normal returnval ")
+            console.log(" no call back .. normal returnval ")
             return { Transfer : Transfer, TargetColours : TargetColours, Xfer: Xfer, SourceColours : SourceColours };            
         }
     }
