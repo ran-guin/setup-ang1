@@ -4,11 +4,16 @@ app.controller('SharedController',
     ['$scope', '$q', '$rootScope', '$http', '$location', 
     function ($scope, $q, $rootScope, $http, $location) {
 
-        console.log('loaded Common Controller');
+        console.log('loaded Shared Controller');
 
-        $scope.messages = [];
-        $scope.warnings = [];
-        $scope.errors   = [];
+        
+        $scope.reset_messages = function () {
+            $scope.messages = [];
+            $scope.warnings = [];
+            $scope.errors   = [];
+        }
+
+        $scope.reset_messages();
 
         // Automatically generate timestamp attribute along with standard attributes for lastMonth & nextMonth //
         var start = new Date();
