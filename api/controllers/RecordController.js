@@ -215,22 +215,59 @@ module.exports = {
 		console.log("Update...");
 	},
 
+	enum: function (req, res) {
+		var model = req.param('model');
+		var field = req.param('field');
+
+		var Mod = sails.models[model];
+		if (Mod) {
+			var table = Mod.tablename || model;
+
+			var field_atts = Mod.attributes[field];
+			if (field_atts && field_atts.enum) {
+				var options = field_atts.enum;
+
+				var identifier = field;
+				console.log("Enum: " + options.join(','));
+				var data = [];
+				for (var i=0; i<options.length; i++) {
+					data[i] = {};
+					data[i].id = i;
+					data[i].label = options[i];
+				}
+				console.log("Data: " + JSON.stringify(data));
+				return res.render('core/lookup', { table: table, identifier : identifier, data : data, prompt: field })
+			}
+			else { return res.json('not an enum') }
+		}
+		else { return res.json("Model " + model + ' not defined') }
+	},
+
 	lookup: function (req, res) {
+		// Simple accessor to generate lookup table
+		// Options: 
+		// model = Sample_type, condition = '..' -> lookup table of Sample type options
+		//
+		// model = 'Rack', field = 'Capacity'  -> lookup table containing distinct values ... 
 
 		var model = req.param('model') || req.param('table');
 		//var fields = req.param('fields') || '';
 		var prompt = req.param('prompt');
 		var condition = req.param('condition') || 1;
 		var defaultTo = req.param('default') || 'ml';
+		var field     = req.param('field');
+		var label     = req.param('labal');
+		var table = req.param('table');
 
-		var table = model;
 		var idField = 'id';
 		var nameField = 'name';
 		var identifier = table;
 
+		var select;
+
 		if (sails.models[model]) {
 			var Mod = sails.models[model];
-			if (Mod.tableName) { table = Mod.tableName }
+			table = table || Mod.tableName || model;
 
 			if (Mod.lookupCondition) {
 				condition = condition + ' AND ' + Mod.lookupCondition;
@@ -248,6 +285,20 @@ module.exports = {
 				if (Mod.tableAlias) { prompt = '-- Select ' + Mod.tableAlias + ' --' }
 				else { prompt = '-- Select ' + model }
 			}
+			
+			if (field && Mod.attributes[field] && Mod.attributes[field].enum) {
+				var options = Mod.attributes[field].enum;
+				return res.render('core/lookup', { table: table, identifier : identifier, data : { label : options}, prompt: field })
+			}
+			else if (field) {
+				// retrieve distinct list of options from a particular field ... or ...
+				table = table || model;
+				select = " DISTINCT " + field + ' as label';
+			}
+			else {
+				// select all values from specified table as lookup .. 
+				select = idField + ' as id, ' + nameField + ' as label';
+			}
 		}
 
 		console.log('generate ' + table + ' lookup');
@@ -256,10 +307,8 @@ module.exports = {
 
 		console.log("LABELS: " + fields);
 		var extract = fields.split(':');
-		
 */
 
-		var select = idField + ' as id, ' + nameField + ' as label';
 		var query = "Select " + select + " from " + table + " WHERE " + condition;
 
 		console.log("Lookup Query: " + query);
