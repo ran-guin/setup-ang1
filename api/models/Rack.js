@@ -13,13 +13,19 @@ module.exports = {
 	// ** LEGACY **/
 	migrate: 'safe',
 	attributes: {
-    /*
 		Rack_ID : { type : 'integer'},
 		Rack_Name : { type : 'string' },
 		Rack_Alias : { type : 'stirng' },
 		FK_Equipment__ID : { model : 'equipment'},
-		FKParent_Rack__ID : { model : 'rack'}
-*/
+		FKParent_Rack__ID : { model : 'rack'},
+    Rack_Type : { 
+      type : 'string',
+      enum : ['Shelf','Rack','Box','Slot'],
+    },
+    Capacity : { 
+      type : 'string',
+      enum : ['1', '9x9','8x12']
+    },
   },
 
   subtypes : ['Shelf','Rack','Box','Slot'],
