@@ -369,11 +369,37 @@ module.exports = {
 		console.log("Update " + model + ": " + ids);
 		console.log(JSON.stringify(data));
 
+		var table = model;
+		var idField = 'id';
+		if (sails.models[model]) {
+			var Mod = sails.models[model];
+			table = Mod.tableName || model;
+			if (Mod.alias && Mod.alias('id')) {
+				idField = Mod.alias('id');
+				console.log("set id alias to " + idField);
+			}
+			else {
+				console.log("leave id alias to " + idField);
+			}
+		}
+		else {
+			// alternate input for non standard tables : update('Plate:Plate_ID', ids, data);
+			var splitModel = model.split(':');
+			if (splitModel.length > 0 ) { 
+				table = splitModel[0];
+				idField = splitModel[1];
+				console.log("Split " + model + ' into ' + table + ' : ' + idField);
+			}
+			else {
+				console.log("no " + model + " model :  id alias left as " + idField);
+			}
+		}
+
 		var deferred = q.defer();
 		
 		var list = ids.join(',');
 		
-		var query = "UPDATE " + model;
+		var query = "UPDATE " + table;
 		
 		if (data) {
 			var fields = Object.keys(data);
@@ -387,8 +413,9 @@ module.exports = {
 			if (Set.length) {
 				query = query + " SET " + Set.join(',');
 			}			
-			query = query + " WHERE Plate_ID IN (" + list + ")";
+			query = query + " WHERE " + idField + " IN (" + list + ")";
 			
+			console.log("UPDATE: " + query);
 			Record.query_promise( query )
 			.then (function (result) {
 				deferred.resolve(result);				
