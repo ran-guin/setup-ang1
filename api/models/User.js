@@ -47,6 +47,11 @@ module.exports = {
       type: 'string'
     },
 
+    access: {
+      type: 'string',
+      enum: ['Guest', 'Research','Lab', 'Admin','Root'],
+    }
+
     groups : {
       collection: 'grp',
       via: 'members'
