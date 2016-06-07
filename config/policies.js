@@ -80,7 +80,7 @@ module.exports.policies = {
 
   // enable testing during development mode 
   test: {
-      'test' : 'flash'
+      'test' : 'reset'
   },
 
   //'*' : ['sessionAuth'],
