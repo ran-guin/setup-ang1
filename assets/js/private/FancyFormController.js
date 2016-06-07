@@ -53,29 +53,41 @@ app.controller('FancyFormController',
 
         // Automatically Load Lookup Files //
         $scope.loadLookup = function loadLookup(model, labels, prompt, condition) {
-
-            var table = model;
-         
-        	var url = "/lookup/" + table + '/';
+            console.log("Lookup for " + model);
+            var specs = model.split(':');
 
             var options = {};
+            if (specs.length > 1) {
+                // reference fields using format: model:field (eg Rack:Capacity)
+                model = specs[0];
+                field = specs[1];
+                url = "/enum/" + model;
 
-            if ( labels ) { 
-        		url = url + labels;   // defaults to "id:name:label"
-        		options.label = labels;
-        	}
+                options.field = field;
+            }
+            else {
+                url = "/lookup/" + model + '/';
+
+               if ( labels ) { 
+                    url = url + labels;   // defaults to "id:name:label"
+                    options.label = labels;
+                }
+    
+                if (condition) {
+                    options.condition = condition;
+                }
+            }
+
         	if (prompt) {
         		options.prompt = prompt;
         	}
-        	if (condition) {
-        		options.condition = condition;
-        	}
             
         	url = url + '?';
-            console.log("call factory lookup with url: " + url + ':' + JSON.stringify(options));
-       		var got = FancyFormFactory.loadLookup(url, table, options);
+            console.log("Call factory lookup with url: " + url + ':' + JSON.stringify(options));
+            var got = FancyFormFactory.loadLookup(url, model, options);
 
-       		console.log("Loaded " + table + " Lookup Table");
+
+       		console.log("Loaded " + model + " Lookup Table");
     	}
 
         $scope.loadAttributePrompt = function loadAttributePrompt(model, attribute, label, defaultTo) {
