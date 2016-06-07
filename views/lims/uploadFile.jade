@@ -1,0 +1,14 @@
+// standard input variables: 
+
+div
+  form(role='form' method = 'post' action="/uploadFile" enctype="multipart/form-data") 
+    table.table
+      tr
+        td(style='width:30%')
+          h2 Upload Records from File              
+        td(style='width:40%; vertical-align:middle' )
+          span(style='width:100%')
+              input.btn.btn-lg.btn-default(type = 'file' name='MatrixFile' style='display:inline-block')
+              span &nbsp; &nbsp; 
+        td(style='width:30%; vertical-align:middle')                
+          button.btn.btn-lg.btn-success(type='submit') UpLoad File Data
