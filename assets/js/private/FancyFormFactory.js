@@ -7,21 +7,31 @@ app.factory('FancyFormFactory', function($rootScope, $http){
   service.AttributePrompt = [];
 
   /** Load Lookup Table **/
-  service.loadLookup = function (url, table, options) {
+  service.loadLookup = function (url, model, options) {
 
     if (! options ) { options = {} } 
-    var model = options.model || table;
-    var elementId    = options.elementId || table;   // optional elementId to replace table 
+    var table = options.table || model;
+    var elementId    = options.elementId;   // optional elementId to replace table 
 
     var prompt = options.prompt;
     var def = options.default;
     var condition = options.condition || '';
-    console.log("URL: " + url);
+    var field = options.field;   // enables application to enum field lookups 
+
     
     if (prompt) { url = url + "prompt=" + prompt + '&'}
-    if (condition) { url = url + "condition=" + condition }
+    if (condition) { url = url + "condition=" + condition + '&' }
+    if (field ) { 
+        url = url + "field=" + field + '&'
+        elementId = elementId || field;
+    }
+    else {
+        elementId = elementId || table;
+    }
 
-    console.log('load lookup table for ' + table + ' : ' + model );
+    console.log("URL: " + url);
+
+    console.log(elementId + ' load lookup table for ' + table + ' : ' + model );
 
         if ( this.Lookup[elementId]) {
           console.log('already loaded ' + elementId );
