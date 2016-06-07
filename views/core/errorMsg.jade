@@ -1,4 +1,4 @@
-if message || ( sails.config.messages && sails.config.messages.length)
+if message || messages || ( sails.config.messages && sails.config.messages.length)
   // p &nbsp;
   div.alert.alert-success
     a(href="#" onclick="return false;" class="close" data-dismiss="alert" aria-label="close") &times;
@@ -7,6 +7,12 @@ if message || ( sails.config.messages && sails.config.messages.length)
         i.fa.fa-check
         span &nbsp; 
         span #{message}
+      if messages
+        each msg in messages
+          br
+          i.fa.fa-check
+          span &nbsp; 
+          b #{msg}
       if sails.config.messages
         each msg in sails.config.messages
           br
@@ -14,43 +20,49 @@ if message || ( sails.config.messages && sails.config.messages.length)
           span &nbsp; 
           b #{msg}
 
-    
-
-if errors || errorMsg || (sails.config.errors && sails.config.errors.length)
-  div.alert.alert-danger
-    i.fa.fa-warning 
-    a(href="#" class="close" data-dismiss="alert" aria-label="close") &times;
-    strong &nbsp; Error: &nbsp;
-      span #{errorMsg}
-      if errors
-        ul
-          each err in errors
-            li #{err}
-      if sails.config.warnings
-        ul
-          each warn in sails.config.warnings
-            li #{warn}
-      
-
-if warnings || warningMsg || (sails.config.warnings && sails.config.warnings.length)
+if warning || warnings || warningMsg || (sails.config.warnings && sails.config.warnings.length)
   div.alert.alert-warning
-    i.fa.fa-question 
     a(href="#" class="close" data-dismiss="alert" aria-label="close") &times;
-    strong 
+    strong
+      if warning || warningMsg
+        i.fa.fa-question 
         span.text-danger &nbsp; Warning:
         span &nbsp;
-      span #{warningMsg}
-      b #{sails.config.warningMsg}
+        span #{warningMsg}
+        span #{warning}
       if warnings
-        ul
-          each warning in warnings
-            li #{warning}
+        each warn in warnings
+          br
+          i.fa.fa-question
+          span &nbsp;
+          b #{warn}
+      if sails.config.warnings
+        each warn in sails.config.warnings
+          br
+          i.fa.fa-question
+          span &nbsp;
+          b #{warn}
+
+if error || errors || errorMsg || (sails.config.errors && sails.config.errors.length)
+  div.alert.alert-danger
+    a(href="#" class="close" data-dismiss="alert" aria-label="close") &times;
+    strong
+      if warning || warningMsg
+        i.fa.fa-question 
+        span.text-danger &nbsp; Warning:
+        span &nbsp;
+        span #{errorMsg}
+        span #{error}
       if errors
-        ul
-          each err in errors
-            li #{err}
+        each err in errors
+          br
+          i.fa.fa-warning
+          span &nbsp;
+          b #{err}   
+             
       if sails.config.errors
-        ul
-          each err in sails.config.errors
-            li #{err}      
-    
+        each err in sails.config.errors
+          br
+          i.fa.fa-warning
+          span &nbsp;
+          b #{err}
