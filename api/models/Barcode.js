@@ -30,52 +30,29 @@ module.exports = {
   	}
   },
 
-  testPrint : function (barcode, printer) {
-
-    var Printer = require('node-printer');
-    var options = { media: 'Custom.200x600mm', n:3 };
-
-    console.log("testPrint...");
-
-    var Plist = Printer.list();
-    console.log(Plist);
-
-    var printer = new Printer(printer);
-
-    var test = printer.printText('Hello');
-
-    var barcode_image = bwipjs.toBuffer({bcid: 'code128', text: barcode});
-
-    var job = printer.printBuffer(buffer);
-
-
-
-  },
-
-  testPrint2 : function (barcode, printer) {
-
-/*
-      printer.printDirect({data:"print from Node.JS buffer" 
-      // or simple String: "some text"
-      //, printer:'Foxit Reader PDF Printer' // printer name, if missing then will print to default printer
-      , type: 'RAW' // type: RAW, TEXT, PDF, JPEG, .. depends on platform
-      , success:function(jobID){
-        console.log("sent to printer with ID: "+jobID);
-      }
-      , error:function(err){console.log(err);}
-    });
- */
+  printLabel : function (barcode, code, printer) {
+    // generate print label
   },
 
 
-  printLabels : function (model, ids) {
-    var msg = "Print " + model + " Labels: " + ids[0] +  '..' + ids[ids.length-1];
+  printLabels : function (model, ids, printer ) {
+
+    var msg = "Print " + ids.length + ' ' + model + " Labels: " + ids[0] +  '..' ;
     console.log(msg);
 
-    Barcode.testPrint('123','z4m-6')
+    var printer = 'z4m-6';  // get from printer group
+    var code = 'code128';
+
+    for (var i=0; i<ids.length; i++) {
+      var prefix = '';
+      var label = prefix + ids[i];      
+    
+      Barcode.printLabel(label, code, printer);
+    } 
 
     sails.config.messages.push(msg);
     console.log(msg);
+    
     return { message: msg };
   },
 

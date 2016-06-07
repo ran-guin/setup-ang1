@@ -9,10 +9,14 @@ app.controller('CommonController',
         // Support Basic Password Validation and Confirmation
         // usage: ng-model='repeat' ng-key-up="compare(repeat)"
         
+        $scope.reset_messages = function () {
+            $scope.messages = [];
+            $scope.warnings = [];
+            $scope.errors   = [];
+        }
 
-        $scope.messages = [];
-        $scope.warnings = [];
-        $scope.errors   = [];
+        $scope.reset_messages();
+
         $scope.parse_messages = function ( result ) {
 
             if (result && result.data) {

@@ -104,8 +104,6 @@ module.exports = {
 
 		Protocol_step.loadSteps(protocol_id)
 		.then ( function (data) {
-
-
 	    	data['protocol']  = { id: protocol_id, name: protocol };
 	    	data['plate_ids'] = plate_ids;
 	    	data['Samples']   = Samples;
