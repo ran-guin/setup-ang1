@@ -43,6 +43,51 @@ module.exports = {
 			//return res.send(result);
 			return res.render('core/attributePrompt', result[0] );
 		});
+	},
+
+	uploadAttributes : function (req, res) {
+
+
+		req.file('uploadFile')
+	    .upload({
+	    	maxBytes: 100000
+	    }, function (err, uploadedFiles) {
+			if (err) return res.serverError(err);
+			else if (uploadedFiles.length == 0) {
+				return res.json("Error: No File Uploaded");
+			}
+			else {
+				// assume only one file for now, but may easily enable multiple files if required... 
+				console.log("Parsing contents...");
+				var f = 0; // file index
+
+				var matrix = uploadedFiles[f].fd
+				var obj = xlsx.parse(matrix);
+
+				console.log(JSON.stringify(obj));
+
+				for (var i=0; i<obj.length; i++) {
+					var rows = obj[i].data.length;
+					var cols = obj[i].data[0].length;
+
+					var fields = obj[i].data[0];
+					console.log("Field: " + fields.join(', '));
+
+					var records = [];
+					for (j=1; j<rows; j++) {
+						var record = [];
+						for (k=0; k<cols; k++) {
+							var cell = obj[i].data[j][k];
+							console.log(i + ': [' + j + ',' + k + '] = ' + cell );
+							record.push(cell);
+						}
+						records.push(record);
+					}
+				}
+
+				console.log("Data: " + JSON.stringify(records));
+			}
+		}
 	}
 };
 
