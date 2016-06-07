@@ -51,6 +51,7 @@ module.exports.policies = {
 */
   record: {
       'lookup' : true,
+      'enum' : 'reset',
   },
 
   user: {
