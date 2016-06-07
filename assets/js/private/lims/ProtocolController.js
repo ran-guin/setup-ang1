@@ -9,7 +9,6 @@ function protocolController ($scope, $rootScope, $http, $q) {
     $scope.stepNumber = 1;
 
     $scope.initialize = function (config) {
-
         if (config && config['Samples']) {
             // both protocol tracking and standard Container page 
  
@@ -60,7 +59,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
             else {
                 console.log("Last Step : " + JSON.stringify($scope.last_step));
                 console.log("Protocol: " + JSON.stringify($scope.protocol));
-                $scope.messages.push("Starting new protocol");
+                $scope.messages.push("Starting new protocol " + $scope.timestamp);
             }
 
             $scope.warning = "Already Completed";
@@ -107,6 +106,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
                 LoadPoint: $scope.LoadPoints[1]
             }]
         };
+        console.log("initialization complete...");
 
     }
 
@@ -174,6 +174,8 @@ function protocolController ($scope, $rootScope, $http, $q) {
     }
 
     $scope.complete = function complete (action) {
+
+        $scope.reset_messages();
 
         $scope.uninjectData();
 
@@ -275,7 +277,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
                 qty = $scope['transfer_qty' + $scope.stepNumber + '_split'].split(',');
             }  
             var qty_units = $scope['units_label'];
-            console.log("Q = " + JSON.stringify(qty) + ' ' + qty_units;
+            console.log("Q = " + JSON.stringify(qty) + ' ' + qty_units);
 
             var Target = { 
                 'format' : $scope.Step.Target_format,
@@ -360,6 +362,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
                 }
                 else {
                     $scope.status = 'Completed';
+                    $scope.messages.push("Completed '" + $scope.protocol.name + "'' Protocol")
                 }
 
                 if (action == 'Debug') {
