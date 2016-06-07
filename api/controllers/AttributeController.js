@@ -87,7 +87,6 @@ module.exports = {
 
 				console.log("Data: " + JSON.stringify(records));
 			}
-		}
+		});
 	}
-};
-
+}
