@@ -100,7 +100,7 @@ module.exports = {
 				promises.push( Attribute.save('Plate', ids, data["Plate_Attribute"]) );
 				promises.push( Attribute.save('Prep', first_prep_id, data["Prep_Attribute"]) );
 				
-				promises.push( Record.update('Plate', ids, {'FKLast_Prep__ID' : last_prep_id } ) );
+				promises.push( Record.update('Plate:Plate_ID', ids, {'FKLast_Prep__ID' : last_prep_id } ) );
 
 				q.all( promises )
 				.then ( function (Qdata) {
