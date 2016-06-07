@@ -89,8 +89,10 @@ module.exports.routes = {
 
   'POST /record/save' : 'RecordController.save',
 
-  'GET /lookup/:table/:fields' : 'RecordController.lookup',
-  'GET /lookup/:table' : 'RecordController.lookup',
+  'POST /enum/:model/:field' : 'RecordController.enum',
+  'GET /enum/:model' : 'RecordController.enum',
+  'GET /lookup/:model/:label' : 'RecordController.lookup',
+  'GET /lookup/:model' : 'RecordController.lookup',
   'GET /attribute/:model/:attribute' : 'AttributeController.prompt',
 
   'GET /remote_login' : 'Remote_login.validate',
