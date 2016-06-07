@@ -27,8 +27,13 @@ function wellController ($scope, $rootScope, $http, $q ) {
         $scope.target  = Config['Target'] || {};
         $scope.options = Config['Options'];
         $scope.sizes   = Config['sizes'];
-        $scope.size    = Config['size'] || '1';
-
+        
+        //$scope.source_size = Config['size'] || $scope.sizes[0];
+        if (Config['target_size']) {
+            // Transfer UI 
+            $scope.target_size    = Config['target_size'] || $scope.sizes[0];
+        }
+        
         $scope.map = Config['map'] || {}; 
         $scope.target_rows = $scope.target.rows || ['A'];
         $scope.target_cols = $scope.target.cols || [1];
