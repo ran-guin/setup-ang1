@@ -137,7 +137,7 @@ function wellMapper() {
         }
 
         this.CMap = CMap;
-        console.log("CMAP: " + JSON.stringify(CMap));
+        console.log("Initial CMAP: " + JSON.stringify(CMap));
 
         this.colours = colours;
         this.rgbList = rgbList;
@@ -326,7 +326,7 @@ function wellMapper() {
         //this.available = Options.available || {};   // hash of available wells keyed on target box ids
     }
 
-    this.distribute = function ( sources, Target, Options ) {
+    this.distribute = function ( sources, Target, Options, callback) {
 //
 //        Input:
 //        
@@ -349,7 +349,8 @@ function wellMapper() {
         if (! Target) { Target = {} };
         if (! sources) { 
             console.log("Missing Source or Target information");
-            return {}
+            callback("Missing Source or Target information");
+            //return {}
         }
         if (!Options) { Options = {} }
 
@@ -376,8 +377,9 @@ function wellMapper() {
         Transfer[target_index] = {};
         Transfer[target_index][target_position] = sources[0];
 
-        Colour[target_index] = {};
-        Colour[target_index][target_position] = this.rgbList[0];
+        //TargetColours[target_index] = {};
+
+        // Colour[target_index][target_position];
 
         var repeat_set = 1;
         var repeat_wells = 1;
@@ -494,10 +496,10 @@ function wellMapper() {
                         console.log('box #' + target_index + '-' + target_position + ' = container #' + sources[i].id + ' from ' + sources[i].position);
 
                         if (! Transfer[target_index]) { Transfer[target_index] = {} }
-                        if (! Colour[target_index]) { Colour[target_index] = {} }
+                        if (! TargetColours[target_index]) { TargetColours[target_index] = {} }
       
                         Transfer[target_index][target_position] = sources[i];
-                        Colour[target_index][target_position] = this.rgbList[i];
+                        TargetColours[target_index][target_position] = this.rgbList[i];
                         //rearray.push([sources[i], Container.position(sources[i]), targets[target_index], target_position]);
 
                         var XferData = { 
@@ -540,11 +542,18 @@ function wellMapper() {
         } 
 
         this.Transfer = Transfer;
-        this.TransferMap = Colour;
+        this.TransferMap = TargetColours;
         this.Xfer = Xfer;
 
         console.log("completed distribution... ");
-        return { Transfer : Transfer, ColourMap : Colour, Xfer: Xfer, SourceColours : SourceColours };
+        if (callback && callback.constructor === 'function') {
+            console.log("callback detected");
+            return callback(null, { Transfer : Transfer, TargetColours : TargetColours, Xfer: Xfer, SourceColours : SourceColours });
+        }
+        else {
+            console.log(callback.constructor + " no call back .. normal returnval ")
+            return { Transfer : Transfer, TargetColours : TargetColours, Xfer: Xfer, SourceColours : SourceColours };            
+        }
     }
 
     this.split_list = function split_list (field, input, options) {
