@@ -12,7 +12,8 @@ div(ng-app='myApp')
           label(for='email')
             i.fa.fa-email
             |  Email
-          input#email.input-lg.form-control(name='email' type='text', ng-model='email' ng-blur="testUnique('email','user','email')" placeholder='-- Enter Email --' default='' value="" force=1)
+          input#email.input-lg.form-control(name='email' type='text', ng-model='email' required ng-blur="testUnique('email','user','email')" placeholder='-- Enter Email --' default='' value="" force=1)
+          span.alert-danger(ng-show='email_errors') {{email_errors}}
         .form-group
           label(for='pwd')
             i.fa.fa-eye
