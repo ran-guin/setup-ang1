@@ -11,19 +11,19 @@ function wellController ($scope, $rootScope, $http, $q ) {
     var map = {};
     
     $scope.map = {};
-    $scope.sources = [];
+    $scope.Samples = [];
 
     $scope.initialize = function initialize(Config) {
 
         console.log("loaded Well Controller");
         console.log("CONFIG: " + JSON.stringify(Config));
 
-        $scope.sources = Config['Sources'] || [];
-        console.log("sources: " + $scope.sources);
-        console.log("source 1: " + $scope.sources[0]);
+        $scope.Samples = Config['Samples'] || [];
+        console.log("Samples: " + $scope.Samples);
+        console.log("source 1: " + $scope.Samples[0]);
 
         $scope.targets = [];
-        $scope.source_init = $scope.sources;
+        $scope.source_init = $scope.Samples;
         $scope.target  = Config['Target'] || {};
         $scope.options = Config['Options'];
         $scope.sizes   = Config['sizes'];
@@ -119,7 +119,7 @@ function wellController ($scope, $rootScope, $http, $q ) {
             var newMap = new wellMapper();
 
             newMap.colourMap();
-            newMap.from($scope.sources);            
+            newMap.from($scope.Samples);            
 
             $scope.rgbList = newMap.rgbList;       
             //$scope.source_rows = newMap.source_rows;
@@ -134,7 +134,7 @@ function wellController ($scope, $rootScope, $http, $q ) {
 
         // recalculate mapping //
         $scope.Map = $scope.newMap.distribute(
-            $scope.sources, 
+            $scope.Samples, 
             {
                 qty: $scope.transfer_qty,
                 qty_units : $scope.transfer_qty_label,
@@ -152,7 +152,7 @@ function wellController ($scope, $rootScope, $http, $q ) {
             }
         );
         
-        console.log("Sources: " + JSON.stringify($scope.sources));
+        console.log("Samples: " + JSON.stringify($scope.Samples));
         console.log("NEW MAP: " + JSON.stringify($scope.Map));
         console.log("Xfer: ");
         if ($scope.Map.Xfer) {
@@ -168,20 +168,20 @@ function wellController ($scope, $rootScope, $http, $q ) {
 
     }
 
-    // Fill for sources only ... may not be necessary ... 
+    // Fill for Samples only ... may not be necessary ... 
     $scope.source_by_Col = function source_by_Col () {
         $scope.byCol = true;
         $scope.byRow = false;
         $scope.fill_by = 'column';
-        //$scope.sources = _.sortByNat($scope.sources, 'position');
+        //$scope.Samples = _.sortByNat($scope.Samples, 'position');
 
         if (! $scope.ordered) {
-            $scope.sources = _.sortByNat($scope.sources, function(sample) {
+            $scope.Samples = _.sortByNat($scope.Samples, function(sample) {
                 var batch = sample.batch || 0; 
                 var string = batch.toString() + '_' + sample.position.substring(1,3) + '_' + sample.position.substring(0,1);
                 return string;
             });
-            console.log($scope.ordered + " : S: " + JSON.stringify($scope.sources) );
+            console.log($scope.ordered + " : S: " + JSON.stringify($scope.Samples) );
         }
     }
 
@@ -191,24 +191,24 @@ function wellController ($scope, $rootScope, $http, $q ) {
         $scope.fill_by = 'row';
         
         if (! $scope.ordered) {
-            $scope.sources = _.sortByNat($scope.sources, function(sample) { 
+            $scope.Samples = _.sortByNat($scope.Samples, function(sample) { 
                 var batch = sample.batch || 0;
                 var string = batch.toString() + '_' + sample.position;
                 return string;
             });
-            console.log($scope.ordered + " : S: " + JSON.stringify($scope.sources) );
+            console.log($scope.ordered + " : S: " + JSON.stringify($scope.Samples) );
         }
     }
 
-    $scope.reset_sources = function reset_sources () {
-        $scope.sources = $scope.sources_init;
+    $scope.reset_Samples = function reset_Samples () {
+        $scope.Samples = $scope.Samples_init;
     }
 
     $scope.distribute = function distribute() {
         /** distribute source samples onto targets using various distribution options **/
         console.log('distribute');
 
-        $scope.targets = $.extend(true, [], $scope.sources);
+        $scope.targets = $.extend(true, [], $scope.Samples);
 
         for (var i=0; i<$scope.targets.length; i++) {
             $scope.targets[i]['container'] = 'new';
@@ -258,7 +258,7 @@ function wellController ($scope, $rootScope, $http, $q ) {
     $scope.testXfer = function testXfer () {
         //var Targets = [{"id":200,"position":"A1","container":1000},{"id":201,"position":"A2","container":1000},{"id":202,"position":"A3","container":1000},{"id":203,"position":"B1","container":1000},{"id":204,"position":"B2","container":1000},{"id":205,"position":"B3","container":1000},{"id":206,"position":"C1","container":1000},{"id":207,"position":"C2","container":1000},{"id":208,"position":"C3","container":1000},{"id":209,"position":"D1","container":1000},{"id":210,"position":"D2","container":1000},{"id":211,"position":"D3","container":1000},{"id":212,"position":"A1","container":1001},{"id":213,"position":"A2","container":1001},{"id":214,"position":"A3","container":1001},{"id":215,"position":"B1","container":1001},{"id":216,"position":"B2","container":1001},{"id":217,"position":"B3","container":1001},{"id":218,"position":"C1","container":1001},{"id":219,"position":"C2","container":1001},{"id":220,"position":"C3","container":1001},{"id":221,"position":"D1","container":1001},{"id":222,"position":"D2","container":1001},{"id":223,"position":"D3","container":1001},{"id":224,"position":"A1","container":1002},{"id":225,"position":"A2","container":1002},{"id":226,"position":"A3","container":1002},{"id":227,"position":"B1","container":1002},{"id":228,"position":"B2","container":1002},{"id":229,"position":"B3","container":1002},{"id":230,"position":"C1","container":1002},{"id":231,"position":"C2","container":1002},{"id":232,"position":"C3","container":1002},{"id":233,"position":"D1","container":1002},{"id":234,"position":"D2","container":1002},{"id":235,"position":"D3","container":1002},{"id":236,"position":"A1","container":1003},{"id":237,"position":"A2","container":1003},{"id":238,"position":"A3","container":1003},{"id":239,"position":"B1","container":1003},{"id":240,"position":"B2","container":1003},{"id":241,"position":"B3","container":1003},{"id":242,"position":"C1","container":1003},{"id":243,"position":"C2","container":1003},{"id":244,"position":"C3","container":1003},{"id":245,"position":"D1","container":1003},{"id":246,"position":"D2","container":1003},{"id":247,"position":"D3","container":1003},{"id":248,"position":"A1","container":1004},{"id":249,"position":"A2","container":1004},{"id":250,"position":"A3","container":1004},{"id":251,"position":"B1","container":1004},{"id":252,"position":"B2","container":1004},{"id":253,"position":"B3","container":1004},{"id":254,"position":"C1","container":1004},{"id":255,"position":"C2","container":1004},{"id":256,"position":"C3","container":1004},{"id":257,"position":"D1","container":1004},{"id":258,"position":"D2","container":1004},{"id":259,"position":"D3","container":1004},{"id":260,"position":"A1","container":1005},{"id":261,"position":"A2","container":1005},{"id":262,"position":"A3","container":1005},{"id":263,"position":"B1","container":1005},{"id":264,"position":"B2","container":1005},{"id":265,"position":"B3","container":1005},{"id":266,"position":"C1","container":1005},{"id":267,"position":"C2","container":1005},{"id":268,"position":"C3","container":1005},{"id":269,"position":"D1","container":1005},{"id":270,"position":"D2","container":1005},{"id":271,"position":"D3","container":1005},{"id":272,"position":"A1","container":1006},{"id":273,"position":"A2","container":1006},{"id":274,"position":"A3","container":1006},{"id":275,"position":"B1","container":1006},{"id":276,"position":"B2","container":1006},{"id":277,"position":"B3","container":1006},{"id":278,"position":"C1","container":1006},{"id":279,"position":"C2","container":1006},{"id":280,"position":"C3","container":1006},{"id":281,"position":"D1","container":1006},{"id":282,"position":"D2","container":1006},{"id":283,"position":"D3","container":1006},{"id":284,"position":"A1","container":1007},{"id":285,"position":"A2","container":1007},{"id":286,"position":"A3","container":1007},{"id":287,"position":"B1","container":1007},{"id":288,"position":"B2","container":1007},{"id":289,"position":"B3","container":1007},{"id":290,"position":"C1","container":1007},{"id":291,"position":"C2","container":1007},{"id":292,"position":"C3","container":1007},{"id":293,"position":"D1","container":1007},{"id":294,"position":"D2","container":1007},{"id":295,"position":"D3","container":1007}];
 
-        var sources = $scope.sources;
+        var Samples = $scope.Samples;
         var targets = $scope.targets;
         var options = $scope.options;
 
@@ -273,7 +273,7 @@ function wellController ($scope, $rootScope, $http, $q ) {
         console.log("Found format: " + format + '=' + $scope['Plate_Format-id']);
 
         var data = { 
-            Sources: sources,
+            Samples: Samples,
             Targets: {
                 // only applicable for split or packing
             },
@@ -327,7 +327,7 @@ function wellController ($scope, $rootScope, $http, $q ) {
 
     $scope.resort = function resort() {
         // deprecate .. use distribute in wellmapper.js
-        var sources = $scope.sources;
+        var Samples = $scope.Samples;
 
         //var target_format_id = transfer_parameters['target_format_id'];
         //var prep_id = transfer_parameters['prep_id'];
@@ -364,12 +364,12 @@ function wellController ($scope, $rootScope, $http, $q ) {
         var target_position = x_min + y_min.toString();
 
         //array.push(targets[target_index], target_position);  // store mul plate record... 
-        //rearray.push([sources[i], Container.position(sources[i]), targets[target_index], target_position]);
+        //rearray.push([Samples[i], Container.position(Samples[i]), targets[target_index], target_position]);
 
         Target[target_index] = {};
-        Target[target_index][target_position] = sources[0];
+        Target[target_index][target_position] = Samples[0];
 
-        for (var i=1; i<sources.length; i++) {
+        for (var i=1; i<Samples.length; i++) {
 
             if (fill_by == 'row') {
                 y++;
@@ -410,7 +410,7 @@ function wellController ($scope, $rootScope, $http, $q ) {
             if (! Target[target_index]) { Target[target_index] = {} }
             if (! Colour[target_index]) { Colour[target_index] = {} }
 
-            Target[target_index][target_position] = sources[i];
+            Target[target_index][target_position] = Samples[i];
             Colour[target_index][target_position] = $scope.rgbList[i];
 
             $scope.Target = Target;
@@ -419,9 +419,9 @@ function wellController ($scope, $rootScope, $http, $q ) {
             //array.push(targets[target_index], target_position);  // store mul plate record... 
 
             var index = targets[target_index] + ':' + target_position;
-            map[index] = sources[i];
+            map[index] = Samples[i];
 
-            //rearray.push([sources[i], Container.position(sources[i]), targets[target_index], target_position]);
+            //rearray.push([Samples[i], Container.position(Samples[i]), targets[target_index], target_position]);
         }
 
         $scope.targets = targets;
