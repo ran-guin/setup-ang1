@@ -7,7 +7,7 @@
 
 var q = require('q');
 var fs = require('fs');
-var _ = require('underscore');
+var _ = require('underscore-node');
 
 module.exports = {
 
@@ -45,6 +45,7 @@ module.exports = {
 		var groupBy    = options.group;
 		var orderBy    = options.order;
 		var limit      = options.limit;
+		var debug      = options.debug;
 
 		var conditions = options.conditions;
 		
@@ -59,7 +60,7 @@ module.exports = {
 		if (orderBy && orderBy.length) { query = query + ' ORDER BY ' + orderBy.join(',') }
 		if (limit) { query = query + ' LIMIT ' + limit }
 
-		console.log("built query: " + query);
+		if (debug) { console.log("built query: " + query) }
 		return query;
 	},
 
@@ -406,16 +407,16 @@ module.exports = {
 			var Set = [];
 			for (var i=0; i<fields.length; i++) {
 				
-				//reformat_data(data[fields[i]]);
+				var setVal = Record.parseValue(data[fields[i]], { model : model });
 
-				Set.push(fields[i] + " = '" + data[fields[i]] + "'");
+				Set.push(fields[i] + " = " + setVal );
 			}
 			if (Set.length) {
 				query = query + " SET " + Set.join(',');
 			}			
 			query = query + " WHERE " + idField + " IN (" + list + ")";
 			
-			console.log("UPDATE: " + query);
+			console.log("\n UPDATE: " + model + ': ' + query);
 			Record.query_promise( query )
 			.then (function (result) {
 				deferred.resolve(result);				
@@ -434,11 +435,18 @@ module.exports = {
 		return deferred.promise;
 	},	
 
-	createNew : function (table, Tdata, resetData) {
+	createNew : function (model, Tdata, resetData) {
 		// Bypass waterline create method to enable insertion into models in non-standard format //
 		var debug = 0;
 		var deferred = q.defer();
 		//console.log("\ncreate new record(s) in " + table);
+
+		var Mod = sails.models[model] || {};
+
+		var table = model; // default to model name ... 
+		if (Mod.tableName) {
+			table = Mod.tableName;
+		} 
 
 		if (Tdata === undefined) { deferred.reject('no data'); return deferred.promise }
 
@@ -446,81 +454,40 @@ module.exports = {
 		if (Tdata.constructor === Object) { data = [Tdata] }
 		else { data = Tdata }
 
-		var fields = Object.keys(data[0]);
+		var fields = Object.keys(data[0]) || [];
 
 		var Values = [];
 		var onDuplicate = '';
 
-		console.log("insertion data: " + JSON.stringify(data[0] + '...'));
+		console.log("insertion data: " + JSON.stringify(data[0]) + '...');
 		
 		for (var index=0; index<data.length; index++) {
 			var Vi = [];
 			for (var f=0; f<fields.length; f++) {
-				var value = data[index][fields[f]];
-				if (value === 'NULL' ||  value === undefined) {
-					value = null;
-				}
-			
-				var noQuote = 0;
-				if (typeof value == 'number') { value = value.toString() }
+				var input_value = data[index][fields[f]];
 
-				if (value === null) { }			
-				else if (value.constructor === String) {
-					if (value.match(/^<user>$/i)) {
-						value = sails.config.payload.userid; 
-						if (debug) console.log("replacing <user> with " + value);
+				var value = Record.parseValue(input_value, { model: model, field: fields[f] });
+				if ( ! index) {
+					// only need to set onDuplicate once if any increment fields are defined 
+					if (input_value && input_value.constructor === String && input_value.match(/<increment>/ ) ) {
+						// only one increment field should be included since there is only one 'on duplcate command at the end '
+						if (onDuplicate) {
+							var msg = "possible onDuplicate conflict detected";
+							console.log(msg);
+							sails.config.warnings.push(msg);
+						}
+						else {
+							onDuplicate = " ON DUPLICATE KEY UPDATE " + fields[f] + "=" + fields[f] + " + 1";
+						}
 					}
-					else if (value.match(/^<increment>$/i)) {
-						value = 1;
-						onDuplicate = " ON DUPLICATE KEY UPDATE " + fields[f] + "=" + fields[f] + " + 1";
-						if (debug) console.log("replacing <increment> with SQL ");
-					}
-					else if (value.match(/^<now>$/i)) {
-						value = 'NOW()'; 
-						if (debug) console.log("replacing <now> with " + value);
-						noQuote = 1;
-					}
-					else if (value.match(/^<today>$/i)) {
-						value = 'CURDATE()'; 
-						if (debug) console.log("replacing <today> with " + value);
-						noQuote = 1;
-					}
-					else if (value.match(/^<.*>$/)) {
-						value = value.replace(/^</,'');
-						value = value.replace(/>$/,'');
-						if (debug) { console.log("SQL statement detected: " + value) }
-						noQuote = 1;
-					}
-				}
-				else if (value && value.constructor === Date) {
-					value = JSON.stringify(value);
-					noQuote=1;
 				}
 
 				if (resetData && resetData[fields[f]]) {
-					var resetValue = resetData[fields[f]];
-
-					if (resetValue == '<NULL>') {
-						Vi.push('null');
-					}
-					if (resetValue == '<ID>') {
-						Vi.push(idField);
-					}
-					else if (resetValue == null) {					
-						Vi.push("\"" + value + "\"");
-					}
-					else {
-						Vi.push("\"" + resetValue + "\"");
-					}
-				}						
-				else if (value == null) {
-					Vi.push('null');					
-				}
-				else if (noQuote) {
-					Vi.push(value);
+					var resetValue = Record.parseValue( resetData[fields[f]], { model: model, field: fields[f], defaultTo : value });
+					Vi.push(resetValue);
 				}
 				else {
-					Vi.push("\"" + value + "\"");
+					Vi.push(value);
 				}
 			}
 			Values.push( "(" + Vi.join(", ") + ")");
@@ -535,7 +502,7 @@ module.exports = {
 			var added    = result.affectedRows;
 
 			var msg = added + ' ' + table + ' record(s) added: id(s) from ' + insertId;
-			if (sails.models[table] && sails.models[table].tableType && sails.models[table].taableType.match/lookup/i) { }
+			if (Mod.tableType && Mod.tableType.match/lookup/i) { }
 			else if (sails.config.debug) { sails.config.messages.push(msg) }
 			else { sails.config.messages.push(msg) }
 			
@@ -550,4 +517,89 @@ module.exports = {
 		return deferred.promise;
 	},
 
+	parseValue : function (value, options) {
+		// parses values that may be formatted for specific purposes (eg '<today>, '<id>','<SQL_statement>' ...)
+
+		if (! options ) { options = {} }
+
+		var defaultTo = options.defaultTo;
+		var model = options.model;  // used for <id> values (retrieves id field name)
+		var field = options.field;  // used for <increment> values
+		var debug = options.debug;
+
+		var Mod = {};
+		if (sails && sails.models && sails.models[model]) { Mod = sails.models[model] }
+
+		if (value === 'NULL' ||  value === undefined || value === '<NULL>') {
+			value = null;
+		}
+	
+		var noQuote = 0;
+
+		if (typeof value == 'number') { value = value.toString() }
+
+		var onDuplicate;
+
+		if (value === null) { }			
+		else if (value.constructor === String) {
+			if (value.match(/^<user>$/i)) {
+				value = sails.config.payload.userid; 
+				if (debug) console.log("replacing <user> with " + value);
+			}
+			else if (value.match(/^<increment>$/i) ) {
+				// NOTE:  Requires setting out onDuplicate OUTSIDE OF THIS Function !!!! (onDuplicate is left hanging here... )
+				value = 1; 
+				if (field) {
+					value = 1;
+					onDuplicate = " ON DUPLICATE KEY UPDATE " + field + "=" + field + " + 1";
+					if (debug) console.log("replacing <increment> with SQL ");
+				}
+				else {
+					console.log("No field specified to increment");
+					sails.config.errors.push("no field specfied for increment");
+				}
+			}
+			else if (value.match(/^<now>$/i)) {
+				value = 'NOW()'; 
+				if (debug) console.log("replacing <now> with " + value);
+				noQuote = 1;
+			}
+			else if (value.match(/^<today>$/i)) {
+				value = 'CURDATE()'; 
+				if (debug) console.log("replacing <today> with " + value);
+				noQuote = 1;
+			}
+			else if (value.match(/^<.*>$/)) {
+				value = value.replace(/^</,'');
+				value = value.replace(/>$/,'');
+				if (debug) { console.log("SQL statement detected: " + value) }
+				noQuote = 1;
+			}
+			else if (value.match(/^<id>$/i)) { 
+				var idField = 'id';
+				if (Mod.alias && Mod.alias('id')) {
+					idField = Mod.alias('id');
+				}
+				value = idField;
+			}
+		}
+		else if (value && value.constructor === Date) {
+			value = JSON.stringify(value);
+			noQuote=1;
+		}
+
+
+		if (value === null && defaultTo) {
+			return defaultTo;
+		}
+		else if (value === null) {
+			return 'null';					
+		}
+		else if (noQuote) {
+			return value;
+		}
+		else {
+			return "\"" + value + "\"";
+		}
+	}
 };
