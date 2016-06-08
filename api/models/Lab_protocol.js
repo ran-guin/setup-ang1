@@ -115,7 +115,7 @@ module.exports = {
 					//for (var i=0; i<Qerr.length; i++) {
 						console.log("\n** " + i + " Error: " + JSON.stringify(Qerr));
 					//} 
-					deferred.reject({ error : "Error completing all actions: " + JSON.stringify(Qerr)}) ;
+					deferred.reject({ error : "Error completing all actions: " + Qerr}) ;
 				});
 			})
 			.catch (function (err) {
