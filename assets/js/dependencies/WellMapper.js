@@ -185,7 +185,7 @@ function wellMapper() {
 
         if (! this.target_count[target_index]) { this.target_count[target_index] = 0 }
         
-        if (this.available[target_index] && this.available[target_index].length > this.target_count[target_index]) {
+        if (this.available && this.available[target_index] && this.available[target_index].length > this.target_count[target_index]) {
             this.target_count[target_index]++;
         }
         else {
@@ -197,7 +197,7 @@ function wellMapper() {
 
         console.log(target_index + ": " + JSON.stringify(this.target_count));
 
-        if (this.available[target_index]) {
+        if (this.available && this.available[target_index]) {
             var next = this.available[target_index][this.target_count[target_index]];
             console.log("Next :  " + target_index + " = " + next);
 
