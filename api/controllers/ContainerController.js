@@ -32,6 +32,7 @@ module.exports = {
 		query = query + " LEFT JOIN Attribute ON Prep_Attribute.FK_Attribute__ID=Attribute_ID";
 		
 		query = query + " WHERE FK_Plate__ID=Plate_ID AND Plate_Prep.FK_Prep__ID=Prep_ID AND Plate_ID IN (" + ids + ')';
+
 		query = query + " GROUP BY Prep_ID DESC";
 
 		console.log("Q: " + query);
@@ -51,7 +52,7 @@ module.exports = {
 		var ids = req.param('ids');
 		var element = req.param('element') || 'injectedData';   // match default in CommonController
 
-		var flds = ['Parent', 'id', 'container_format', 'sample_type', 'qty', 'qty_units', 'attributes'];
+		var flds = ['id', 'Parent', 'container_format', 'sample_type', 'qty', 'qty_units', 'attributes'];
 
 		Container.loadData(ids)
 		.then (function (result) {
@@ -115,8 +116,8 @@ module.exports = {
 	    res.setTimeout(0);
 
 	    var ids = req.body.ids || req.body.plate_ids;
-
 	    var Samples = JSON.parse(req.body.Samples);
+	    var force = req.body.force || 1;
 
 	    console.log("IDS: " + JSON.stringify(ids));
 
@@ -159,45 +160,45 @@ module.exports = {
 
 				}
 
-				var warning;
+				var data = [];
+				var errors = [];
+				var warnings = [];
+
 				if (rows > Samples.length) {
-					warning = applied + " Matrix tubes scanned, but only " + Samples.length + " current Samples found";
+					warnings.push(applied + " Matrix tubes scanned, but only " + Samples.length + " current Samples found");
 				}
 				else if (Samples.length > rows) {
-					warning = Samples.length + " active Samples, but data only found for " + applied;
+					warnings.push(Samples.length + " active Samples, but data supplied for " + applied);
 				}
 
 				console.log(Samples.length + ' Sample found');
-				var data = [];
-				var errors = [];
+
 				for (var i=0; i<Samples.length; i++) {
 					console.log("Sample #" + i + ": " + JSON.stringify(Samples[i]));
 					var id = Samples[i].id;
 					var position = Samples[i].position;
 					if (position) {
-						var mapped = map[position];
+						var mapped = map[position] || map[position.toUpperCase()];
 						if (mapped) {
 							data.push([id, mapped]);
 						}
 						else {
-							errors.push("Nothing mapped to " + position);
+							warnings.push("Nothing mapped to " + position);
 						}
 					}
 					else {
-						errors.push("No position for sample #" + i + ' : ' + id);
+						warnings.push("No position for sample #" + i + ' : ' + id);
 					}					
 				}
 
-				if (errors.length) {
+				sails.config.warnings = warnings;
+				sails.config.errors = errors;
+
+				if (errors.length || (! force && warnings.length)) {
 					console.log("Errors: " + JSON.stringify(errors));
 					return res.render('lims/Container', { 
 						plate_ids: ids, 
-						//protocols : Protocols, 
 						Samples: Samples, 
-						//sampleList : sampleList,
-						warningMsg: warning,
-						errorMsg : errors.join(','),
-						//target_formats : target_formats 
 					} );
 				}
 				else {
@@ -209,12 +210,12 @@ module.exports = {
 
 					Attribute.uploadAttributes('Plate', attribute, data)
 					.then ( function (resp) {
-						var message;
-						var warning = resp.error;
 
-						if (resp.affectedRows) { message = resp.affectedRows + " Matrix barcodes associated with samples" }
+						if (resp.affectedRows) {
+							sails.config.messages.push(resp.affectedRows + " Matrix barcodes associated with samples");
+						}
 						
-						return res.render('lims/Container', { Samples : Samples, plate_ids: ids, warningMsg: warning, message: message});					
+						return res.render('lims/Container', { Samples : Samples, plate_ids: ids});					
 					})	
 					.catch ( function (err) {
 						return res.json({error : err, attribute: attribute, data: data});
