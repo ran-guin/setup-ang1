@@ -37,5 +37,18 @@ describe('Record', function() {
             assert.equal('e1a,e1b,e3', merged.errors.join(','));
         });
     });
+
+    describe('* parseValue', function () {
+	it('id fields', function () {
+		assert.equal("id", Record.parseValue('<id>', { model: 'user' }) );
+		assert.equal("Plate_ID", Record.parseValue('<id>', { model: 'container' }) );
+	});
+	it('null values', function () {
+		assert.equal(null, Record.parseValue(null, { model: 'user' }) );
+		assert.equal(null, Record.parseValue('<NULL>', { model: 'container' }) );
+		assert.equal(14, Record.parseValue('<NULL>', { defaultTo: 14 }) );
+		assert.equal('hello', Record.parseValue(undefined, { defaultTo: 'hello' }) );
+	});
+    });
 });
 
