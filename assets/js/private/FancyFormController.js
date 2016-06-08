@@ -51,6 +51,41 @@ app.controller('FancyFormController',
     		//return "\n<div class='container' style='padding:20px'>\n" + view + "</div>\n";
     	}
 
+        $scope.normalize_units = function (field) {
+            // convert quantities to same units as original to ensure ongoing calculated volumes are correct.
+            // when removing or adding 250 ul to a container with 2 ml, the 250 ul should be converted to the original units (eg 0.25 ml)
+            //
+            // new values may be re-normalized via a cron job at a different time (eg check for volumes > 1000 or < 0.01 and convert)
+            //
+            // eg normalize_units('qty','reference_units') or normalize_units('solution_qty')
+
+            // UNDER CONSTRUCTION .. 
+            var values = [];
+            var splitField;  // get from current split fields .. 
+
+            for (var i=0; i<Sample.length; i++) {                      
+                var orig_units = Samples[index].qty_units;
+                var new_units = $scope[field + '_units'];
+
+                var val = splitField[i] || $scope[field];
+                var newVal = val;
+
+                var conflict = 0;
+                if (new_units === orig_units) { }
+                else {
+                    newVal = $scope.convert(val, new_units, old_units);
+                    conflict++;
+                }
+                values.push(newVal);
+            }
+            if (conflict || splitField[field]) {
+                splitField[field] = values;
+            }
+            else {
+                $scope[field] = values[0];
+            }
+        }
+
         // Automatically Load Lookup Files //
         $scope.loadLookup = function loadLookup(model, labels, prompt, condition) {
             console.log("Lookup for " + model);
