@@ -23,6 +23,8 @@ function protocolController ($scope, $rootScope, $http, $q) {
             $scope.load_Sample_info();
 
             $scope.last_step = config['last_step'];
+
+            $scope.load_Sample_info();
       }
 
         if (config && config['Steps']) { 
