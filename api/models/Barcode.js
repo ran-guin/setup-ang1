@@ -37,9 +37,12 @@ module.exports = {
 
   printLabels : function (model, ids, printer ) {
 
+    var deferred = q.defer();
+
     var msg = "Print " + ids.length + ' ' + model + " Labels: " + ids[0] +  '..' ;
     console.log(msg);
 
+/*
     var printer = 'z4m-6';  // get from printer group
     var code = 'code128';
 
@@ -52,8 +55,11 @@ module.exports = {
 
     sails.config.messages.push(msg);
     console.log(msg);
+*/
+
+    deferred.resolve( { message: msg });
     
-    return { message: msg };
+    return deferred.promise;
   },
 
   parse : function (barcode) {
