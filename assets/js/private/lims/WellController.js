@@ -16,10 +16,10 @@ function wellController ($scope, $rootScope, $http, $q ) {
     $scope.initialize = function initialize(Config) {
 
         console.log("loaded Well Controller");
-        console.log("CONFIG: " + JSON.stringify(Config));
+        // console.log("CONFIG: " + JSON.stringify(Config));
 
         $scope.Samples = Config['Samples'] || [];
-        console.log("Samples: " + $scope.Samples);
+        // console.log("Samples: " + $scope.Samples);
         console.log("source 1: " + $scope.Samples[0]);
 
         $scope.targets = [];
@@ -72,7 +72,7 @@ function wellController ($scope, $rootScope, $http, $q ) {
         $scope.redistribute();
     }
 
-    $scope.reset_pack_mode = function reset_split_mode () {
+    $scope.reset_pack_mode = function reset_pack_mode () {
         if ($scope['pack_wells'] > 1 ) {
             $scope.pack_mode = 'batch';
         }
@@ -107,64 +107,79 @@ function wellController ($scope, $rootScope, $http, $q ) {
 
         if ($scope.fill_by.match(/row/i)) { 
             $scope.source_by_Row();
+            $scope.pack = $scope.pack_wells || 1;
         }
-        else { 
+        else if ($scope.fill_by.match(/col/i) ) { 
             $scope.source_by_Col();
+            $scope.pack = $scope.pack_wells || 1;
+        }
+        else {
+            $scope.pack = 0;
         }
         
-        $scope.loadWells();
+        console.log("Target Samples: " + $scope.N * $scope.splitX);
+        console.log("Target Boxes: " + $scope.N_boxes);
 
-        if (! $scope.newMap) {
-            // initiate mapping //
-            var newMap = new wellMapper();
+        $scope.loadWells()
+        .then (function (loaded) {
 
-            newMap.colourMap();
-            newMap.from($scope.Samples);            
+            if (! $scope.newMap) {
+                // initiate mapping //
+                var newMap = new wellMapper();
 
-            $scope.rgbList = newMap.rgbList;       
-            //$scope.source_rows = newMap.source_rows;
-            //$scope.source_cols = newMap.source_cols;
-  
-            console.log("rgb: " + JSON.stringify(newMap.rgbList));
-            console.log("colours: " + JSON.stringify(newMap.colours));
-            console.log("colour MAP: " + JSON.stringify(newMap.colourMap));
+                newMap.colourMap();
+                newMap.from($scope.Samples);            
 
-            $scope.newMap = newMap;
-        }  
+                $scope.rgbList = newMap.rgbList;       
+                //$scope.source_rows = newMap.source_rows;
+                //$scope.source_cols = newMap.source_cols;
+      
+                console.log("rgb: " + JSON.stringify(newMap.rgbList));
+                console.log("colours: " + JSON.stringify(newMap.colours));
+                console.log("colour MAP: " + JSON.stringify(newMap.colourMap));
 
-        // recalculate mapping //
-        $scope.Map = $scope.newMap.distribute(
-            $scope.Samples, 
-            {
-                qty: $scope.transfer_qty,
-                qty_units : $scope.transfer_qty_label,
-            },
-            { 
-                Max_Row : $scope.Max_Row, 
-                Max_Col : $scope.Max_Col,
-                fillBy : $scope.fill_by, 
-                pack : $scope.pack,
-                pack_wells : $scope.pack_wells,
-                split : $scope.splitX,
-                target_size : $scope.target_size,
-                target_boxes : $scope.target_boxes,
-                available : $scope.available,
+                $scope.newMap = newMap;
+            }  
+
+            // recalculate mapping //
+            $scope.Map = $scope.newMap.distribute(
+                $scope.Samples, 
+                {
+                    qty: $scope.transfer_qty,
+                    qty_units : $scope.transfer_qty_label,
+                },
+                { 
+                    Max_Row : $scope.Max_Row, 
+                    Max_Col : $scope.Max_Col,
+                    fillBy : $scope.fill_by, 
+                    pack : $scope.pack,
+                    pack_wells : $scope.pack_wells,
+                    split : $scope.splitX,
+                    split_mode : $scope.split_mode,
+                    target_size : $scope.target_size,
+                    target_boxes : $scope.target_boxes,
+                    available : $scope.available,
+                }
+            );
+            
+            console.log("Samples: " + JSON.stringify($scope.Samples));
+            console.log("NEW MAP: " + JSON.stringify($scope.Map));
+            console.log("Xfer: ");
+            if ($scope.Map.Xfer) {
+                for (var i=0; i<$scope.Map.Xfer.length; i++) {
+                    console.log(i = ': ' + JSON.stringify($scope.Map.Xfer));
+                } 
             }
-        );
-        
-        console.log("Samples: " + JSON.stringify($scope.Samples));
-        console.log("NEW MAP: " + JSON.stringify($scope.Map));
-        console.log("Xfer: ");
-        if ($scope.Map.Xfer) {
-            for (var i=0; i<$scope.Map.Xfer.length; i++) {
-                console.log(i = ': ' + JSON.stringify($scope.Map.Xfer));
-            } 
-        }
-        // console.log(newMap.source_rows + " x " newMap.source_cols);
+            // console.log(newMap.source_rows + " x " newMap.source_cols);
 
-        console.log("NEW CMAP: " + JSON.stringify($scope.newMap.CMap));
-        console.log("Source Colour Map: " + JSON.stringify($scope.Map.SourceColours))
-        console.log("Target Colour Map: " + JSON.stringify($scope.Map.ColourMap))
+            console.log("NEW CMAP: " + JSON.stringify($scope.newMap.CMap));
+            console.log("Source Colour Map: " + JSON.stringify($scope.Map.SourceColours))
+            console.log("Target Colour Map: " + JSON.stringify($scope.Map.ColourMap))
+            
+        })
+        .catch ( function (err) {
+            console.log("Error loading wells");
+        })
 
     }
 
@@ -181,7 +196,7 @@ function wellController ($scope, $rootScope, $http, $q ) {
                 var string = batch.toString() + '_' + sample.position.substring(1,3) + '_' + sample.position.substring(0,1);
                 return string;
             });
-            console.log($scope.ordered + " : S: " + JSON.stringify($scope.Samples) );
+            console.log("reorder by Col: " + JSON.stringify(_.pluck($scope.Samples, 'position')) );
         }
     }
 
@@ -192,11 +207,14 @@ function wellController ($scope, $rootScope, $http, $q ) {
         
         if (! $scope.ordered) {
             $scope.Samples = _.sortByNat($scope.Samples, function(sample) { 
+
+                if (!sample.position) { sample.position = 'A1'}
+
                 var batch = sample.batch || 0;
                 var string = batch.toString() + '_' + sample.position;
                 return string;
             });
-            console.log($scope.ordered + " : S: " + JSON.stringify($scope.Samples) );
+            console.log("reorder by Row: " + JSON.stringify(_.pluck($scope.Samples, 'position')) );
         }
     }
 
@@ -217,8 +235,10 @@ function wellController ($scope, $rootScope, $http, $q ) {
         console.log("Targets: " + JSON.stringify($scope.targets));        
     }
 
-    $scope.loadWells = function (model) {
+    $scope.loadWells = function () {
         // get available wells 
+        var deferred = $q.defer();
+
         var rack_id = $scope.target_rack;
         var size    = $scope.target_size;
         var fill_by = $scope.fill_by;
@@ -235,9 +255,12 @@ function wellController ($scope, $rootScope, $http, $q ) {
                 // define target boxes (only handles one for now ... )
                 $scope.target_boxes = [rack_id];
                 $scope.available[rack_id] = returnData.available_wells;
+                $scope.N_boxes = ' until required (err if not enough)'; // test
+                deferred.resolve();
             })
             .catch (function (err) {
                 console.log("Error loading Rack info: " + JSON.stringify(err) );
+                deferred.reject(err);
             });
         } 
         else if (size) {
@@ -245,14 +268,19 @@ function wellController ($scope, $rootScope, $http, $q ) {
             $http.get('/Rack/wells?size=' + size + '&fillBy=' + fill_by)
             .then ( function (wells) {
                 console.log("loaded wells: " + JSON.stringify(wells));
-                $scope.available['0'] = wells.data;
+                $scope.available = wells.data;
+
+                $scope.N_boxes = Math.ceil($scope.N * $scope.splitX / wells.data.length);
                 console.log("GOT : " + JSON.stringify($scope.available)); 
+                deferred.resolve();
             })
             .catch ( function (wells) {
                 console.log("Error retrieving available wells");
+                deferred.reject();
             });
         }
 
+        return deferred.promise;
     }
 
     $scope.testXfer = function testXfer () {
