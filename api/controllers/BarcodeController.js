@@ -13,20 +13,35 @@ module.exports = {
 	scan: function (req, res) {
 
 		var model = req.body.model;
-		//var alt_param = model.toLowerCase + '_ids';
-		var ids = [];
-
 		var barcode = req.body.barcode;
 
 		console.log("Scan: " + JSON.stringify(req.body));
 
 		Barcode.interpret(barcode)
 		.then ( function (Scanned) {
-			if (Scanned['Plate'].length) {
-				var ids = Scanned['Plate'];
 
-				console.log("Load: " + ids.join(','));
-				Container.loadData(ids)
+			console.log("Scanned: " + JSON.stringify(Scanned));
+
+			var plate_ids = [];
+			var box_condition = '';
+			if ( Scanned['Plate'].length) {
+				plate_ids = Scanned['Plate'];
+			}
+			else if ( Scanned['Rack'].length ) {
+			console.log("D");
+				var boxes = Scanned['Rack'].join(',');
+			console.log("C");
+				box_condition = "Box.Rack_ID IN (" + boxes + ')';
+			console.log("B");
+				console.log("condition: " + box_condition);
+			}
+
+			console.log(plate_ids + ' OR ' + box_condition);
+	
+			if (plate_ids || box_condition) {
+				console.log("Load: " + plate_ids.join(',') + ' samples from box(es) ' + boxes);
+
+				Container.loadData(plate_ids, box_condition)
 				.then (function (data) {
 
 					var errorMsg;
@@ -34,7 +49,7 @@ module.exports = {
 
 					var sampleList = [];
 					if (data.length == 0) {
-						errorMsg = "expecting ids: " + ids.join(', ') + "<P>... but No Containers Found (?)";
+						errorMsg = "expecting ids: " + plate_ids.join(', ') + "<P>... but No Containers Found (?)";
 						return res.render('customize/private_home');
 					}	
 					else {
@@ -42,8 +57,8 @@ module.exports = {
 							sampleList.push(data[i].id);
 						}
 
-						if (sampleList.length < ids.length) { 
-							warningMsg = "Scanned " + ids.length + " records but only found " + sampleList.length;
+						if (sampleList.length < plate_ids.length) { 
+							warningMsg = "Scanned " + plate_ids.length + " records but only found " + sampleList.length;
 						}
 
 						var get_last_step = Protocol_step.parse_last_step(data);
@@ -51,7 +66,7 @@ module.exports = {
 						if (get_last_step.warning) { warningMsg = get_last_step.warning }
 
 						return res.render('lims/Container', { 
-							plate_ids: ids.join(','), 
+							plate_ids: plate_ids.join(','), 
 							last_step : last_step, 
 							Samples: data , 
 							//sampleList : sampleList,
@@ -65,7 +80,7 @@ module.exports = {
 				})
 				.catch (function (err) {
 					return res.render('customize/private_home', {errorMsg: JSON.stringify(err) });
-				});				
+				});			
 			}
 			else {
 		    	var errors = Scanned['Errors'];
