@@ -52,16 +52,13 @@ module.exports = {
 			return deferred.promise;
 	},
 
-	loadData : function (ids) {
+	loadData : function (ids, condition) {
 
 		var include = 'prep, position, attributes';
 
-//		sails.config.messages.push("Loaded Plate Data...");
-
-		ids = Record.cast_to(ids, 'array');
-		id_list = ids.join(',');
-
 		var deferred = q.defer();
+			
+		ids = Record.cast_to(ids, 'array');
 
 		//var fields = 'Plate_ID as id, Sample_Type as sample_type, Plate_Format_Type as container_format';
 		//var query = 'SELECT ' + fields + " FROM Plate LEFT JOIN Sample_Type ON FK_Sample_Type__ID=Sample_Type_ID LEFT JOIN Plate_Format ON FK_Plate_Format__ID=Plate_Format_ID WHERE Plate_ID IN (" + id_list + ')';
@@ -84,63 +81,75 @@ module.exports = {
 			'Plate_Format ON FK_Plate_Format__ID=Plate_Format_ID',
 		];
 
-		var conditions = [
-			'Plate_ID IN (' + id_list + ')'
-		];
+		console.log('generate conditions');
+		var conditions = [];
+		if (condition) { conditions.push(condition) }
 
-
-		if ( include.match(/prep/) ) {
-			left_joins.push('Prep ON FKLast_Prep__ID=Prep_ID');
-			left_joins.push('lab_protocol ON Prep.FK_Lab_Protocol__ID=lab_protocol.id');
-			left_joins.push('protocol_step ON protocol_step.Lab_protocol=lab_protocol.id AND Prep_Name=protocol_step.name');
-
-			fields.push("FK_Lab_Protocol__ID as last_protocol_id")
-			fields.push("lab_protocol.name as last_protocol");
-			fields.push("MAX(protocol_step.step_number) as last_step_number");
-			fields.push("Prep.Prep_Name as last_step");
-			fields.push("CASE WHEN Prep.Prep_Name like 'Completed %' THEN 'Completed' WHEN Prep.Prep_Name IS NULL THEN 'N/A' ELSE 'In Process' END as protocol_status");
+		if (ids && ids.length) {
+			var id_list = ids.join(',');
+			conditions.push('Plate_ID IN (' + id_list + ')');
 		}
 
-		if ( include.match(/position/) ) {
-			left_joins.push('Rack ON Plate.FK_Rack__ID=Rack.Rack_ID');
-			left_joins.push('Rack AS Box ON Rack.FKParent_Rack__ID=Box.Rack_ID');
-			fields.push ("case WHEN Box.Rack_Type='Box' THEN Box.Rack_ID ELSE NULL END as box_id");
-			fields.push ("case WHEN Box.Rack_Type='Box' THEN Box.Capacity ELSE NULL END as box_size");
-			fields.push ("case WHEN Rack.Rack_Type='Slot' THEN Rack.Rack_Name ELSE NULL END as position");
+		console.log("Conditions: " + conditions.join(' AND '));
+		if (! conditions.length) {
+			console.log('no conditions');
+			deferred.reject("no conditions ...");
+		}
+		else {	
+			console.log("continue..");
+			if ( include.match(/prep/) ) {
+				left_joins.push('Prep ON FKLast_Prep__ID=Prep_ID');
+				left_joins.push('lab_protocol ON Prep.FK_Lab_Protocol__ID=lab_protocol.id');
+				left_joins.push('protocol_step ON protocol_step.Lab_protocol=lab_protocol.id AND Prep_Name=protocol_step.name');
+
+				fields.push("FK_Lab_Protocol__ID as last_protocol_id")
+				fields.push("lab_protocol.name as last_protocol");
+				fields.push("MAX(protocol_step.step_number) as last_step_number");
+				fields.push("Prep.Prep_Name as last_step");
+				fields.push("CASE WHEN Prep.Prep_Name like 'Completed %' THEN 'Completed' WHEN Prep.Prep_Name IS NULL THEN 'N/A' ELSE 'In Process' END as protocol_status");
+			}
+
+			if ( include.match(/position/) ) {
+				left_joins.push('Rack ON Plate.FK_Rack__ID=Rack.Rack_ID');
+				left_joins.push('Rack AS Box ON Rack.FKParent_Rack__ID=Box.Rack_ID');
+				fields.push ("case WHEN Box.Rack_Type='Box' THEN Box.Rack_ID ELSE NULL END as box_id");
+				fields.push ("case WHEN Box.Rack_Type='Box' THEN Box.Capacity ELSE NULL END as box_size");
+				fields.push ("case WHEN Rack.Rack_Type='Slot' THEN Rack.Rack_Name ELSE NULL END as position");
+			}
+
+			if ( include.match(/attribute/) ) {
+				fields.push("GROUP_CONCAT( CONCAT(Attribute_Name,'=',Attribute_Value) SEPARATOR ';<BR>') as attributes");
+				left_joins.push('Plate_Attribute ON Plate_Attribute.FK_Plate__ID=Plate_ID');
+				left_joins.push('Attribute ON Plate_Attribute.FK_Attribute__ID=Attribute_ID');
+			}
+
+			var query = Record.build_query({tables: tables, fields: fields, left_joins: left_joins, conditions: conditions, group: ['Plate_ID'], debug: true })
+
+		    Record.query(query, function (err, result) {
+		    	if (err) {
+		    		console.log("error: " + err);
+		    		deferred.reject("Error: " + err);
+		    	}
+		    	else {
+
+		    		for (var i=0; i<result.length; i++) {
+		    			if (
+		    				result[i].protocol_status == 'In Process' 
+		    				&& result[i].last_step && result[i].last_step.constructor === String 
+		    				&&  result[i].last_step.match(/^(Aliquot|Extract|Transfer|Pre-Print) /)
+		    				&& ! result[i].last_step.match(/ out to /) 
+		    				) {
+		    					// differentiate internal transfer steps from later (inapplicable) steps 
+		    					result[i].protocol_status = 'Completed Transfer';
+		    			}
+		    		}
+		    		// console.log("Loaded DATA: " + JSON.stringify(result));
+		    		deferred.resolve(result);
+		    	}
+
+		    });
 		}
 
-		if ( include.match(/attribute/) ) {
-			fields.push("GROUP_CONCAT( CONCAT(Attribute_Name,'=',Attribute_Value) SEPARATOR ';<BR>') as attributes");
-			left_joins.push('Plate_Attribute ON Plate_Attribute.FK_Plate__ID=Plate_ID');
-			left_joins.push('Attribute ON Plate_Attribute.FK_Attribute__ID=Attribute_ID');
-		}
-
-		var query = Record.build_query({tables: tables, fields: fields, left_joins: left_joins, conditions: conditions, group: ['Plate_ID'], debug: true })
-
-	    Record.query(query, function (err, result) {
-	    	if (err) {
-	    		console.log("error: " + err);
-	    		deferred.reject("Error: " + err);
-	    	}
-	    	else {
-
-	    		for (var i=0; i<result.length; i++) {
-	    			if (
-	    				result[i].protocol_status == 'In Process' 
-	    				&& result[i].last_step && result[i].last_step.constructor === String 
-	    				&&  result[i].last_step.match(/^(Aliquot|Extract|Transfer|Pre-Print) /)
-	    				&& ! result[i].last_step.match(/ out to /) 
-	    				) {
-	    					// differentiate internal transfer steps from later (inapplicable) steps 
-	    					result[i].protocol_status = 'Completed Transfer';
-	    			}
-	    		}
-	    		// console.log("Loaded DATA: " + JSON.stringify(result));
-	    		deferred.resolve(result);
-	    	}
-
-	    });
-	    	
 	    return deferred.promise;
 		
 	},
