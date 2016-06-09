@@ -25,7 +25,7 @@ block content
                 hr
 
               div.form-group
-                div.col-sm-6
+                div.col-sm-4
                   label
                     input.input(type='radio' value = 'Pre-Print' ng-model="transfer_type")
                     b &nbsp; Pre-Print &nbsp;
@@ -36,17 +36,47 @@ block content
                     input(type='radio' value = 'Transfer' ng-model="transfer_type") 
                     b &nbsp; Transfer &nbsp; 
 
-                div.col-sm-6
+                div.col-sm-4
                   input.input-lg(type='text' placeholder=' -- Transfer Qty --', ng-model='transfer_qty' size='16' ng-disabled="transfer_type=='Pre-Print'")
                   span &nbsp;
                   span.lookup(id='Lookup-units' ng-init="loadLookup('units','','units')")
 
+                div.col-sm-4
+                  b Into: 
+                  span.lookup(id='Lookup-container_format' ng-init="loadLookup('container_format','', 'Select Target Format')") 
+              
+              hr 
+
               div.form-group
-                div.col-sm-3
+                div.col-sm-4
                   b &nbsp; Split X: 
                   input.input-lg(name='splitX' ng-model='splitX' type='text' size='3' default='1' tooltip="example")
 
-                div.col-sm-5
+
+                div.col-sm-4
+                  div
+                    b Pack by: 
+                      label
+                        input(type='radio' value = 'row' ng-model="fill_by" ng-click="redistribute();") 
+                        // reset_fill_by(); 
+                        b &nbsp; Row &nbsp;
+                      label
+                        input(type='radio' value = 'column' ng-model="fill_by" ng-click="redistribute();")
+                        b &nbsp; Column &nbsp;
+                      label
+                        input(type='radio' value = 'position' ng-model="fill_by" ng-click="")
+                        b &nbsp; Posn &nbsp;
+
+                div.col-sm-4
+                  div(ng-show="fill_by != 'position'")
+                    b in groups of: 
+                    label
+                      input.input-lg(name='pack_wells' type='text' size=6 ng-model="pack_wells")
+
+              hr
+
+              div.form-group
+                div.col-sm-6
                   div(ng-show="splitX > 1")
                     b Distribution: 
                     label
@@ -55,54 +85,21 @@ block content
                     label
                       input(type='radio' value = 'parallel' ng-model="split_mode" ng-click="reset_split_mode()")
                       b &nbsp; Parallel &nbsp;
-
+                div.col-sm-6
                     div &nbsp; [ eg : 
                       b {{ split_mode }} : {{ splitExample }}
                       span ]
-                div.col-sm-4
-                  div(ng-show="split_mode == 'serial'")
-                    b Pack in groups of: 
-                    label
-                      input.input-lg(name='pack_wells' type='text' size=6 ng-model="pack_wells") 
 
-              p &nbsp;
+              hr
+
               div.form-group
-                div.col-sm-6
+                div.col-sm-4
                   b Target (optional): 
                   div
                     input.input-lg(type='text' name='target_rack' size=12 ng-model='target_rack' ng-change="validate_target(); redistribute();" placeholder='-- Scan Loc# --')
-                div.col-sm-6
-                  span.lookup(id='Lookup-container_format' ng-init="loadLookup('container_format','', 'Select Target Format')") 
+                div.col-sm-4 &nbsp;
+                  button.btn.btn-lg.btn-primary(type='button' ng-click="redistribute()") Distribute
               
-              p &nbsp;
-              div.form-group
-                div.col-sm-6
-                  div
-                    b Pack into available wells: 
-                    input(type='radio' value = '1' ng-model='pack' ng-change='pack_wells()') 
-                    b &nbsp; Yes &nbsp;
-                    input(type='radio' value = '0' ng-model='pack' ng-change='pack_wells()') 
-                    b &nbsp; No &nbsp;            
-                 div.col-sm-6
-                    div(ng-show="pack")
-                      // splitX > 1")
-                      b Fill By {{ fill_by }} : 
-                      label
-                        input(type='radio' value = 'row' ng-model="fill_by" ng-click="redistribute();") 
-                        // reset_fill_by(); 
-                        b &nbsp; Row &nbsp;
-                      label
-                        input(type='radio' value = 'column' ng-model="fill_by" ng-click="redistribute();")
-                        b &nbsp; Column &nbsp;
-                    div(ng-show="!pack")
-                      b samples retaining original box/rack positions
-
-              hr
-              div.col-sm-4 &nbsp;
-              div.col-sm-4
-                button.btn.btn-lg.btn-primary(type='button' ng-click="redistribute()") Distribute
-              div.col-sm-4 &nbsp;
-
               p &nbsp;
 
               hr
