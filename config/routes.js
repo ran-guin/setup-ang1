@@ -127,6 +127,7 @@ module.exports.routes = {
   'GET /Container/history' : 'ContainerController.history',
   'GET /Container/summary' : 'ContainerController.summary',
 
+  'POST /Rack/newBox'  : 'RackController.createBox',
   'POST /Rack/boxData' : 'RackController.boxData',
 
   // Custom Pages 
