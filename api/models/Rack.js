@@ -59,8 +59,63 @@ module.exports = {
     return 1; 
   },
 
-  addSlottedBox : function addSlottedBox (parent, size) {
-    return;
+  addSlottedBox : function addSlottedBox (parent, name, size) {
+
+    var deferred = q.defer();
+
+    var wells = Rack.wells[size];
+    if (! wells || !name || !size) {
+      deferred.reject("not standard size");
+    }
+    else {
+
+      Record.query_promise("Select Rack_Alias from Rack where Rack_ID = " + parent)
+      .then (function (result) {
+        if (result.length == 1) {
+          var alias = result[0]['Rack_Alias'];
+
+          var boxData = [ { Rack_Name: name, Rack_Alias: alias + ' ' + name, FKParent_Rack__ID : parent, Rack_Type: 'Box', Movable: 'Y', Rack_Full: 'N', Capacity: size }]
+          
+          Record.createNew('Rack', boxData)
+          .then ( function (boxResult) {
+            var parent = boxResult.insertId;  
+            console.log("Created box " + parent);
+            var slotData = [];
+            for (var row=0; row<wells.length; row++) {
+              for (var col=0; col<wells[row].length; col++) {
+                var well = wells[row][col];
+                var slot = well.toLowerCase();
+
+                var data = { Rack_Name: name, Rack_Alias: alias + ' ' + name + ' ' + slot, FKParent_Rack__ID : parent, Rack_Type: 'Slot', Movable: 'N', Rack_Full: 'N', Capacity: '1' };
+                slotData.push(data);
+                console.log("Slot " + slot + " = " + JSON.stringify(data));
+              }
+
+            }
+
+            console.log("Insert slot data: " + JSON.stringify(slotData));
+            Record.createNew('Rack',slotData)
+            .then ( function (slotResult) {
+              deferred.resolve({box: boxResult, slots: slotResult});
+            })
+            .catch (function (err) {
+              deferred.reject(err);
+            });
+          })
+          .catch ( function (err) {
+            deferred.reject(err);
+          });
+        }
+        else {
+          deferred.reject('no rack alias found');
+        }
+      })
+      .catch ( function (err) {
+        deferred.reject("problem getting parent info");
+      });
+    }
+
+    return deferred.promise;
   },
 
   add : function add (options) {
