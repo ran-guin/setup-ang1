@@ -52,7 +52,7 @@ module.exports = {
 		var ids = req.param('ids');
 		var element = req.param('element') || 'injectedData';   // match default in CommonController
 
-		var flds = ['id', 'Parent', 'container_format', 'sample_type', 'qty', 'qty_units', 'attributes'];
+		var flds = ['id', 'Parent', 'box_id', 'box_size', 'position', 'container_format', 'sample_type', 'qty', 'qty_units', 'attributes'];
 
 		Container.loadData(ids)
 		.then (function (result) {
@@ -91,7 +91,7 @@ module.exports = {
 
 			console.log("BODY: " + JSON.stringify(req.body));
 			Sources = JSON.parse(req.body.Samples);
-			var target_size = req.body['Capacity_label'] || 1;
+			var target_size = req.body['Capacity-label'] || 1;
 
 			var sizes = Object.keys(Rack.wells);
 				
