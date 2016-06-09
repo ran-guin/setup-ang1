@@ -133,7 +133,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
         }
         else { $scope.sample_type = 'undefined' }
 
-        console.log("Samples: " + $scope.plate_list);
+        // console.log("Samples: " + $scope.plate_list);
     }
 
     $scope.forward = function forward(action) {
