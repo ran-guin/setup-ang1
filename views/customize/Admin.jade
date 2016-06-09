@@ -13,7 +13,7 @@ block content
     hr
 
     div(ng-app='myApp')
-      div(ng-controller="CommonController")
+      div(ng-controller="FancyFormController")
             
         include ./../core/errorMsg.jade
 
@@ -34,6 +34,23 @@ block content
           span &nbsp; &nbsp;
           button.btn.btn-primary(type='submit' ng-disabled="!table") List
           span &nbsp; &nbsp;
+
+        hr
+
+        form(role='form' name='adminForm' method='post' action="#{sails.config.root}/Rack/newBox" enctype='form-data')
+
+          h3 Create Slotted Box:
+          div.form-group
+            div.col-sm-3
+              input.input-lg.form-control(type='text' name = 'name' ng-model='name' placeholder='-- Box Name (eg B3) -- ')
+            div.col-sm-3
+              input.input-lg.form-control(type='text' name = 'parent' ng-model='parent' required placeholder ='-- Scan Parent Shelf / Rack --')
+            div.col-sm-3
+              span.lookup(id='Lookup-Capacity' ng-init="loadLookup('rack:Capacity','', 'Select Target Size')") 
+            div.col-sm-3
+              button.btn.btn-lg.btn-primary(type='submit' ng-disabled="!name || !parent") Generate Box Record
+   
+
 
     // If link section to the right include line below (and adjust Links.jade file as required) //
       include Links
