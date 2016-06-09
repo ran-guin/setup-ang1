@@ -34,6 +34,32 @@ module.exports = {
 		return deferred.promise;
 	},
 
+	createBox : function (req, res ) {
+		var size = req.body['Capacity-label'];
+		var name = req.body.name;
+
+		var parent = req.body.parent;
+
+		var Scanned = Barcode.parse(req.body.parent);
+		console.log("Parsed " + parent + " : " + JSON.stringify(Scanned));
+		if (Scanned['Rack']) {
+			parent = Scanned['Rack'][0];
+		}
+
+		console.log("Add daughter to " + parent + ': ' + name + ' = ' + size);
+		Rack.addSlottedBox(parent, name, size)
+		.then ( function (result) {
+			var box = result.box;
+			var slots = result.slots.length;
+		
+			sails.config.messages.push("Added Box with " + slots + ' Slots');
+			return res.render('customize/private_home');
+		})
+		.catch ( function (err) {
+			return res.json(err); 
+		})
+	},
+
 	wells: function (req, res) {
 		var size = req.param('size');
 		var fillBy = req.param('fillBy') || 'row';
@@ -44,10 +70,8 @@ module.exports = {
 			for (var i=0; i<wellMap[size].length; i++) {
 				for (j=0; j<wellMap[size][i].length; j++) {
 					wells.push(wellMap[size][i][j]);
-					console.log(i+j);
 				}
 			}
-			console.log("wells: " + wells.join(','));
 		}
 		else if (size && wellMap[size]) {			
 			console.log(JSON.stringify(wellMap));
@@ -57,7 +81,6 @@ module.exports = {
 					console.log(i+j);
 				}
 			}
-			console.log("Wells: " + wells.join(','));
 		}
 		else {
 			console.log("no size or mapping");
@@ -65,7 +88,6 @@ module.exports = {
 		}
 
 
-		console.log("Retrieved: " + JSON.stringify(wells));
 		if (wellMap[size]) { 
 			return res.json(wells); 
 		}
