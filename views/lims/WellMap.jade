@@ -50,7 +50,7 @@ block content
               div.form-group
                 div.col-sm-4
                   b &nbsp; Split X: 
-                  input.input-lg(name='splitX' ng-model='splitX' type='text' size='3' default='1' tooltip="example")
+                  input.input-lg(name='splitX' ng-model='splitX' type='text' ng-change="redistribute()" size='3' default='1' tooltip="example")
 
 
                 div.col-sm-4
@@ -64,14 +64,14 @@ block content
                         input(type='radio' value = 'column' ng-model="fill_by" ng-click="redistribute();")
                         b &nbsp; Column &nbsp;
                       label
-                        input(type='radio' value = 'position' ng-model="fill_by" ng-click="")
+                        input(type='radio' value = 'position' ng-model="fill_by" ng-click="redistribute();")
                         b &nbsp; Posn &nbsp;
 
                 div.col-sm-4
                   div(ng-show="fill_by != 'position'")
                     b in groups of: 
                     label
-                      input.input-lg(name='pack_wells' type='text' size=6 ng-model="pack_wells")
+                      input.input-lg(name='pack_wells' type='text' size='6'  ng-model="pack_wells" ng-change="redistribute()")
 
               hr
 
@@ -80,10 +80,10 @@ block content
                   div(ng-show="splitX > 1")
                     b Distribution: 
                     label
-                      input(type='radio' value = 'serial' ng-model="split_mode" ng-click="reset_split_mode()") 
+                      input(type='radio' value = 'serial' ng-model="split_mode" ng-click="reset_split_mode(); redistribute();") 
                       b &nbsp; Serial &nbsp;
                     label
-                      input(type='radio' value = 'parallel' ng-model="split_mode" ng-click="reset_split_mode()")
+                      input(type='radio' value = 'parallel' ng-model="split_mode" ng-click="reset_split_mode(); redistribute();")
                       b &nbsp; Parallel &nbsp;
                 div.col-sm-6
                     div &nbsp; [ eg : 
@@ -123,7 +123,7 @@ block content
                         td(ng-repeat="col in source_cols" style="background-color:#{{ rgbList[ $parent.$index*source_cols.length + $index ] }}" ) 
                           span(data-toggle="tooltip" title="{{Samples[$parent.$index*source_cols.length + $index].id}}") &nbsp; &nbsp; &nbsp;
                   td(style='width:50%')
-                    h2 Target Samples: [ size: {{ target_size }}]
+                    h2 Target Samples: [ size: {{ target_size }} = #{target_size} ]
                     include TargetMap.jade
                     hr
                     ul
@@ -151,69 +151,66 @@ block content
                                     b 0
               if debug || 1
 
-                h2.alert.alert-warning Debugging Information:  (hidden in production)
-                hr
-                h2 Samples:  [{{ Samples.length }} samples]
-                b plate_ids: #{plate_ids}
-                b target: #{target}
-                b target_size: #{target_size}
-                b options: #{options}
-                b sizes: #{sizes}
-                
-                h4 
-                  b Samples: 
-                  span {{ Samples[0] }}, {{ Samples[1] }} ...{{ Samples[Samples.length-1] }}
-                  p &nbsp;
-                  b Target: {{ target }}
+                div.alert.alert-warning Debugging Information:  (hidden in production)
+                  h2 Samples:  [{{ Samples.length }} samples]
+                  h4 plate_ids: #{plate_ids}
+                  h5 target: #{target}
+                  h5 target_size: #{JSON.stringify(target_size)}
+                  h5 options: #{JSON.stringify(options)}
+                  h5 sizes: #{sizes}
+                  
+                  h4 
+                    b Samples: 
+                    span {{ Samples[0] }}, {{ Samples[1] }} ...{{ Samples[Samples.length-1] }}
+                    p &nbsp;
+                    b Target: {{ target }}
 
-                h4 
-                  b Options:
-                  ul
-                    li Split: {{ splitX }}
-                    li Split_mode: {{ split_mode }}
-                    li Pack: {{ pack }} : {{ pack_wells }}
-                    li Fill By: {{ fill_by }}
-                    li Transfer Qty: {{ transfer_qty }} {{ units_label }}
-                    li Target Container: {{ Plate_Format }}
-                    li Transfer Type: {{ transfer_type }}
-                    li Available: {{ available }}
-                    li Target Boxes: {{ target_boxes }}
-                hr
-                h4 Target: {{ target }}
-                hr
-                h5 Options: {{ options }}
-                hr
-                button(type='button' ng-click="redistribute()") Distribute
-                span &nbsp; &nbsp;
-                button(type='button' ng-click="redistribute()") Re-Distribute
-                span &nbsp; &nbsp;
-                button(type='button' ng-click="source_by_Col()") Pick Columns First
-                span &nbsp; &nbsp;
-                button(type='button' ng-click="source_by_Row()") Pick Rows First
-                span &nbsp; &nbsp;
-                button(type='button' ng-click="reset_Samples()") Reset Source Order
+                  h4 
+                    b Options:
+                    ul
+                      li Split: {{ splitX }}
+                      li Split_mode: {{ split_mode }}
+                      li Pack: {{ pack }} : {{ pack_wells }}
+                      li Fill By: {{ fill_by }}
+                      li Transfer Qty: {{ transfer_qty }} {{ units_label }}
+                      li Target Container: {{ Plate_Format }}
+                      li Transfer Type: {{ transfer_type }}
+                      li Available: {{ available }}
+                      li Target Boxes: {{ target_boxes }}
+                  hr
+                  h4 Target: {{ target }}
+                  hr
+                  h5 Options: {{ options }}
+                  hr
+                  button(type='button' ng-click="redistribute()") Distribute
+                  span &nbsp; &nbsp;
+                  button(type='button' ng-click="redistribute()") Re-Distribute
+                  span &nbsp; &nbsp;
+                  button(type='button' ng-click="source_by_Col()") Pick Columns First
+                  span &nbsp; &nbsp;
+                  button(type='button' ng-click="source_by_Row()") Pick Rows First
+                  span &nbsp; &nbsp;
+                  button(type='button' ng-click="reset_Samples()") Reset Source Order
 
-                hr
-                
-                button.btn.btn-primary(type='button' ng-click="testXfer()") Complete Transfer
-                span &nbsp; &nbsp;
-                hr
-                b {{ feedback }}
-                hr
+                  hr
+                  
+                  button.btn.btn-primary(type='button' ng-click="testXfer()") Complete Transfer
+                  span &nbsp; &nbsp;
+                  hr
+                  b {{ feedback }}
+                  hr
 
-                //b {{ map }}
-                b Colour Map:
+                  //b {{ map }}
+                  b Colour Map:
 
-                b {{ colours.length }} colours:
+                  b {{ colours.length }} colours:
 
-                table.table.table-bordered
-                  tr(ng-repeat="colour in colours") 
-                      td(ng-repeat="hue in colourMap[colour]" style="background-color:#" + "{{hue}}" ) {{hue}}
+                  table.table.table-bordered
+                    tr(ng-repeat="colour in colours") 
+                        td(ng-repeat="hue in colourMap[colour]" style="background-color:#" + "{{hue}}" ) {{hue}}
 
-                h3 Angular Transfer / Samples: 
-                b {{ transfer }}
-                hr
-                b {{ Samples }}
-
-                h3 amples: 
-                b #{ Samples }
+                  h3 Angular Transfer / Samples: 
+                  b Transfer: {{ Map.Transfer }}
+                  hr
+                  b Target Colours: {{ Map.TargetColours }} 
+             
