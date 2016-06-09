@@ -18,9 +18,9 @@ module.exports = {
   	var Prefixes = {
   		'Plate' : 'Bcg',
   		'Solution' : 'Sol',
-  		'Location' : 'Loc',
-  		'Equipment' : 'Eqp'
-  	};
+  		'Rack' : 'Loc',
+  		'Equipment' : 'Eqp',
+    };
 
   	if (model == undefined) {
   		return Prefixes;
