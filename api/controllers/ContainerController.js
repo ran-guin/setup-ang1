@@ -21,17 +21,17 @@ module.exports = {
 		var ids = req.param('ids');
 		var element = req.param('element') || 'injectedHistory';  // match default in CommonController
 
-		var fields = ['Count(DISTINCT Plate_ID) as Samples', 'Prep_Name as Step', 'Prep_DateTime as Completed', 'Employee_Name as Completed_By'];
+		var fields = ['Count(DISTINCT Plate_ID) as Samples', 'Prep_Name as Step', 'lab_protocol.name as Protocol', 'Prep_DateTime as Completed', 'Employee_Name as Completed_By'];
 		fields.push("CASE WHEN Attribute_ID IS NULL THEN '' ELSE GROUP_CONCAT( DISTINCT CONCAT(Attribute_Name,'=',Attribute_Value) SEPARATOR ';<BR>') END as attributes");
 		fields.push('Prep_Comments as Comments');
 
-		var query = "SELECT " + fields.join(',') + " FROM Plate, Plate_Prep, Prep";
+		var query = "SELECT " + fields.join(',') + " FROM (Plate, Plate_Prep, Prep, lab_protocol)";
 
 		query = query + " LEFT JOIN Prep_Attribute ON Prep.Prep_ID=Prep_Attribute.FK_Prep__ID";
 		query = query + " LEFT JOIN Employee ON Prep.FK_Employee__ID=Employee_ID";
 		query = query + " LEFT JOIN Attribute ON Prep_Attribute.FK_Attribute__ID=Attribute_ID";
 		
-		query = query + " WHERE FK_Plate__ID=Plate_ID AND Plate_Prep.FK_Prep__ID=Prep_ID AND Plate_ID IN (" + ids + ')';
+		query = query + " WHERE FK_Plate__ID=Plate_ID AND Plate_Prep.FK_Prep__ID=Prep_ID AND Prep.FK_Lab_Protocol__ID=lab_protocol.id AND Plate_ID IN (" + ids + ')';
 
 		query = query + " GROUP BY Prep_ID DESC";
 
