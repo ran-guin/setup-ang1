@@ -33,7 +33,12 @@ block content
 
               include uploadMatrix.jade
 
-            if debug || 1
+            if ! debug
+              p &nbsp;
+              p &nbsp;
+              p &nbsp;
+              
+            if debug
               hr
               h2.alert.alert-warning Debugging Information:  (hidden in production)
               b session: #{JSON.stringify(session)} 
