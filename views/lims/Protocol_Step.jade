@@ -2,7 +2,6 @@ extends ./../customize/privateLayout
 
 block content
 
-
   div.container
     include ./../core/errorMsg.jade
     
@@ -21,7 +20,6 @@ block content
     - aliases = { 'equipment' : 'Equip', 'solution' : 'Sol' }
     - attributes = attributes || {}; // {'Thaw_Time' : 'integer' }
 
-    hr
     div(ng-app='myApp')
       div(ng-controller="SharedController")
        div(ng-controller="FancyFormController")
@@ -29,7 +27,8 @@ block content
           div(ng-controller='ProtocolController' ng-init="#{init}" ngcloak)
             
             include ActiveSamples.jade
-            br
+            
+            br 
             include ./../core/angularMessages.jade
 
             div(ng-show="status != 'Completed'")      
@@ -97,6 +96,8 @@ block content
                           if (fld != field)
                             - mandatory = true;
                             - pattern = "^[\\S]{1,}$"; 
+
+                          // - fld = '_' + fld;
 
                           if fType === 'hidden' 
                             input(type='hidden' name='#{fld}#{Snum}' id='#{fld}#{Snum}' ng-model='#{fld}#{Snum}' force=1)
@@ -171,8 +172,6 @@ block content
                             div.col-sm-12
                               b {{ JSON.stringify(Map) }}
 
-              hr
-
               form.form-horizontal(role="form" data-toggle="validator" method='post' action="#{sails.config.root}/scan-barcode")
                 input(type = 'hidden' name='Samples' value='{{Samples}}')
                 input(type='hidden' id = 'id' name='plate_ids' value="{{plate_list}}")
@@ -185,28 +184,32 @@ block content
               include uploadMatrix.jade
               hr
 
-            h3(ng-if="debug") Debugging 
+            p &nbsp;
+            p &nbsp;
+            div.alert.alert-danger(ng-if="debug") 
+              br
+              h3 Debugging 
 
-            hr
-            b comment: {{ comments }}
-            h5 Defaults: {{ Default }}
-            h5 Att : {{ AttributePrompt }}
-            h5 Details: {{ Step }}
-            h5 Steps : {{ Steps }}
-            h5 ids: {{ plate_ids }}
-            h5 Samples: {{ Samples }}
-            h5 Input: {{ input }}
-            h5 Show: {{ Show }}
-            h5 Fields: #{ JSON.stringify(flds) }
-            h5 Attributes: #{JSON.stringify(attributes)}
+              hr
+              b comment: {{ comments }}
+              h5 Defaults: {{ Default }}
+              h5 Att : {{ AttributePrompt }}
+              h5 Details: {{ Step }}
+              h5 Steps : {{ Steps }}
+              h5 ids: {{ plate_ids }}
+              h5 Samples: {{ Samples }}
+              h5 Input: {{ input }}
+              h5 Show: {{ Show }}
+              h5 Fields: #{ JSON.stringify(flds) }
+              h5 Attributes: #{JSON.stringify(attributes)}
 
-            hr
-            b #{sails.config.payload}
-            b #{ JSON.stringify(sails.config.payload) }
+              hr
+              b #{sails.config.payload}
+              b #{ JSON.stringify(sails.config.payload) }
 
-            hr
-            b Config Messages:
-            br
-            b #{sails.config.messages}
-            h3 angular messages: 
-            b {{ messages }}
+              hr
+              b Config Messages:
+              br
+              b #{sails.config.messages}
+              h3 angular messages: 
+              b {{ messages }}
