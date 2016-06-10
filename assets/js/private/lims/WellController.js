@@ -127,7 +127,7 @@ function wellController ($scope, $rootScope, $http, $q ) {
                 // initiate mapping //
                 var newMap = new wellMapper();
 
-                newMap.colourMap();
+                newMap.colourMap($scope.Samples.length);
                 newMap.from($scope.Samples);            
 
                 $scope.rgbList = newMap.rgbList;       
