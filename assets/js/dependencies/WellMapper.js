@@ -41,11 +41,14 @@ function wellMapper() {
     this.rgbList = [];
     this.Map = {};
 
-    this.colourMap = function (N, shades) {
+    this.colourMap = function (length, options) {
 
+        if (!options) { options = {} }
         N = 8;          // Number of colours
         shades = 12;    // Number of shades
 
+        var shade_gap = 1;
+        if (length <=8 ) { shades = 1 }
 
         var list = [];
         
@@ -72,7 +75,7 @@ function wellMapper() {
             var green = greens[c];
             var blue = blues[c];
 
-            for (var i=0; i<shades; i++) {
+            for (var i=0; i<shades; i=i+shade_gap) {
 
                 var rgb = hex[red] + hex[green] + hex[blue];
                 if (red >= maxIndex) { 
@@ -180,28 +183,18 @@ function wellMapper() {
 
     this.next_available = function (target_index) {
 
-        console.log("box #" + target_index + " contains ");
-        console.log(this.available);
-
         if (! this.target_count[target_index]) { this.target_count[target_index] = 0 }
         
-        console.log(target_index + ": " + JSON.stringify(this.target_count));
-
         var x = 'A';
         var y = 1;
         if (this.available && this.available[target_index]) {
             var next = this.available[target_index][this.target_count[target_index]] || 'A1';
-            console.log("Next :  " + target_index + " = " + next);
-
             x = next;
             if (x) { y = next.replace(x,'') }
-
-            console.log(target_index + ':' + x + y )
         }
         else { console.log('next box not defined');  }
 
        if (this.available && this.available[target_index] && this.available[target_index].length > this.target_count[target_index]) {
-            console.log('current: ' + this.available[target_index].length + ' vs ' + this.target_count[target_index])
             this.target_count[target_index]++;
         }
         else {
@@ -210,37 +203,8 @@ function wellMapper() {
         }
         this.total_target_count++;       
 
+        x = x.toUpperCase();
         return { x: x, y: y, target_index: target_index};
-    },
-
-    this.old_next_available = function (x, y, target_index) {
-        var next = this.next_position(x,y,target_index);
-        var position = next.x + next.y.toString();
- 
-        if (this.target_boxes.length) {           
-            var available_list = this.available[this.target_boxes[next.target_index]];
-
-
-            if (available_list) {
-                
-                var tried = 0;
-                while ( tried <= 96 && available_list.indexOf(position) < 0 ) {
-                    console.log(position + " not available in box #" + JSON.stringify(this.target_boxes) );
-                    //console.log(next.target_index + " : " + JSON.stringify(available_list) + ' available in ' + JSON.stringify(this.target_boxes) );
-                    next = this.next_position(x,y,target_index);
-                    position = next.x + next.y.toString();
-                    available_list = this.available[this.target_boxes[next.target_index]];
-                    tried++;
-                }
-                return next;  // first available well for target 
-            }
-            else { 
-                return next;  // no specified list of available wells for this target
-            }
-        }
-        else {
-            return next;      // no target boxes supplied
-        }
     },
 
     this.next_position = function (x, y, target_index) {
@@ -306,9 +270,7 @@ function wellMapper() {
         if (Options.available) {
             if (Options.available.constructor === Object) {
                 // specifically supplied for each target box
-                console.log("available is " + Options.available.constructor);
                 this.available = Options.available;
-                console.log("Available OPTIONS: " + JSON.stringify(Options.available)); 
             }
             else {
                 var boxes_required = 2;   // test only
@@ -317,7 +279,6 @@ function wellMapper() {
                     Available.push(Options.available);
                 }
                 this.available = Available;
-                console.log("Set available for each target..." + JSON.stringify(Available));    
             }
         }
         else {
@@ -330,7 +291,7 @@ function wellMapper() {
         this.splitX = Options.split || Options.splitX || 1;
 
         console.log("Initialized:\nsplit = " + this.splitX + "\nfillBy = " + this.fill_by + "\npack_wells = " + this.pack_wells + "\nmode = " + this.split_mode + "\ntarget_size = " + this.target_size + "\n");
-        console.log("Available" + this.available); 
+        console.log("Available" +JSON.stringify(this.available)); 
 
         this.target_boxes = Options.target_boxes || [];       // target box ids 
         //this.available = Options.available || {};   // hash of available wells keyed on target box ids
@@ -465,109 +426,111 @@ function wellMapper() {
         var lists = Object.keys(List);
         var statics = Object.keys(Static);
 
+        var pack_wells = this.pack_wells;
+        var splitX     = this.splitX;
+
+        if (! pack_wells) { pack_wells = 1 }
+
         if (this.split_mode === 'serial') { 
             repeat_wells = this.splitX || 1;
         }
-        else { 
+        else {
+            pack_wells = sources.length; 
             repeat_set = this.splitX || 1;
         }
 
-
-        var batch_wells = 1;
-        var repeat_batch= 1;
-        if (this.pack_wells > 1 && this.split_mode === 'serial') { 
-            batch_wells = this.pack_wells;
-            repeat_batch = Math.ceil(sources.length / this.pack_wells);
-            // repeat_wells = batch_wells;
+        var batches = [];
+        for (var i=0; i<sources.length; ) {
+            var batch = [];
+            for (j=0; j<pack_wells && i<sources.length; j++) {
+                batch.push(i);
+                i++;
+            }
+            batches.push(batch);
         }
 
         var target = 0;
 
-        console.log(this.split_mode + " looping " + repeat_set + "x" 
-            + sources.length + 'x' 
-            + batch_wells + 'x'
+        console.log("\n*** BATCH PROCESSING ");
+        console.log(JSON.stringify(batches));
+
+        console.log(this.split_mode + " looping " + batches.length + "x" 
+            + splitX + ' x ' +
+            + batches[0].length + 'x'
             + repeat_wells);
 
-        for (var h=0; h<repeat_set; h++) {  // only repeats when split in parallel mode
-            //for (var j=0; j<batch_wells; j++) {   // force use of consecutive wells if pack > 1 (even if in serial mode)
-                for (var i=0; i<sources.length; ) {
+        for (j=0; j<batches.length; j++) {
+            var batch = batches[j];
+            for (var h=0; h<splitX; h++) { 
+                   
+                for (l=0; l<batch.length; l++) {
+                    var i = batch[l];
                     SourceColours[sources[i].position] = this.rgbList[i];
+                      
+                    var target_position;
 
-                    // var batch_index = 0;
-                    for (var k=0; k<repeat_wells && i<sources.length; k++) {
-
-                        var target_position;
-                        /*
-                        if (batch_wells > 1) {
-                            var virtual_index = i + k + (k * repeat_batch);
-                            batch_index++;
-                            console.log("virtual index : " + virtual_index);
-                            target_position = sources[virtual_index].position;
-                        }
-                        */
-                        if (this.pack_wells) { 
-                            target_position = x + y.toString();
-                        }
-                        else {
-                            target_position = sources[i].position;
-
-                            if (this.split_mode == 'serial') {
-                                target_index = k;
-                            }
-                            else {
-                                target_index = h;
-                            }
-                        }
-
-                        console.log('box #' + target_index + '-' + target_position + ' = container #' + sources[i].id + ' from ' + sources[i].position);
-
-                        if (! Transfer[target_index]) { Transfer[target_index] = {} }
-                        if (! TargetColours[target_index]) { TargetColours[target_index] = {} }
-      
-                        Transfer[target_index][target_position] = sources[i];
-                        TargetColours[target_index][target_position] = this.rgbList[i];
-
-                        console.log("Transfer : " + JSON.stringify(Transfer[target_index][target_position]) );
-                        console.log("Colour : " + JSON.stringify(TargetColours[target_index][target_position]) );
-                        //rearray.push([sources[i], Container.position(sources[i]), targets[target_index], target_position]);
-
-                        var XferData = { 
-                            batch: target_index,
-                            source_id: sources[i].id,
-                            source_position: sources[i].position,
-                            target_position: target_position,
-                        };
-
-                        // Add Static Values (single values entered)
-                        for (var l=0; l<statics.length; l++) {
-                            var opt = statics[l];
-                            XferData[opt] = Static[opt];
-                        }
-
-                        // Add multiplexed values (comma-delimited list entered)
-                        for (var m=0; m<lists.length; m++) {
-                            var opt = lists[m];
-                             XferData[opt] = List[opt][target];
-                        }
-
-                        Xfer.push(XferData);
-
-                        // next...
-                        if (this.pack_wells) {
-                            var next = this.next_available(target_index);
-                            x = next.x;
-                            y = next.y;
-                            target_index = next.target_index;                                
-                        }
-                        else {
-
-                        }
-
-                        target++;
+                    if (this.pack_wells) { 
+                        target_position = x + y.toString();
                     }
-                    i = i+1;
+                    else {
+                        var source_index = batches[j][batch]
+                        target_position = sources[i].position;
+
+                        if (this.split_mode == 'serial') {
+                            target_index = j;
+                        }
+                        else {
+                            target_index = h;
+                        }
+                    }
+
+                    console.log(i + ' box #' + target_index + '-' + target_position + ' = container #' + sources[i].id + ' from ' + sources[i].position);
+
+                    if (! Transfer[target_index]) { Transfer[target_index] = {} }
+                    if (! TargetColours[target_index]) { TargetColours[target_index] = {} }
+  
+                    Transfer[target_index][target_position] = sources[i];
+                    TargetColours[target_index][target_position] = this.rgbList[i];
+
+                    console.log("Transfer : " + JSON.stringify(Transfer[target_index][target_position]) );
+                    console.log("Colour : " + JSON.stringify(TargetColours[target_index][target_position]) );
+                    //rearray.push([sources[i], Container.position(sources[i]), targets[target_index], target_position]);
+
+                    var XferData = { 
+                        batch: target_index,
+                        source_id: sources[i].id,
+                        source_position: sources[i].position,
+                        target_position: target_position,
+                    };
+
+                    // Add Static Values (single values entered)
+                    for (var stat=0; stat<statics.length; stat++) {
+                        var opt = statics[stat];
+                        XferData[opt] = Static[opt];
+                    }
+
+                    // Add multiplexed values (comma-delimited list entered)
+                    for (var list_index=0; list_index<lists.length; list_index++) {
+                        var opt = lists[list_index];
+                         XferData[opt] = List[opt][target];
+                    }
+
+                    Xfer.push(XferData);
+
+                    // next...
+                    if (this.pack_wells) {
+                        var next = this.next_available(target_index);
+                        x = next.x;
+                        y = next.y;
+                        target_index = next.target_index;                                
+                    }
+                    else {
+
+                    }
+
+                    target++;
                 }
-     //       }
+            }
         } 
 
         this.Transfer = Transfer;
@@ -727,20 +690,8 @@ function wellMapper() {
         var id_list = [];
         var position_list = [];
         var targets = [];
-/*
-        for (var i=0; i<this.Transfer.length; i++) {
-            var keys = Object.keys(this.Transfer[i]);
-            for (var j=0; j<keys.length; j++) {
-                var source = this.Transfer[i][keys[j]];
-                id_list.push(source.id);
-                position_list.push(source.position);
-                var target_position = i + '-' + keys[j];
-                targets.push(target_position);
-            }
-        }
-*/
 
-        console.log('Xfer: ' + JSON.stringify(this.Xfer));
+        // console.log('Xfer: ' + JSON.stringify(this.Xfer));
 
        for (var i=0; i<this.Xfer.length; i++) {
             var transfer = this.Xfer[i];
