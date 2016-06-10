@@ -1,21 +1,21 @@
-p.bg-info(style='padding:20px; margin:0px')
-  span Active Samples: 
-  b {{N}} x 
-  b(style='color:red') {{sample_type}} 
-  b in {{container_format}}
-  span &nbsp;
+div.section-block.bg-info
+    span Active Samples: 
+    b {{N}} x 
+    b(style='color:red') {{sample_type}} 
+    b in {{container_format}}
+    span &nbsp;
 
-  button.btn.btn-primary.btn-sm(type='button' ng-show="!injectedAlready()" ng-click="injectData('/Container/summary','', plate_ids)") ?
-  button.btn.btn-danger.btn-sm(type='button' ng-show='injectedAlready()' ng-click='uninjectData()') x    
+    button.btn.btn-primary.btn-sm(type='button' ng-show="!injectedAlready()" ng-click="injectData('/Container/summary','', plate_ids)") ?
+    button.btn.btn-danger.btn-sm(type='button' ng-show='injectedAlready()' ng-click='uninjectData()') x    
 
-  span.navbar.navbar-right 
+    span.navbar.navbar-right 
 
-    button.btn.btn-primary.btn-sm(type='button' ng-show="!injectedAlready('injectedHistory')" ng-click="injectData('/Container/history','injectedHistory', plate_ids)") History
-    button.btn.btn-danger.btn-sm(type='button' ng-show="injectedAlready('injectedHistory')" ng-click="uninjectData('injectedHistory')") x    
-    span &nbsp; &nbsp; &nbsp; &nbsp;
+      button.btn.btn-primary.btn-sm(type='button' ng-show="!injectedAlready('injectedHistory')" ng-click="injectData('/Container/history','injectedHistory', plate_ids)") History
+      button.btn.btn-danger.btn-sm(type='button' ng-show="injectedAlready('injectedHistory')" ng-click="uninjectData('injectedHistory')") x    
+      span &nbsp; &nbsp; &nbsp; &nbsp;
 
-    b {{user}} &nbsp;
-    span {{ timestamp }} &nbsp; &nbsp;
+      b {{user}} &nbsp;
+      span {{ timestamp }} &nbsp; &nbsp;
 
 div#injectedData
 
