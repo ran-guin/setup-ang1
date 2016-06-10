@@ -23,6 +23,15 @@
     background-color: #ccc;
 }
 
+.message-block {
+    padding: 10px;
+}
+
+.section-block {
+    padding: 20px;
+    border: 1px solid;
+}
+
 .popover {
 	max-width: 100%;
 }
