@@ -13,10 +13,10 @@ block content
       div(ng-controller="FancyFormController")
         div(ng-controller="ProtocolController", ng-init="#{init2}")
           div(ng-controller='WellController', ng-init="#{init1}")
-            if errorMsg 
-              h2(style='color:red') Error: #{errorMsg}
-
+            br
             include ActiveSamples
+
+            include ./../core/errorMsg.jade
 
             form.form-horizontal(role='form' method='post' action="#{sails.config.root}/transfer")
               p &nbsp;
@@ -102,12 +102,12 @@ block content
               
               p &nbsp;
 
-              hr
+              h3 Distribution View:
               - var index = 0;
               table.table()
                 tr
                   td(style='width:50%')
-                    h2 Source Samples: [ size: {{ source_size }}]
+                    h2 Source Samples: [ size: {{ Samples[0].box_size }} ]
                     include SourceMap.jade
                     hr
                     ul
@@ -123,7 +123,7 @@ block content
                         td(ng-repeat="col in source_cols" style="background-color:#{{ rgbList[ $parent.$index*source_cols.length + $index ] }}" ) 
                           span(data-toggle="tooltip" title="{{Samples[$parent.$index*source_cols.length + $index].id}}") &nbsp; &nbsp; &nbsp;
                   td(style='width:50%')
-                    h2 Target Samples: [ size: {{ target_size }} = #{target_size} ]
+                    h2 Target Samples: [ size: {{ target_size }} ]
                     include TargetMap.jade
                     hr
                     ul
@@ -149,7 +149,7 @@ block content
                                     b #{plateMap[index]} 
                                   else 
                                     b 0
-              if debug || 1
+              if debug
 
                 div.alert.alert-warning Debugging Information:  (hidden in production)
                   h2 Samples:  [{{ Samples.length }} samples]
