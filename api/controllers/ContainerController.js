@@ -21,8 +21,9 @@ module.exports = {
 		var ids = req.param('ids');
 		var element = req.param('element') || 'injectedHistory';  // match default in CommonController
 
-		var fields = ['Count(DISTINCT Plate_ID) as Samples', 'Prep_Name as Step', 'lab_protocol.name as Protocol', 'Prep_DateTime as Completed', 'Employee_Name as Completed_By'];
-		fields.push("CASE WHEN Attribute_ID IS NULL THEN '' ELSE GROUP_CONCAT( DISTINCT CONCAT(Attribute_Name,'=',Attribute_Value) SEPARATOR ';<BR>') END as attributes");
+		var fields = ['Count(DISTINCT Plate_ID) as Samples', 'Prep_Name as Step', 'lab_protocol.name as Protocol', 'Prep_DateTime as Completed', 'Group_Concat(DISTINCT Employee_Name) as Completed_By'];
+		fields.push("CASE WHEN Max(Attribute_ID) IS NULL THEN '' ELSE GROUP_CONCAT( DISTINCT CONCAT(Attribute_Name,'=',Attribute_Value) SEPARATOR ';<BR>') END as attributes");
+
 		fields.push('Prep_Comments as Comments');
 
 		var query = "SELECT " + fields.join(',') + " FROM (Plate, Plate_Prep, Prep, lab_protocol)";

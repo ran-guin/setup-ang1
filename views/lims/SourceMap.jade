@@ -17,7 +17,11 @@ if target_size == '9x9'
 
 if target_size == '8x12'
 	- rows = ['A','B','C','D','E','F','G','H'];
-	- cols = [1,2,3,4,5,6,7,8,9.10,11,12];
+	- cols = [1,2,3,4,5,6,7,8,9,10,11,12];
+
+- var lightbg = '#fff';
+- var darkbg  = '#000';
+- var bg = darkbg;
 
 div(ng-if="Map.Transfer && Map.SourceColours")
 		// div(ng-repeat="transfer in Map.Transfer") source_batches
@@ -25,10 +29,15 @@ div(ng-if="Map.Transfer && Map.SourceColours")
 			each row in rows
 				tr
 					each col in cols
+						if col > 6 
+							- bg=darkbg;
+						if col <= 6 
+							- bg=lightbg;
+
 						td					
 							div(ng-if="Map.SourceColours['#{row}#{col}']")
 								div.wellmap( style="background-color:#{{ Map.SourceColours['#{row}#{col}'] }}")
-									span #{row}#{col}
+									b(style='color:#{bg}') #{row}#{col}
 									span.tooltip {{ transfer['#{row}#{col}']['id'] }}
 							div(ng-if="! Map.SourceColours['#{row}#{col}']")
 								div.wellmap(style='background-color: #666')

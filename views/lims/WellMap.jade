@@ -110,7 +110,7 @@ block content
                     h2 Source Samples: [ size: {{ Samples[0].box_size }} ]
                     include SourceMap.jade
                     hr
-                    ul
+                    // ul
                       li(ng-repeat="source in Samples")
                         b id={{source.id}} posn={{source.position}}
 
@@ -126,7 +126,7 @@ block content
                     h2 Target Samples: [ size: {{ target_size }} ]
                     include TargetMap.jade
                     hr
-                    ul
+                    // ul
                       li(ng-repeat="xfer in Map.Xfer")
                         b {{xfer.source_position}} -> {{xfer.target_position}} : id={{xfer.source_id}} [ {{xfer.qty}} {{xfer.qty_units}}]
 

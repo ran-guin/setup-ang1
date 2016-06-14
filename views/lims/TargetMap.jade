@@ -14,7 +14,12 @@ if target_size == '9x9'
 
 if target_size == '8x12'
 	- rows = ['A','B','C','D','E','F','G','H'];
-	- cols = [1,2,3,4,5,6,7,8,9.10,11,12];
+	- cols = [1,2,3,4,5,6,7,8,9,10,11,12];
+
+
+- var lightbg = '#fff';
+- var darkbg  = '#000';
+- var bg = darkbg;
 
 div(ng-if="Map.Transfer && Map.TargetColours")
 	div(ng-repeat="transfer in Map.Transfer")
@@ -22,12 +27,19 @@ div(ng-if="Map.Transfer && Map.TargetColours")
 			each row in rows
 				tr
 					each col in cols
+						if col > 6 
+							- bg=darkbg;
+						if col <= 6 
+							- bg=lightbg;
+
 						td					
 							div(ng-if="Map.TargetColours[0]['#{row}#{col}']")
-								div.wellmap( style="background-color:#{{ Map.TargetColours[0]['#{row}#{col}'] }}")
-									span {{ transfer['#{row}#{col}']['position'] }}
-									span.tooltip {{ transfer['#{row}#{col}']['id'] }}
+								a(href='#' data-toggle='tooltip' title="from {{ transfer['#{row}#{col}']['position'] }} : BCG{{ transfer['#{row}#{col}']['id'] }}" style='color:#{bg}') 
+									div.wellmap( style="background-color:#{{ Map.TargetColours[0]['#{row}#{col}'] }}")
+										b {{ transfer['#{row}#{col}']['position'] }}
+									// span.tooltip {{ transfer['#{row}#{col}']['id'] }}
 							div(ng-if="! Map.TargetColours[0]['#{row}#{col}']")
 								div.wellmap(style='background-color: #666')
 									span &nbsp;	
+		hr
 // b map: {{ Map.TargetColours }}	

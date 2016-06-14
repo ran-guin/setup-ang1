@@ -246,7 +246,7 @@ function wellMapper() {
         return { x: x, y: y, target_index: target_index};
     }
 
-    this.initialize = function ( Target, Options ) {
+    this.initialize = function (sources, Target, Options ) {
         //var sources = [{ id: 1, type: 'blood', position: 'A1'}, { id : 2, type : 'blood', position : 'A2'}];
         
         //var rows = Target.rows || this.source_rows;  // unnecessary..
@@ -260,12 +260,23 @@ function wellMapper() {
         this.split_mode = Options.split_mode || 'parallel';
         this.preserve_batch = this.batch;
         this.target_size = Options.target_size;
+        this.sources = sources;
+        this.source_count = sources.length;
 
         this.x_min = Options.Min_Row || 'A';
         this.y_min = Options.Min_Col || 1;
 
+        this.target_format = Target.format;
+
+        this.splitX = Options.split || Options.splitX || 1;
+
         this.available = Options.available;
+
+        this.source_count = sources.length;
+ 
         this.target_count = {};
+
+
 
         if (Options.available) {
             if (Options.available.constructor === Object) {
@@ -273,7 +284,9 @@ function wellMapper() {
                 this.available = Options.available;
             }
             else {
-                var boxes_required = 2;   // test only
+                var boxes_required = Math.ceil( this.source_count * this.splitX / Options.available.length );   // test only
+                
+                console.log("Require " + boxes_required + " boxes");
                 var Available = [];
                 for (var i=0; i<boxes_required; i++) {
                     Available.push(Options.available);
@@ -286,10 +299,6 @@ function wellMapper() {
             this.y_max = Options.Max_Col || 1;
         }
         
-        this.target_format = Target.format;
-
-        this.splitX = Options.split || Options.splitX || 1;
-
         console.log("Initialized:\nsplit = " + this.splitX + "\nfillBy = " + this.fill_by + "\npack_wells = " + this.pack_wells + "\nmode = " + this.split_mode + "\ntarget_size = " + this.target_size + "\n");
         console.log("Available" +JSON.stringify(this.available)); 
 
@@ -330,7 +339,7 @@ function wellMapper() {
         console.log("Target: " + JSON.stringify(Target));
         console.log("Options: " + JSON.stringify(Options));
 
-        this.initialize(Target, Options);
+        this.initialize(sources, Target, Options);
 
         var target_index = 0;
 
@@ -439,6 +448,7 @@ function wellMapper() {
             repeat_set = this.splitX || 1;
         }
 
+
         var batches = [];
         for (var i=0; i<sources.length; ) {
             var batch = [];
@@ -448,11 +458,13 @@ function wellMapper() {
             }
             batches.push(batch);
         }
-
         var target = 0;
 
         console.log("\n*** BATCH PROCESSING ");
         console.log(JSON.stringify(batches));
+
+        console.log("AVAILABLE: ");
+        console.log(JSON.stringify(this.available));
 
         console.log(this.split_mode + " looping " + batches.length + "x" 
             + splitX + ' x ' +

@@ -78,7 +78,6 @@ module.exports = {
 			for (var i=0; i<wellMap[size][0].length; i++) {
 				for (j=0; j<wellMap[size].length; j++) {
 					wells.push(wellMap[size][j][i]);
-					console.log(i+j);
 				}
 			}
 		}

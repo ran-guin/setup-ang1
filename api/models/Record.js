@@ -494,7 +494,7 @@ module.exports = {
 		}
 
 		var createString = "INSERT INTO " + table + " (" + fields.join(',') + ") VALUES " + Values.join(', ') + onDuplicate;
-		console.log("\nInsert example: \nINSERT INTO " + table + " (" + fields.join(',') + ") VALUES " + Values[0] + onDuplicate);
+		console.log("\nInsert SQL: \nINSERT INTO " + table + " (" + fields.join(',') + ") VALUES " + Values[0] + onDuplicate);
 
 		Record.query_promise(createString)
 		.then ( function (result) {
