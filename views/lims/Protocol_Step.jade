@@ -80,60 +80,61 @@ block content
                                 span ]
 
                         each field,i in flds
-                          - fld = field.replace('*','');
-                          - alias = aliases[fld] || fld;
-                          - fType = 'text';
-                          - mandatory = false;
-                          - pattern = formats[i];
-                          - def     = defaults[i];
+                          if fld && fld.length
+                            - fld = field.replace('*','');
+                            - alias = aliases[fld] || fld;
+                            - fType = 'text';
+                            - mandatory = false;
+                            - pattern = formats[i];
+                            - def     = defaults[i];
 
-                          if attributes[alias]
-                            - fType = attributes[alias].type
-                            if fType === 'Count'
-                              - fType = 'hidden'
-                            // - var attr_index = attributes.indexOf(fld);
+                            if attributes[alias]
+                              - fType = attributes[alias].type
+                              if fType === 'Count'
+                                - fType = 'hidden'
+                              // - var attr_index = attributes.indexOf(fld);
 
-                          if (fld != field)
-                            - mandatory = true;
-                            - pattern = "^[\\S]{1,}$"; 
+                            if (fld != field)
+                              - mandatory = true;
+                              - pattern = "^[\\S]{1,}$"; 
 
-                          // - fld = '_' + fld;
+                            // - fld = '_' + fld;
 
-                          if fType === 'hidden' 
-                            input(type='hidden' name='#{fld}#{Snum}' id='#{fld}#{Snum}' ng-model='#{fld}#{Snum}' force=1)
-                          else 
+                            if fType === 'hidden' 
+                              input(type='hidden' name='#{fld}#{Snum}' id='#{fld}#{Snum}' ng-model='#{fld}#{Snum}' force=1)
+                            else 
 
-                            div.form-group
-                              label.col-sm-2.control-label(for='#{fld}#{Snum}') #{alias}
-                              div.col-sm-4
-                                input.input-lg(type='#{fType}' name="#{fld}#{Snum}" ng-required="#{mandatory}" placeholder = "Enter #{alias}" id='#{fld}#{Snum}' ng-model='#{fld}#{Snum}' default='#{def}' force=1 data-error="You must enter a valid quantity" ng-blur="splitField('#{fld}#{Snum}')")
+                              div.form-group
+                                label.col-sm-2.control-label(for='#{fld}#{Snum}') #{alias}
+                                div.col-sm-4
+                                  input.input-lg(type='#{fType}' name="#{fld}#{Snum}" ng-required="#{mandatory}" placeholder = "Enter #{alias}" id='#{fld}#{Snum}' ng-model='#{fld}#{Snum}' default='#{def}' force=1 data-error="You must enter a valid quantity" ng-blur="splitField('#{fld}#{Snum}')")
 
-                                div.help-block.with-errors(style='color:red' ng-show="form#{Snum}.#{fld}#{Snum}.$invalid" ng-model="#{fld}#{Snum}_errors") #{alias} is Mandatory
-                              if fld.match(/_qty/)
-                                div.col-sm-2
-                                  span.lookup(id='Lookup-units' ng-init="loadLookup('units', '::#{fld}_units#{Snum}', 'units')")
-                              // if fld == 'Split'
-                                div.col-sm-6(ng-show="Split#{Snum} > 1") 
-                                  label
-                                    input(type='radio' value = 'serial' ng-model="split_mode" ng-click="reset_split_mode()") 
-                                    b &nbsp; Serial &nbsp;
-                                  label
-                                    input(type='radio' value = 'parallel' ng-model="split_mode" ng-click="reset_split_mode()")
-                                    b &nbsp; Parallel &nbsp;
-                                  span &nbsp; [ eg : 
-                                    b {{ split_mode }} -> {{ splitExample }}
-                                    span ]
-                                  br
-                                  label
-                                    b Pack: &nbsp;
-                                    input(type='radio' value=1 ng-model="pack_wells" ng-click="reset_pack_mode()") 
-                                    b &nbsp; Yes &nbsp;
-                                  label
-                                    input(type='radio' value=0 ng-model="pack_wells" ng-click="reset_pack_mode()")
-                                    b &nbsp; No &nbsp;
-                                  span &nbsp; [ eg : 
-                                    b {{ pack_wells }} -> {{ packExample }}
-                                    span ]
+                                  div.help-block.with-errors(style='color:red' ng-show="form#{Snum}.#{fld}#{Snum}.$invalid" ng-model="#{fld}#{Snum}_errors") #{alias} is Mandatory
+                                if fld.match(/_qty/)
+                                  div.col-sm-2
+                                    span.lookup(id='Lookup-units' ng-init="loadLookup('units', '::#{fld}_units#{Snum}', 'units')")
+                                // if fld == 'Split'
+                                  div.col-sm-6(ng-show="Split#{Snum} > 1") 
+                                    label
+                                      input(type='radio' value = 'serial' ng-model="split_mode" ng-click="reset_split_mode()") 
+                                      b &nbsp; Serial &nbsp;
+                                    label
+                                      input(type='radio' value = 'parallel' ng-model="split_mode" ng-click="reset_split_mode()")
+                                      b &nbsp; Parallel &nbsp;
+                                    span &nbsp; [ eg : 
+                                      b {{ split_mode }} -> {{ splitExample }}
+                                      span ]
+                                    br
+                                    label
+                                      b Pack: &nbsp;
+                                      input(type='radio' value=1 ng-model="pack_wells" ng-click="reset_pack_mode()") 
+                                      b &nbsp; Yes &nbsp;
+                                    label
+                                      input(type='radio' value=0 ng-model="pack_wells" ng-click="reset_pack_mode()")
+                                      b &nbsp; No &nbsp;
+                                    span &nbsp; [ eg : 
+                                      b {{ pack_wells }} -> {{ packExample }}
+                                      span ]
 
                         hr
                         div.form-group
