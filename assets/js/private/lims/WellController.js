@@ -108,13 +108,16 @@ function wellController ($scope, $rootScope, $http, $q ) {
         if ($scope.fill_by.match(/row/i)) { 
             $scope.source_by_Row();
             $scope.pack = $scope.pack_wells || 1;
+            $scope.split_mode = 'serial';
         }
         else if ($scope.fill_by.match(/col/i) ) { 
             $scope.source_by_Col();
             $scope.pack = $scope.pack_wells || 1;
+            $scope.split_mode = 'serial';
         }
-        else {
+        else if ($scope.fill_by.match(/pos/i)) {
             $scope.pack = 0;
+            $scope.split_mode = 'parallel';
         }
         
         console.log("Target Samples: " + $scope.N * $scope.splitX);
