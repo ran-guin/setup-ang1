@@ -90,7 +90,7 @@ module.exports = {
 
 		var plate_ids = req.body['plate_ids'] || [];
 
-		console.log("BODY: " + JSON.stringify(req.body));
+		// console.log("BODY: " + JSON.stringify(req.body));
 
 		var protocol = req.body['lab_protocol-label'];
 		var protocol_id = req.body['lab_protocol-id'];

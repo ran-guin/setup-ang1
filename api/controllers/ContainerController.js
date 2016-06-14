@@ -39,7 +39,7 @@ module.exports = {
 		console.log("Q: " + query);
 		Record.query_promise(query)
 		.then ( function (result) {
-			console.log("got data: " + JSON.stringify(result));
+			// console.log("got data: " + JSON.stringify(result));
 
 			return res.render('customize/injectedData', { fields : fields, data : result, title: 'Sample History', element: element});
 		})
@@ -90,7 +90,7 @@ module.exports = {
 				ids.push(Sources[i].id);
 			}
 
-			console.log("BODY: " + JSON.stringify(req.body));
+			// console.log("BODY: " + JSON.stringify(req.body));
 			Sources = JSON.parse(req.body.Samples);
 			var target_size = req.body['Capacity-label'] || 1;
 
