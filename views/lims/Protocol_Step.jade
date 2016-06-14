@@ -80,8 +80,9 @@ block content
                                 span ]
 
                         each field,i in flds
+                          span &nbsp; 
+                          - fld = field.replace('*','');
                           if fld && fld.length
-                            - fld = field.replace('*','');
                             - alias = aliases[fld] || fld;
                             - fType = 'text';
                             - mandatory = false;
