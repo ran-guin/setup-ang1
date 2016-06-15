@@ -46,8 +46,19 @@ function protocolController ($scope, $rootScope, $http, $q) {
                             $scope.messages.push("Completed '" + $scope.last_step.protocol + "' protocol");
                         }
                         else if ( $scope.last_step.status === 'Completed Transfer') {
-                            $scope.stepNumber = i+1;
-                            $scope.messages.push("already completed '" + $scope.last_step.name + "' ... repeat if required or fetch target samples to continue protocol");
+                            var format = $scope.Samples[0].container_format;
+
+                            if ($scope.last_step.name.match(format) ) {
+                                console.log("Target plates found");
+                                $scope.stepNumber = i+2;
+                                $scope.messages.push("Continuing protocol after '" + $scope.last_step.name + "' ...");
+
+                            }
+                            else {
+                                console.log($scope.last_step.name + ' not ' + format);
+                                $scope.stepNumber = i+1;
+                                $scope.messages.push("already completed '" + $scope.last_step.name + "' ... repeat if required or fetch target samples to continue protocol");
+                            }
                         }
                         else {
                             $scope.stepNumber = i+2;
@@ -110,6 +121,11 @@ function protocolController ($scope, $rootScope, $http, $q) {
         };
         console.log("initialization complete...");
 
+    }
+
+    $scope.exitThisProtocol = function exitThisProtocol () {
+        console.log("Exit Protocol");
+        $scope.status = 'Completed';
     }
 
     $scope.load_Sample_info = function load_Sample_info () {

@@ -82,7 +82,26 @@ module.exports = {
       // generate standard payload 
       var url = sails.config.globals.url;
 
+      var mode = sails.config.environment;
+      var connection = undefined;
+
       var payload = { user: user.name, userid: user.id, access: user.access, url: url};
+      
+      if (mode) {
+        payload['mode'] = mode;
+
+        var connection = sails.config[mode];
+        if (connection) {
+          host = connection.MYSQL_HOST;
+          db   = connection.DEFAULT_MYSQL_DATABASE;
+          db_user   = connection.DEFAULT_MYSQL_USER;
+        
+          payload['db'] = db;
+          payload['db_user'] = db_user;
+          payload['host'] = host;
+        }
+      }
+
       return payload;
   },
 

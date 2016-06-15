@@ -80,8 +80,9 @@ block content
                                 span ]
 
                         each field,i in flds
+                          span &nbsp; 
+                          - fld = field.replace('*','');
                           if fld && fld.length
-                            - fld = field.replace('*','');
                             - alias = aliases[fld] || fld;
                             - fType = 'text';
                             - mandatory = false;
@@ -149,6 +150,7 @@ block content
                           div.col-sm-2
                             button.btn.btn-primary(type='button' ng-click="repeat()" ng-disable="Step.Repeatable") Repeat Previous Step
                         hr
+                        button.btn.btn-danger(type='button' ng-click="exitThisProtocol()") Exit Protocol Now             
 
                         // if Step.transfer_type
                           div.form-group.alert-warning
@@ -172,13 +174,6 @@ block content
                           div.form-group
                             div.col-sm-12
                               b {{ JSON.stringify(Map) }}
-
-              form.form-horizontal(role="form" data-toggle="validator" method='post' action="#{sails.config.root}/scan-barcode")
-                input(type = 'hidden' name='Samples' value='{{Samples}}')
-                input(type='hidden' id = 'id' name='plate_ids' value="{{plate_list}}")
-                input(type='hidden' name='model' value='Plate')
-                div
-                  button.btn.btn-danger(type='submit') Exit Protocol              
 
             div(ng-if="status=='Completed'")
               include ContainerOptions.jade 

@@ -486,7 +486,7 @@ function wellMapper() {
                     }
                     else {
                         var source_index = batches[j][batch]
-                        target_position = sources[i].position;
+                        target_position = sources[i].position.toUpperCase();
 
                         if (this.split_mode == 'serial') {
                             target_index = j;
