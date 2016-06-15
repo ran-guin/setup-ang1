@@ -65,19 +65,14 @@ block content
                         b &nbsp; Column &nbsp;
                       label
                         input(type='radio' value = 'position' ng-model="fill_by" ng-click="redistribute();")
-                        b &nbsp; Posn &nbsp;
-
+                        b &nbsp; Slot &nbsp;
                 div.col-sm-4
-                  div(ng-show="fill_by != 'position'")
-                    b in groups of: 
-                    label
-                      input.input-lg(name='pack_wells' type='text' size='6'  ng-model="pack_wells" ng-change="redistribute()")
+                    div &nbsp; 
+                      b {{ fillExample }}
 
-              hr
-
-              div.form-group
-                div.col-sm-6
-                  div(ng-show="splitX > 1")
+              div.form-group(ng-show="splitX > 1")
+                br
+                div.col-sm-4
                     b Distribution: 
                     label
                       input(type='radio' value = 'serial' ng-model="split_mode" ng-click="reset_split_mode(); redistribute();") 
@@ -85,10 +80,17 @@ block content
                     label
                       input(type='radio' value = 'parallel' ng-model="split_mode" ng-click="reset_split_mode(); redistribute();")
                       b &nbsp; Parallel &nbsp;
-                div.col-sm-6
-                    div &nbsp; [ eg : 
-                      b {{ split_mode }} : {{ splitExample }}
-                      span ]
+                div.col-sm-4
+                  div(ng-show="fill_by != 'position'")
+                    b in groups of: 
+                    label
+                      input.input-lg(name='pack_wells' type='text' size='6'  ng-model="pack_wells" ng-change="redistribute()")
+                div.col-sm-4
+                    div &nbsp; 
+
+                      b(ng-show="!packExample") {{ splitExample }}
+                      br
+                      b {{ packExample }}
 
               hr
 
