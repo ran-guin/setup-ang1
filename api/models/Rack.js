@@ -88,7 +88,7 @@ module.exports = {
 
                 var data = { Rack_Name: name, Rack_Alias: alias + ' ' + name + ' ' + slot, FKParent_Rack__ID : parent, Rack_Type: 'Slot', Movable: 'N', Rack_Full: 'N', Capacity: '1' };
                 slotData.push(data);
-                console.log("Slot " + slot + " = " + JSON.stringify(data));
+                // console.log("Slot " + slot + " = " + JSON.stringify(data));
               }
 
             }
