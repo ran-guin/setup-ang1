@@ -48,19 +48,29 @@ function wellController ($scope, $rootScope, $http, $q ) {
         $scope.transfer_type = Config['transfer_type'] || 'Aliquot';
         
         $scope.splitExamples = { 
-            'serial' : "[pack=1] A1, A2 -> A1, A1, A2, A2 ...",
-            'parallel' : "[pack=1] A1, A2... -> A1, A2,... A1, A2...",
-            'batch'    : "[pack=2] A1,B1,C1,D1 ->  A1,B1, A1,B1, C1,D1, C1,D1...",
-            'split'    : "when samples are split, multiple entries are always applied to respective splits",
+            'serial-row' : "eg A1, A1, A2, A2, B1, B1, B2, B2",
+            'serial-column' : "eg A1, A1, B1, B1, A2, A2, B2, B2",
+            'serial-position' : "grouping and serial/parallel modes n/a",
+            'parallel-row' : "eg A1, A2, B1, B2, A1, A2, B1, B2",
+            'parallel-column' : "eg A1, B1, A2, B2, A1, A2, B1, B2",
+            'parallel-position' : "grouping and seria/parallel modes n/a",
         };             
-        $scope.splitExample = $scope.splitExamples[$scope.split_mode];
+        $scope.splitExample = $scope.splitExamples[$scope.split_mode + '-' + $scope.fill_by];
+ 
+        $scope.fillExamples = {
+            'row'  : "wells filled by row : eg A1, A2, A3 ...", 
+            'column' : "wells filled by column : eg A1, B1, C1 ...",
+            'position' : "samples copied into same well position they came from",
+        };             
+        $scope.fillExample = $scope.fillExamples[$scope.fill_by];
 
         $scope.packExamples = {
-            'batch'  : "samples packed into available wells in groups", 
-            'packed' : "samples packed into first available wells",
-            'copy' : " samples copied into similar well position",
+            'batch-serial-row'  : "eg [N=2] A1,A2, A1,A2, A3,A4, A3,A4", 
+            'batch-parallel-row'  : "grouping not applicable in parallel mode", 
+            'batch-serial-column'  : "eg [N=2] A1,B1, A1,B1 ... C1,D1, C1, D1", 
+            'batch-parallel-column'  : "grouping not applicable in parallel mode", 
         };             
-        $scope.packExample = $scope.packExamples[$scope.pack_mode];
+        $scope.packExample = $scope.packExamples[$scope.pack_mode + '-' + $scope.split_mode + '-' + $scope.fill_by] || '';
 
         // initialize variables to track available wells if applicable in target boxes.
         $scope.target_boxes = [];
@@ -80,21 +90,22 @@ function wellController ($scope, $rootScope, $http, $q ) {
             $scope.pack_mode = 'packed';
         }
         else {
-            $scope.pack_mode = 'copy';
+            $scope.pack_mode = 'slot position retained';
         }
 
         console.log($scope['pack_wells'] + " : set example to " + $scope.pack_mode );
         console.log(JSON.stringify($scope.packExamples));
+        
+        $scope.packExample = $scope.packExamples[$scope.pack_mode + '-' + $scope.split_mode + '-' + $scope.fill_by] || '';
 
-        $scope.packExample = $scope.packExamples[$scope.pack_mode];
     }
 
     $scope.reset_split_mode = function reset_split_mode () {
         if ($scope.split_mode == 'parallel') {
-            $scope.splitExample = $scope.splitExamples[$scope.split_mode];
+            $scope.splitExample = $scope.splitExamples[$scope.split_mode + '-' + $scope.fill_by];
         }
         else if ($scope.split_mode == 'serial') {
-            $scope.splitExample = $scope.splitExamples[$scope.split_mode];            
+            $scope.splitExample = $scope.splitExamples[$scope.split_mode + '-' + $scope.fill_by];            
         }
         else { console.log(" Unidentified split mode: " + $scope.split_mode) }
 
@@ -107,18 +118,19 @@ function wellController ($scope, $rootScope, $http, $q ) {
 
         if ($scope.fill_by.match(/row/i)) { 
             $scope.source_by_Row();
-            $scope.pack = $scope.pack_wells || 1;
-            $scope.split_mode = 'serial';
+            // $scope.split_mode = 'serial';
         }
         else if ($scope.fill_by.match(/col/i) ) { 
             $scope.source_by_Col();
-            $scope.pack = $scope.pack_wells || 1;
-            $scope.split_mode = 'serial';
+            // $scope.split_mode = 'serial';
         }
         else if ($scope.fill_by.match(/pos/i)) {
-            $scope.pack = 0;
-            $scope.split_mode = 'parallel';
+            $scope.source_by_Slot();
+            // $scope.split_mode = 'parallel';
         }
+
+        $scope.reset_split_mode();
+        $scope.reset_pack_mode();
         
         console.log("Target Samples: " + $scope.N * $scope.splitX);
         console.log("Target Boxes: " + $scope.N_boxes);
@@ -188,11 +200,16 @@ function wellController ($scope, $rootScope, $http, $q ) {
 
     // Fill for Samples only ... may not be necessary ... 
     $scope.source_by_Col = function source_by_Col () {
-        $scope.byCol = true;
-        $scope.byRow = false;
+        // $scope.byCol = true;
+        // $scope.byRow = false;
         $scope.fill_by = 'column';
         //$scope.Samples = _.sortByNat($scope.Samples, 'position');
 
+        $scope.fillExample = $scope.fillExamples[$scope.fill_by];
+        
+        $scope.pack_wells = $scope.pack_wells || 1;
+        $scope.pack = $scope.pack_wells || 1;
+        
         if (! $scope.ordered) {
             $scope.Samples = _.sortByNat($scope.Samples, function(sample) {
                 var batch = sample.batch || 0; 
@@ -204,9 +221,14 @@ function wellController ($scope, $rootScope, $http, $q ) {
     }
 
     $scope.source_by_Row = function source_by_Row () {
-        $scope.byCol = false;
-        $scope.byRow = true;
+        // $scope.byCol = false;
+        // $scope.byRow = true;
         $scope.fill_by = 'row';
+
+        $scope.fillExample = $scope.fillExamples[$scope.fill_by];
+        
+        $scope.pack_wells = $scope.pack_wells || 1;
+        $scope.pack = $scope.pack_wells || 1;
         
         if (! $scope.ordered) {
             $scope.Samples = _.sortByNat($scope.Samples, function(sample) { 
@@ -219,6 +241,18 @@ function wellController ($scope, $rootScope, $http, $q ) {
             });
             console.log("reorder by Row: " + JSON.stringify(_.pluck($scope.Samples, 'position')) );
         }
+    }
+
+    $scope.source_by_Slot = function source_by_Slot () {
+        // $scope.byCol = true;
+        // $scope.byRow = false;
+        $scope.fill_by = 'column';
+        //$scope.Samples = _.sortByNat($scope.Samples, 'position');
+
+        $scope.pack = 0;
+        $scope.pack_wells = 0;
+
+        $scope.fillExample = $scope.fillExamples[$scope.fill_by];
     }
 
     $scope.reset_Samples = function reset_Samples () {
