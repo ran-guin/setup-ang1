@@ -16,9 +16,11 @@ app.controller('SharedController',
         $scope.reset_messages();
 
         // Automatically generate timestamp attribute along with standard attributes for lastMonth & nextMonth //
+
         var start = new Date();
-        $scope.timestamp = start.toISOString().slice(0, 19).replace('T', ' '); 
-            
+        $scope.datestamp = start.toLocaleString('en-CA').slice(0,10);
+        $scope.timestamp = $scope.datestamp + ' ' + start.toLocaleString('en-CA', { hour: '2-digit', minute: '2-digit', hour12: false}); 
+             
         $scope.lastMonth = new Date(start.getTime() - 30 * 24 * 60 * 60 * 1000 ).toISOString();
         $scope.nextMonth = new Date(start.getTime() + 30 * 24 * 60 * 60 * 1000 ).toISOString();
 
@@ -28,8 +30,11 @@ app.controller('SharedController',
             var now = new Date();
             $scope.now = now;
 
-            $scope.timestamp = now.toISOString().slice(0, 19).replace('T', ' ');
-            $scope.created = now.toISOString().slice(0, 19).replace('T', ' ');
+            // $scope.datestamp = now.toISOString().slice(0, 10).replace('T', ' ');
+            $scope.datestamp = now.toLocaleString('en-CA').slice(0,10);
+            $scope.timestamp = $scope.datestamp + ' ' + start.toLocaleString('en-CA', { hour: '2-digit', minute: '2-digit', hour12: false}); 
+            
+            $scope.created = $scope.timestamp;
 
             $scope.$apply();
         }, update_seconds*1000);
