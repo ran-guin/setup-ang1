@@ -550,6 +550,9 @@ function protocolController ($scope, $rootScope, $http, $q) {
 
             $scope.Map = $scope.newMap.distribute(Sources, Target, Options);
             
+            var warnings = $scope.Map.warnings;
+            if (warnings && warnings.length) { $scope.warnings = warnings }
+
             console.log("map: " + JSON.stringify($scope.Map.Xfer));
 
         }
