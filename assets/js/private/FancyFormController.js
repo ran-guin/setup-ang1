@@ -134,25 +134,6 @@ app.controller('FancyFormController',
        		console.log("Loaded " + model + ': ' + attribute + " attribute prompt");
     	}
 
-    	// Automatically generate timestamp attribute along with standard attributes for lastMonth & nextMonth //
-	    var start = new Date();
-	    $scope.timestamp = start.toISOString().slice(0, 19).replace('T', ' '); 
-	        
-	    $scope.lastMonth = new Date(start.getTime() - 30 * 24 * 60 * 60 * 1000 ).toISOString();
-	    $scope.nextMonth = new Date(start.getTime() + 30 * 24 * 60 * 60 * 1000 ).toISOString();
-
-	    /** timer with date + hours + minutes - automatically updates  **/
-	    var update_seconds = 1;
-	    setInterval (function() {
-	        var now = new Date();
-	        $scope.now = now;
-
-	        $scope.timestamp = now.toISOString().slice(0, 19).replace('T', ' ');
-	        $scope.created = now.toISOString().slice(0, 19).replace('T', ' ');
-
-	        $scope.$apply();
-	    }, update_seconds*1000);
-   
         $scope.setup = function( config ) {
 
 	    }
