@@ -207,45 +207,6 @@ function wellMapper() {
         return { x: x, y: y, target_index: target_index};
     },
 
-    this.next_position = function (x, y, target_index) {
-    	/* Get next available position */
-        if (this.fill_by.match(/row/i)) {
-            console.log("fill by row to " + this.x_max + this.y_max);
-            y++;
-            if (y > this.y_max) {
-                y = 1;
-                                    
-                if (x == this.x_max) {
-                    x=this.x_min;
-                    y = this.y_min;
-                    target_index++;       // next plate ... 
-                }
-                else {
-                    x = String.fromCharCode(x.charCodeAt(0) + 1);
-                }
-            }
-        }
-        else {
-            console.log("fill by col to " + this.x_max + this.y_max);
-            if (x == this.x_max) {
-                x=this.x_min;
-                if (y >= this.y_max) {
-                    y=this.y_min;
-                    target_index++;       // next plate ... 
-                }
-                else {
-                    y++;
-                }
-            }   
-            else {
-                x = String.fromCharCode(x.charCodeAt(0) + 1);
-            }
-
-        }
-        console.log("next: " + x + y + ' [ ' + target_index + ' ]');
-        return { x: x, y: y, target_index: target_index};
-    }
-
     this.initialize = function (sources, Target, Options ) {
         //var sources = [{ id: 1, type: 'blood', position: 'A1'}, { id : 2, type : 'blood', position : 'A2'}];
         
@@ -438,8 +399,6 @@ function wellMapper() {
         var pack_wells = this.pack_wells;
         var splitX     = this.splitX;
 
-        if (! pack_wells) { pack_wells = 1 }
-
         if (this.split_mode === 'serial') { 
             repeat_wells = this.splitX || 1;
         }
@@ -481,7 +440,7 @@ function wellMapper() {
                       
                     var target_position;
 
-                    if (this.pack_wells) { 
+                    if (this.fill_by === 'row' || this.fill_by === 'column') { 
                         target_position = x + y.toString();
                     }
                     else {
@@ -530,14 +489,14 @@ function wellMapper() {
                     Xfer.push(XferData);
 
                     // next...
-                    if (this.pack_wells) {
+                    if (this.fill_by === 'row' || this.fill_by === 'column') {
                         var next = this.next_available(target_index);
                         x = next.x;
                         y = next.y;
                         target_index = next.target_index;                                
                     }
                     else {
-
+                        // Does not use x and y for positioning above... 
                     }
 
                     target++;
