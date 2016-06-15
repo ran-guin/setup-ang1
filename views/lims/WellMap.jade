@@ -70,7 +70,7 @@ block content
                     div &nbsp; 
                       b {{ fillExample }}
 
-              div.form-group(ng-show="splitX > 1")
+              div.form-group(ng-show="splitX > 1 && fill_by != 'position'")
                 br
                 div.col-sm-4
                     b Distribution: 
@@ -81,7 +81,7 @@ block content
                       input(type='radio' value = 'parallel' ng-model="split_mode" ng-click="reset_split_mode(); redistribute();")
                       b &nbsp; Parallel &nbsp;
                 div.col-sm-4
-                  div(ng-show="fill_by != 'position'")
+                  div(ng-show="split_mode === 'serial' ")
                     b in groups of: 
                     label
                       input.input-lg(name='pack_wells' type='text' size='6'  ng-model="pack_wells" ng-change="redistribute()")
