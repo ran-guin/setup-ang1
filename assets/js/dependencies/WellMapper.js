@@ -285,6 +285,7 @@ function wellMapper() {
 //
 
         var Transfers = [];
+        var warnings = [];
 
         var targetMap = [];
         if (! Target) { Target = {} };
@@ -436,6 +437,12 @@ function wellMapper() {
                    
                 for (l=0; l<batch.length; l++) {
                     var i = batch[l];
+                    
+                    if (! sources[i].position) { 
+                        warnings.push("No Source Position Information for Sample " + sources[i].id);
+                        sources[i].position = ''
+                    }
+
                     SourceColours[sources[i].position] = this.rgbList[i];
                       
                     var target_position;
@@ -509,13 +516,21 @@ function wellMapper() {
         this.Xfer = Xfer;
 
         console.log("completed distribution... ");
+        var data = {
+            Transfer: Transfer,
+            TargetColours: TargetColours,
+            Xfer : Xfer,
+            SourceColours: SourceColours,
+            warnings: warnings,
+        };
+
         if (callback && callback.constructor === 'function') {
             console.log("callback detected");
-            return callback(null, { Transfer : Transfer, TargetColours : TargetColours, Xfer: Xfer, SourceColours : SourceColours });
+            return callback(null, data);
         }
         else {
             console.log(" no call back .. normal returnval ")
-            return { Transfer : Transfer, TargetColours : TargetColours, Xfer: Xfer, SourceColours : SourceColours };            
+            return data;            
         }
     }
 
