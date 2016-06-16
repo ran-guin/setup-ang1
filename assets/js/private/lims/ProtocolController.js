@@ -191,6 +191,41 @@ function protocolController ($scope, $rootScope, $http, $q) {
         return P[model];
     }
 
+    $scope.parse_standard_error = function (message) {
+        // Convert warning / error messages into more readable format
+        // (if <match> is included in value, then the regexp of the key will be evaluated and the match replaced in the value string)
+        //   eg 'Error creating \\w+' : "<match> - no record created" -> yields "Error creating Employee - no record created" 
+        //
+        var Map = {
+            'Duplicate entry' : "Duplicate entry encountered",
+            'Unknown column'  : "Unrecognized column in database (?) - please inform LIMS administrator",
+            "Error saving \\w+" : "<match>",
+        };
+
+        var strings = Object.keys(Map);
+
+        var errors = [];
+        for (var i=0; i<strings.length; i++) {
+            
+            var test = strings[i];
+            if (Map[strings[i]].match(/<match>/)) {
+                test = new RegExp(test);
+                console.log("Testing regexp :" + test);
+            }
+
+            var found = message.match(test);
+            if (found) {
+                console.log("match found for " + test);
+                var err = Map[strings[i]].replace('<match>', found);
+                errors.push( err );
+            }
+        }
+
+        console.log("Parsed Error: " + message);
+        if (! errors.length) { errors.push(message) }
+        return errors;
+    }
+
     $scope.complete = function complete (action) {
 
         $scope.reset_messages();
@@ -341,51 +376,64 @@ function protocolController ($scope, $rootScope, $http, $q) {
         else {
             $http.post(url, data)
             .then ( function (returnVal) {
+
                 var result = $scope.parse_messages(returnVal.data);
 
                 console.log("\n **** Step Posted Successfully ***");
                 console.log(JSON.stringify(result));
 
-                if ($scope.Step.transfer_type && ! $scope.Step.reset_focus && result.Samples) {
-                    console.log("Focus on " + result.Samples.length + " new Sample records ");
-
-                    $scope.Samples = result.Samples;
-                    $scope.load_Sample_info();
-                    /*
-                    var promiseResults = result;
-                    
-                    // console.log("\n** Retrieved: " + promiseResults);
-
-                    for (var i=0; i<promiseResults.length; i++) {
-                        if (promiseResults[i].Samples) {
-                            console.log("Found regenerated sample list..." + i);
-                            console.log( JSON.stringify(promiseResults[i].Samples) );
-                            $scope.Samples = promiseResults[i].Samples;
-            
-                            $scope.load_Sample_info();
-                        }
-                        else {
-                            console.log("no sample info in result: " + i);
-                        }
-                    }
-                    */
-                }
-                else if ($scope.Step.transfer_type) {
-                    console.log("RETAINED focus " + $scope.Step.reset_focus);
-                }
-
-                if ($scope.stepNumber < $scope.steps) {
-                    console.log('completed... go to next step');
-                    $scope.forward(action)
+                if (result.error) { 
+                    $scope.errors = $scope.parse_standard_error(result.error);
+                    $scope.errors.push("Skip step if necessary to continue");
                 }
                 else {
-                    $scope.status = 'Completed';
-                    $scope.messages.push("Completed '" + $scope.protocol.name + "'' Protocol")
+                    if (result.warning) { scope.warnings = parse_standard_error(result.warning) }
+                    
+                    if ($scope.Step.transfer_type && ! $scope.Step.reset_focus && result.Samples) {
+                        console.log("Focus on " + result.Samples.length + " new Sample records ");
+
+                        $scope.Samples = result.Samples;
+                        $scope.load_Sample_info();
+                        /*
+                        var promiseResults = result;
+                        
+                        // console.log("\n** Retrieved: " + promiseResults);
+
+                        for (var i=0; i<promiseResults.length; i++) {
+                            if (promiseResults[i].Samples) {
+                                console.log("Found regenerated sample list..." + i);
+                                console.log( JSON.stringify(promiseResults[i].Samples) );
+                                $scope.Samples = promiseResults[i].Samples;
+                
+                                $scope.load_Sample_info();
+                            }
+                            else {
+                                console.log("no sample info in result: " + i);
+                            }
+                        }
+                        */
+                    }
+                    else if ($scope.Step.transfer_type) {
+                        console.log("RETAINED focus " + $scope.Step.reset_focus);
+                    }
+
+                    if ($scope.stepNumber < $scope.steps) {
+                        console.log('completed... go to next step');
+                        $scope.forward(action)
+                    }
+                    else {
+                        $scope.status = 'Completed';
+                        $scope.messages.push("Completed '" + $scope.protocol.name + "'' Protocol")
+                    }
                 }
 
                 if (action == 'Debug') {
                     $scope.errMsg = JSON.stringify(result,null,4);
                 }
+            })
+            .catch ( function (err) {
+                console.log("Encountered error : " + err);
+                $scope.errors.push("Error: " + JSON.stringify(err));
             });
         }
     }
