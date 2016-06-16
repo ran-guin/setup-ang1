@@ -138,7 +138,7 @@ module.exports = {
 		})
 		.catch ( function (err) {
 			console.log("error completing LP : " + JSON.stringify(err));
-			return res.json(err);
+			return res.send({ error : "Error completing protocol: " + err });
 		});
 	},
 
