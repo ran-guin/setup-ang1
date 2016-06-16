@@ -25,6 +25,9 @@ module.exports = {
   	{ name : 'ug', base_unit: 'g', factor: 0.000001 },
   	{ name : 'ng', base_unit: 'g', factor: 0.000000001 },
   	{ name : 'pg', base_unit: 'g', factor: 0.000000000001 },
-  ]
+  ],
+
+    lookupCondition : "units.status = 'Active'",
+
 };
 

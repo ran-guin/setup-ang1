@@ -111,11 +111,12 @@ module.exports = {
 				})
 				.catch ( function (Qerr) {
 					// sails.config.warnings.push('There was a glitch somewhere in the step saving process');
-					console.log("Error Completing all actions: ");
-					//for (var i=0; i<Qerr.length; i++) {
-						console.log("\n** " + i + " Error: " + JSON.stringify(Qerr));
-					//} 
-					deferred.reject({ error : "Error completing all actions: " + Qerr}) ;
+					console.log("Error Completing all actions: " + Qerr.length);
+					for (var i=0; i<Qerr.length; i++) {
+						console.log("\n** " + i + " Error: " + Qerr[i]);
+						console.log(JSON.stringify(Qerr[0]));
+					} 
+					deferred.reject("Error completing all actions: " + Qerr) ;
 				});
 			})
 			.catch (function (err) {
@@ -125,7 +126,7 @@ module.exports = {
 
 		}
 		else {
-			deferred.reject({ error : " No Plate IDs or Data "} );
+			deferred.reject(" No Plate IDs or Data ");
 		}
 
 		return deferred.promise;

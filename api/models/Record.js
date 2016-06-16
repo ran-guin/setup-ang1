@@ -509,8 +509,8 @@ module.exports = {
 			deferred.resolve(result);
 		})
 		.catch ( function (err) {
-			console.log("Cloning error: " + err);
-			deferred.reject({error : "Error creating new record(s): " + err}) 
+			console.log("Error creating record in " + table);
+			deferred.reject("Error creating new " + table + " record(s) : " + err); 
 
 		});
 
