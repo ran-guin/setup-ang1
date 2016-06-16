@@ -20,6 +20,14 @@ div.section-block.bg-info
       b {{user}} &nbsp;
       span {{ timestamp }} &nbsp; &nbsp;
 
+    div(ng-show="Samples && Samples[0] && Samples[0].last_step")
+      hr
+      u Progress: 
+      b {{Samples[0].last_protocol}} [ {{Samples[0].protocol_status}} ] &nbsp; &nbsp;
+       
+      span (completed '{{Samples[0].last_step}}')  
+
+
 div#injectedData
 
 div#injectedHistory
