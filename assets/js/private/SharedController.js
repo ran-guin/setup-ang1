@@ -69,7 +69,10 @@ app.controller('SharedController',
             console.log("INJECT HTML");
             if (! element) { element = 'injectedData' }
 
-            url = url + '?element=' + element;
+            if (url.match(/\?/)) { url = url + '&' }
+            else { url = url + '?' }
+
+            url = url + 'element=' + element;
             if (ids) { url = url + '&ids=' + ids }
 
 
