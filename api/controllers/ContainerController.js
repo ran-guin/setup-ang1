@@ -20,8 +20,9 @@ module.exports = {
 	history : function (req, res) {
 		var ids = req.param('ids');
 		var element = req.param('element') || 'injectedHistory';  // match default in CommonController
+		var include_parents = req.param('include_parents');
 
-		var fields = ['Count(DISTINCT Plate_ID) as Samples', 'Prep_Name as Step', 'lab_protocol.name as Protocol', 'Prep_DateTime as Completed', 'Group_Concat(DISTINCT Employee_Name) as Completed_By'];
+		var fields = ['Count(DISTINCT Plate.Plate_ID) as Samples', 'Prep_Name as Step', 'lab_protocol.name as Protocol', 'Prep_DateTime as Completed', 'Group_Concat(DISTINCT Employee_Name) as Completed_By'];
 		fields.push("CASE WHEN Max(Attribute_ID) IS NULL THEN '' ELSE GROUP_CONCAT( DISTINCT CONCAT(Attribute_Name,'=',Attribute_Value) SEPARATOR ';<BR>') END as attributes");
 
 		fields.push('Prep_Comments as Comments');
@@ -32,7 +33,18 @@ module.exports = {
 		query = query + " LEFT JOIN Employee ON Prep.FK_Employee__ID=Employee_ID";
 		query = query + " LEFT JOIN Attribute ON Prep_Attribute.FK_Attribute__ID=Attribute_ID";
 		
-		query = query + " WHERE FK_Plate__ID=Plate_ID AND Plate_Prep.FK_Prep__ID=Prep_ID AND Prep.FK_Lab_Protocol__ID=lab_protocol.id AND Plate_ID IN (" + ids + ')';
+		var relevant_list;
+		if (include_parents) { 
+			query = query + " LEFT JOIN Plate AS Scanned ON Scanned.FKOriginal_Plate__ID=Plate.FKOriginal_Plate__ID";
+			relevant_list = 'Scanned.Plate_ID IN (' + ids + ')';
+		}
+		else { 
+			relevant_list = 'Plate.Plate_ID IN (' + ids + ')';
+		}
+
+		query = query + " WHERE FK_Plate__ID = Plate.Plate_ID AND Plate_Prep.FK_Prep__ID=Prep_ID AND Prep.FK_Lab_Protocol__ID=lab_protocol.id ";
+
+		query = query + " AND " + relevant_list;
 
 		query = query + " GROUP BY Prep_ID DESC";
 
