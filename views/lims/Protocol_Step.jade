@@ -113,7 +113,7 @@ block content
                                   div.help-block.with-errors(style='color:red' ng-show="form#{Snum}.#{fld}#{Snum}.$invalid" ng-model="#{fld}#{Snum}_errors") #{alias} is Mandatory
                                 if fld.match(/_qty/)
                                   div.col-sm-2
-                                    span.lookup(id='Lookup-units' ng-init="loadLookup('units', '::#{fld}_units#{Snum}', 'units')")
+                                    span.lookup(id='Lookup-units' ng-init="loadLookup('units', '::#{fld}_units#{Snum}', 'units','','#{def}')")
                                 // if fld == 'Split'
                                   div.col-sm-6(ng-show="Split#{Snum} > 1") 
                                     label
