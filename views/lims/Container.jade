@@ -22,13 +22,6 @@ block content
               
               include ActiveSamples.jade
 
-              if last_step && last_step.protocol
-                p &nbsp;
-                u Progress: 
-                b #{last_step.protocol} [ #{last_step.status} ]
-                br 
-                span (completed '#{last_step.name}')  
-     
               include ContainerOptions.jade 
 
               include uploadMatrix.jade
