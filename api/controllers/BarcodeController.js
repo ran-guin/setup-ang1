@@ -50,6 +50,8 @@ module.exports = {
 					var sampleList = [];
 					if (data.length == 0) {
 						errorMsg = "expecting ids: " + plate_ids.join(', ') + "<P>... but No Containers Found (?)";
+						sails.config.errors.push(errorMsg);
+						
 						return res.render('customize/private_home');
 					}	
 					else {
