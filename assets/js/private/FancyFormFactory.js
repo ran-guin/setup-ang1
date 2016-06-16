@@ -17,10 +17,11 @@ app.factory('FancyFormFactory', function($rootScope, $http){
     var def = options.default;
     var condition = options.condition || '';
     var field = options.field;   // enables application to enum field lookups 
-
+    var defaultTo = options.default;
     
     if (prompt) { url = url + "prompt=" + prompt + '&'}
     if (condition) { url = url + "condition=" + condition + '&' }
+    if (defaultTo) { url = url + 'default=' + defaultTo + '&' }
     if (field ) { 
         url = url + "field=" + field + '&'
         elementId = elementId || field;
