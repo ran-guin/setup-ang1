@@ -87,7 +87,7 @@ app.controller('FancyFormController',
         }
 
         // Automatically Load Lookup Files //
-        $scope.loadLookup = function loadLookup(model, labels, prompt, condition) {
+        $scope.loadLookup = function loadLookup(model, labels, prompt, condition, defaultTo) {
             console.log("Lookup for " + model);
             var specs = model.split(':');
 
@@ -116,6 +116,11 @@ app.controller('FancyFormController',
         	if (prompt) {
         		options.prompt = prompt;
         	}
+
+            if (defaultTo) {
+                options.default = defaultTo;
+            }
+
             
         	url = url + '?';
             console.log("Call factory lookup with url: " + url + ':' + JSON.stringify(options));
