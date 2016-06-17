@@ -55,7 +55,8 @@ app.controller('SharedController',
                 return result.data;
             }
             else {
-                console.log("Not is formatted form");
+                console.log("Not in formatted form");
+                console.log(JSON.stringify(result));
                 return result;
             }
         }
