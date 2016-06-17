@@ -43,8 +43,7 @@ block content
 
                 div.col-sm-4
                   b Into: 
-                  span.lookup(id='Lookup-container_format' ng-init="loadLookup('container_format','', 'Select Target Format')") 
-              
+                  span.lookup(id='Lookup-container_format' ng-init="loadLookup('container_format','', 'Select Target Format')")               
               hr 
 
               div.form-group
@@ -96,11 +95,18 @@ block content
 
               div.form-group
                 div.col-sm-4
+                  span.lookup(id='Lookup-sample_type' ng-init="loadLookup('sample_type','', 'Extract ?')")
+
+                div.col-sm-4
                   b Target (optional): 
                   div
                     input.input-lg(type='text' name='target_rack' size=12 ng-model='target_rack' ng-change="validate_target(); redistribute();" placeholder='-- Scan Loc# --')
                 div.col-sm-4 &nbsp;
                   button.btn.btn-lg.btn-primary(type='button' ng-click="redistribute()") Distribute
+                  p &nbsp;
+                  button.btn.btn-lg.btn-primary(type='button' ng-click="updateLookups()") Update Lookups
+                  p &nbsp;
+                  button.btn.btn-lg.btn-primary(type='button' ng-click="execute_transfer()") Execute
               
               p &nbsp;
 
