@@ -181,30 +181,30 @@ function wellMapper() {
 
     },
 
-    this.next_available = function (target_index) {
+    this.next_available = function (batch_index) {
 
-        if (! this.target_count[target_index]) { this.target_count[target_index] = 0 }
+        if (! this.target_count[batch_index]) { this.target_count[batch_index] = 0 }
         
         var x = 'A';
         var y = 1;
-        if (this.available && this.available[target_index]) {
-            var next = this.available[target_index][this.target_count[target_index]] || 'A1';
+        if (this.available && this.available[batch_index]) {
+            var next = this.available[batch_index][this.target_count[batch_index]] || 'A1';
             x = next;
             if (x) { y = next.replace(x,'') }
         }
         else { console.log('next box not defined');  }
 
-       if (this.available && this.available[target_index] && this.available[target_index].length > this.target_count[target_index]) {
-            this.target_count[target_index]++;
+       if (this.available && this.available[batch_index] && this.available[batch_index].length > this.target_count[batch_index]) {
+            this.target_count[batch_index]++;
         }
         else {
-            target_index++;
-            this.target_count[target_index] = 1;
+            batch_index++;
+            this.target_count[batch_index] = 1;
         }
         this.total_target_count++;       
 
         x = x.toUpperCase();
-        return { x: x, y: y, target_index: target_index};
+        return { x: x, y: y, batch_index: batch_index};
     },
 
     this.initialize = function (sources, Target, Options ) {
@@ -232,13 +232,14 @@ function wellMapper() {
         this.splitX = Options.split || Options.splitX || 1;
 
         this.available = Options.available;
+        
+        this.transfer_type = Options.transfer_type;
 
         this.source_count = sources.length;
  
         this.target_count = {};
 
-
-
+        var boxes_required = 0;
         if (Options.available) {
             if (Options.available.constructor === Object) {
                 // specifically supplied for each target box
@@ -260,6 +261,20 @@ function wellMapper() {
             this.y_max = Options.Max_Col || 1;
         }
         
+        this.boxes_required = boxes_required;
+
+        this.Options = {
+            split : this.splitX,
+            pack  : this.pack_wells,
+            split_mode : this.split_mode,
+            sources : this.source_count,
+            targets : this.source_count * this.splitX,
+            target_boxes: this.boxes_required,
+            target_size: this.target_size,
+            fill_by    : this.fill_by,
+            transfer_type : this.transfer_type,
+        };
+
         console.log("Initialized:\nsplit = " + this.splitX + "\nfillBy = " + this.fill_by + "\npack_wells = " + this.pack_wells + "\nmode = " + this.split_mode + "\ntarget_size = " + this.target_size + "\n");
         console.log("Available" +JSON.stringify(this.available)); 
 
@@ -303,27 +318,26 @@ function wellMapper() {
 
         this.initialize(sources, Target, Options);
 
-        var target_index = 0;
+        var batch_index = 0;
 
-        var next = this.next_available(target_index);
+        var next = this.next_available(batch_index);
         x = next.x;
         y = next.y;
         
-        var Xfer = [];
+        // var Xfer = [];
 
-        var Transfer = [];
-        var Colour = [];
-        var SourceColours = {};
-        var TargetColours = {};
+       //var Colour = [];
+        //var SourceColours = {};
+        //var TargetColours = {};
 
          var target_position = this.x_min + this.y_min.toString();
 
-        Transfer[target_index] = {};
-        Transfer[target_index][target_position] = sources[0];
+        // Transfer[batch_index] = {};
+        // Transfer[batch_index][target_position] = sources[0];
 
-        //TargetColours[target_index] = {};
+        //TargetColours[batch_index] = {};
 
-        // Colour[target_index][target_position];
+        // Colour[batch_index][target_position];
 
         var repeat_set = 1;
         var repeat_wells = 1;
@@ -331,11 +345,11 @@ function wellMapper() {
         var List = {};
         var Static = {};
 
-        var options = Object.keys(Options);
+        var options = Object.keys(Target);
 
         for (var i=0; i<options.length; i++) {
             console.log(i);
-            var opt = Options[options[i]];
+            var opt = Target[options[i]];
 
             if (opt && opt.constructor === String && opt.match(/,/) ){
                 opt = opt.split(/\s*,\s*/);
@@ -431,11 +445,17 @@ function wellMapper() {
             + batches[0].length + 'x'
             + repeat_wells);
 
+
+        var SourceMap = {};        
+        var Transfer = [];
+        var TransferMap = [];
+ 
+        var count = 0;
         for (j=0; j<batches.length; j++) {
             var batch = batches[j];
             for (var h=0; h<splitX; h++) { 
                    
-                for (l=0; l<batch.length; l++) {
+                for (l=0; l<batch.length; l++, count++) {
                     var i = batch[l];
                     
                     if (! sources[i].position) { 
@@ -443,64 +463,102 @@ function wellMapper() {
                         sources[i].position = ''
                     }
 
-                    SourceColours[sources[i].position] = this.rgbList[i];
-                      
+                    // SourceColours[sources[i].position.toUpperCase()] = this.rgbList[i];
+
+                    if (sources[i].box_id) {
+                        if (! SourceMap[sources[i].box_id]) { SourceMap[sources[i].box_id] = {} } 
+
+                        SourceMap[sources[i].box_id][sources[i].position.toUpperCase()] = {
+                            colour_code : this.rgbList[i],
+                            source_id   : sources[i].id,
+                            box_size    : sources[i].box_size,
+                        };
+                    }
+                    else {
+                        warnings.push("Box information missing for sample " + i);
+                    }
+
                     var target_position;
 
                     if (this.fill_by === 'row' || this.fill_by === 'column') { 
                         target_position = x + y.toString();
+                        target_position = target_position.toUpperCase();
                     }
                     else {
                         var source_index = batches[j][batch]
                         target_position = sources[i].position.toUpperCase();
 
                         if (this.split_mode == 'serial') {
-                            target_index = j;
+                            batch_index = j;
                         }
                         else {
-                            target_index = h;
+                            batch_index = h;
                         }
                     }
 
-                    console.log(i + ' box #' + target_index + '-' + target_position + ' = container #' + sources[i].id + ' from ' + sources[i].position);
+                    console.log(i + ' box #' + batch_index + '-' + target_position + ' = container #' + sources[i].id + ' from ' + sources[i].position);
 
-                    if (! Transfer[target_index]) { Transfer[target_index] = {} }
-                    if (! TargetColours[target_index]) { TargetColours[target_index] = {} }
+                    if (! TransferMap[batch_index]) { TransferMap[batch_index] = {} }
+                    // if (! TargetColours[batch_index]) { TargetColours[batch_index] = {} }
   
-                    Transfer[target_index][target_position] = sources[i];
-                    TargetColours[target_index][target_position] = this.rgbList[i];
+                    TransferMap[batch_index][target_position] = sources[i];
+                    // TargetColours[batch_index][target_position] = this.rgbList[i];
 
-                    console.log("Transfer : " + JSON.stringify(Transfer[target_index][target_position]) );
-                    console.log("Colour : " + JSON.stringify(TargetColours[target_index][target_position]) );
-                    //rearray.push([sources[i], Container.position(sources[i]), targets[target_index], target_position]);
+                    console.log("Transfer : " + JSON.stringify(TransferMap[batch_index][target_position]) );
+                    // console.log("Colour : " + JSON.stringify(TargetColours[batch_index][target_position]) );
+                    //rearray.push([sources[i], Container.position(sources[i]), targets[batch_index], target_position]);
 
                     var XferData = { 
-                        batch: target_index,
+                        batch: batch_index,
                         source_id: sources[i].id,
                         source_position: sources[i].position,
                         target_position: target_position,
                     };
 
+
+                    var MapData = {
+                        // for visualization only 
+                        source_id: sources[i].id,
+                        source_position: sources[i].position,
+                        target_position: target_position,
+                        colour_code: '#' + this.rgbList[i],
+                        target_index: count,
+                    };
+
+                    var TargetData = {
+                        batch: batch_index,
+                        source_id: sources[i].id,
+                        //source_position: sources[i].position,
+                        //target_position: target_position,
+                        //colour_code: '#' + this.rgbList[i],
+                        // target_index: count,
+                    };
+
                     // Add Static Values (single values entered)
                     for (var stat=0; stat<statics.length; stat++) {
                         var opt = statics[stat];
-                        XferData[opt] = Static[opt];
+                        // XferData[opt] = Static[opt];
+                        TargetData[opt] = Static[opt];
                     }
 
                     // Add multiplexed values (comma-delimited list entered)
                     for (var list_index=0; list_index<lists.length; list_index++) {
                         var opt = lists[list_index];
-                         XferData[opt] = List[opt][target];
+                         // XferData[opt] = List[opt][target];
+                         TargetData[opt] = List[opt][target];
                     }
 
-                    Xfer.push(XferData);
+                    TransferMap[batch_index][target_position] = MapData;
+
+                    // Xfer.push(XferData);
+                    Transfer.push(TargetData);
 
                     // next...
                     if (this.fill_by === 'row' || this.fill_by === 'column') {
-                        var next = this.next_available(target_index);
+                        var next = this.next_available(batch_index);
                         x = next.x;
                         y = next.y;
-                        target_index = next.target_index;                                
+                        batch_index = next.batch_index;                                
                     }
                     else {
                         // Does not use x and y for positioning above... 
@@ -511,16 +569,19 @@ function wellMapper() {
             }
         } 
 
-        this.Transfer = Transfer;
-        this.TransferMap = TargetColours;
-        this.Xfer = Xfer;
+        //this.Transfer = Transfer;
+        //this.TMap = TransferMap;
+        //this.TransferMap = TargetColours;
+        //this.Xfer = Xfer;
 
         console.log("completed distribution... ");
         var data = {
-            Transfer: Transfer,
-            TargetColours: TargetColours,
-            Xfer : Xfer,
-            SourceColours: SourceColours,
+            Transfer: Transfer,         // [ { batch: 0, source_id: 123, qty ; 20, qty_units: 'ml' ...}, { }, ...]
+            TransferMap: TransferMap,   // helps with visualization purposes
+            Options : this.Options,
+            // TargetColours: TargetColours,
+            // Xfer : Xfer,
+            SourceMap: SourceMap,
             warnings: warnings,
         };
 
@@ -679,8 +740,8 @@ function wellMapper() {
 
         // console.log('Xfer: ' + JSON.stringify(this.Xfer));
 
-       for (var i=0; i<this.Xfer.length; i++) {
-            var transfer = this.Xfer[i];
+       for (var i=0; i<this.Transfer.length; i++) {
+            var transfer = this.Transfer[i];
             id_list.push(transfer.source_id);
             position_list.push(transfer.source_position);
             targets.push(transfer.batch + '-' + transfer.target_position);
