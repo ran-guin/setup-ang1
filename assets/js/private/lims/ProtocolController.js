@@ -356,14 +356,8 @@ function protocolController ($scope, $rootScope, $http, $q) {
  
             var Map = $scope.distribute($scope.Samples, Target, Options);  // change to promise (test.. )
  
-            data['Sources'] = $scope.Map.Samples;
-            //data['Targets'] = $scope.Map.Xfer;
-            data['CustomData'] = Map.Xfer;
-
-            data['Target'] = Target;
-            data['Transfer_Options'] = Options;
-
-            //data['Transfer'] = ;
+            data['Transfer_Options'] = Map.Options;
+            data['Transfer'] = Map.Transfer;
         } 
 
         console.log("Send: " + JSON.stringify(data));
@@ -382,13 +376,17 @@ function protocolController ($scope, $rootScope, $http, $q) {
                 console.log("\n **** Step Posted Successfully ***");
                 console.log(JSON.stringify(result));
 
-                if (result.error) { 
+                if (result.error && result.error.length) { 
+                    console.log("Errors encountered");
                     $scope.errors = $scope.parse_standard_error(result.error);
                     $scope.errors.push("Skip step if necessary to continue");
                 }
                 else {
-                    if (result.warning) { scope.warnings = parse_standard_error(result.warning) }
-                    
+                    if (result.warning && result.warning.length) { 
+                        console.log("Warnings encountered");
+                        scope.warnings = parse_standard_error(result.warning);
+                    }
+                    console.log("no errors encountered...");
                     if ($scope.Step.transfer_type && ! $scope.Step.reset_focus && result.Samples) {
                         console.log("Focus on " + result.Samples.length + " new Sample records ");
 
@@ -588,7 +586,6 @@ function protocolController ($scope, $rootScope, $http, $q) {
 
         console.log("Transfer Type = " + $scope.Step.transfer_type);
 
-        var Xfer = [];
         if (Target) {
 
             var newMap = new wellMapper();
@@ -601,7 +598,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
             var warnings = $scope.Map.warnings;
             if (warnings && warnings.length) { $scope.warnings = warnings }
 
-            console.log("map: " + JSON.stringify($scope.Map.Xfer));
+            console.log("map: " + JSON.stringify($scope.Map.Transfer));
 
         }
         else {
