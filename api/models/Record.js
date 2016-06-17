@@ -234,8 +234,8 @@ module.exports = {
 	},
 
 	clone : function (table, ids, resetData, options) {
-
-		ids = Record.cast_to(ids, 'array', 'id');
+		console.log("IDS: " + JSON.stringify(ids));
+		// ids = Record.cast_to(ids, 'array', 'id');
 		var id_list = ids.join(',');
 		console.log("Cloning: " + id_list);
 		console.log("* RESET: " + JSON.stringify(resetData));
@@ -402,30 +402,76 @@ module.exports = {
 		
 		var query = "UPDATE " + table;
 		
+		var SetEach = [];
 		if (data) {
 			var fields = Object.keys(data);
 			var Set = [];
 			for (var i=0; i<fields.length; i++) {
-				
-				var setVal = Record.parseValue(data[fields[i]], { model : model });
+				var setval = data[fields[i]];
 
-				Set.push(fields[i] + " = " + setVal );
+				console.log(fields[i] + " SETVAL: " + JSON.stringify(setval));
+				if (setval && setval.constructor === Array) {
+					// If value supplied is an array (matching array of applicable ids), then set values one at a time
+					// (this may be avoided if all of the array elements are identical in which case values may be set in standard way)
+					//
+
+					if (setval.length == ids.length) {
+						console.log(fields[i] + " contains multiple values ... adding independently");
+						for (var j=0; j<setval.length; j++) {
+							if (! SetEach[j] ) { SetEach[j] = {} }
+							SetEach[j][fields[i]] = setval[j];
+						}
+					}
+					else {
+						sails.config.warnings.push("Ignored update to " + fields[i] + " (Length of supplied values != length of id list)");
+					}
+				}
+				else {
+					console.log("parse " + setval);
+					var setVal = Record.parseValue(setval, { model : model });
+					console.log("parsed " + setVal);
+					Set.push(fields[i] + " = " + setVal );
+				}
 			}
+
+			var promises = [];
 			if (Set.length) {
 				query = query + " SET " + Set.join(',');
+				query = query + " WHERE " + idField + " IN (" + list + ")";
+				console.log("\n UPDATE: " + model + ': ' + query);
+				promises.push( Record.query_promise(query) );
+			}
+		
+			if (SetEach.length) {
+				console.log("ALSO SET " + JSON.stringify(SetEach));
+	
+				for (var j=0; j<SetEach.length; j++) {
+					var subSet = [];
+					var setFields = Object.keys(SetEach[j]); 
+					for (var i=0; i<setFields.length; i++) {
+						var setVal = Record.parseValue(SetEach[j][setFields[i]], { model: model});
+						subSet.push(setFields[i] + ' = ' + setVal);
+					}
+					
+					if (subSet) {
+						var subquery = "UPDATE " + table + " SET " + subSet.join(',') + " WHERE " + idField  + ' = ' + ids[j];
+						console.log("subquery: " + subquery);
+						promises.push(Record.query_promise(subquery));
+					}
+				}
 			}			
-			query = query + " WHERE " + idField + " IN (" + list + ")";
 			
-			console.log("\n UPDATE: " + model + ': ' + query);
-			Record.query_promise( query )
+			console.log(promises.length + ' update queries...');
+
+			q.all( promises )
 			.then (function (result) {
-				deferred.resolve(result);				
+				console.log("updated: " + JSON.stringify(result));				
+				deferred.resolve(result[0]);								
 			})
 			.catch ( function (err) {
 				console.log("Query Error: " + query);
 				deferred.reject("Error updating last prep id: " + err);
 			});
-
 		}
 		else {
 			console.log("nothing to update");
@@ -452,9 +498,13 @@ module.exports = {
 
 		var data = [];
 		if (Tdata.constructor === Object) { data = [Tdata] }
-		else { data = Tdata }
+		else if (Tdata.constructor === Array ) { data = Tdata }
+		else {  deferred.reject('no data');  return deferred.promise }
 
-		var fields = Object.keys(data[0]) || [];
+
+		var fields = [];
+
+		if (data.length) { fields = Object.keys(data[0]) || [] }
 
 		var Values = [];
 		var onDuplicate = '';
@@ -526,6 +576,7 @@ module.exports = {
 		var model = options.model;  // used for <id> values (retrieves id field name)
 		var field = options.field;  // used for <increment> values
 		var debug = options.debug;
+		var index = options.index;
 
 		var Mod = {};
 		if (sails && sails.models && sails.models[model]) { Mod = sails.models[model] }
@@ -534,6 +585,11 @@ module.exports = {
 			value = null;
 		}
 	
+		if (value.constructor === Array && index) {
+			console.log("retrieve " + index + " element from array");
+			value = value[index];
+		}
+
 		var noQuote = 0;
 
 		if (typeof value == 'number') { value = value.toString() }
