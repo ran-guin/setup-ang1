@@ -261,7 +261,7 @@ module.exports = {
 
 		var idField = 'id';
 		var nameField = 'name';
-		var identifier = table;
+		var identifier = model;
 
 		var select;
 
