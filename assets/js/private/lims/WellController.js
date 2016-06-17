@@ -19,6 +19,7 @@ function wellController ($scope, $rootScope, $http, $q ) {
         // console.log("CONFIG: " + JSON.stringify(Config));
 
         $scope.Samples = Config['Samples'] || [];
+        $scope.plate_ids = Config['plate_ids'];
         // console.log("Samples: " + $scope.Samples);
         console.log("source 1: " + $scope.Samples[0]);
 
@@ -60,7 +61,7 @@ function wellController ($scope, $rootScope, $http, $q ) {
         $scope.fillExamples = {
             'row'  : "wells filled by row : eg A1, A2, A3 ...", 
             'column' : "wells filled by column : eg A1, B1, C1 ...",
-            'position' : "samples copied into same well position they came from",
+            'position' : "samples copied into same slot they came from",
         };             
         $scope.fillExample = $scope.fillExamples[$scope.fill_by];
 
@@ -156,40 +157,42 @@ function wellController ($scope, $rootScope, $http, $q ) {
                 $scope.newMap = newMap;
             }  
 
+            $scope.Transfer = {
+                    qty: $scope.transfer_qty,
+                    qty_units : $scope.units_label,
+                    Container_format : $scope.container_format_id,
+                    Sample_type : $scope.sample_type_id,
+            };
+
+            $scope.distribute_Options = {
+                fillBy : $scope.fill_by, 
+                pack : $scope.pack,
+                pack_wells : $scope.pack_wells,
+                split : $scope.splitX,
+                split_mode : $scope.split_mode,
+                target_size : $scope.target_size,
+                target_boxes : $scope.target_boxes,
+                available : $scope.available,
+                transfer_type : $scope.transfer_type,
+            };
+
+            console.log('call distribute');
+            console.log('Transfer: ' + JSON.stringify($scope.Transfer) );
+            console.log('Transfer: ' + JSON.stringify($scope.distribute_Options) );
+
             // recalculate mapping //
             $scope.Map = $scope.newMap.distribute(
                 $scope.Samples, 
-                {
-                    qty: $scope.transfer_qty,
-                    qty_units : $scope.transfer_qty_label,
-                },
-                { 
-                    Max_Row : $scope.Max_Row, 
-                    Max_Col : $scope.Max_Col,
-                    fillBy : $scope.fill_by, 
-                    pack : $scope.pack,
-                    pack_wells : $scope.pack_wells,
-                    split : $scope.splitX,
-                    split_mode : $scope.split_mode,
-                    target_size : $scope.target_size,
-                    target_boxes : $scope.target_boxes,
-                    available : $scope.available,
-                }
+                $scope.Transfer,
+                $scope.distribute_Options
             );
             
             console.log("Samples: " + JSON.stringify($scope.Samples));
             console.log("NEW MAP: " + JSON.stringify($scope.Map));
-            console.log("Xfer: ");
-            if ($scope.Map.Xfer) {
-                for (var i=0; i<$scope.Map.Xfer.length; i++) {
-                    console.log(i = ': ' + JSON.stringify($scope.Map.Xfer));
-                } 
-            }
-            // console.log(newMap.source_rows + " x " newMap.source_cols);
-
+ 
             console.log("NEW CMAP: " + JSON.stringify($scope.newMap.CMap));
-            console.log("Source Colour Map: " + JSON.stringify($scope.Map.SourceColours))
-            console.log("Target Colour Map: " + JSON.stringify($scope.Map.ColourMap))
+            console.log("Source Colour Map: " + JSON.stringify($scope.Map.SourceColours));
+            console.log("Target Colour Map: " + JSON.stringify($scope.Map.TargetMap));
             
         })
         .catch ( function (err) {
@@ -321,12 +324,15 @@ function wellController ($scope, $rootScope, $http, $q ) {
         return deferred.promise;
     }
 
-    $scope.testXfer = function testXfer () {
+    $scope.execute_transfer = function testXfer () {
         //var Targets = [{"id":200,"position":"A1","container":1000},{"id":201,"position":"A2","container":1000},{"id":202,"position":"A3","container":1000},{"id":203,"position":"B1","container":1000},{"id":204,"position":"B2","container":1000},{"id":205,"position":"B3","container":1000},{"id":206,"position":"C1","container":1000},{"id":207,"position":"C2","container":1000},{"id":208,"position":"C3","container":1000},{"id":209,"position":"D1","container":1000},{"id":210,"position":"D2","container":1000},{"id":211,"position":"D3","container":1000},{"id":212,"position":"A1","container":1001},{"id":213,"position":"A2","container":1001},{"id":214,"position":"A3","container":1001},{"id":215,"position":"B1","container":1001},{"id":216,"position":"B2","container":1001},{"id":217,"position":"B3","container":1001},{"id":218,"position":"C1","container":1001},{"id":219,"position":"C2","container":1001},{"id":220,"position":"C3","container":1001},{"id":221,"position":"D1","container":1001},{"id":222,"position":"D2","container":1001},{"id":223,"position":"D3","container":1001},{"id":224,"position":"A1","container":1002},{"id":225,"position":"A2","container":1002},{"id":226,"position":"A3","container":1002},{"id":227,"position":"B1","container":1002},{"id":228,"position":"B2","container":1002},{"id":229,"position":"B3","container":1002},{"id":230,"position":"C1","container":1002},{"id":231,"position":"C2","container":1002},{"id":232,"position":"C3","container":1002},{"id":233,"position":"D1","container":1002},{"id":234,"position":"D2","container":1002},{"id":235,"position":"D3","container":1002},{"id":236,"position":"A1","container":1003},{"id":237,"position":"A2","container":1003},{"id":238,"position":"A3","container":1003},{"id":239,"position":"B1","container":1003},{"id":240,"position":"B2","container":1003},{"id":241,"position":"B3","container":1003},{"id":242,"position":"C1","container":1003},{"id":243,"position":"C2","container":1003},{"id":244,"position":"C3","container":1003},{"id":245,"position":"D1","container":1003},{"id":246,"position":"D2","container":1003},{"id":247,"position":"D3","container":1003},{"id":248,"position":"A1","container":1004},{"id":249,"position":"A2","container":1004},{"id":250,"position":"A3","container":1004},{"id":251,"position":"B1","container":1004},{"id":252,"position":"B2","container":1004},{"id":253,"position":"B3","container":1004},{"id":254,"position":"C1","container":1004},{"id":255,"position":"C2","container":1004},{"id":256,"position":"C3","container":1004},{"id":257,"position":"D1","container":1004},{"id":258,"position":"D2","container":1004},{"id":259,"position":"D3","container":1004},{"id":260,"position":"A1","container":1005},{"id":261,"position":"A2","container":1005},{"id":262,"position":"A3","container":1005},{"id":263,"position":"B1","container":1005},{"id":264,"position":"B2","container":1005},{"id":265,"position":"B3","container":1005},{"id":266,"position":"C1","container":1005},{"id":267,"position":"C2","container":1005},{"id":268,"position":"C3","container":1005},{"id":269,"position":"D1","container":1005},{"id":270,"position":"D2","container":1005},{"id":271,"position":"D3","container":1005},{"id":272,"position":"A1","container":1006},{"id":273,"position":"A2","container":1006},{"id":274,"position":"A3","container":1006},{"id":275,"position":"B1","container":1006},{"id":276,"position":"B2","container":1006},{"id":277,"position":"B3","container":1006},{"id":278,"position":"C1","container":1006},{"id":279,"position":"C2","container":1006},{"id":280,"position":"C3","container":1006},{"id":281,"position":"D1","container":1006},{"id":282,"position":"D2","container":1006},{"id":283,"position":"D3","container":1006},{"id":284,"position":"A1","container":1007},{"id":285,"position":"A2","container":1007},{"id":286,"position":"A3","container":1007},{"id":287,"position":"B1","container":1007},{"id":288,"position":"B2","container":1007},{"id":289,"position":"B3","container":1007},{"id":290,"position":"C1","container":1007},{"id":291,"position":"C2","container":1007},{"id":292,"position":"C3","container":1007},{"id":293,"position":"D1","container":1007},{"id":294,"position":"D2","container":1007},{"id":295,"position":"D3","container":1007}];
 
-        var Samples = $scope.Samples;
-        var targets = $scope.targets;
-        var options = $scope.options;
+        var options = {
+            transfer_type: $scope.transfer_type,
+            // prep not necessary, but could be optionally added here ...
+            //
+            // Target_sample and Target_format qty should already be included in Transfer specs...
+        };            
 
         var format;
 
@@ -339,29 +345,14 @@ function wellController ($scope, $rootScope, $http, $q ) {
         console.log("Found format: " + format + '=' + $scope['Plate_Format-id']);
 
         var data = { 
-            Samples: Samples,
-            Targets: {
-                // only applicable for split or packing
+            ids: $scope.plate_ids,
+            Transfer: $scope.Map.Transfer,
+            Options : {
+                transfer_type: $scope.transfer_type,
+                // prep not necessary, but could be optionally added here ...
+                //
+                // Target_sample and Target_format qty should already be included in Transfer specs...
             },
-            Options: {
- /*               container_format: format,
-                volume : volume,
-*/                volume_units : volume_units,
-            },
-            Set: options,
-/*
-            Targets: [
-                { index: 1, position: 'A2', volume: 2, volume_units: 'ml'},
-                { index: 1, position: 'A4', volume: 3, volume_units: 'ml'}
-            ], 
-            Set: { 
-                'format' : 34, 
-                'sample_type' : 56, 
-                'created' : $scope.timestamp, 
-                'location' : 3,
-                'volume' : 
-             } 
-*/
         };
 
         console.log("POSTING DATA: " + JSON.stringify(data));
@@ -370,6 +361,7 @@ function wellController ($scope, $rootScope, $http, $q ) {
         $http.post("/xfer", data)
         .then (function (returnData) {
             console.log("xfer data: " + JSON.stringify(returnData));
+            /*
             if (1) {
                 var incData =  { table: 'Plate', attributes : ['29'], targets : [1] };
                 $http.post("/attributes/increment", incData)
@@ -383,6 +375,7 @@ function wellController ($scope, $rootScope, $http, $q ) {
                     $scope.errorMsg = "Error incrementing attributes !";
                 });
             }
+            */
         })
         .catch (function (err) {
             console.log("Error posting transfer: " + err);
