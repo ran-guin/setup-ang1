@@ -171,7 +171,7 @@ module.exports = {
 
 	},
 
-	execute_transfer : function (ids, target, options, CustomData) {
+	execute_transfer : function (ids, Transfer, Options) {
 		//
 		// Input: 
 		//
@@ -224,15 +224,15 @@ module.exports = {
 
 			console.log("\n*** Container.execute_transfer: ***")
 			console.log("input IDS:" + JSON.stringify(ids));
-			console.log("input Target: " + JSON.stringify(target));
-			console.log("input Options: " + JSON.stringify(options));
-			if (CustomData) { console.log("input CustomData: " + JSON.stringify(CustomData[0]) + '...') }
+			console.log("input Target: " + JSON.stringify(Transfer));
+			console.log("input Options: " + JSON.stringify(Options));
+			// if (CustomData) { console.log("input CustomData: " + JSON.stringify(CustomData[0]) + '...') }
 
-			Container.get_target_ids(ids, target, options, CustomData)
+			Container.get_target_ids(ids, Transfer, Options)
 			.then (function (target_ids) {
 
 				console.log("post transfer updates to " + JSON.stringify(target_ids));
-				Container.postTransferUpdates(ids, target_ids, target, options)
+				Container.postTransferUpdates(ids, target_ids, Transfer, Options)
 				.then (function (finalResponse) {
 					console.log("completed transfer");
 					deferred.resolve(finalResponse);
@@ -369,18 +369,100 @@ module.exports = {
 		return deferred.promise;
 	},
 
-	get_target_ids: function (ids, target, options, CustomData) {
+	reset_transfer_data : function (Transfer, Options) {
+		// Standard fields that are reset for transferred samples (varies depending upon input options)
+		//
+		// Returns:
+		// reset{
+		//	'source' : (hash of changes to source plates)
+		//	'target' : (hash of changes to target plates (both for standard transfer, and for final transfer after pre-print process)
+		//	'clone' : (hash of changes to clone plates only (will also include reset.target changes)
+		//  }
 
+		if (! Transfer) { Transfer = {} }
+		if (! Options) { Options = {} }
+			
 		var deferred = q.defer();
 
-		Container.resetData(target, options, CustomData)
+		var target_ids = [];
+		
+		var resetSource = {};
+		var resetTarget = {};
+
+		var resetClone = {
+			'Plate_ID' : null,
+			'Plate_Status' : 'Active',
+			'FKParent_Plate__ID' : '<id>',
+			'FK_Rack__ID' : '<NULL>',
+			'Plate_Created' : '<now>',
+			'FK_Employee__ID' : '<user>' 
+		};
+
+		if (Options.prep) {
+			resetSource['FKLast_Prep__ID'] = Options.prep;
+			resetTarget['FKLast_Prep__ID'] = Options.prep;
+		}
+
+		if (Options.transfer_type === 'Pre-Print') {
+			resetClone['Current_Volume'] = 0;
+			resetClone['Plate_Status'] = 'Pre-Printed';
+		}
+		else if (Options.transfer_type === 'Transfer' ) {
+			resetSource['Plate_Status'] = 'Thrown Out';
+		}
+
+		var qtyField = Container.alias('qty');
+		var qtyUnits = Container.alias('qty_units');
+		if (Options.transfer_qty) {
+			// Single quantity only ?? or remove
+			resetSource[qtyField] = "<" + qtyField + " - " + Options.transfer_qty + ">";
+
+			resetTarget[qtyField] = Options.transfer_qty;
+			resetTarget[qtyUnits] = Options.transfer_qty_units;
+		}
+		else if (Transfer[0].qty) {
+			resetTarget[qtyUnits] = Transfer[0].qty_units || Options.transfer_qty_units;
+			var quantities = [];
+			var adjustments = [];
+			for (var i=0; i<Transfer.length; i++) {
+				quantities.push( Transfer[i].qty );
+				adjustments.push("<" + qtyField + " - " + Transfer[i].qty + ">");		
+			}
+			resetTarget[qtyField] = quantities;
+			resetSource[qtyField] = adjustments;
+		}
+
+		// Target options 
+		if (Transfer[0].Sample_type || Options.Sample_type) {
+			resetTarget['FK_Sample_Type__ID'] = Transfer[0].Sample_type || Options.Sample_type;
+		}
+
+		if (Transfer[0].Container_format || Options.Container_format) {
+			resetTarget['FK_Plate_Format__ID'] = Transfer[0].Container_format || Options.Container_format;
+		}	
+		
+		var extras = Object.keys(Transfer);
+		for (var i=0; i<extras.length; i++) {
+
+		}
+
+		var reset = { target: resetTarget, clone: resetClone, source: resetSource}
+		deferred.resolve(reset);
+
+		console.log('Reset:  ' + JSON.stringify(reset));
+		return deferred.promise;
+	},
+
+	get_target_ids: function (ids, Transfer, Options) {
+
+		var deferred = q.defer();
+		console.log("get target ids from " + JSON.stringify(ids));
+		Container.reset_transfer_data(Transfer, Options)
 		.then (function (result) {
 
 			var resetTarget = result.target;
 			var resetSource = result.source;
 			var resetClone  = result.clone;
-
-			var target_ids = result.target_ids || ids;
 
 			console.log("\n*** Reset: " + JSON.stringify(result));
 
@@ -391,25 +473,32 @@ module.exports = {
 					// pre-printed plates salvaged
 
 					var parents = retrieved.parents;
-					var ids = retrieved.ids;
+					var current_ids = retrieved.ids;
 
 					// also set to Active ...
 					resetTarget['Plate_Status'] = 'Active';
 					
-					Record.update('container', ids, resetTarget );
+					Record.update('container', current_ids, resetTarget );
 
 					if (resetSource && Object.keys(resetSource).length) {
 						Record.update('container', parents, resetSource)
 					}
 
-					deferred.resolve(ids);
+					deferred.resolve(current_ids);
 				}
 				else {
 					// clone new plates 
 					// Add new records to Database //
-					options['id'] = Container.alias('id');
-					Record.clone('Plate', target_ids, _.extend(resetTarget, resetClone), options)
+					var clone_ids = _.pluck(Transfer,'source_id');
+					Options['id'] = Container.alias('id');
+					console.log("Clone Plates: " + clone_ids.join(','));
+					Record.clone('Plate', clone_ids, _.extend(resetTarget, resetClone), Options)
 					.then ( function (cloneData) {
+						
+						if (resetSource && Object.keys(resetSource).length) {
+							console.log("Update Source: " + JSON.stringify(resetSource));
+							Record.update('container', clone_ids, resetSource)
+						}
 
 						if (cloneData.data) {
 							console.log("\nCreated new record(s) from execute transfer: " + JSON.stringify(cloneData.data[0]) + '...');

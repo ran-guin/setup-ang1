@@ -74,20 +74,14 @@ module.exports = {
 				var first_prep_id = [ firstPrepResult.insertId ];
 
 				console.log("\nPrep ID: (just inserted)" + last_prep_id );
-				console.log("Target: (supplied by POST) " + JSON.stringify(data['Target']));
+				console.log("Transfer: (supplied by POST) " + JSON.stringify(data['Transfer']));
 				console.log("Options: " + JSON.stringify(data['Transfer_Options']));
-				console.log("Custom: " + JSON.stringify(data['CustomData']));
+				//console.log("Custom: " + JSON.stringify(data['CustomData']));
 
 				var transferred;
-				if (data['Target'] && data['Transfer_Options'] && data['Transfer_Options']['transfer_type']) {
+				if (data['Transfer'] && data['Transfer_Options'] && data['Transfer_Options']['transfer_type']) {
 					console.log('\n*** call Container.execute_transfer from Lab_protocol Model');
-					promises.push( Container.execute_transfer( 
-						ids,
-						data['Target'],
-						data['Transfer_Options'], // test data}
-
-						data['CustomData']
-					));
+					promises.push( Container.execute_transfer( ids, data['Transfer'], data['Transfer_Options']) );
 
 					transferred = promises.length;
 				}
