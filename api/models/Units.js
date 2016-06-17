@@ -10,7 +10,11 @@ module.exports = {
   attributes: {
   	name : { type : 'string' },
   	base_unit : { type : 'string' },
-  	factor : { type : 'float' }
+  	factor : { type : 'float' },
+    status : {
+      type : 'string',
+      enum : ['Active','Inactive']
+    }
   },
 
   initData: [
