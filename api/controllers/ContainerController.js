@@ -241,24 +241,12 @@ module.exports = {
 
 	completeTransfer : function (req, res ) {
 		console.log("CC completing transfer");
-		
-		var Sources = req.body['Sources'];
-		var targets = req.body['Targets'];
-		var Set     = req.body['Set'] || {};
+
+		var ids = req.body['ids'] || [];
 		var Options = req.body['Options'] || {};
+		var Transfer = req.body['Transfer'] || {};
 
-/*
-		Sources = [ { id : 1}, { id: 2} ];
-		Targets = {
-			size : 1, 
-			size: '2x3', 
-			Format : { id : 5}, 
-			rows: ['A','B'], 
-			cols : [1],
-		};
-*/
-
-		q.when( Container.execute_transfer(Sources, Targets, { Prep : { id : 7 }}) )
+		q.when( Container.execute_transfer(ids, Transfer, Options) )
 		.then ( function (results) {
 			return res.json(results);
 		})
