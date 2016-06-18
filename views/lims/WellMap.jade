@@ -37,7 +37,7 @@ block content
                     b &nbsp; Transfer &nbsp; 
 
                 div.col-sm-4
-                  input.input-lg(type='text' placeholder=' -- Transfer Qty --', ng-model='transfer_qty' size='16' ng-disabled="transfer_type=='Pre-Print'")
+                  input.input-lg(type='text' placeholder=' -- Transfer Qty --', ng-model='transfer_qty' ng-blur="redistribute()" size='16' ng-disabled="transfer_type=='Pre-Print'")
                   span &nbsp;
                   span.lookup(id='Lookup-units' ng-init="loadLookup('units','','units')")
 
