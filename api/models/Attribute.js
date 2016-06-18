@@ -179,7 +179,12 @@ module.exports = {
 						'FK_Attribute__ID' : atts[i], 
 						//'Attribute_Value' : data[atts[i]],
 					};
-					insertData['Attribute_Value'] = data[atts[i]];					
+
+					console.log("Parse " + data[atts[i]] + ' with index: ' + j);
+
+					var val = Record.parseValue(data[atts[i]], { index: j } );
+
+					insertData['Attribute_Value'] = val;					
 					insertData['FK_' + model + '__ID'] = ids[j];
 					insertData['Set_DateTime'] = "<now>";
 					insertData['FK_Employee__ID'] = sails.config.payload.userid;
