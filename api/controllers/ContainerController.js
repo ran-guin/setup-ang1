@@ -200,7 +200,7 @@ module.exports = {
 						}
 					}
 					else {
-						warnings.push("No position for sample #" + i + ' : ' + id);
+						errors.push("No position data for sample #" + i + ' : ' + id);
 					}					
 				}
 
