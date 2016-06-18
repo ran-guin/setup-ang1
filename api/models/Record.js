@@ -581,12 +581,12 @@ module.exports = {
 		var Mod = {};
 		if (sails && sails.models && sails.models[model]) { Mod = sails.models[model] }
 
-		if (value === 'NULL' ||  value === undefined || value === '<NULL>') {
+		if (value === null || value === 'NULL' ||  value === undefined || value === '<NULL>') {
 			value = null;
 		}
-	
-		if (value.constructor === Array && index) {
+		else if (value.constructor === Array ) {
 			console.log("retrieve " + index + " element from array");
+			if (! index) { index = 0 }
 			value = value[index];
 		}
 
@@ -599,7 +599,8 @@ module.exports = {
 		if (value === null) { }			
 		else if (value.constructor === String) {
 			if (value.match(/^<user>$/i)) {
-				value = sails.config.payload.userid; 
+				if (sails.config.payload) { value = sails.config.payload.userid }
+				else { value = '1' }  // testing only  
 				if (debug) console.log("replacing <user> with " + value);
 			}
 			else if (value.match(/^<increment>$/i) ) {
@@ -638,11 +639,19 @@ module.exports = {
 				}
 				value = idField;
 			}
+
+			console.log("value: " + value);
+			// account for redundant quotes ... 
+			if (value.match(/^\"/) && value.match(/\"$/)) {
+				noQuote = 1;
+				console.log("suppress quotes");
+			}
 		}
 		else if (value && value.constructor === Date) {
 			value = JSON.stringify(value);
 			noQuote=1;
 		}
+
 
 
 		if (value === null && defaultTo) {
