@@ -227,7 +227,8 @@ function wellMapper() {
         this.x_min = Options.Min_Row || 'A';
         this.y_min = Options.Min_Col || 1;
 
-        this.target_format = Target.format;
+        this.Container_format = Target.Container_format;
+        this.Sample_type = Target.Sample_type
 
         this.splitX = Options.split || Options.splitX || 1;
 
@@ -328,7 +329,7 @@ function wellMapper() {
 
        //var Colour = [];
         //var SourceColours = {};
-        //var TargetColours = {};
+        // var TargetColours = {};
 
          var target_position = this.x_min + this.y_min.toString();
 
