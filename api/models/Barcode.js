@@ -148,7 +148,7 @@ module.exports = {
       if (Scanned['Unformatted'] && Scanned['Unformatted'].length && ! Scanned['Unformatted'].match(/a-zA-Z/) ) {
         console.log("** Matrix Barcode Detected ** " + Scanned['Unformatted']);
 
-        var Mbarcodes = Scanned['Unformatted'].match(/.{10}/);
+        var Mbarcodes = Scanned['Unformatted'].match(/.{10}/g);
         if (Mbarcodes) {
           console.log("List: " + JSON.stringify(Mbarcodes));
           
