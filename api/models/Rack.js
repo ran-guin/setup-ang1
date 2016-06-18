@@ -86,7 +86,7 @@ module.exports = {
                 var well = wells[row][col];
                 var slot = well.toLowerCase();
 
-                var data = { Rack_Name: name, Rack_Alias: alias + ' ' + name + ' ' + slot, FKParent_Rack__ID : parent, Rack_Type: 'Slot', Movable: 'N', Rack_Full: 'N', Capacity: '1' };
+                var data = { Rack_Name: slot, Rack_Alias: alias + ' ' + name + ' ' + slot, FKParent_Rack__ID : parent, Rack_Type: 'Slot', Movable: 'N', Rack_Full: 'N', Capacity: '1' };
                 slotData.push(data);
                 // console.log("Slot " + slot + " = " + JSON.stringify(data));
               }
