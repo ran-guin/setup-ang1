@@ -105,11 +105,13 @@ module.exports = {
 				})
 				.catch ( function (Qerr) {
 					// sails.config.warnings.push('There was a glitch somewhere in the step saving process');
-					console.log("Error Completing all actions: " + Qerr.length);
-					for (var i=0; i<Qerr.length; i++) {
-						console.log("\n** " + i + " Error: " + Qerr[i]);
-						console.log(JSON.stringify(Qerr[0]));
-					} 
+					console.log("Error Completing all actions: " + JSON.stringify(Qerr));
+					if (Qerr.constructor === Array) {
+						for (var i=0; i<Qerr.length; i++) {
+							console.log("\n** " + i + " Error: " + Qerr[i]);
+							console.log(JSON.stringify(Qerr[0]));
+						} 
+					}
 					deferred.reject("Error completing all actions: " + Qerr) ;
 				});
 			})
