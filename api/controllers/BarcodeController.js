@@ -49,10 +49,20 @@ module.exports = {
 
 					var sampleList = [];
 					if (data.length == 0) {
-						errorMsg = "expecting ids: " + plate_ids.join(', ') + "<P>... but No Containers Found (?)";
-						sails.config.errors.push(errorMsg);
-						
-						return res.render('customize/private_home');
+						if (Scanned['Rack'].length) {
+							
+						}
+						else {
+							if (plate_ids.length) {
+								errorMsg = "expecting ids: " + plate_ids.join(', ');
+								return res.render('customize/private_home');
+							}
+							else if (Scanned['Rack'].length) {
+								sails.config.messages.push("Scanned Loc#s: " + Scanned['Rack'].join(', '));
+								sails.config.warnings.push("Use alDente for handling Rack Locations.  LITMUS only reads Boxes containing samples.");
+							} 
+							return res.render('customize/private_home');
+						}
 					}	
 					else {
 						for (var i=0; i<data.length; i++) {
