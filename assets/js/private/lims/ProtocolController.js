@@ -333,8 +333,8 @@ function protocolController ($scope, $rootScope, $http, $q) {
             console.log("Q = " + JSON.stringify(qty) + ' ' + qty_units);
 
             var Target = { 
-                'format' : $scope.Step.Target_format,
-                'sample_type'   : $scope.Step.Target_sample,
+                'Container_format' : $scope.Step.Target_format,
+                'Sample_type'   : $scope.Step.Target_sample,
                 'qty'           : qty,
                 'qty_units'     : qty_units,
             };
