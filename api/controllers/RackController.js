@@ -49,10 +49,17 @@ module.exports = {
 		console.log("Add daughter to " + parent + ': ' + name + ' = ' + size);
 		Rack.addSlottedBox(parent, name, size)
 		.then ( function (result) {
-			var box = result.box;
-			var slots = result.slots.length;
+			console.log("Added Slotted Box " + JSON.stringify(result));
+			if (result.box && result.slots) {
+
+				var box = result.box.insertId;
+				var slots = result.slots.affectedRows;
 		
-			sails.config.messages.push("Added Box with " + slots + ' Slots');
+				sails.config.messages.push("Added Box #" + box + " with " + slots + ' Slots');
+			}
+			else {
+				sails.config.warnings.push("Could not recognize new box/slot feedback");
+			}
 			return res.render('customize/private_home');
 		})
 		.catch ( function (err) {
