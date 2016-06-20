@@ -8,6 +8,8 @@ block content
   - var init2 = "initialize(" + JSON.stringify(config2) + ")";
   
   div.container
+    include ./../core/errorMsg.jade
+
     div(ng-app='myApp')
      div(ng-controller="SharedController")
       div(ng-controller="FancyFormController")
@@ -16,7 +18,8 @@ block content
             br
             include ActiveSamples
 
-            include ./../core/errorMsg.jade
+            br 
+            include ./../core/angularMessages.jade
 
             form.form-horizontal(role='form' method='post' action="#{sails.config.root}/transfer")
               p &nbsp;
@@ -103,6 +106,8 @@ block content
                     input.input-lg(type='text' name='target_rack' size=12 ng-model='target_rack' ng-change="validate_target(); redistribute();" placeholder='-- Scan Loc# --')
                 div.col-sm-4 &nbsp;
                   button.btn.btn-lg.btn-primary(type='button' ng-click="redistribute()") Distribute
+                  span &nbsp; &nbsp;
+                  input(type='radio' ng-click="use_custom_settings()")
                   p &nbsp;
                   button.btn.btn-lg.btn-primary(type='button' ng-click="updateLookups()") Update Lookups
                   p &nbsp;
