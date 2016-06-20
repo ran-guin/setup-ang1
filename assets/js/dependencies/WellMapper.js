@@ -213,6 +213,7 @@ function wellMapper() {
         //var rows = Target.rows || this.source_rows;  // unnecessary..
         //var cols = Target.cols || this.source_cols;
 
+        if (!Target) { Target = {} }
         if (!Options) { Options = {} }
 
         this.fill_by = Options.fillBy || 'Row';
@@ -570,10 +571,8 @@ function wellMapper() {
             }
         } 
 
-        //this.Transfer = Transfer;
-        //this.TMap = TransferMap;
-        //this.TransferMap = TargetColours;
-        //this.Xfer = Xfer;
+        this.Transfer = Transfer;
+        this.TransferMap = TransferMap;
 
         console.log("completed distribution... ");
         var data = {
