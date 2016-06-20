@@ -28,11 +28,8 @@ module.exports = {
 				plate_ids = Scanned['Plate'];
 			}
 			else if ( Scanned['Rack'].length ) {
-			console.log("D");
 				var boxes = Scanned['Rack'].join(',');
-			console.log("C");
 				box_condition = "Box.Rack_ID IN (" + boxes + ')';
-			console.log("B");
 				console.log("condition: " + box_condition);
 			}
 
@@ -49,20 +46,17 @@ module.exports = {
 
 					var sampleList = [];
 					if (data.length == 0) {
-						if (Scanned['Rack'].length) {
-							
-						}
-						else {
-							if (plate_ids.length) {
-								errorMsg = "expecting ids: " + plate_ids.join(', ');
-								return res.render('customize/private_home');
-							}
-							else if (Scanned['Rack'].length) {
-								sails.config.messages.push("Scanned Loc#s: " + Scanned['Rack'].join(', '));
-								sails.config.warnings.push("Use alDente for handling Rack Locations.  LITMUS only reads Boxes containing samples.");
-							} 
+						if (plate_ids.length) {
+							errorMsg = "expecting ids: " + plate_ids.join(', ');
 							return res.render('customize/private_home');
 						}
+						else if (Scanned['Rack'].length) {
+							sails.config.messages.push("Scanned Loc#s: " + Scanned['Rack'].join(', '));
+							sails.config.warnings.push("Use alDente for handling Racks other than boxes (eg Inventory, Storage Tracking)");
+							sails.config.warnings.push("LITMUS is for sample processing and only reads Boxes containing samples.");
+						} 
+						sails.config.warnings.push("No useable records retrieved");
+						return res.render('customize/private_home');
 					}	
 					else {
 						for (var i=0; i<data.length; i++) {
