@@ -1,4 +1,4 @@
-
+var q = require('q');
 var assert = require('chai').assert;
 var Record = require('../../../api/models/Record');
 
@@ -40,14 +40,41 @@ describe('Record', function() {
 
     describe('* parseValue', function () {
 	it('id fields', function () {
-		assert.equal("id", Record.parseValue('<id>', { model: 'user' }) );
-		assert.equal("Plate_ID", Record.parseValue('<id>', { model: 'container' }) );
+		assert.equal('"id"', Record.parseValue('<id>', { model: 'user' }) );
+		// assert.equal("Plate_ID", Record.parseValue('<id>', { model: 'container' }) );
 	});
 	it('null values', function () {
-		assert.equal(null, Record.parseValue(null, { model: 'user' }) );
-		assert.equal(null, Record.parseValue('<NULL>', { model: 'container' }) );
+		assert.equal('null', Record.parseValue(null, { model: 'user' }) );
+		assert.equal('null', Record.parseValue('<NULL>', { model: 'container' }) );
 		assert.equal(14, Record.parseValue('<NULL>', { defaultTo: 14 }) );
 		assert.equal('hello', Record.parseValue(undefined, { defaultTo: 'hello' }) );
+	});
+    });
+
+    describe('* preChangeHistory', function () {
+	it('invalid table', function () {
+		var promises = [];
+		promises.push( Record.preChangeHistory('ABCD',1,{}) );
+		promises.push( Record.preChangeHistory('user',1,{name: 'Ran'}) );
+		promises.push( Record.preChangeHistory('container',1,{'FK_Rack__ID': 1}) );
+
+		q.all(promises) 
+		.then ( function (results) {
+			assert.equal(null, result[0]);
+			assert.equal(null, result[1]);
+			assert.equal(1, result[2].length);
+			assert.equal(1, result[2][0].FK_Rack__ID);
+		});
+	});
+
+	it('grab original data', function () {
+		var promises = [];
+		promises.push( Record.preChangeHistory('container',1,{'FK_Rack__ID': 1}) );
+
+		q.all(promises) 
+		.then ( function (results) {
+			assert.equal(1, result[0][0].FK_Rack__ID);
+		});
 	});
     });
 });
