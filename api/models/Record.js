@@ -437,8 +437,14 @@ module.exports = {
 							SetEach[j][fields[i]] = setval[j];
 						}
 					}
+					else if (setval.length == 1) {
+						console.log("single value for all elements");
+						var setVal = Record.parseValue(setval[0], { model : model });
+						Set.push(fields[i] + " = " + setVal );						
+					}
 					else {
-						sails.config.warnings.push("Ignored update to " + fields[i] + " (Length of supplied values != length of id list)");
+						var msg = "Ignored update to " + fields[i] + " (Length of supplied values != length of id list) " + setval.length + ' != ' + ids.length;
+						sails.config.warnings.push(msg);
 					}
 				}
 				else {
@@ -660,7 +666,7 @@ module.exports = {
 
 			console.log("value: " + JSON.stringify(value));
 			// account for redundant quotes ... 
-			if (value.match(/^\"/) && value.match(/\"$/)) {
+			if (value.constructor === String && value.match(/^\"/) && value.match(/\"$/)) {
 				noQuote = 1;
 				console.log("suppress quotes");
 			}
@@ -741,6 +747,8 @@ module.exports = {
     			console.log(query);
     			Record.query_promise(query)
     			.then (function (result) {
+
+    				console.log("ADD PRE CHANGE HISTORY :" + JSON.stringify(result));
     				deferred.resolve(result);
     			})
     			.catch ( function (err) {
@@ -764,27 +772,27 @@ module.exports = {
 
     	if (Mod && fields.length) {
     		var track = _.union(Mod.track_history, fields);
-    		var track_FKs = Mod.FK(track);
 
     		var table = Mod.tableName || model;
     		var idField = Mod.alias('id') || 'id';
 
-    		if (track.length && track_FKs) {
-    			if (Mod.FK('table') && track_FKs.length) {
-
-    				if (track_FKs.length < track.length) {
-    					sails.config.warnings.push(table + " missing FK specs for one of history tracking fields: " + track.join(','));
-    				}
-
-
-	    			var query = "SELECT " + idField + ', ' + track_FKs.join(',') + " FROM " + table + " WHERE " + idField + " IN " + ids.join(',');
-    				deferred.resolve(Record.query_promis(query));
-    			}
-    			else {
-    				
-    			}
+    		if (track.length ) {
+    			var query = "SELECT " + idField + ', ' + track.join(',') + " FROM " + table + " WHERE " + idField + " IN (" + ids.join(',') + ')';
+    			
+    			console.log(query);
+    			Record.query_promise(query)
+    			.then (function (result) {
+    				console.log("ADD POST CHANGE HISTORY :" + JSON.stringify(result));
+    				deferred.resolve(result);
+    			})
+    			.catch ( function (err) {
+ 		   			deferred.reject(err);    				
+    			})
+			}
+    		else {
+ 				console.log('no history tracking required');   		 
+    			deferred.resolve();
     		}
-    		else { deferred.resolve() }
     	}
     	else { deferred.resolve() }
     	
