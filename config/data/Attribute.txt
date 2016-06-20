@@ -58,3 +58,7 @@ Attribute_ID	Attribute_Name	Attribute_Format	Attribute_Type	FK_Grp__ID	Inherited
 64	Untracked_Thaw_Count		Int	3	Yes	Source	Editable	
 65	Untracked_Thaw_Count		Int	3	Yes	Plate	Editable	
 66	Matrix_Barcode		Int	3	Yes	Plate	Editable	
+67	Picogreen_Lot_Number		Int	3	Yes	Plate	Editable	
+68	Qiagen_Lot_Number		Int	3	Yes	Plate	Editable	
+69	Adjusted_260_280		Int	3	Yes	Plate	Editable	
+70	Adjusted_260_230_ratio		Int	3	Yes	Plate	Editable	
