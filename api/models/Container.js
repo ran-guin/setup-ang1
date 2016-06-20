@@ -639,6 +639,32 @@ module.exports = {
 		return;
 	},
 
+	relocate : function (ids, target) {
+		
+		var deferred = q.defer();
+
+		if (ids.length && ( target.length == 1 || target.length == ids.length) ) {
+			Record.update('container', ids, { 'FK_Rack__ID' : target })
+			.then (function (ok) {
+				deferred.resolve(ok);
+			})
+			.catch (function (err) {
+				deferred.reject(err);
+			});
+		}
+		else {
+			if (ids.length) {
+				var msg = "List of Target locations doesn't match length of ids " + JSON.stringify(target);
+				deferred.reject(msg);
+			}
+			else {
+				deferred.reject("No ids to move... ");
+			}
+		}
+		
+		return deferred.promise;
+	},
+
 };
 
   
