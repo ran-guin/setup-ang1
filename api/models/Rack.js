@@ -233,13 +233,15 @@ module.exports = {
     var mirror = options.mirror;
     var unsorted = options.unsorted;
 
-    if (wells) {
+    var Mod = sails.models[model];
+    if (wells && Mod) {
       if (ids.length == wells.length) {
         var promises = [];
+        var idField = Mod.alias('id') || 'id';
         for (var i=0; i<wells.length; i++) {
           var update =  "Update " + model + ", Rack SET  FK_Rack__ID = Rack.Rack_ID "
             + " WHERE Rack.FKParent_Rack__ID =" + target_rack + " AND Rack_Name = '" + wells[i] 
-            + " AND " + model + '_ID = ' + ids[i]; 
+            + "' AND " + idField + ' = ' + ids[i]; 
           promises.push( Record.query_promise(update) );
         }
 
@@ -301,7 +303,6 @@ module.exports = {
     var rack_ids;
     if (rack_id.constructor === Number) { rack_id = rack_id.toString() }
 
-    console.log("\n* Rack " + JSON.stringify(rack_id) + rack_id.constructor);
     if (!rack_id) {
       console.log("No Rack ID supplied");
       deferred.reject('no rack id');
@@ -316,7 +317,6 @@ module.exports = {
       rack_ids = [rack_id];
     }
 
-    console.log("Racks: " + JSON.stringify(rack_ids));
     // Box specific conditions //
     conditions.push("Rack_Type = 'Slot'");
     conditions.push("FKParent_Rack__ID IN (" + rack_ids.join(',') + ')');
@@ -345,13 +345,10 @@ module.exports = {
     }
       
     var query = Record.build_query({tables: tables, fields: fields, left_joins: left_joins, conditions: conditions, group: ['Rack_ID'] , order: order });
-    console.log("boxContents Query: " + query);
 
     Record.query_promise(query)
     .then ( function (data) {
-      console.log("Query: " + query);
-      console.log("Result: " + JSON.stringify(data));
-  
+ 
       var contained = {};
       var available = {};
       for (var i=0; i<data.length; i++) {
