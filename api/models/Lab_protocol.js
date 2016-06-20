@@ -83,7 +83,7 @@ module.exports = {
 					console.log('\n*** call Container.execute_transfer from Lab_protocol Model');
 					promises.push( Container.execute_transfer( ids, data['Transfer'], data['Transfer_Options']) );
 
-					transferred = promises.length;
+					transferred = promises.length; // point to promise index for transfer step (to retrieve appropriate sample ids)
 				}
 				else {
 					console.log("Not a transfer step..." + JSON.stringify(data));
@@ -99,9 +99,53 @@ module.exports = {
 				q.all( promises )
 				.then ( function (Qdata) {
 					// sails.config.messages.push('Saved step...');
-			
-					if (transferred) { deferred.resolve(Qdata[transferred-1]) }
-					else { deferred.resolve(result) }
+
+					if (transferred) { 
+						returnData = Qdata[transferred-1];
+					}
+					else { returnData = result }
+
+					// before returning ... check if samples are to be moved ... 
+					if (data['Move']) {
+						var moveIds = ids;
+						var target_location = data['Move'];
+
+						if (transferred) {
+							// regardless of reset_focus, move should apply to target plates from transfer
+							console.log("\n** Check for target plates in: " + JSON.stringify(Qdata[transferred-1]) );
+							moveIds = Qdata[transferred-1].target_ids;
+							
+							if (!moveIds) {
+								var msg = "Error moving target ids - no target ids retrieved";
+								console.log(msg);
+								sails.config.errors.push(msg);
+							}
+							else {
+								var msg = "MOVE transferred samples: " + moveIds.join(',') + ' TO Loc#(s): ' + target_location;
+								console.log(msg);
+								sails.config.messages.push(msg);
+							}
+						}
+						else {
+							var msg = "MOVE current samples: " + moveIds.join(',') + ' TO Loc#(s): ' + target_location;
+							console.log(msg);
+							sails.config.messages.push(msg);
+						}
+
+						// Move Samples as required
+						Container.relocate(moveIds, target_location)
+						.then (function () {
+							deferred.resolve(returnData);
+						})
+						.catch ( function (err) {
+							deferred.resolve(returnData);  // return successfully, but generate error message for user
+						});
+					}
+					else {
+						console.log("No sample relocation requested");
+						deferred.resolve(returnData);
+					}
+
 				})
 				.catch ( function (Qerr) {
 					// sails.config.warnings.push('There was a glitch somewhere in the step saving process');
@@ -159,7 +203,7 @@ module.exports = {
 				promises.push( 
 					Record.createNew('Prep',{ 
 						Prep_Name : 'Completed Protocol', 
-						Prep_Action: 'Update', 
+						Prep_Action: 'Completed', 
 						FK_Lab_Protocol__ID: lab_protocol_id, 
 						Prep_DateTime : '<now>', 
 						FK_Employee__ID : '<user>'
