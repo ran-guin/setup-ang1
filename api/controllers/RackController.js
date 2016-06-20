@@ -47,7 +47,7 @@ module.exports = {
 		}
 
 		console.log("Add daughter to " + parent + ': ' + name + ' = ' + size);
-		Rack.addSlottedBox(parent, name, size)
+		Rack.add({ parent: parent, name: name, size: size, type: 'Box'})
 		.then ( function (result) {
 			console.log("Added Slotted Box " + JSON.stringify(result));
 			if (result.box && result.slots) {
@@ -60,10 +60,14 @@ module.exports = {
 			else {
 				sails.config.warnings.push("Could not recognize new box/slot feedback");
 			}
+
 			return res.render('customize/private_home');
 		})
 		.catch ( function (err) {
-			return res.json(err); 
+			console.log("Could not add slotted box: " + err);
+
+			sails.config.errors = Record.parse_standard_error(err);
+			return  res.render('customize/private_home'); 
 		})
 	},
 
