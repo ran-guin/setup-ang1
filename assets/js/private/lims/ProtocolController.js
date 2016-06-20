@@ -287,16 +287,15 @@ function protocolController ($scope, $rootScope, $http, $q) {
                     $scope[key] = '<increment>';
                     PlateAttributes[att.id] = $scope[key];
                 }
-                else if (att.model == 'Plate' && $scope.SplitFields[key]) {
+                else if (att.model == 'Plate' && $scope.SplitFields[key] && $scope.SplitFields[key].length ) {
                     PlateAttributes[att.id] = $scope.SplitFields[key];
                     console.log(key + ' : ' + $scope.SplitFields[key]);
                 }
-                else if (att.model == 'Plate') {
+                else if (att.model == 'Plate' && $scope[key] != null && $scope[key].length ) {
                     PlateAttributes[att.id] = $scope[key];
                     console.log(key + ' : ' + $scope[key]);
                 }
-
-                else if (att.model == 'Prep') {
+                else if (att.model == 'Prep' && $scope[key] != null) {
                     PrepAttributes[att.id] = $scope[key];
                     console.log(key + ' = ' + $scope[key]);
                 }
@@ -304,6 +303,8 @@ function protocolController ($scope, $rootScope, $http, $q) {
                     console.log("Invalid Attribute: " + JSON.stringify(att))
                 }
             }
+            console.log("Plate Attribute Data: " + JSON.stringify(PlateAttributes));
+            console.log("Plate Attribute Data: " + JSON.stringify(PrepAttributes));
         }
 
         var status = 'In Process';
@@ -359,6 +360,12 @@ function protocolController ($scope, $rootScope, $http, $q) {
             data['Transfer_Options'] = Map.Options;
             data['Transfer'] = Map.Transfer;
         } 
+
+        var loc = 'location' + $scope.stepNumber;
+        if ( $scope[loc] ) {
+            data['Move'] = $scope.SplitFields[loc] || $scope[loc];
+            console.log("Move Sample(s) to: " + JSON.stringify(data['Move']) );
+        }
 
         console.log("Send: " + JSON.stringify(data));
         console.log("Called: " + url);
@@ -468,12 +475,15 @@ function protocolController ($scope, $rootScope, $http, $q) {
 
         var input = $scope[field];
 
-        if (input && input.match(/,/)) {
+        var trim = new RegExp($scope.stepNumber + '$');
+        var model = field.replace(trim,'');
+
+        var prefix = $scope.Prefix(model);
+            
+        if (input && ( input.match(/,/) || input.match(prefix) ) ) {
             console.log("\n** Split ** " + field + ' : ' + $scope[field]);
             $scope[field + '_split'] = input;
 
-            var prefix = $scope.Prefix(field);
-            
             if (prefix) { 
                 separator = prefix;
             }
@@ -496,7 +506,6 @@ function protocolController ($scope, $rootScope, $http, $q) {
                 }
             }
 
-
             if (prefix && (input_array.length > 1) && (input_array[0] == '')) { input_array.shift() }  // remove first element 
 
             console.log('test: ' + JSON.stringify(input_array) );
@@ -517,6 +526,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
             else {
                 // $scope.errMsg = "# of entered values must be factor of " + $scope.N;
                 $scope[field+'_errors'] = "# of entered values must be factor of " + $scope.N;
+                $scope.errors.push("# of entered values must be factor of " + $scope.N);
                 $scope.formDisabled  = true;
            }
 
@@ -563,7 +573,11 @@ function protocolController ($scope, $rootScope, $http, $q) {
    
             return array;
         }
-        else { console.log('not multiple values...') }
+        else { 
+            console.log('not multiple values...');
+            $scope[field + '_split'] = null;
+            $scope.SplitFields[field] = null;
+        }
 
     }
 
