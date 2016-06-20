@@ -201,6 +201,27 @@ function wellController ($scope, $rootScope, $http, $q ) {
 
     }
 
+    $scope.use_custom_settings  = function use_custom_settings() {
+
+        var volumes = _.pluck($scope.Samples, 'qty');
+        var version = '[mid qty version]';
+
+        var min = _.min(volumes);
+        var max = _.max(volumes);
+
+        $scope.messages.push("Original Volumes Detected: Minimum: " + min + '; Maximum: ' + max );
+
+        if (volumes.length) {
+            $scope.splitX = 3;
+            $scope.pack_wells = 8;
+            $scope.fill_by = 'column';
+
+            $scope.redistribute();
+        }
+
+        $scope.messages.push("Using Custom Data Matrix Sample Distribution Settings " + version);
+    }
+
     // Fill for Samples only ... may not be necessary ... 
     $scope.source_by_Col = function source_by_Col () {
         // $scope.byCol = true;
