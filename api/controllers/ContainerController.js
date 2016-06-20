@@ -235,7 +235,10 @@ module.exports = {
 						return res.render('lims/Container', { Samples : Samples, plate_ids: ids});					
 					})	
 					.catch ( function (err) {
-						return res.json({error : err, attribute: attribute, data: data});
+						var error = err.error || '';
+						console.log("Upload Error" + JSON.stringify(error));
+						sails.config.errors = Record.parse_standard_error(error);
+						return res.render('customize/private_home');
 					});
 				}		
 				
