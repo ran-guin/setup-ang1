@@ -161,7 +161,7 @@ module.exports = {
           .then ( function (result) {
             if (result.length) {
               console.log("R: " + JSON.stringify(result));
-              Scanned['Plate'].push(result[0]['FK_Plate__ID']);   // need to adjust slightly to accept multiple scanned barcodes ... 
+              Scanned['Plate'] = _.pluck(result,'FK_Plate__ID');   // need to adjust slightly to accept multiple scanned barcodes ... 
               deferred.resolve(Scanned);
             }
             deferred.resolve(Scanned);
