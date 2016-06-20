@@ -138,9 +138,13 @@ module.exports = {
 	    .upload({
 	    	maxBytes: 100000
 	    }, function (err, uploadedFiles) {
-			if (err) return res.serverError(err);
+			if (err) {
+				sails.config.errors.push(err);
+				return res.render('customize/private_home');
+			}
 			else if (uploadedFiles.length == 0) {
-				return res.json("Error: No File Uploaded");
+				sails.config.errors.push("no files supplied");
+				return res.render('customize/private_home');
 			}
 			else {
 				// assume only one file for now, but may easily enable multiple files if required... 
