@@ -94,8 +94,15 @@ module.exports = {
 				}
 				else { returnVal = input }
 			}
-			else if (input && input.constructor === String) {
+			else if (input && input.constructor === String)  {
 				returnVal = input.split(/\s*,\s*/);
+			}
+			else if (input && input.constructor === Number ) {
+				var number = input.toString();
+				returnVal = number.split(/\s*,\s*/);
+			}
+			else {
+				console.log("not array or string ? " + input.constructor);
 			}
 		}
 		else if (! input) { console.log("Nothing to cast") }
@@ -233,22 +240,27 @@ module.exports = {
 	    return data;
 	},
 
-	clone : function (table, ids, resetData, options) {
-		console.log("IDS: " + JSON.stringify(ids));
+	clone : function (model, ids, resetData, options) {
 		// ids = Record.cast_to(ids, 'array', 'id');
-		var id_list = ids.join(',');
-		console.log("Cloning: " + id_list);
-		console.log("* RESET: " + JSON.stringify(resetData));
-		console.log("* Options: " + JSON.stringify(options));
 
 		var deferred = q.defer();
 
 		if (! options) { options = {} }
-		var idField = options.id || 'id';
+		if (options.debug) {			
+			console.log("Cloning: " + ids.join(','));
+			console.log("* RESET: " + JSON.stringify(resetData));
+			console.log("* Options: " + JSON.stringify(options));
+		}
 
-		var query = "SELECT * from " + table + " WHERE " + idField + ' IN (' + id_list + ')';	
-		console.log("q: " + query);
-		console.log("\nReset: " + JSON.stringify(resetData));
+		var idField = options.id || 'id';
+		var table = model;
+
+		var Mod = sails.models[model];
+		if (Mod && Mod.tableName) { table = Mod.tableName }
+
+		var query = "SELECT * from " + table + " WHERE " + idField + ' IN (' + ids.join(',') + ')';	
+		
+		console.log("\nReset clone data: " + JSON.stringify(resetData));
 
 		Record.query(query, function (err, result) {
 
@@ -367,6 +379,9 @@ module.exports = {
 	},
 
 	update : function (model, ids, data) {
+		// Wrapper for updating records in database
+		// This also add change history records in database if change_history specified in model attributes.
+
 		console.log("Update " + model + ": " + ids);
 		console.log(JSON.stringify(data));
 
@@ -435,6 +450,9 @@ module.exports = {
 			}
 
 			var promises = [];
+
+			promises.push( Record.preChangeHistory(model, ids, data));
+
 			if (Set.length) {
 				query = query + " SET " + Set.join(',');
 				query = query + " WHERE " + idField + " IN (" + list + ")";
@@ -461,6 +479,8 @@ module.exports = {
 				}
 			}			
 			
+			promises.push(Record.postChangeHistory(model, ids, data));
+
 			console.log(promises.length + ' update queries...');
 
 			q.all( promises )
@@ -561,7 +581,6 @@ module.exports = {
 		.catch ( function (err) {
 			console.log("Error creating record in " + table);
 			deferred.reject("Error creating new " + table + " record(s) : " + err); 
-
 		});
 
 		return deferred.promise;
@@ -600,7 +619,6 @@ module.exports = {
 		else if (value.constructor === String) {
 			if (value.match(/^<user>$/i)) {
 				if (sails.config.payload) { value = sails.config.payload.userid }
-				else { value = '1' }  // testing only  
 				if (debug) console.log("replacing <user> with " + value);
 			}
 			else if (value.match(/^<increment>$/i) ) {
@@ -626,12 +644,6 @@ module.exports = {
 				if (debug) console.log("replacing <today> with " + value);
 				noQuote = 1;
 			}
-			else if (value.match(/^<.*>$/)) {
-				value = value.replace(/^</,'');
-				value = value.replace(/>$/,'');
-				if (debug) { console.log("SQL statement detected: " + value) }
-				noQuote = 1;
-			}
 			else if (value.match(/^<id>$/i)) { 
 				var idField = 'id';
 				if (Mod.alias && Mod.alias('id')) {
@@ -639,8 +651,14 @@ module.exports = {
 				}
 				value = idField;
 			}
+			else if (value.match(/^<.*>$/)) {
+				value = value.replace(/^</,'');
+				value = value.replace(/>$/,'');
+				if (debug) { console.log("SQL statement detected: " + value) }
+				noQuote = 1;
+			}
 
-			console.log("value: " + value);
+			console.log("value: " + JSON.stringify(value));
 			// account for redundant quotes ... 
 			if (value.match(/^\"/) && value.match(/\"$/)) {
 				noQuote = 1;
@@ -651,7 +669,6 @@ module.exports = {
 			value = JSON.stringify(value);
 			noQuote=1;
 		}
-
 
 
 		if (value === null && defaultTo) {
@@ -666,5 +683,112 @@ module.exports = {
 		else {
 			return "\"" + value + "\"";
 		}
-	}
+	},
+
+	parse_standard_error : function (message) {
+        // Convert warning / error messages into more readable format
+        // (if <match> is included in value, then the regexp of the key will be evaluated and the match replaced in the value string)
+        //   eg 'Error creating \\w+' : "<match> - no record created" -> yields "Error creating Employee - no record created" 
+        //
+        var Map = {
+            'Duplicate entry' : "Duplicate entry encountered",
+            'Unknown column'  : "Unrecognized column in database (?) - please inform LIMS administrator",
+            "Error saving \\w+" : "<match>",
+        };
+
+        var strings = Object.keys(Map);
+
+        var errors = [];
+        for (var i=0; i<strings.length; i++) {
+            
+            var test = strings[i];
+            if (Map[strings[i]].match(/<match>/)) {
+                test = new RegExp(test);
+                console.log("Testing regexp :" + test);
+            }
+
+            var found = message.match(test);
+            if (found) {
+                console.log("match found for " + test);
+                var err = Map[strings[i]].replace('<match>', found);
+                errors.push( err );
+            }
+        }
+
+        console.log("Parsed Error: " + message);
+        if (! errors.length) { errors.push(message) }
+        return errors;
+    },
+
+    preChangeHistory : function (model, ids, data) {
+    	// retrieve values before record is updated  ... run in conjunction with postChangeHistory 
+    	var deferred = q.defer();
+
+    	ids = Record.cast_to(ids, 'array');
+    	var fields = Object.keys(data);
+    	var Mod = sails.models[model];
+
+    	if (model && ids && data && Mod && fields.length) {
+    		var track = _.intersection(Mod.track_history, fields);
+
+    		var table = Mod.tableName || model;
+    		var idField = 'id';
+
+    		if (Mod && Mod.alias && Mod.alias('id')) { idField = Mod.alias('id') }
+
+    		if (track && track.length) {
+    			var query = "SELECT " + idField + ', ' + track.join(',') + " FROM " + table + " WHERE " + idField + " IN (" + ids.join(',') + ')';
+    			console.log(query);
+    			Record.query_promise(query)
+    			.then (function (result) {
+    				deferred.resolve(result);
+    			})
+    			.catch ( function (err) {
+ 		   			deferred.reject(err);    				
+    			})
+    		}
+    		else { deferred.resolve() }
+    	}
+    	else { deferred.resolve() }
+
+    	return deferred.promise;
+    },
+
+   postChangeHistory : function (model, ids, data) {
+    	// retrieve values before record is updated  ... run in conjunction with postChangeHistory 
+
+    	var deferred = q.defer();
+
+    	var fields = Object.keys(data);
+    	var Mod = sails.models[model];
+
+    	if (Mod && fields.length) {
+    		var track = _.union(Mod.track_history, fields);
+    		var track_FKs = Mod.FK(track);
+
+    		var table = Mod.tableName || model;
+    		var idField = Mod.alias('id') || 'id';
+
+    		if (track.length && track_FKs) {
+    			if (Mod.FK('table') && track_FKs.length) {
+
+    				if (track_FKs.length < track.length) {
+    					sails.config.warnings.push(table + " missing FK specs for one of history tracking fields: " + track.join(','));
+    				}
+
+
+	    			var query = "SELECT " + idField + ', ' + track_FKs.join(',') + " FROM " + table + " WHERE " + idField + " IN " + ids.join(',');
+    				deferred.resolve(Record.query_promis(query));
+    			}
+    			else {
+    				
+    			}
+    		}
+    		else { deferred.resolve() }
+    	}
+    	else { deferred.resolve() }
+    	
+    	return deferred.promise;	
+    }
+
 };
