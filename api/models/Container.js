@@ -35,6 +35,10 @@ module.exports = {
 		return field;  // return null if no alias defined... 
 	},
 
+	track_history: [
+		'FK_Rack__ID',
+	],
+
 	saveLastPrep : function (plates, prep_id) {
 			var deferred = q.defer();
 			
