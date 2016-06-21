@@ -344,11 +344,43 @@ function wellMapper() {
         var repeat_set = 1;
         var repeat_wells = 1;
 
+        var pack_wells = this.pack_wells;
+        var splitX     = this.splitX;
+
+        if (this.split_mode === 'serial') { 
+            repeat_wells = this.splitX || 1;
+        }
+        else {
+            pack_wells = sources.length; 
+            repeat_set = this.splitX || 1;
+        }
+
+
+        var batches = [];
+        for (var i=0; i<sources.length; ) {
+            var batch = [];
+            for (j=0; j<pack_wells && i<sources.length; j++) {
+                batch.push(i);
+                i++;
+            }
+            batches.push(batch);
+        }
+        var target = 0;
+
+        console.log("\n*** BATCH PROCESSING ");
+        console.log(JSON.stringify(batches));
+
+        console.log("AVAILABLE: ");
+        console.log(JSON.stringify(this.available));
+
+        
+
         var List = {};
         var Static = {};
 
         var options = Object.keys(Target);
 
+        console.log("ORIGINAL PACK " + pack_wells);
         for (var i=0; i<options.length; i++) {
             console.log(i);
             var opt = Target[options[i]];
@@ -363,9 +395,12 @@ function wellMapper() {
                 console.log("options length = " + opt.length);
                 if (this.splitX > 1) {
                     if (this.split_mode === 'serial') {
-                        for (k=0; k<sources.length; k++) {
+                        pack_wells = pack_wells || 1; 
+                        for (k=0; k<sources.length; k=k+pack_wells ) {
                             for (j=0; j<this.splitX; j++) {
-                                List[options[i]].push(opt[j]);
+                                for (var l=0; l<pack_wells; l++) {
+                                    List[options[i]].push(opt[j]);
+                                }
                             }
                         }
                     }
@@ -408,45 +443,17 @@ function wellMapper() {
                 console.log("\n* Static " + options[i] + ' = ' + JSON.stringify(opt));
             }
         }
+        console.log("\n** LIST: " + JSON.stringify(List));
 
         console.log("Lists");
         var lists = Object.keys(List);
         var statics = Object.keys(Static);
 
-        var pack_wells = this.pack_wells;
-        var splitX     = this.splitX;
-
-        if (this.split_mode === 'serial') { 
-            repeat_wells = this.splitX || 1;
-        }
-        else {
-            pack_wells = sources.length; 
-            repeat_set = this.splitX || 1;
-        }
-
-
-        var batches = [];
-        for (var i=0; i<sources.length; ) {
-            var batch = [];
-            for (j=0; j<pack_wells && i<sources.length; j++) {
-                batch.push(i);
-                i++;
-            }
-            batches.push(batch);
-        }
-        var target = 0;
-
-        console.log("\n*** BATCH PROCESSING ");
-        console.log(JSON.stringify(batches));
-
-        console.log("AVAILABLE: ");
-        console.log(JSON.stringify(this.available));
-
         console.log(this.split_mode + " looping " + batches.length + "x" 
             + splitX + ' x ' +
             + batches[0].length + 'x'
             + repeat_wells);
-
+        console.log("Pack x " + pack_wells);
 
         var SourceMap = {};        
         var Transfer = [];
