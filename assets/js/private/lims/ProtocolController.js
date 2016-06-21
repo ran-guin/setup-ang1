@@ -185,11 +185,11 @@ function protocolController ($scope, $rootScope, $http, $q) {
             condition : condition,
         };
 
-        $http.post('/search', searchData)
+        $http.post('/Record/search', searchData)
         .then ( function (result) {
             console.log("RESULT: " + JSON.stringify(result));
             $scope.valid_plate_sets = [];
-            if (result.data[0][0].PS) {
+            if (result.data && result.data[0] && result.data[0][0]) {
                 for (var i=0; i<result.data[0].length; i++) {
                     $scope.valid_plate_sets.push(result.data[0][i].PS);
                 }
