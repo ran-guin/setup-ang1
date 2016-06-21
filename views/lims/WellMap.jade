@@ -40,9 +40,11 @@ block content
                     b &nbsp; Transfer &nbsp; 
 
                 div.col-sm-4
-                  input.input-lg(type='text' placeholder=' -- Transfer Qty --', ng-model='transfer_qty' ng-blur="redistribute()" size='16' ng-disabled="transfer_type=='Pre-Print'")
+                  input.input-lg#transfer_qty(type='text' placeholder=' -- Transfer Qty --', ng-model='transfer_qty' ng-blur="redistribute()" size='16' ng-disabled="transfer_type=='Pre-Print'")
                   span &nbsp;
                   span.lookup(id='Lookup-units' ng-init="loadLookup('units','','units')")
+                  br
+                  span(style='color: red' ng-show='transfer_qty_errors || units_errors') Transfer Qty + Units Required
 
                 div.col-sm-4
                   b Into: 
@@ -105,10 +107,13 @@ block content
                   div
                     input.input-lg(type='text' name='target_rack' size=12 ng-model='target_rack' ng-change="validate_target(); redistribute();" placeholder='-- Scan Loc# --')
                 div.col-sm-4 &nbsp;
-                  button.btn.btn-lg.btn-primary(type='button' ng-click="redistribute(); execute_transfer();") Distribute
-                  span &nbsp; &nbsp;
+                  button.btn.btn-lg.btn-primary(type='button' ng-click="redistribute(); execute_transfer();" ng-show="form_validated") Distribute
+                  p &nbsp;
                   input(type='radio' ng-click="use_custom_settings()") 
                   span &nbsp; Custom x 3 sub-aliquot
+                  br
+                  input(type='radio' ng-click="set_to_default(); redistribute()") 
+                  span &nbsp; Reset Defaults
               
               p &nbsp;
 
