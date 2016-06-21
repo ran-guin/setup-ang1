@@ -16,10 +16,17 @@ form(role='form' method='post' action="/Lab_protocol/run" enctype='form-data')
           - defaultProtocol = Samples[0].last_protocol_id
         - init = "loadLookup('lab_protocol','','Select Protocol',\"(Container_format IS NULL OR Container_format = '" + Samples[0].container_format_id + "') AND ( Sample_type IS NULL OR Sample_type = '" + Samples[0].sample_type_id + "')\")";
 
-
+  
         span.lookup(id='Lookup-lab_protocol' ng-init="#{init}")
       td(style='width:30%; vertical-align:middle')
         button.btn.btn-lg.btn-success(type='submit' ng-disabled=0) Run Protocol 
+        p &nbsp; {{ plate_set }}
+        input(type='radio' name='plate_set' value='new') 
+        span &nbsp; New
+        div(ng-repeat='set in valid_plate_sets')
+          input(type='radio' name='plate_set' value='{{set}}' ) 
+          span &nbsp; Set # {{ set }}
+          br
 
 form(role='form' method = 'post' action= "/transfer")
   input(type = 'hidden' name='Samples' value='{{ Samples }}')
