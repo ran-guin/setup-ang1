@@ -19,13 +19,13 @@ function protocolController ($scope, $rootScope, $http, $q) {
             else {
                 $scope.Samples = config['Samples'] || {};   // array of sample info                
             }
+
+            $scope.load_Sample_info();
+            console.log("loaded");
+            $scope.last_step = config['last_step'];
  
             $scope.load_Sample_info();
-
-            $scope.last_step = config['last_step'];
-
-            $scope.load_Sample_info();
-      }
+        }
 
         if (config && config['Steps']) { 
             console.log("loaded protocol steps");
@@ -33,6 +33,17 @@ function protocolController ($scope, $rootScope, $http, $q) {
             $scope.steps = $scope.Steps.length;
             $scope.protocol = config['protocol'];
 
+            $scope.plate_set = config['plate_set'];
+
+            console.log("plate set " + $scope.plate_set);
+
+            if ($scope.plate_set === 'new') {
+                console.log("Generate New plate set...");
+                $scope.save_plate_set();
+            }
+            else { 
+                console.log("Retrieved existing plate set " + $scope.plate_set);
+            }
 
             if ($scope.last_step && $scope.last_step.protocol && $scope.protocol && $scope.last_step.protocol == $scope.protocol.name) {
                 console.log("noted last step: " + JSON.stringify($scope.last_step));
@@ -110,6 +121,12 @@ function protocolController ($scope, $rootScope, $http, $q) {
 
             $scope.listExample = $scope.listExamples[$scope.list_mode];
         }
+        else {
+            // No protocol loaded ... 
+            // $scope.plate_set = 'new';  // set default .. 
+
+            $scope.get_plate_sets();
+        }
 
         $scope.LoadPoints = [{ Id: '1', Text: 'loadPointA' },{ Id: '2', Text: 'loadPointB' }];        
         $scope.cargo = {
@@ -151,6 +168,68 @@ function protocolController ($scope, $rootScope, $http, $q) {
 
         // console.log("Samples: " + $scope.plate_list);
     }
+
+    $scope.set_plate_set = function (set) {
+        $scope.plate_set = set;
+    }
+
+    $scope.get_plate_sets = function () {
+
+        var count = $scope.plate_ids.length;
+        console.log("using " + count + ' ids');
+
+        var condition = " FK_Plate__ID IN " + $scope.plate_ids.join(',') + ") GROUP BY Plate_Set_Number HAVING COUNT(*) = " + count;
+        
+        var searchData = {
+            scope: { 'Plate_Set' : [ 'DISTINCT Plate_Set_Number as PS'] },
+            condition : condition,
+        };
+
+        $http.post('Record/search', searchData)
+        .then ( function (result) {
+            $scope.valid_plate_sets = [];
+            for (var i=0; i<result.data[0].length; i++) {
+                $scope.valid_plate_sets.push(result.data[0][i].PS);
+            }
+            console.log("GOT SETS: " + JSON.stringify($scope.valid_plate_sets));
+        })
+        .catch ( function (err) { 
+            console.log("Error getting sets: " + err);
+        }); 
+    }
+
+    $scope.save_plate_set = function (parent) {
+
+        $http.post('Record/search', { scope : { 'Plate_Set' : [ 'Max(Plate_Set_Number) as MaxPS'] }})
+        .then ( function (result) {
+            if (result.data && result.data[0] && result.data[0][0]) {
+                var maxPS = result.data[0][0].MaxPS || 1
+                console.log("GOT " + JSON.stringify(maxPS));
+
+                var data = [];
+                for (var i=0; i<$scope.Samples.length; i++) {
+                    var record = { FK_Plate__ID : $scope.Samples[0].id, Plate_Set_Number: maxPS+1 , FKParent_Plate_Set__Number: parent }    
+                    data.push(record);
+                }
+                
+                $http.post("Record/save", { model: 'plate_set', data: data} )
+                .then (function (result) {
+                    $scope.plate_set = maxPS + 1;
+                    console.log("SAVED Plate Set: " + $scope.plate_set);
+                })
+                .catch ( function (err) {
+                    $scope.errors.push("Error saving plate set");
+                    console.log("Error saving plate set");
+                })
+
+
+            }
+            else { console.log('max ps result in incorrect format') }
+        })
+        .catch ( function (err) {
+            console.log("Error retrieving max plate set");
+        });
+    }    
 
     $scope.forward = function forward(action) {
 
@@ -263,11 +342,13 @@ function protocolController ($scope, $rootScope, $http, $q) {
 
         $scope['plate_list_split'] = $scope.plate_list;  // test.. should be reverse split
         console.log("split Data to " + $scope.N + ' values');
+
         var PlateData = $scope.splitData(PlateInfo, $scope.N, map);
 
         console.log("load " + $scope.N + ' plate ids...');
         for (var i=0; i<$scope.N; i++) {
             PlateData[i]['FK_Plate__ID'] = $scope.Samples[i].id;
+            PlateData[i]['Plate_Set_Number'] = $scope.plate_set;
         }       
 
         console.log("split " + $scope.input);
@@ -398,6 +479,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
                         console.log("Focus on " + result.Samples.length + " new Sample records ");
 
                         $scope.Samples = result.Samples;
+                        $scope.save_plate_set( $scope.plate_set );
                         $scope.load_Sample_info();
                         /*
                         var promiseResults = result;
