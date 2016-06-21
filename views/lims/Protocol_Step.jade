@@ -102,14 +102,15 @@ block content
 
                             // - fld = '_' + fld;
 
+                            - alias = alias.replace(/\_/g, ' ');
+
                             if fType === 'hidden' 
                               input(type='hidden' name='#{fld}#{Snum}' id='#{fld}#{Snum}' ng-model='#{fld}#{Snum}' force=1)
                             else 
-
                               div.form-group
-                                label.col-sm-2.control-label(for='#{fld}#{Snum}') #{alias}
-                                div.col-sm-4
-                                  input.input-lg(type='#{fType}' name="#{fld}#{Snum}" ng-required="#{mandatory}" placeholder = "Enter #{alias}" id='#{fld}#{Snum}' ng-model='#{fld}#{Snum}' default='#{def}' force=1 data-error="You must enter a valid quantity" ng-blur="splitField('#{fld}#{Snum}')")
+                                label.col-sm-2.control-label(for='#{fld}#{Snum}') #{alias}:
+                                div.col-sm-6
+                                  input.input-lg.form-control(type='#{fType}' name="#{fld}#{Snum}" ng-required="#{mandatory}" placeholder = "-- Enter #{alias} --" id='#{fld}#{Snum}' ng-model='#{fld}#{Snum}' default='#{def}' force=1 data-error="You must enter a valid quantity" ng-blur="splitField('#{fld}#{Snum}')")
 
                                   div.help-block.with-errors(style='color:red' ng-show="form#{Snum}.#{fld}#{Snum}.$invalid" ng-model="#{fld}#{Snum}_errors") #{alias} is Mandatory
                                 if fld.match(/_qty/)
