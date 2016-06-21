@@ -24,12 +24,13 @@ form(role='form' method='post' action="/Lab_protocol/run" enctype='form-data')
         input(type='radio' name='plate_set' ng-model='plate_set' value='new') 
         span &nbsp; Create New Set 
         br
-        a(href='#' onclick='return false' ng-click="show('existing_list')" ng-show="!show['existing_list']") Retrieve Existing Set
-        a(href='#' onclick='return false' ng-click="hide('existing_list')" ng-show="show['existing_list']") Hide Set(s)
-        div(ng-repeat='set in valid_plate_sets' ng-show="show['existing_list']")
-          input(type='radio' name='plate_set'  ng-model='plate_set' value='{{set}}' ) 
-          span &nbsp; Retrieve Set # {{ set }}
-          br
+        div(ng-show="valid_plate_sets.length")
+          a(href='#' onclick='return false' ng-click="hide('existing_list')" ng-show="show['existing_list']") Hide Set(s)
+          a(href='#' onclick='return false' ng-click="show('existing_list')" ng-show="!show['existing_list']") Retrieve Existing Set
+          div(ng-repeat='set in valid_plate_sets' ng-show="show['existing_list']")
+            input(type='radio' name='plate_set'  ng-model='plate_set' value='{{set}}' ) 
+            span &nbsp; Retrieve Set # {{ set }}
+            br
 
 form(role='form' method = 'post' action= "/transfer")
   input(type = 'hidden' name='Samples' value='{{ Samples }}')
