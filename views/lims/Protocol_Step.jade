@@ -11,7 +11,7 @@ block content
     //    - Steps      (array of hashes)
     //    - attributes (array of hashes)
 
-    - var configParams = { protocol: protocol, plate_ids: plate_ids, Samples: Samples, Steps : Steps, Attributes: attributes, last_step: last_step};
+    - var configParams = { protocol: protocol, plate_ids: plate_ids, plate_set: plate_set, Samples: Samples, Steps : Steps, Attributes: attributes, last_step: last_step};
 
     - var init = "initialize(" + JSON.stringify(configParams) + ")";
 
@@ -26,6 +26,7 @@ block content
         div(ng-controller="WellController" ng-init="#{init}")
           div(ng-controller='ProtocolController' ng-init="#{init}" ngcloak)
             
+            h3 Sample Set: # {{ plate_set }}
             include ActiveSamples.jade
             
             br 
