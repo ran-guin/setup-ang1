@@ -76,7 +76,8 @@ module.exports.routes = {
   'GET /home': 'UserController.home',
 
   /* Generic Record control options */
-  'POST /search' : 'RecordController.search',
+  'POST /Record/search' : 'RecordController.search',
+  'GET /Record/search' : 'RecordController.search',
 
   'GET /record/list/:model' : 'RecordController.list',   
   'POST /record/list' : 'RecordController.list',    
