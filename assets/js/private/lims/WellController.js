@@ -253,13 +253,21 @@ function wellController ($scope, $rootScope, $http, $q ) {
 
         $scope.messages.push("Original Volumes Detected: Minimum: " + min + '; Maximum: ' + max );
 
-        if (volumes.length) {
-            $scope.splitX = 3;
+        if (volumes.length && min > 1.0 ) {
+            $scope.splitX = 5;
             $scope.pack_wells = 8;
             $scope.fill_by = 'column';
             $scope.split_mode = 'serial';
-
+            $scope.transfer_qty = "200,200,500,500,100";
             $scope.redistribute();
+        }
+        else {
+            $scope.splitX = 4;
+            $scope.pack_wells = 8;
+            $scope.fill_by = 'column';
+            $scope.split_mode = 'serial';
+            $scope.transfer_qty = "200,200,500,100";
+            $scope.redistribute();            
         }
 
         $scope.messages.push("Using Custom Data Matrix Sample Distribution Settings " + version);
