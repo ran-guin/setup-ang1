@@ -393,10 +393,13 @@ module.exports = {
 	},
 
 	search : function (req, res) {
+
 		var string = req.body.search;
 		var scope = req.body.scope;
+		var condition = req.body.condition || {}
 
-		if (! scope ) { 
+		if (! scope ) {
+			// Generic Search 
 			scope = { 
 				'user' : ['email', 'username'] 
 			};
@@ -404,10 +407,16 @@ module.exports = {
 
 		var deferred = q.defer();
 
+		var promises = [];
+
 		var tables = Object.keys(scope);
 		for (var i=0; i< tables.length; i++) {
 			var fields = scope[tables[i]];
 			var query = "SELECT " + fields.join(',') + " FROM " + tables[i];
+			
+			var condition = condition[tables[i]];
+			if (condition) { query = query + " WHERE " + condition }
+
 			promises.push( Record.query_promise(query));
 		}
 
@@ -424,8 +433,16 @@ module.exports = {
 	save : function (req, res) {
 		var body = req.body;
 
-		console.log("SAVE BODY: " + body);
-		return res.json(body);
+		var model = req.param('model') || body.model;
+		var data  = body.data;
+
+		Record.createNew(model, data)
+		.then ( function (result ) {
+			return res.json(result);
+		})
+		.catch ( function (err) {
+			return res.json(err);
+		});
 	}
 	
 };
