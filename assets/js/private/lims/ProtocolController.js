@@ -25,9 +25,10 @@ function protocolController ($scope, $rootScope, $http, $q) {
             $scope.last_step = config['last_step'];
  
             $scope.load_Sample_info();
+            $scope.valid_plate_sets = [];
         }
 
-        if (config && config['Steps']) { 
+        if (config && config['Steps'] && config['protocol']) { 
             console.log("loaded protocol steps");
             $scope.Steps = config['Steps'];
             $scope.steps = $scope.Steps.length;
@@ -184,13 +185,16 @@ function protocolController ($scope, $rootScope, $http, $q) {
             condition : condition,
         };
 
-        $http.post('Record/search', searchData)
+        $http.post('/search', searchData)
         .then ( function (result) {
+            console.log("RESULT: " + JSON.stringify(result));
             $scope.valid_plate_sets = [];
-            for (var i=0; i<result.data[0].length; i++) {
-                $scope.valid_plate_sets.push(result.data[0][i].PS);
+            if (result.data[0][0].PS) {
+                for (var i=0; i<result.data[0].length; i++) {
+                    $scope.valid_plate_sets.push(result.data[0][i].PS);
+                }
             }
-            console.log("GOT SETS: " + JSON.stringify($scope.valid_plate_sets));
+            console.log("Retrieved SET: " + JSON.stringify($scope.valid_plate_sets));
         })
         .catch ( function (err) { 
             console.log("Error getting sets: " + err);
@@ -199,15 +203,15 @@ function protocolController ($scope, $rootScope, $http, $q) {
 
     $scope.save_plate_set = function (parent) {
 
-        $http.post('Record/search', { scope : { 'Plate_Set' : [ 'Max(Plate_Set_Number) as MaxPS'] }})
+        $http.post('/Record/search', { scope : { 'Plate_Set' : [ 'Max(Plate_Set_Number) as MaxPS'] }})
         .then ( function (result) {
-            if (result.data && result.data[0] && result.data[0][0]) {
+           if (result.data && result.data[0] && result.data[0][0]) {
                 var maxPS = result.data[0][0].MaxPS || 1
-                console.log("GOT " + JSON.stringify(maxPS));
+                console.log("SAVE SET " + JSON.stringify(maxPS));
 
                 var data = [];
                 for (var i=0; i<$scope.Samples.length; i++) {
-                    var record = { FK_Plate__ID : $scope.Samples[0].id, Plate_Set_Number: maxPS+1 , FKParent_Plate_Set__Number: parent }    
+                    var record = { FK_Plate__ID : $scope.Samples[i].id, Plate_Set_Number: maxPS+1 , FKParent_Plate_Set__Number: parent }    
                     data.push(record);
                 }
                 
@@ -215,6 +219,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
                 .then (function (result) {
                     $scope.plate_set = maxPS + 1;
                     console.log("SAVED Plate Set: " + $scope.plate_set);
+                    $scope.valid_plate_sets.push($scope.plate_set);
                 })
                 .catch ( function (err) {
                     $scope.errors.push("Error saving plate set");
@@ -347,7 +352,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
         console.log("load " + $scope.N + ' plate ids...');
         for (var i=0; i<$scope.N; i++) {
             PlateData[i]['FK_Plate__ID'] = $scope.Samples[i].id;
-            PlateData[i]['Plate_Set_Number'] = $scope.plate_set;
+            PlateData[i]['FK_Plate_Set__Number'] = $scope.plate_set;
         }       
 
         console.log("split " + $scope.input);
