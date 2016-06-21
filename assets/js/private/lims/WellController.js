@@ -17,6 +17,8 @@ function wellController ($scope, $rootScope, $http, $q ) {
 
         console.log("loaded Well Controller");
         // console.log("CONFIG: " + JSON.stringify(Config));
+        
+        $scope.Config = Config;
 
         $scope.Samples = Config['Samples'] || [];
         $scope.plate_ids = Config['plate_ids'];
@@ -28,7 +30,7 @@ function wellController ($scope, $rootScope, $http, $q ) {
         $scope.target  = Config['Target'] || {};
         $scope.options = Config['Options'];
         $scope.sizes   = Config['sizes'];
-        
+
         //$scope.source_size = Config['size'] || $scope.sizes[0];
         if (Config['target_size']) {
             // Transfer UI 
@@ -42,12 +44,8 @@ function wellController ($scope, $rootScope, $http, $q ) {
         $scope.Max_Row = $scope.Max_Row || 'A';
         $scope.Max_Col = $scope.Max_Col || 1;
 
-        $scope.fill_by = Config['fill_by'] || 'row';
-        $scope.splitX   = Config['Split'] || 1;
-        $scope.pack_wells   = Config['pack'] || 0;   // applicable only for splitting with parallel mode (if N wells pipetted together)
-        $scope.split_mode    = Config['mode'] || 'parallel';  // serial or parallel...appliable only for split (eg A1, A1, A2, A2... or A1, A2... A1, A2...)
-        $scope.transfer_type = Config['transfer_type'] || 'Aliquot';
-        
+        $scope.set_to_default();
+     
         $scope.splitExamples = { 
             'serial-row' : "eg A1, A1, A2, A2, B1, B1, B2, B2",
             'serial-column' : "eg A1, A1, B1, B1, A2, A2, B2, B2",
@@ -80,7 +78,39 @@ function wellController ($scope, $rootScope, $http, $q ) {
         console.log("SIZES: " + JSON.stringify($scope.sizes));
 
         console.log("INIT Map");
-        $scope.redistribute();
+        $scope.form_validated = false;
+        // $scope.redistribute();
+    }
+
+    $scope.validate_Form = function validated_form() {
+        
+        if (! $scope.transfer_qty) { 
+            $scope.transfer_qty_errors = true;
+            document.getElementById('transfer_qty').style = "border-color: red";
+
+        }
+        else { 
+            $scope.transfer_qty_errors = false
+            document.getElementById('transfer_qty').style = "border-color: green";
+        }
+
+        if ( $scope.units_label && $scope.units_id && $scope.units_label !== '?') { 
+            $scope.units_errors = false;
+            console.log("GOTTEN " + $scope.units_label + ' AND ' + $scope.units_id);
+            document.getElementById('units-lookup').style = "border-color: green";
+       }
+        else { 
+            $scope.units_errors = true;
+            console.log("MISSING " + $scope.units_label + ' OR  ' + $scope.units_id);
+            document.getElementById("units-lookup").style = "border-color: red";
+        }
+
+
+        if ($scope.transfer_qty_errors || $scope.units_errors) {
+            $scope.form_validated = false ;
+        }
+        else { $scope.form_validated = true }
+
     }
 
     $scope.reset_pack_mode = function reset_pack_mode () {
@@ -133,6 +163,8 @@ function wellController ($scope, $rootScope, $http, $q ) {
         $scope.reset_split_mode();
         $scope.reset_pack_mode();
         
+        $scope.validate_Form();
+
         console.log("Target Samples: " + $scope.N * $scope.splitX);
         console.log("Target Boxes: " + $scope.N_boxes);
 
@@ -199,6 +231,16 @@ function wellController ($scope, $rootScope, $http, $q ) {
             console.log("Error loading wells");
         })
 
+    }
+
+    $scope.set_to_default = function set_to_default() {
+
+        $scope.fill_by = $scope.Config['fill_by'] || 'row';
+        $scope.splitX   = $scope.Config['Split'] || 1;
+        $scope.pack_wells   = $scope.Config['pack'] || 0;   // applicable only for splitting with parallel mode (if N wells pipetted together)
+        $scope.split_mode    = $scope.Config['mode'] || 'parallel';  // serial or parallel...appliable only for split (eg A1, A1, A2, A2... or A1, A2... A1, A2...)
+        $scope.transfer_type = $scope.Config['transfer_type'] || 'Aliquot';
+   
     }
 
     $scope.use_custom_settings  = function use_custom_settings() {
