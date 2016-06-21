@@ -15,6 +15,18 @@ app.controller('SharedController',
 
         $scope.reset_messages();
 
+        $scope.hide = {};
+        $scope.show = {};
+        $scope.hide = function (name) {
+            $scope.hide[name] = true;
+            $scope.show[name] = false;
+        }
+
+        $scope.show = function (name) {
+            $scope.hide[name] = false;
+            $scope.show[name] = true;
+        }
+
         // Automatically generate timestamp attribute along with standard attributes for lastMonth & nextMonth //
 
         var start = new Date();
