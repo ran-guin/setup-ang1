@@ -405,6 +405,7 @@ module.exports = {
 			};
 		}
 
+		console.log("Condition: " + JSON.stringify(condition));
 		var deferred = q.defer();
 
 		var promises = [];
@@ -414,9 +415,10 @@ module.exports = {
 			var fields = scope[tables[i]];
 			var query = "SELECT " + fields.join(',') + " FROM " + tables[i];
 			
-			var condition = condition[tables[i]];
-			if (condition) { query = query + " WHERE " + condition }
+			if (condition &&  condition.constructor === Object && condition[tables[i]] )  { query = query + " WHERE " + condition[tables[i]] }
+			else if (condition && condition.constructor === String) { query = query + " WHERE " + condition }
 
+			console.log("\n** Search: " + query);
 			promises.push( Record.query_promise(query));
 		}
 
