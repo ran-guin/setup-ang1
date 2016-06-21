@@ -215,6 +215,7 @@ function wellController ($scope, $rootScope, $http, $q ) {
             $scope.splitX = 3;
             $scope.pack_wells = 8;
             $scope.fill_by = 'column';
+            $scope.split_mode = 'serial';
 
             $scope.redistribute();
         }
