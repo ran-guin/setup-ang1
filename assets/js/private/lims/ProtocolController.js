@@ -123,8 +123,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
         }
         else {
             // No protocol loaded ... 
-            // $scope.plate_set = 'new';  // set default .. 
-
+            $scope.plate_set = 'new';  // set default .. 
             $scope.get_plate_sets();
         }
 
@@ -178,7 +177,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
         var count = $scope.plate_ids.length;
         console.log("using " + count + ' ids');
 
-        var condition = " FK_Plate__ID IN " + $scope.plate_ids.join(',') + ") GROUP BY Plate_Set_Number HAVING COUNT(*) = " + count;
+        var condition = " FK_Plate__ID IN (" + $scope.plate_ids.join(',') + ") GROUP BY Plate_Set_Number HAVING COUNT(*) = " + count;
         
         var searchData = {
             scope: { 'Plate_Set' : [ 'DISTINCT Plate_Set_Number as PS'] },
