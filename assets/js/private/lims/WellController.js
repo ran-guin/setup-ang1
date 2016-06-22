@@ -84,7 +84,7 @@ function wellController ($scope, $rootScope, $http, $q ) {
 
     $scope.validate_Form = function validated_form() {
         
-        if (! $scope.transfer_qty) { 
+        if (! $scope.transfer_qty && $scope.transfer_type==='Aliquot') { 
             $scope.transfer_qty_errors = true;
             document.getElementById('transfer_qty').style = "border-color: red";
 
@@ -96,13 +96,16 @@ function wellController ($scope, $rootScope, $http, $q ) {
 
         if ( $scope.units_label && $scope.units_id && $scope.units_label !== '?') { 
             $scope.units_errors = false;
-            console.log("GOTTEN " + $scope.units_label + ' AND ' + $scope.units_id);
             document.getElementById('units-lookup').style = "border-color: green";
-       }
-        else { 
+        }
+        else if ($scope.transfer_type === 'Aliquot') { 
             $scope.units_errors = true;
             console.log("MISSING " + $scope.units_label + ' OR  ' + $scope.units_id);
             document.getElementById("units-lookup").style = "border-color: red";
+        }
+        else {
+            $scope.units_errors = false;
+            document.getElementById("units-lookup").style = "border-color: green";            
         }
 
 
