@@ -52,30 +52,71 @@ describe('Record', function() {
     });
 
     describe('* preChangeHistory', function () {
-	it('invalid table', function () {
-		var promises = [];
-		promises.push( Record.preChangeHistory('ABCD',1,{}) );
-		promises.push( Record.preChangeHistory('user',1,{name: 'Ran'}) );
-		promises.push( Record.preChangeHistory('container',1,{'FK_Rack__ID': 1}) );
+		it('invalid table', function () {
+			var promises = [];
+			promises.push( Record.preChangeHistory('ABCD',1,{}) );
+			promises.push( Record.preChangeHistory('user',1,{name: 'Ran'}) );
+			promises.push( Record.preChangeHistory('container',1,{'FK_Rack__ID': 1}) );
 
-		q.all(promises) 
-		.then ( function (results) {
-			assert.equal(null, result[0]);
-			assert.equal(null, result[1]);
-			assert.equal(1, result[2].length);
-			assert.equal(1, result[2][0].FK_Rack__ID);
+			q.all(promises) 
+			.then ( function (results) {
+				assert.equal(null, result[0]);
+				assert.equal(null, result[1]);
+				assert.equal(1, result[2].length);
+				assert.equal(1, result[2][0].FK_Rack__ID);
+			});
 		});
-	});
 
-	it('grab original data', function () {
-		var promises = [];
-		promises.push( Record.preChangeHistory('container',1,{'FK_Rack__ID': 1}) );
+		it('grab original data', function () {
+			var promises = [];
+			promises.push( Record.preChangeHistory('container',1,{'FK_Rack__ID': 1}) );
 
-		q.all(promises) 
-		.then ( function (results) {
-			assert.equal(1, result[0][0].FK_Rack__ID);
+			q.all(promises) 
+			.then ( function (results) {
+				assert.equal(1, result[0][0].FK_Rack__ID);
+			});
 		});
-	});
+    });
+
+    describe('* parseMetaFields', function () {
+    	
+    	it('standard fields', function () {
+    		Record.parseMetaFields('lab_protocol',['name','id','status'])
+    		.then ( function (parsed) { 
+    			assert.equal('name,id,status', parsed.fields.join(','));
+    			assert.equal(1, parsed.id_index);
+	    		console.log('Parsed Fields: ' + JSON.stringify(parsed));
+    		})
+    		.catch ( function (err) {
+    			console.log("Error: " + err);
+    		});
+    	});
+
+    	it('alias fields', function () {
+    		Record.parseMetaFields('container',['id','target_format'])
+    		.then (function (parsed) {
+	    		assert.equal('Plate_ID,FK_Plate_Format__ID', parsed.fields.join(','))
+    			assert.equal(0, parsed.id_index)
+	    		console.log('Parsed Attributes: ' + JSON.stringify(parsed));
+    		})
+    		.catch ( function (err) {
+    			console.log("Error: " + err);
+    		});
+    	});
+
+    	it('attributes fields', function () {
+    		Record.parseMetaFields('container',['Matrix_Barcode'])
+    		.then (function (parsed) {
+	    		assert.equal('Matrix_Barcode', parsed.attributes[0].name);
+	    		assert.equal('66', parsed.attributes[0].id);
+    			assert.equal(null, parsed.id_index)
+    			console.log('Parsed: ' + JSON.stringify(parsed));
+    		})
+    		.catch ( function (err) {
+    			console.log("Error: " + err);
+    		});
+    	});
+
     });
 });
 

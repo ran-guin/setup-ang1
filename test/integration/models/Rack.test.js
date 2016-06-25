@@ -7,7 +7,7 @@ describe('Rack', function() {
 
 		it('new racks', function () {
 			var parent = 7;
-			Rack.add({parent: 7, type: 'Box', name: 'B1'})
+			Rack.add({parent: 7, type: 'Box'})
 			. then (function (result) {
 				console.log("TEST created rack: " + JSON.stringify(result));
 			})
