@@ -445,7 +445,50 @@ module.exports = {
 		.catch ( function (err) {
 			return res.json(err);
 		});
-	}
-	
+	},
+
+	parseMetaFields : function (req, res) {
+		var body = req.body;
+
+		if (!body) { body = {} }
+		var model   = body.model || req.param('model') ;
+		var headers = body.headers || req.param('headers').split(',');
+
+		console.log("Parse " + model + ' : ' + JSON.stringify(headers) );
+
+		var parsedFields = Record.parseMetaFields(model, headers)
+		.then ( function (result) {
+			console.log("parsed meta fields ");
+			return res.json(result);
+		})
+		.catch ( function (err) {
+			console.log("ERROR PARSING: " + err);
+			return res.json(err);
+		});
+	},
+
+	uploadData : function (req, res) {
+		var body = req.body;
+
+		var model   = body.model;
+		var headers = body.headers;
+		var data    = body.data;
+
+		console.log("UPLOAD DATA");
+		console.log("model : " + model);
+		console.log("headers: " + JSON.stringify(headers));
+		console.log("data: " + JSON.stringify(data));
+
+		Record.uploadData(model, headers, data)
+		.then ( function (result) {
+			sails.config.messages.push("uploaded");
+			console.log("Uploaded");
+		})
+		.catch (function (err) {
+			console.log("Error uploading: " + err);
+			sails.config.errors.push(err);
+			return res.render('customize/private_home');
+		});
+	},
 };
 
