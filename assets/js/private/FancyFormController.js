@@ -63,7 +63,7 @@ app.controller('FancyFormController',
             var values = [];
             var splitField;  // get from current split fields .. 
 
-            for (var i=0; i<Sample.length; i++) {                      
+            for (var i=0; i<Samples.length; i++) {                      
                 var orig_units = Samples[index].qty_units;
                 var new_units = $scope[field + '_units'];
 
