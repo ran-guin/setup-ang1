@@ -120,6 +120,11 @@ module.exports.routes = {
   'POST /alDente_protocol' : 'Remote_login.protocol',
   
   'POST /uploadMatrix' : 'ContainerController.uploadMatrix',
+  'POST /uploadFile' : 'AttributeController.uploadAttributes',
+  'POST /parseMetaFields' : 'RecordController.parseMetaFields',
+  'GET /parseMetaFields' : 'RecordController.parseMetaFields',
+  'POST /uploadData' : 'RecordController.uploadData',
+
   'POST /transfer' : 'ContainerController.transfer',
 
   'GET /xfer' : 'ContainerController.transfer',  
