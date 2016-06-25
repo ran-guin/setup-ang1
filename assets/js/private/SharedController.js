@@ -11,6 +11,10 @@ app.controller('SharedController',
             $scope.messages = [];
             $scope.warnings = [];
             $scope.errors   = [];
+
+            $scope.repeat_warnings = {};
+            $scope.repeat_errors = {};
+            $scope.repeat_messages = {};
         }
 
         $scope.reset_messages();
@@ -51,6 +55,41 @@ app.controller('SharedController',
             $scope.$apply();
         }, update_seconds*1000);
    
+        $scope.message = function (msg) {
+            var repeat = $scope.messages.indexOf(msg);
+            if (repeat >= 0) {
+                if ( $scope.repeat_messages[repeat] ) { $scope.repeat_messages[repeat]++ }
+                else { $scope.repeat_messages[repeat] = 2 }
+            }
+            else {
+                $scope.messages.push(msg);
+            }
+            console.log("Angular Message: " + msg);
+        }
+
+        $scope.warning = function (msg) {
+            var repeat = $scope.warnings.indexOf(msg);
+            if (repeat >= 0) {
+                if ( $scope.repeat_warnings[repeat] ) { $scope.repeat_warnings[repeat]++ }
+                else { $scope.repeat_warnings[repeat] = 2 }
+            }
+            else {
+                $scope.warnings.push(msg);
+            }
+            console.log("Angular Warning: " + msg);
+        }
+        
+        $scope.error = function (msg) {
+            var repeat = $scope.errors.indexOf(msg);
+            if (repeat >= 0) {
+                if ( $scope.repeat_errors[repeat] ) { $scope.repeat_errors[repeat]++ }
+                else { $scope.repeat_errors[repeat] = 2 }
+            }
+            else {
+                $scope.errors.push(msg);
+            }
+            console.log("Angular Message: " + msg);
+        }
 
         $scope.parse_messages = function ( result ) {
 
