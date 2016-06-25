@@ -101,7 +101,7 @@ module.exports = {
 				var number = input.toString();
 				returnVal = number.split(/\s*,\s*/);
 			}
-			else {
+			else if (input) {
 				console.log("not array or string ? " + input.constructor);
 			}
 		}
@@ -162,7 +162,7 @@ module.exports = {
 		return deferred.promise;
 	}, 
 
-	uploadFile: function (table, file) {
+	upload_SQL_File: function (table, file) {
 
 		var deferred = q.defer();
 		try {
@@ -378,12 +378,14 @@ module.exports = {
 
 	},
 
-	update : function (model, ids, data) {
+	update : function (model, ids, data, options) {
 		// Wrapper for updating records in database
 		// This also add change history records in database if change_history specified in model attributes.
 
 		console.log("Update " + model + ": " + ids);
 		console.log(JSON.stringify(data));
+
+		if (!options) { options = {} }
 
 		var table = model;
 		var idField = 'id';
@@ -416,6 +418,24 @@ module.exports = {
 		var list = ids.join(',');
 		
 		var query = "UPDATE " + table;
+
+		var conditions = options.conditions;
+
+		if (options.include_tables) {
+			var tables = Object.keys( options.include_tables );
+			var tables = [];
+			for (var i=0; i<tables.length; i++) {
+				tables.push( tables[i] );
+				conditions.push(options.include_tables[tables[i]]);
+			}
+
+			query = query + ", " + tables.join(',');
+		}
+		else {
+			conditions.push(idField + " IN (" + list + ")");
+		}
+		
+		var condition = conditions.join(' AND ');
 		
 		var SetEach = [];
 		if (data) {
@@ -461,7 +481,7 @@ module.exports = {
 
 			if (Set.length) {
 				query = query + " SET " + Set.join(',');
-				query = query + " WHERE " + idField + " IN (" + list + ")";
+				query = query + " WHERE " + condition;
 				console.log("\n UPDATE: " + model + ': ' + query);
 				promises.push( Record.query_promise(query) );
 			}
@@ -588,6 +608,177 @@ module.exports = {
 			console.log("Error creating record in " + table);
 			deferred.reject("Error creating new " + table + " record(s) : " + err); 
 		});
+
+		return deferred.promise;
+	},
+
+	uploadData : function (model, headers, data) {
+
+		var deferred = q.defer();
+
+		Record.parseMetaFields(model, headers)
+		.then ( function (metaFields) {
+			var fields = metaFields.fields;
+			var attributes = metaFields.attributes;
+			var ids   = metaFields.ids;
+					
+			var id_index = ids.index || 0;
+			var idField = headers[id_index];
+
+			var field_count = Object.keys(fields).length;
+			var attribute_count = Object.keys(attributes).length;
+			console.log("\n** MetaFields: " + JSON.stringify(metaFields));
+
+			var idCol = 0;
+
+			// data has additional index value ... 
+			if (data.length && data[0].length === headers.length+1 &&  field_count + attribute_count === headers.length) {
+
+				var update_attributes = [];
+				for (var row=0; row<data.length; row++) {
+					var fieldData = {};
+
+					var id;
+					var condition;
+					var include_tables;
+					if (ids.index) {
+						id = data[row][id_index+1];
+					}
+					else {
+						// enable conditional field to act as id (first column must be associated with unique record) 
+						if (fields[idField]) {
+							condition = headers[0] + " = '" + data[row][1] + "'";
+						}
+						else if (attributes[idField] && attributes[idField].id) {
+							var att_id = attributes[idField].id;
+							condition = "Attribute_Value = '" + data[row][1] + "'";
+							include_tables = {'Plate_Attribute' : "FK_Plate__ID=Plate_ID AND FK_Attribute__ID = " + att_id };
+						}
+					}
+
+					console.log('id = ' + id);
+
+					for (var col=1; col<=headers.length; col++) {
+						var header = headers[col-1];
+						header = header.replace(/ /g,'_');
+
+						var value = data[row][col]; // Record.parseValue(data[row][col]);
+
+						if (header === idField) {
+							// skip 
+							if (condition) { id_condition = condition + " = '" + value + "'" }
+							console.log("skip " + header);
+						}
+						else if (fields[header]) {
+							fieldData[fields[header]] = value;
+							console.log("set fieldData for " + header);
+						}
+						else if (attributes[header]) {
+							var att_id = attributes[header].id;
+							console.log("set attribute for " + header);
+							update_attributes.push( Attribute.insertHash(model, id, att_id, value) );
+						}
+						else {
+							console.log(header + ' not identified ??');
+						}
+						
+					}
+					if (Object.keys(fields).length) {
+						promises.push( Record.update(model, id, fieldData, { conditions: [condition], include_tables: include_tables }) );
+						console.log("\n** Update Fields: " + id + JSON.stringify(fieldData));
+					}
+				}
+
+				if (update_attributes.length) {
+					promises.push( Record.createNew('Plate_Attribute', update_attributes) );
+					console.log("\n** Update Attributes: " + JSON.stringify(update_attributes)  );
+				}
+				deferred.resolve();
+			}
+			else {
+				var msg = "Data: " + data[0].length + '; headers: ' + headers.length + '; F: ' + Object.keys(fields).length + '; A: ' + Object.keys(attributes).length;
+				console.log(msg);
+				deferred.reject(msg);
+			}
+		})
+		.catch ( function (err) {
+			deferred.reject(err);
+		});
+
+		return deferred.promise;
+	},
+
+	parseMetaFields : function (model, headers) {
+	// parses meta fields (used to determine what headers apply to fields and/or attributes in uploaded file.  also returns index to id field if found)
+		var deferred = q.defer();
+
+		var Mod = sails.models[model] || {};
+		var table = Mod.tableName || model;
+
+		var fields = {};
+		var attributes = {};
+		var ids = {};
+
+		console.log("parse " + model + ': ' + headers.join(','));
+
+		var check_attributes = [];
+		for (var i=0; i<headers.length; i++) {
+			var header = headers[i];
+			var alias;
+			if (header) { alias = header.replace(/ /g,'_') }
+
+			if (Mod.alias && alias && Mod.alias(alias)) {
+				fields[alias] = Mod.alias(alias);
+			}
+			else if (alias && Mod.attributes && Mod.attributes[alias]) {
+				fields[alias] = header;
+
+				if (header === 'id') {
+				ids = { alias : alias, index: i};
+				}
+				else if (Mod.alias && Mod.alias('id') === alias) {
+				ids = { alias : alias, index: i};
+				}
+			}
+			else {
+				check_attributes.push(i);
+			}
+			
+			if (header === 'id' || header === 'ID' || header === table || alias === table + '_ID') {
+				ids = { alias : alias, index: i};
+			}
+		}
+
+		if (check_attributes.length) {
+
+			var query = "Select Attribute_Name, Attribute_ID FROM Attribute WHERE Attribute_Class = '" + table + "'";
+			Record.query_promise(query)
+			.then (function (result) {
+				var names = _.pluck(result,'Attribute_Name');
+				var att_ids   = _.pluck(result,'Attribute_ID');
+
+				for (var i=0; i<check_attributes.length; i++) {
+					var att = headers[check_attributes[i]];
+					var alias = att.replace(/ /g,'_');
+
+					var index = names.indexOf(alias);
+					if (index >=0 ) {
+						attributes[alias] = {id: att_ids[index], name: names[index], index: check_attributes[i]};
+					}
+					else {
+						console.log(" Not recognized as either a field or a header");
+					}
+				}
+
+				deferred.resolve( { fields: fields, attributes: attributes, ids: ids });
+			})
+			.catch ( function (err) {
+				deferred.reject(err);
+			})
+		}
+		else {
+			deferred.resolve( { fields: fields, attributes: [], ids: ids});
+		}
 
 		return deferred.promise;
 	},
