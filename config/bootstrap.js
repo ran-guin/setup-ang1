@@ -177,7 +177,7 @@ function load_custom_data (Model) {
 
 	var file = __dirname + "/data/" + table + '.txt';
 
-	Record.uploadFile(table, file )
+	Record.upload_SQL_File(table, file )
 	.then ( function (add) {
 		if (add) {
 			var id = add.insertId;
