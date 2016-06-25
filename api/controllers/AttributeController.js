@@ -47,46 +47,31 @@ module.exports = {
 
 	uploadAttributes : function (req, res) {
 
+		var body = req.body;
 
-		req.file('uploadFile')
-	    .upload({
-	    	maxBytes: 100000
-	    }, function (err, uploadedFiles) {
-			if (err) return res.serverError(err);
-			else if (uploadedFiles.length == 0) {
-				return res.json("Error: No File Uploaded");
-			}
-			else {
-				// assume only one file for now, but may easily enable multiple files if required... 
-				console.log("Parsing contents...");
-				var f = 0; // file index
+		var skip = body['skip'] || 0;
+		var page = body['page'] || 1;
 
-				var matrix = uploadedFiles[f].fd
-				var obj = xlsx.parse(matrix);
+		var options = req.body['options'];
 
-				console.log(JSON.stringify(obj));
+		var file = req.file('uploadFile');
 
-				for (var i=0; i<obj.length; i++) {
-					var rows = obj[i].data.length;
-					var cols = obj[i].data[0].length;
+		if (file) {
+			console.log("Uploaded file");
+		}
+		else { console.log("No file supplied ") }
 
-					var fields = obj[i].data[0];
-					console.log("Field: " + fields.join(', '));
-
-					var records = [];
-					for (j=1; j<rows; j++) {
-						var record = [];
-						for (k=0; k<cols; k++) {
-							var cell = obj[i].data[j][k];
-							console.log(i + ': [' + j + ',' + k + '] = ' + cell );
-							record.push(cell);
-						}
-						records.push(record);
-					}
-				}
-
-				console.log("Data: " + JSON.stringify(records));
-			}
+		// querying for headers only 
+		Upload.uploadFile(file, options)
+		.then ( function (results) {
+			console.log("Updated custom");
+			return res.render('customize/upload_file', { data : results });
+		})
+		.catch ( function (err) {
+			console.log("Error uploading attributes: " + err);
+			return res.render('customize/private_home', { errorMsg: err });
 		});
+
+
 	}
 }
