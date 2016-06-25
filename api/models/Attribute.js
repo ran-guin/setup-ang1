@@ -17,6 +17,25 @@ module.exports = {
 
 	},
 
+	insertHash : function (model, id, att_id, value) {
+		var hash = {};
+
+		var Mod = sails.models[model];
+
+		var table = Mod.tableName || model;
+
+		var field = 'FK_' + table + '__ID';  // Legacy
+
+		var hash = {
+			FK_Attribute__ID : att_id,
+			Attribute_Value : value
+		};
+
+		hash[field] = id;
+
+		return hash;
+	},
+
 	'load_Prep_Attributes' : function (input, cb) {		
 
 		var Plate_attributes = [];
@@ -241,6 +260,7 @@ module.exports = {
 			deferred.reject({error: err});
 		});
 		return deferred.promise;
-	}
+	},
+
 };
 
