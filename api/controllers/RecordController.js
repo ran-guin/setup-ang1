@@ -210,7 +210,24 @@ module.exports = {
 			}
 		);
 	},
-	
+
+	remoteQuery : function ( req, res ) {
+		var body = req.body;
+
+		var query = body.query;
+
+		console.log("q: " + query);
+		Record.query_promise(query)
+		.then ( function (result) {
+			console.log("Remote Query Result: " + JSON.stringify(result));
+			return res.json(result);
+		})
+		.catch ( function (err) {
+			console.log("Error: " + err);
+			return res.json(err);
+		});
+	},
+
 	update: function (req, res) {
 		console.log("Update...");
 	},
@@ -406,7 +423,6 @@ module.exports = {
 		}
 
 		console.log("Condition: " + JSON.stringify(condition));
-		var deferred = q.defer();
 
 		var promises = [];
 
