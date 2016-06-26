@@ -76,6 +76,8 @@ module.exports.routes = {
   'GET /home': 'UserController.home',
 
   /* Generic Record control options */
+  'POST /remoteQuery': 'RecordController.remoteQuery',
+
   'POST /Record/search' : 'RecordController.search',
   'GET /Record/search' : 'RecordController.search',
 
@@ -122,6 +124,7 @@ module.exports.routes = {
   'POST /uploadMatrix' : 'ContainerController.uploadMatrix',
   'POST /uploadFile' : 'AttributeController.uploadAttributes',
   'POST /parseMetaFields' : 'RecordController.parseMetaFields',
+
   'GET /parseMetaFields' : 'RecordController.parseMetaFields',
   'POST /uploadData' : 'RecordController.uploadData',
 
