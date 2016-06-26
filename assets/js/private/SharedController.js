@@ -88,7 +88,7 @@ app.controller('SharedController',
             else {
                 $scope.errors.push(msg);
             }
-            console.log("Angular Message: " + msg);
+            console.log("Angular Error: " + msg);
         }
 
         $scope.parse_messages = function ( result ) {
