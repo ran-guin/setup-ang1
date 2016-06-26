@@ -55,7 +55,7 @@ block content
                     tr
                       td Row
                       td(ng-repeat="fld in headers track by $index")
-                        input.form-control(type='text' ng-model='currentPage.data[header_row-1][$index]' ng-disabled='validated') 
+                        input.form-control(id="{{ currentPage.data[header_row-1][$index+starting_column-1] }}" type='text' ng-model='currentPage.data[header_row-1][$index+starting_column-1]' ng-disabled='validated') 
                     tr(ng-repeat="row in dataBlock track by $index")
                       td(ng-repeat="cell in row track by $index")
                         b {{ cell }}
