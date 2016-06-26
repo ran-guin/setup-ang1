@@ -31,7 +31,7 @@ function uploadController ($scope, $rootScope, $http, $q) {
 			$scope.currentPage = $scope.data[$scope.page-1];
 		}		
 
-		$scope.messages.push("Initialize");
+		$scope.messages.push("Attempting to auto-locate data for uploading...");
 		if ($scope.currentPage.data && $scope.currentPage.data.length) {
 			// find first row with values in first two columns
 			for (var row=0; row< $scope.currentPage.data.length; row++) {
@@ -52,10 +52,10 @@ function uploadController ($scope, $rootScope, $http, $q) {
 							if (header[col] && header[col].length) {
 								// ok
 								if ( headers.indexOf(header[col]) >= 0 ) {
-									var msg = col + ': ' + header[col] + ' -> ' + headers.indexOf(header[col]);
 									$scope.columns = col;  // exclude this column since it is the first repeat ... 
-									$scope.warnings.push("Repeat column heading found : " + " limiting to " + $scope.columns+ ' columns ' + msg);
-									console.log("Repeat column heading found ... limiting to " + $scope.columns + ' columns ')
+									var msg = "'" + header[col] + "' column repeated.  Truncating data here after " + $scope.columns + ' columns ';
+									$scope.warning(msg);
+									$scope.warning("Note: you may extend the number of columns manually below, but you must change the headers to ensure they are unique");
 									col=$scope.currentPage.data.length;
 								}
 								else {
@@ -155,6 +155,8 @@ function uploadController ($scope, $rootScope, $http, $q) {
 			$scope.starting_column = 1;
 			$scope.error("Cannot start column before column 1");
 		}
+		$scope.reload_headers();
+		console.log("HEADERS " + JSON.stringify($scope.headers));
 	}	
 
 	$scope.reload_headers = function () {
@@ -168,10 +170,12 @@ function uploadController ($scope, $rootScope, $http, $q) {
 		$scope.reset_messages();
 
 		$scope.reload_headers();
+		console.log("HEADERS: " + $scope.headers.join(','));
 
 		var model = $scope.model || 'container'; // default for now testing.. 
 
-		$scope.message("Validating " + model + " : " + $scope.headers.join(','))
+		$scope.message("Validating headers for " + $scope.columns + ' columns for ' + $scope.rows + " Records starting on row " + $scope.starting_row + ' of Page ' + $scope.page );
+
 		$http.post('/parseMetaFields', { model: model, headers: $scope.headers })
 		.then ( function (result) {
 			var found = result.data;
@@ -180,20 +184,81 @@ function uploadController ($scope, $rootScope, $http, $q) {
 			
 			var fields = Object.keys(found.fields);
 			var attributes = Object.keys(found.attributes);
-			var id_index = _.pluck(found.ids, 'index');
 
-			if (! id_index ) {
-				$scope.error("no id column");
-				$scope.validated = false;
+			var okay = true;
+			for (var i=0; i<$scope.headers.length; i++) {
+				var header = $scope.headers[i];
+
+				var el = document.getElementById(header);
+				console.log("element : " + header);
+
+				if ( el && fields.indexOf(header) >=0 ) { 
+					el.style = 'border-color:green';
+					$scope.message("'" + header + "' is a recognized field");
+				}
+				else if ( el && attributes.indexOf(header) >=0 ) { 
+					el.style = 'border-color:green';
+					$scope.message("'" + header + "' is a recognized attribute");
+				}
+				else if (el) { 
+					$scope.error("'" + header + "' not a recognized field or attribute - please use a valid field id or attribute as a heading");
+					el.style = 'border-color:red';
+					okay = false;
+				}
+				else { 
+					console.log(header + " not a recognized field or attribute");
+					okay = false;
+				}
 			}
-			else if (attributes.length + fields.length !== $scope.headers.length) {
-				$scope.error("Expected " + $scope.headers.length + " Fields, but only found " + attributes.length + ' attributes + ' + fields.length + ' fields');
-				$scope.validated = false;
+
+			if (found.ids && found.ids.index != null )  {
+				var id_index = found.ids.index;
+				$scope.message("Using column: '" + $scope.headers[id_index] + "' as an ID reference ");
+			}
+			else { 
+				$scope.warning("no id field supplied - using 1st column: " + $scope.headers[0] + ' as a reference ');
+			}
+
+			if (found.ids && found.ids.index != null ) {
+				$scope.message("confirming id list");
+				$scope.validated = okay;
 			}
 			else {
-				$scope.message($scope.headers.length + " fields / attributes found"); 
-				$scope.validated = true;
+				$scope.message("Validating reference attributes");
+
+				console.log("BLOCK " + JSON.stringify($scope.dataBlock));
+				var list = [];
+				for (var i=0; i<$scope.dataBlock.length; i++) {
+					var v = $scope.dataBlock[i][1];
+					console.log($scope.dataBlock[i].join(',') + ' = ' + v);
+
+					list.push(v);
+				}
+
+				var alias = $scope.headers[0].replace(/ /g,'_');
+
+				var query = "SELECT DISTINCT FK_Plate__ID as id, Attribute_Value as ref FROM Plate_Attribute,Attribute WHERE FK_Attribute__ID=Attribute_ID ";
+				query = query + " AND Attribute_Name like '" + alias + "' AND Attribute_Value IN ('" + list.join("','") + "')";
+
+				console.log("Q: " + query);
+
+				$http.post('/remoteQuery', { query : query })
+				.then ( function (result) {
+					var list = result.data;
+					if (list.length == $scope.rows) {
+						$scope.validated = okay;
+					}
+					else {
+						$scope.error("Could not find all records associated with reference column.  Found " + list.length + ' OF ' + $scope.rows)
+						$scope.validated = false;
+					}
+				})
+				.catch( function (err) {
+					$scope.error("Error confirming attribute data from query " + query);
+					$scope.validated = false;
+				});
 			}
+
 		})
 		.catch ( function (err) {
 			$scope.validated = false;
