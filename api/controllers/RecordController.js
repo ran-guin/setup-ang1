@@ -489,21 +489,24 @@ module.exports = {
 		var model   = body.model;
 		var headers = body.headers;
 		var data    = body.data;
+		var reference = body.reference;
 
 		console.log("UPLOAD DATA");
 		console.log("model : " + model);
 		console.log("headers: " + JSON.stringify(headers));
 		console.log("data: " + JSON.stringify(data));
 
-		Record.uploadData(model, headers, data)
+		Record.uploadData(model, headers, data, reference)
 		.then ( function (result) {
 			sails.config.messages.push("uploaded");
 			console.log("Uploaded");
+			return res.json(result);
 		})
 		.catch (function (err) {
 			console.log("Error uploading: " + err);
-			sails.config.errors.push(err);
-			return res.render('customize/private_home');
+			return res.json({error: err});
+			// sails.config.errors.push(err);
+			// return res.render('customize/private_home');
 		});
 	},
 };
