@@ -91,6 +91,41 @@ app.controller('SharedController',
             console.log("Angular Error: " + msg);
         }
 
+        $scope.parse_standard_error = function (message) {
+            // Convert warning / error messages into more readable format
+            // (if <match> is included in value, then the regexp of the key will be evaluated and the match replaced in the value string)
+            //   eg 'Error creating \\w+' : "<match> - no record created" -> yields "Error creating Employee - no record created" 
+            //
+            var Map = {
+                "Duplicate entry '[\\w\-]+'" : "<match>",
+                'Unknown column'  : "Unrecognized column in database (?) - please inform LIMS administrator",
+                "Error saving \\w+" : "<match>",
+            };
+
+            var strings = Object.keys(Map);
+
+            var errors = [];
+            for (var i=0; i<strings.length; i++) {
+                
+                var test = strings[i];
+                if (Map[strings[i]].match(/<match>/)) {
+                    test = new RegExp(test);
+                    console.log("Testing regexp :" + test);
+                }
+
+                var found = message.match(test);
+                if (found) {
+                    console.log("match found for " + test);
+                    var err = Map[strings[i]].replace('<match>', found);
+                    errors.push( err );
+                }
+            }
+
+            console.log("Parsed Error: " + message);
+            if (! errors.length) { errors.push(message) }
+            return errors;
+        }
+
         $scope.parse_messages = function ( result ) {
 
             if (result && result.data) {
