@@ -40,14 +40,13 @@ module.exports = {
 
 				if (uploadedFiles[f]) { console.log("ok")}
 				var matrix = uploadedFiles[f].fd
-
 				console.log("matrix set");
 
-				var obj;
 				try {
-					obj = xlsx.parse(matrix);
+					var obj = xlsx.parse(matrix);
 					var i = page;  // only upload one page at a time for now... 
 
+					console.log("OBJ: " + JSON.stringify(obj));
 					var rows = obj[i].data.length;
 					var cols = obj[i].data[0].length;
 
@@ -82,12 +81,135 @@ module.exports = {
 				catch (e) {
 					console.log("ERROR: " + e);
 					deferred.reject(e); 
-				}
+				};
 			}
 		});
 	
 		return deferred.promise;
-	}
+	},
 
+	uploadMatrixFile : function (file, Samples, options) {
+
+		var deferred = q.defer();
+
+		if (!options) { options = {} }
+		var force = options.force;
+
+		file.upload({
+	    	maxBytes: 100000
+	    }, function (err, uploadedFiles) {
+			if (err) {
+				sails.config.errors.push(err);
+				deferred.reject(err);
+			}
+			else if (uploadedFiles.length == 0) {
+				sails.config.errors.push("no files supplied");
+				deferred.reject('no files supplied');
+			}
+			else {
+				// assume only one file for now, but may easily enable multiple files if required... 
+				console.log("Parsing contents...");
+				var f = 0; // file index
+
+				var matrix = uploadedFiles[f].fd
+
+//				try {
+					var obj = xlsx.parse(matrix);
+
+					console.log(JSON.stringify(obj));
+
+					var f = 0;
+					var rows = obj[f].data.length;
+					var cols = obj[f].data[f].length;
+
+					columns = ['A','B','C','D','E','F','G','H'];
+
+					var map = {};
+					var applied = 0;
+					for (var i=1; i<=rows; i++) {
+						for (var j=0; j<cols; j++) {
+						
+							var posn =  columns[j];
+							//if (i<10) { posn = posn + '0' }
+							posn = posn + i.toString();
+
+							map[posn] = obj[f].data[i-1][j];
+							applied = applied + 1;
+						}
+
+					}
+
+					var data = [];
+					var errors = [];
+					var warnings = [];
+
+					if (rows > Samples.length) {
+						warnings.push(applied + " Matrix tubes scanned, but only " + Samples.length + " current Samples found");
+					}
+					else if (Samples.length > rows) {
+						warnings.push(Samples.length + " active Samples, but data supplied for " + applied);
+					}
+
+					console.log(Samples.length + ' Sample found');
+
+					for (var i=0; i<Samples.length; i++) {
+						console.log("Sample #" + i + ": " + JSON.stringify(Samples[i]));
+						var id = Samples[i].id;
+						var position = Samples[i].position;
+						if (position) {
+							var mapped = map[position] || map[position.toUpperCase()];
+							if (mapped) {
+								data.push([id, mapped]);
+							}
+							else {
+								warnings.push("Nothing mapped to " + position);
+							}
+						}
+						else {
+							errors.push("No position data for sample #" + i + ' : ' + id);
+						}					
+					}
+
+					sails.config.warnings = warnings;
+					sails.config.errors = errors;
+
+					if (errors.length || (! force && warnings.length)) {
+						console.log("Errors: " + JSON.stringify(errors));
+						deferred.reject(errors);
+					}
+					else {
+						console.log("Map: " + JSON.stringify(map));
+						console.log("Matrix Data: " + JSON.stringify(data));
+
+						var MatrixAttribute_ID = 66;  // testing - replace with query to database... 
+						var attribute = MatrixAttribute_ID;
+
+						Attribute.uploadAttributes('Plate', attribute, data)
+						.then ( function (result) {
+							console.log("Response: " + JSON.stringify(result));
+							if (result.affectedRows) {
+								console.log(JSON.stringify(sails.config.messages));
+								sails.config.messages.push(result.affectedRows + " Matrix barcodes associated with samples");
+							}
+							console.log('resolved');
+							deferred.resolve();		
+						})	
+						.catch ( function (err) {
+							var error = err.error || '';
+							console.log("Upload Error" + JSON.stringify(error));
+							deferred.reject(error);
+						});
+					}		
+/*					
+				}
+				catch (e) {
+					deferred.reject("Error loading excel file: " + e);
+				}
+*/
+			}
+			
+			return deferred.promise;
+		});
+	},
 };
 
