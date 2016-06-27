@@ -535,10 +535,7 @@ module.exports = {
 
 		var Mod = sails.models[model] || {};
 
-		var table = model; // default to model name ... 
-		if (Mod.tableName) {
-			table = Mod.tableName;
-		} 
+		var table = Mod.tableName || model; // default to model name ... 
 
 		if (Tdata === undefined) { deferred.reject('no data'); return deferred.promise }
 
@@ -594,17 +591,20 @@ module.exports = {
 
 		Record.query_promise(createString)
 		.then ( function (result) {
+			console.log("Result: " + JSON.stringify(result));
 			var insertId = result.insertId;
 			var added    = result.affectedRows;
 
 			var msg = added + ' ' + table + ' record(s) added: id(s) from ' + insertId;
-			if (Mod.tableType && Mod.tableType.match/lookup/i) { }
-			else if (sails.config.debug) { sails.config.messages.push(msg) }
-			else { sails.config.messages.push(msg) }
-			
+			console.log(msg);
+
+			if (Mod.tableType && Mod.tableType.match(/lookup/i) ) { }
+			// else { sails.config.messages.push(msg) }
+			console.log("resolved");
 			deferred.resolve(result);
 		})
 		.catch ( function (err) {
+			console.log("Error: " + JSON.stringify(err));
 			console.log("Error creating record in " + table);
 			deferred.reject("Error creating new " + table + " record(s) : " + err); 
 		});
@@ -612,7 +612,7 @@ module.exports = {
 		return deferred.promise;
 	},
 
-	uploadData : function (model, headers, data) {
+	uploadData : function (model, headers, data, reference) {
 
 		var deferred = q.defer();
 
@@ -624,6 +624,7 @@ module.exports = {
 					
 			var id_index = ids.index || 0;
 			var idField = headers[id_index];
+			idField = idField.replace(/ /g,'_');
 
 			var field_count = Object.keys(fields).length;
 			var attribute_count = Object.keys(attributes).length;
@@ -634,6 +635,7 @@ module.exports = {
 			// data has additional index value ... 
 			if (data.length && data[0].length === headers.length+1 &&  field_count + attribute_count === headers.length) {
 
+				var promises = [];
 				var update_attributes = [];
 				for (var row=0; row<data.length; row++) {
 					var fieldData = {};
@@ -643,6 +645,9 @@ module.exports = {
 					var include_tables;
 					if (ids.index) {
 						id = data[row][id_index+1];
+					}
+					else if (reference) {
+						id = reference[data[row][1]];  // data 0 is simply a row # ... 
 					}
 					else {
 						// enable conditional field to act as id (first column must be associated with unique record) 
@@ -656,7 +661,8 @@ module.exports = {
 						}
 					}
 
-					console.log('id = ' + id);
+					console.log(ids.index + ' id = ' + id);
+					console.log("ref " + JSON.stringify(reference));
 
 					for (var col=1; col<=headers.length; col++) {
 						var header = headers[col-1];
@@ -693,7 +699,14 @@ module.exports = {
 					promises.push( Record.createNew('Plate_Attribute', update_attributes) );
 					console.log("\n** Update Attributes: " + JSON.stringify(update_attributes)  );
 				}
-				deferred.resolve();
+
+				q.all(promises)
+				.then ( function (result) {
+					deferred.resolve(result);
+				})
+				.catch ( function (err) {
+					deferred.reject("Error in uploadData: " + err);
+				})
 			}
 			else {
 				var msg = "Data: " + data[0].length + '; headers: ' + headers.length + '; F: ' + Object.keys(fields).length + '; A: ' + Object.keys(attributes).length;
