@@ -20,24 +20,24 @@ block content
                 td
                   b Page: &nbsp;
                 td
-                  input(type='number' name='page' ng-model='page' ng-change="get_block()")
+                  input(type='number' name='page' ng-model='page' ng-change="initiate_page()")
                 td
                   b Start on row: 
                 td
-                  input(type='number' ng-model='starting_row' default=1 ng-click="get_block()" size=5) 
+                  input(type='number' ng-model='starting_row' default=1 ng-change="get_block()" size=5) 
                 td
                   b Start on column: 
                 td  
-                  input(type='number' ng-model='starting_column' ng-click="get_block()") 
+                  input(type='number' ng-model='starting_column' ng-change="get_block()") 
               tr(ng-show="! validated")              
                 td
                   b Rows: 
                 td
-                  input(type='number' ng-model='rows' default=1 ng-click="get_block()") 
+                  input(type='number' ng-model='rows' default=1 ng-change="get_block()") 
                 td
                   b Columns: 
                 td  
-                  input(type='number' ng-model='columns' ng-click="get_block()")               
+                  input(type='number' ng-model='columns' ng-change="get_block()")               
                 td
                   span &nbsp;
                 td
