@@ -31,6 +31,13 @@ function uploadController ($scope, $rootScope, $http, $q) {
 			$scope.currentPage = $scope.data[$scope.page-1];
 		}		
 
+		$scope.initiate_page();
+
+	}
+
+	$scope.initiate_page = function () {
+
+		$scope.reset_messages();
 		$scope.messages.push("Attempting to auto-locate data for uploading...");
 		if ($scope.currentPage.data && $scope.currentPage.data.length) {
 			// find first row with values in first two columns
@@ -92,7 +99,6 @@ function uploadController ($scope, $rootScope, $http, $q) {
 			}
 			else { $scope.warnings.push("Could not auto-set starting row & column length") }
 		}
-
 	}
 
 	$scope.get_block = function (options) {
@@ -188,8 +194,10 @@ function uploadController ($scope, $rootScope, $http, $q) {
 			var okay = true;
 			for (var i=0; i<$scope.headers.length; i++) {
 				var header = $scope.headers[i];
-
 				var el = document.getElementById(header);
+
+				header = header.replace(/ /g, '_');
+
 				console.log("element : " + header);
 
 				if ( el && fields.indexOf(header) >=0 ) { 
@@ -206,7 +214,8 @@ function uploadController ($scope, $rootScope, $http, $q) {
 					okay = false;
 				}
 				else { 
-					console.log(header + " not a recognized field or attribute");
+					$scope.error(header + " not a recognized field or attribute");
+					console.log("Attributes: " + JSON.stringify(attributes));
 					okay = false;
 				}
 			}
@@ -216,7 +225,7 @@ function uploadController ($scope, $rootScope, $http, $q) {
 				$scope.message("Using column: '" + $scope.headers[id_index] + "' as an ID reference ");
 			}
 			else { 
-				$scope.warning("no id field supplied - using 1st column: " + $scope.headers[0] + ' as a reference ');
+				$scope.message("No ID field supplied - using 1st column: " + $scope.headers[0] + ' as a reference (okay)');
 			}
 
 			if (found.ids && found.ids.index != null ) {
@@ -230,8 +239,6 @@ function uploadController ($scope, $rootScope, $http, $q) {
 				var list = [];
 				for (var i=0; i<$scope.dataBlock.length; i++) {
 					var v = $scope.dataBlock[i][1];
-					console.log($scope.dataBlock[i].join(',') + ' = ' + v);
-
 					list.push(v);
 				}
 
@@ -242,10 +249,19 @@ function uploadController ($scope, $rootScope, $http, $q) {
 
 				console.log("Q: " + query);
 
+				$scope.reference = {};  // clear previous references... 
+
 				$http.post('/remoteQuery', { query : query })
 				.then ( function (result) {
 					var list = result.data;
 					if (list.length == $scope.rows) {
+						$scope.validated = okay;
+						for (var i=0; i<list.length; i++) {
+							var id = list[i].id;
+							var ref = list[i].ref;
+							$scope.reference[ref] = id;
+						}
+						$scope.message("Found reference IDs for all " + list.length + " " + $scope.headers[0] + " values " + okay);
 						$scope.validated = okay;
 					}
 					else {
@@ -278,14 +294,30 @@ function uploadController ($scope, $rootScope, $http, $q) {
 
 		var model = $scope.model || 'container'; // default for now testing.. 
 
-		console.log("CALL uploadData with " + JSON.stringify($scope.headers));
+		console.log("\n** Upload Headers" + JSON.stringify($scope.headers));
+		console.log("\n** Upload References" + JSON.stringify($scope.reference));
 
-		$http.post('/uploadData', { model: model, headers: $scope.headers, data: data })
+		$scope.reset_messages();
+		$http.post('/uploadData', { model: model, headers: $scope.headers, data: data, reference: $scope.reference })
 		.then ( function (result) {
 			console.log("Upload Result " + JSON.stringify(result));
+			if (result.data && result.data.error) {
+				var msg = $scope.parse_standard_error(result.data.error);
+				$scope.error(msg);
+			}
+			else {
+				if (result.data && result.data.length && result.data[0].affectedRows) {
+					var count = result.data[0].affectedRows;
+					$scope.message("Updated " + count + " Data Records");
+				}
+				else { 
+					$scope.warning("No rows affected");
+				}
+			}
 		})
 		.catch ( function (err) {
-			$scope.error(err);
+			var msg = $scope.parse_standard_error(err);
+			$scope.error(msg);
 		});
 	}
 }]);
