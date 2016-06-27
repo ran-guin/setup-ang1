@@ -253,7 +253,7 @@ module.exports = {
 
 		Record.createNew( table, upload )
 		.then ( function (result) {
-			// console.log("\nupload results: " + JSON.stringify(result));
+			console.log("\nuploaded attributes: " + JSON.stringify(result));
 			deferred.resolve(result);			
 		})
 		.catch ( function (err) {
