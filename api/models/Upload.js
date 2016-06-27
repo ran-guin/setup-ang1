@@ -143,10 +143,10 @@ module.exports = {
 					var errors = [];
 					var warnings = [];
 
-					if (rows > Samples.length) {
+					if (applied > Samples.length) {
 						warnings.push(applied + " Matrix tubes scanned, but only " + Samples.length + " current Samples found");
 					}
-					else if (Samples.length > rows) {
+					else if (Samples.length > applied) {
 						warnings.push(Samples.length + " active Samples, but data supplied for " + applied);
 					}
 
@@ -195,9 +195,8 @@ module.exports = {
 							deferred.resolve();		
 						})	
 						.catch ( function (err) {
-							var error = err.error || '';
-							console.log("Upload Error" + JSON.stringify(error));
-							deferred.reject(error);
+							console.log("Upload Error" + JSON.stringify(err));
+							deferred.reject(err);
 						});
 					}		
 /*					
