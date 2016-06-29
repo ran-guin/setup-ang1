@@ -293,6 +293,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
             'Prep_Action' : $scope['action' + $scope.stepNumber],
             'Prep_Comments' : $scope['comments' + $scope.stepNumber],
             'Prep_DateTime' : $scope.timestamp,
+            'FK_Plate_Set__Number' : $scope.plate_set,
         };
 
         console.log("PREP DATA: " + JSON.stringify(PrepData));
@@ -317,7 +318,6 @@ function protocolController ($scope, $rootScope, $http, $q) {
         console.log("load " + $scope.N + ' plate ids...');
         for (var i=0; i<$scope.N; i++) {
             PlateData[i]['FK_Plate__ID'] = $scope.Samples[i].id;
-            PlateData[i]['FK_Plate_Set__Number'] = $scope.plate_set;
         }       
 
         console.log("split " + $scope.input);
