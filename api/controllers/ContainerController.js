@@ -121,131 +121,6 @@ module.exports = {
 
 	},
 
-	uploadMatrix : function (req, res) {
-
-		var MatrixAttribute_ID = 66;
-
-		// Expects 8 rows of 12 columns (A1..H12) //
-	    res.setTimeout(0);
-
-	    var ids = req.body.ids || req.body.plate_ids;
-	    var Samples = JSON.parse(req.body.Samples);
-	    var force = req.body.force || 1;
-
-	    console.log("IDS: " + JSON.stringify(ids));
-
-	    req.file('MatrixFile')
-	    .upload({
-	    	maxBytes: 100000
-	    }, function (err, uploadedFiles) {
-			if (err) {
-				sails.config.errors.push(err);
-				return res.render('customize/private_home');
-			}
-			else if (uploadedFiles.length == 0) {
-				sails.config.errors.push("no files supplied");
-				return res.render('customize/private_home');
-			}
-			else {
-				// assume only one file for now, but may easily enable multiple files if required... 
-				console.log("Parsing contents...");
-				var f = 0; // file index
-
-				var matrix = uploadedFiles[f].fd
-				var obj = xlsx.parse(matrix);
-
-				console.log(JSON.stringify(obj));
-
-				var f = 0;
-				var rows = obj[f].data.length;
-				var cols = obj[f].data[f].length;
-
-				columns = ['A','B','C','D','E','F','G','H'];
-
-				var map = {};
-				var applied = 0;
-				for (var i=1; i<=rows; i++) {
-					for (var j=0; j<cols; j++) {
-					
-						var posn =  columns[j];
-						//if (i<10) { posn = posn + '0' }
-						posn = posn + i.toString();
-
-						map[posn] = obj[f].data[i-1][j];
-						applied = applied + 1;
-					}
-
-				}
-
-				var data = [];
-				var errors = [];
-				var warnings = [];
-
-				if (rows > Samples.length) {
-					warnings.push(applied + " Matrix tubes scanned, but only " + Samples.length + " current Samples found");
-				}
-				else if (Samples.length > rows) {
-					warnings.push(Samples.length + " active Samples, but data supplied for " + applied);
-				}
-
-				console.log(Samples.length + ' Sample found');
-
-				for (var i=0; i<Samples.length; i++) {
-					console.log("Sample #" + i + ": " + JSON.stringify(Samples[i]));
-					var id = Samples[i].id;
-					var position = Samples[i].position;
-					if (position) {
-						var mapped = map[position] || map[position.toUpperCase()];
-						if (mapped) {
-							data.push([id, mapped]);
-						}
-						else {
-							warnings.push("Nothing mapped to " + position);
-						}
-					}
-					else {
-						errors.push("No position data for sample #" + i + ' : ' + id);
-					}					
-				}
-
-				sails.config.warnings = warnings;
-				sails.config.errors = errors;
-
-				if (errors.length || (! force && warnings.length)) {
-					console.log("Errors: " + JSON.stringify(errors));
-					return res.render('lims/Container', { 
-						plate_ids: ids, 
-						Samples: Samples, 
-					} );
-				}
-				else {
-					console.log("Map: " + JSON.stringify(map));
-					console.log("Data: " + JSON.stringify(data));
-
-					var plate_ids = req.body.plate_ids;
-					var attribute = MatrixAttribute_ID;
-
-					Attribute.uploadAttributes('Plate', attribute, data)
-					.then ( function (resp) {
-
-						if (resp.affectedRows) {
-							sails.config.messages.push(resp.affectedRows + " Matrix barcodes associated with samples");
-						}
-						
-						return res.render('lims/Container', { Samples : Samples, plate_ids: ids});					
-					})	
-					.catch ( function (err) {
-						var error = err.error || '';
-						console.log("Upload Error" + JSON.stringify(error));
-						sails.config.errors = Record.parse_standard_error(error);
-						return res.render('customize/private_home');
-					});
-				}		
-				
-	     	}
-	    });
-  	},
-
 	completeTransfer : function (req, res ) {
 		console.log("CC completing transfer");
 
@@ -263,7 +138,40 @@ module.exports = {
 
 	},
 
+	uploadMatrix : function (req, res) {
 
+		var MatrixAttribute_ID = 66;
+
+		// Expects 8 rows of 12 columns (A1..H12) //
+	    res.setTimeout(0);
+
+	    var ids = req.body.ids || req.body.plate_ids;
+	    var Samples = JSON.parse(req.body.Samples);
+	    var force = req.body.force || 1;
+	    var file = req.file('MatrixFile');
+
+	    console.log("IDS: " + JSON.stringify(ids));
+
+	    Upload.uploadMatrixFile(file, Samples, { force: force })
+	    .then ( function (result) {
+	    	console.log("uploaded Matrix File");
+	    	console.log(JSON.stringify(result));
+	    	return res.render('lims/Container', { 
+							plate_ids: ids, 
+							Samples: Samples, 
+			});
+	    })
+	    .catch ( function (err) {
+	    	console.log("Error uploading Matrix File: ");
+	    	console.log(err);
+	    	
+			return res.render('lims/Container', { 
+				plate_ids: ids, 
+				Samples: Samples
+			});
+		});
+
+  	},
 
 };
 
