@@ -1,5 +1,5 @@
 
-if message || messages || ( sails.config.messages && sails.config.messages.length)
+if message || (messages && messages.length) || ( sails.config.messages && sails.config.messages.length)
   br
   div.message-block.alert.alert-success
     a(href="#" onclick="return false;" class="close" data-dismiss="alert" aria-label="close") &times;
@@ -23,7 +23,7 @@ if message || messages || ( sails.config.messages && sails.config.messages.lengt
               span &nbsp; 
               b #{msg}
 
-if warning || warnings || warningMsg || (sails.config.warnings && sails.config.warnings.length)
+if warning || (warnings && warnings.length) || warningMsg || (sails.config.warnings && sails.config.warnings.length)
   br
   div.message-block.alert.alert-warning
     // div.alert.alert-warning
@@ -32,7 +32,7 @@ if warning || warnings || warningMsg || (sails.config.warnings && sails.config.w
       strong
         if warning || warningMsg
           li 
-            i.fa.fa-question 
+            i.fa.fa-warning 
             span.text-danger &nbsp; Warning:
             span &nbsp;
             span #{warningMsg}
@@ -40,17 +40,17 @@ if warning || warnings || warningMsg || (sails.config.warnings && sails.config.w
         if warnings
           each warn in warnings
             li
-              i.fa.fa-question
+              i.fa.fa-warning
               span &nbsp;
               b #{warn}
         if sails.config.warnings
           each warn in sails.config.warnings
             li
-              i.fa.fa-question
+              i.fa.fa-warning
               span &nbsp;
               b #{warn}
 
-if error || errors || errorMsg || (sails.config.errors && sails.config.errors.length)
+if error || (errors && errors.length) || errorMsg || (sails.config.errors && sails.config.errors.length)
   div.message-block.alert.alert-danger
     // div.alert.alert-danger
     a(href="#" class="close" data-dismiss="alert" aria-label="close") &times;
@@ -58,7 +58,7 @@ if error || errors || errorMsg || (sails.config.errors && sails.config.errors.le
       strong
         if error || errorMsg
           li
-            i.fa.fa-question 
+            i.fa.fa-warning(style='color:red')
             span.text-danger &nbsp; Error:
             span &nbsp;
             span #{errorMsg}
@@ -66,13 +66,13 @@ if error || errors || errorMsg || (sails.config.errors && sails.config.errors.le
         if errors
           each err in errors
             li
-              i.fa.fa-warning
+              i.fa.fa-warning(style='color:red')
               span &nbsp;
               b #{err}   
                
         if sails.config.errors
           each err in sails.config.errors
             li
-              i.fa.fa-warning
+              i.fa.fa-warning(style='color:red')
               span &nbsp;
               b #{err}
