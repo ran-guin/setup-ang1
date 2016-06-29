@@ -56,10 +56,10 @@ if error || errors || errorMsg || (sails.config.errors && sails.config.errors.le
     a(href="#" class="close" data-dismiss="alert" aria-label="close") &times;
     ul
       strong
-        if warning || warningMsg
+        if error || errorMsg
           li
             i.fa.fa-question 
-            span.text-danger &nbsp; Warning:
+            span.text-danger &nbsp; Error:
             span &nbsp;
             span #{errorMsg}
             span #{error}
