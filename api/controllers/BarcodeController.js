@@ -36,15 +36,22 @@ module.exports = {
 				console.log("condition: " + condition);
 			}
 			else if ( Scanned['Set'].length ) {
-				var sets = Scanned['Set'].join(',');
-				promises.push( Record_query("Select GROUP_CONCAT(Plate__ID) as ids from Plate_Set WHERE Plate_Set_Number IN (" + sets.join(',') + ")") );
+				var sets = Scanned['Set'];
+				promises.push( Record.query_promise("Select GROUP_CONCAT(FK_Plate__ID) as ids from Plate_Set WHERE Plate_Set_Number IN (" + sets.join(',') + ")") );
 			}
 
 			q.all( promises )
 			.then ( function (result) {
-				if (result && result.length) {
-					var ids = result[0].id;
+				
+			    var errors = Scanned['Errors'] || [];
+			    var warnings = [];
+
+				if (result && result[0] && result[0].length && result[0][0].ids) {
+					var ids = result[0][0].ids;
 					condition = "Plate.Plate_ID IN (" + ids + ")";
+				}
+				else if (result && result[0] && result[0].length ) {
+					errors.push("Nothing found in Set(s) " + sets);
 				}
 
 				console.log(plate_ids + ' OR ' + condition);
@@ -55,13 +62,10 @@ module.exports = {
 					Container.loadData(plate_ids, condition)
 					.then (function (data) {
 
-						var errorMsg;
-						var warningMsg;
-
 						var sampleList = [];
 						if (data.length == 0) {
 							if (plate_ids.length) {
-								errorMsg = "expecting ids: " + plate_ids.join(', ');
+								errors.push("expecting ids: " + plate_ids.join(', '));
 								return res.render('customize/private_home');
 							}
 							else if (Scanned['Rack'].length) {
@@ -78,12 +82,12 @@ module.exports = {
 							}
 
 							if (sampleList.length < plate_ids.length) { 
-								warningMsg = "Scanned " + plate_ids.length + " records but only found " + sampleList.length;
+								warnings.push("Scanned " + plate_ids.length + " records but only found " + sampleList.length);
 							}
 
 							var get_last_step = Protocol_step.parse_last_step(data);
 							var last_step = get_last_step.last_step;
-							if (get_last_step.warning) { warningMsg = get_last_step.warning }
+							if (get_last_step.warning) { warnings.push(get_last_step.warning) }
 
 							return res.render('lims/Container', { 
 								plate_ids: plate_ids.join(','), 
@@ -91,30 +95,33 @@ module.exports = {
 								Samples: data , 
 								//sampleList : sampleList,
 								message : 'loaded Matrix Tube(s)',
-								warningMsg: warningMsg,
-								errorMsg : errorMsg,
+								warnings : warnings,
+								errors : errors,
 								//target_formats : target_formats 
 							});
 						}
 
 					})
 					.catch (function (err) {
-						return res.render('customize/private_home', {errorMsg: JSON.stringify(err) });
+						errors.push(err);
+						return res.render('customize/private_home', {errors : errors });
 					});			
 				}
 				else {
-			    	var errors = Scanned['Errors'];
 			    	errors.push("Unrecognized barcode: " + barcode); 
 			    	return res.render("customize/private_home", { errors: errors });
 			    }
 			})
 			.catch ( function (err) {
-				return res.render('customize/private_home', { errorMsg : "Error retrieving set"} );
+				errors.push("Error retrieving set");
+				return res.render('customize/private_home', { errors : errors } );
 			})
 		})
 		.catch ( function (err) {
 			console.log(err);
-			res.render('customize/private_home', { errors: ['Error interpretting barcode: ' + barcode + " : " + err] } );
+			errors.push('Error interpretting barcode: ' + barcode);
+			errors.push(err);
+			res.render('customize/private_home', { errors: errors } );
 		});
 
 	},
