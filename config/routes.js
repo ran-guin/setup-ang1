@@ -68,34 +68,20 @@ module.exports.routes = {
   'GET /user/dashboard/:id': 'UserController.dashboard',
   //'GET /user/:id': 'UserController.dashboard',  // reserve for waterline standard 
 
- 'GET /api': 'QueryController.staff',
-  'GET /api/q': 'QueryController.query',
-  'POST /api/search': 'QueryController.search',
 
   'GET /': { view: 'customize/public_home' },
   'GET /home': 'UserController.home',
 
   /* Generic Record control options */
-  'POST /remoteQuery': 'RecordController.remoteQuery',
-
-  'POST /Record/search' : 'RecordController.search',
-  'GET /Record/search' : 'RecordController.search',
 
   'GET /record/list/:model' : 'RecordController.list',   
   'POST /record/list' : 'RecordController.list',    
   'GET /record/view/:model/:id' : 'RecordController.view',
   
-  'GET /record/add/:model': 'RecordController.form',
-  'POST /record/add/:model': 'RecordController.save',
   'GET /record/edit/:model/:id': 'RecordController.form',
   'POST /record/edit/:model/:id': 'RecordController.update',
 
-  'POST /record/save' : 'RecordController.save',
 
-  'POST /enum/:model/:field' : 'RecordController.enum',
-  'GET /enum/:model' : 'RecordController.enum',
-  'GET /lookup/:model/:label' : 'RecordController.lookup',
-  'GET /lookup/:model' : 'RecordController.lookup',
   'GET /attribute/:model/:attribute' : 'AttributeController.prompt',
 
   'GET /remote_login' : 'Remote_login.validate',
@@ -110,6 +96,30 @@ module.exports.routes = {
   
   'GET /test'  : 'TestController.test',
   'POST /test'  : 'TestController.test',
+
+  'GET /record/add/:model': 'RecordController.form',
+
+// API routes 
+  'GET /lookup/:model/:label' : 'Record_APIController.lookup',
+  'GET /lookup/:model' : 'Record_APIController.lookup',
+
+  'POST /enum/:model/:field' : 'Record_APIController.enum',
+  'GET /enum/:model' : 'Record_APIController.enum',
+
+  'POST /remoteQuery': 'Record_APIController.remoteQuery',
+
+  'POST /Record/search' : 'Record_APIController.search',
+  'GET /Record/search' : 'Record_APIController.search',
+
+
+  'POST /record/add/:model': 'Record_APIController.save',
+  'POST /record/save' : 'Record_APIController.save',
+
+  'GET /parseMetaFields' : 'Record_APIController.parseMetaFields',
+  'POST /parseMetaFields' : 'Record_APIController.parseMetaFields',
+
+  'POST /uploadData' : 'Record_APIController.uploadData',
+
   /***************************************************************************
   *                                                                          *
   * Custom routes here...                                                    *
@@ -119,14 +129,11 @@ module.exports.routes = {
   * for configuration options and examples.                                  *
   *                                                                          *
   ***************************************************************************/
+  'POST /uploadMatrix' : 'ContainerController.uploadMatrix',
+
   'POST /alDente_protocol' : 'Remote_login.protocol',
   
-  'POST /uploadMatrix' : 'ContainerController.uploadMatrix',
   'POST /uploadFile' : 'AttributeController.uploadAttributes',
-  'POST /parseMetaFields' : 'RecordController.parseMetaFields',
-
-  'GET /parseMetaFields' : 'RecordController.parseMetaFields',
-  'POST /uploadData' : 'RecordController.uploadData',
 
   'POST /transfer' : 'ContainerController.transfer',
 
@@ -166,7 +173,11 @@ module.exports.routes = {
 
   //'POST /completed-step' : 'Lab_protocolController.complete',
 
-  // Clinic Pages
+  // OVID Clinic Pages
+
+  'GET /api': 'QueryController.staff',
+  'GET /api/q': 'QueryController.query',
+
   'GET /clinic/home/:id' : 'ClinicController.home',
   'GET /clinic/list': 'ClinicController.list',
   'GET /clinic/edit': 'ClinicController.edit',
