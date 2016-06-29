@@ -49,6 +49,11 @@ module.exports.policies = {
       'login' : true,
   },
 */
+  record_API: {
+    'lookup' : true,
+    'enum'   : 'reset',
+  },
+
   record: {
       'lookup' : true,
       'enum' : 'reset',
