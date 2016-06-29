@@ -419,7 +419,7 @@ module.exports = {
 		
 		var query = "UPDATE " + table;
 
-		var conditions = options.conditions;
+		var conditions = options.conditions || [];
 
 		if (options.include_tables) {
 			var tables = Object.keys( options.include_tables );
@@ -570,6 +570,7 @@ module.exports = {
 							sails.config.warnings.push(msg);
 						}
 						else {
+							value = 1;
 							onDuplicate = " ON DUPLICATE KEY UPDATE " + fields[f] + "=" + fields[f] + " + 1";
 						}
 					}
@@ -806,6 +807,7 @@ module.exports = {
 		var field = options.field;  // used for <increment> values
 		var debug = options.debug;
 		var index = options.index;
+		var action  = options.action;  // action eg insert or update (eg affects <increment>) 
 
 		var Mod = {};
 		if (sails && sails.models && sails.models[model]) { Mod = sails.models[model] }
@@ -832,17 +834,22 @@ module.exports = {
 				if (debug) console.log("replacing <user> with " + value);
 			}
 			else if (value.match(/^<increment>$/i) ) {
+				if (action === 'insert') {  }  // leave onDuplicate set in createNew function
+				else if (field) { value = field + " + 1 " }
+				else { console.log('should supply field if updating, or insert action') }
 				// NOTE:  Requires setting out onDuplicate OUTSIDE OF THIS Function !!!! (onDuplicate is left hanging here... )
+				/*	
 				value = 1; 
 				if (field) {
-					value = 1;
+					value = '<increment>';  // leave so it can be parsed out in 'createNew'
 					onDuplicate = " ON DUPLICATE KEY UPDATE " + field + "=" + field + " + 1";
-					if (debug) console.log("replacing <increment> with SQL ");
+					console.log("replacing <increment> with SQL ");
 				}
 				else {
 					console.log("No field specified to increment");
 					sails.config.errors.push("no field specfied for increment");
 				}
+				*/
 			}
 			else if (value.match(/^<now>$/i)) {
 				value = 'NOW()'; 
@@ -868,7 +875,6 @@ module.exports = {
 				noQuote = 1;
 			}
 
-			console.log("value: " + JSON.stringify(value));
 			// account for redundant quotes ... 
 			if (value.constructor === String && value.match(/^\"/) && value.match(/\"$/)) {
 				noQuote = 1;
