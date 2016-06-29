@@ -8,12 +8,11 @@
 var q = require('q');
 var xlsx = require('node-xlsx');
 
-
 module.exports = {
 
-  attributes: {
+	attributes: {
 
-  },
+	},
 
 
   	uploadFile : function (file, options) {
@@ -75,7 +74,7 @@ module.exports = {
 						if (record[0]) { records.push(record) }  // only read records with populated first column ... 
 					}
 
-					console.log("Data: " + JSON.stringify(obj));
+					console.log("Upload Data: " + JSON.stringify(obj));
 					deferred.resolve(obj);
 				}
 				catch (e) {
@@ -113,7 +112,7 @@ module.exports = {
 
 				var matrix = uploadedFiles[f].fd
 
-//				try {
+				try {					
 					var obj = xlsx.parse(matrix);
 
 					console.log(JSON.stringify(obj));
@@ -150,7 +149,7 @@ module.exports = {
 						warnings.push(Samples.length + " active Samples, but data supplied for " + applied);
 					}
 
-					console.log(Samples.length + ' Sample found');
+					console.log(Samples.length + ' Sample(s) found');
 
 					for (var i=0; i<Samples.length; i++) {
 						console.log("Sample #" + i + ": " + JSON.stringify(Samples[i]));
@@ -191,24 +190,24 @@ module.exports = {
 								console.log(JSON.stringify(sails.config.messages));
 								sails.config.messages.push(result.affectedRows + " Matrix barcodes associated with samples");
 							}
-							console.log('resolved');
-							deferred.resolve();		
+							deferred.resolve(result);		
 						})	
 						.catch ( function (err) {
-							console.log("Upload Error" + JSON.stringify(err));
+							console.log("Upload Error");
+							console.log(err);
 							deferred.reject(err);
 						});
 					}		
-/*					
 				}
 				catch (e) {
 					deferred.reject("Error loading excel file: " + e);
 				}
-*/
-			}
-			
-			return deferred.promise;
+
+			}			
 		});
+
+		return deferred.promise;
+
 	},
 };
 
