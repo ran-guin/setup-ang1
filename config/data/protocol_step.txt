@@ -79,3 +79,4 @@ Suspend DNA in buffer	22	6	Suspend DNA in 300 ul of TE pH 8.0 buffer		0	0	0	solu
 Transfer DNA to 0.5 ml Matrix Tube	22	7			27	0	0	transfer_qty:location:comments		0.3 ml	1	Transfer	41	0	97	2016-04-18 07:00:00	2016-04-18 07:00:00
 Add Picogreen Data	23	2	Upload data from Picogreen protocol	Upload Picogreen data	0	0	0	Picogreen_Lot_Number			1	NULL	41	0	98	2016-04-18 07:00:00	2016-04-18 07:00:00
 Add Qiagen Data	24	2	Upload data from Qiagen Flexigene 	Upload Qiagen Flexigene data	0	0	0	Qiagen_Lot_Number			1	NULL	41	0	99	2016-04-18 07:00:00	2016-04-18 07:00:00
+Suspend DNA	24	3	Suspend DNA in TE Buffer 	Suspend DNA in TE Buffer	0	0	0	solution_qty	350 ul		1	NULL	41	0	99	2016-04-18 07:00:00	2016-04-18 07:00:00
