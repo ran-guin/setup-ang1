@@ -12,7 +12,7 @@ div.message-block(ng-if="warnings && warnings.length")
     a(href="#" class="close" data-dismiss="alert" aria-label="close") &times;
     ul
       li(ng-repeat="warning in warnings track by $index")
-        i.fa.fa-question
+        i.fa.fa-warning
         span &nbsp;
         b {{warning}}
 
@@ -21,6 +21,6 @@ div.message-block(ng-if="errors && errors.length")
     a(href="#" class="close" data-dismiss="alert" aria-label="close") &times;
     ul
       li(ng-repeat="err in errors track by $index")
-        i.fa.fa-warning
+        i.fa.fa-warning(style='color:red')
         span &nbsp;
         b {{err}}
