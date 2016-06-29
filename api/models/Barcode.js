@@ -20,6 +20,7 @@ module.exports = {
   		'Solution' : 'Sol',
   		'Rack' : 'Loc',
   		'Equipment' : 'Eqp',
+      'Set' : 'Set',
     };
 
   	if (model == undefined) {
