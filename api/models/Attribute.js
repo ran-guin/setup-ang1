@@ -249,7 +249,7 @@ module.exports = {
 			upload[i]['Set_DateTime'] = '<now>';
 		}
 
-		console.log("upload: " + upload[0] + '...');
+		console.log("upload: " + JSON.stringify(upload[0]) + '...');
 
 		Record.createNew( table, upload )
 		.then ( function (result) {
@@ -257,8 +257,11 @@ module.exports = {
 			deferred.resolve(result);			
 		})
 		.catch ( function (err) {
-			deferred.reject({error: err});
+			console.log("error uploading attributes: ");
+			console.log(err);
+			deferred.reject(err);
 		});
+
 		return deferred.promise;
 	},
 
