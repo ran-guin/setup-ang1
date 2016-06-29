@@ -90,11 +90,14 @@ module.exports = {
       if (mode) {
         payload['mode'] = mode;
 
-        var connection = sails.config[mode];
+        var connections = sails.config.connections;
+        var conn  = sails.config.models.connection;
+        var connection = connections[conn];
+
         if (connection) {
-          host = connection.MYSQL_HOST;
-          db   = connection.DEFAULT_MYSQL_DATABASE;
-          db_user   = connection.DEFAULT_MYSQL_USER;
+          host = connection.host;
+          db   = connection.database;
+          db_user   = connection.user;
         
           payload['db'] = db;
           payload['db_user'] = db_user;
