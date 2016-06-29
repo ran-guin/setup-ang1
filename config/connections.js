@@ -42,7 +42,9 @@ module.exports.connections = {
   ***************************************************************************/
 
 // use environment variables for external servers 
-/*  
+// .. otherwise store connections (as below) in config/local.js
+//
+/*
   testDB: {
     adapter: 'sails-mysql',
     host:     process.env.MYSQL_HOST,
