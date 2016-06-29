@@ -158,21 +158,6 @@ module.exports = {
 
 	},
 
-	update : function (table, ids, attributes, values) {
-		var deferred = q.defer();
-		console.log('update attributes for ' + table + ': ' + ids);
-		deferred.resolve({'att1' : 123});
-
-		var update_query = "INSERT INTO " + table 
-			+ "_Attribute (FK_Attribute__ID, FK_" + table + "__ID, Attribute_Value)"
-			+ " VALUES (" + attID + ',' +  ID + ',' + val + ')'
-			+ " ON DUPLICATE KEY UPDATE Attribute_Value=Attribute_Value+1";
-		
-		console.log("update attributes: " + update_query);
-
-		return deferred.promise;		
-	},
-
 	'save' : function ( model, ids, data ) {
 		var deferred = q.defer();
 
@@ -199,9 +184,9 @@ module.exports = {
 						//'Attribute_Value' : data[atts[i]],
 					};
 
-					console.log("Parse " + data[atts[i]] + ' with index: ' + j);
 
-					var val = Record.parseValue(data[atts[i]], { index: j } );
+					var val = Record.parseValue(data[atts[i]], { index: j, action: 'insert'} );
+					console.log("\n** Parse " + data[atts[i]] + ' with index: ' + j + ' -> ' + val);
 
 					insertData['Attribute_Value'] = val;					
 					insertData['FK_' + model + '__ID'] = ids[j];
