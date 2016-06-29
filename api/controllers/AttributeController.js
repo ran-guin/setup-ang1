@@ -68,10 +68,10 @@ module.exports = {
 			return res.render('customize/upload_file', { data : results });
 		})
 		.catch ( function (err) {
-			console.log("Error uploading attributes: " + err);
-			return res.render('customize/private_home', { errorMsg: err });
+			var msg = "Error uploading file: " + err;
+			return res.render('customize/private_home', { errorMsg: msg });
 		});
 
 
 	}
-}
+} 
