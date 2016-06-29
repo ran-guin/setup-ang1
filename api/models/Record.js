@@ -604,9 +604,9 @@ module.exports = {
 			deferred.resolve(result);
 		})
 		.catch ( function (err) {
-			console.log("Error: " + JSON.stringify(err));
 			console.log("Error creating record in " + table);
-			deferred.reject("Error creating new " + table + " record(s) : " + err); 
+			console.log(err);
+			deferred.reject(err); 
 		});
 
 		return deferred.promise;
