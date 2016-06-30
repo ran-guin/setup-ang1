@@ -343,7 +343,7 @@ module.exports = {
 					newData.push(addData);
 				}
 
-				Record.createNew(table, newData)
+				Record.createNew(model, newData)
 				.then (function (newResponse) {
 					var target_id = newResponse.insertId;
 					var target_count = newResponse.affectedRows;
@@ -353,13 +353,13 @@ module.exports = {
 							var nextId = target_id + i;
 							target_ids.push(nextId);
 						}
-						Attribute.clone(table, ids, target_ids, resetData, options)
+						Attribute.clone(model, ids, target_ids, resetData, options)
 						.then (function (data1) {
 							console.log("attribute update: " + JSON.stringify(data1));
 							deferred.resolve({ data: data, insertIds: target_ids, created: newResponse, attributes: data1});
 						})
 						.catch ( function (err2) {
-							deferred.reject({error :err2, table: table, ids: ids, target_ids: target_ids});
+							deferred.reject({error :err2, model: model, ids: ids, target_ids: target_ids});
 						});	
 					}
 					else if (target_count == 0) {
@@ -370,7 +370,7 @@ module.exports = {
 					}
 				})
 				.catch ( function (err3) {
-					deferred.reject({error: err3, table: table, data: data, reset: resetData});
+					deferred.reject({error: err3, model: model, data: data, reset: resetData});
 				});
 			}
 		});
