@@ -7,8 +7,22 @@
 
 module.exports = {
 
-  attributes: {
+	tableName: 'Solution',
+	migrate: 'safe',
 
-  }
+	attributes: {
+
+	},
+
+
+  	legacy_map : {
+  		'number' : 'Solution_Number',
+		'number_in_batch' : 'Number_in_Batch',
+		'expiry' : 'Solution_Expiry',
+		'qty'    : 'Solution_Quantity',
+		'type'   : 'Solution_Type',
+		'Stock'  : 'FK_Stock__ID',
+		'rack'   : 'FK_Rack__ID',
+	}
 };
 
