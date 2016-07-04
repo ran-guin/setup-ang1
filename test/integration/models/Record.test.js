@@ -1,22 +1,22 @@
 var q = require('q');
 var assert = require('chai').assert;
 var Record = require('../../../api/models/Record');
-
+ 
 describe('Record', function() {
     describe('* cast_to', function() {
 
-	it('scalar input', function () {
+	   it('scalar input', function () {
             assert.equal('1,2,3', Record.cast_to('1,2,3', 'array').join(','));
             assert.equal('A,B,C', Record.cast_to("A, B, C", 'Array').join(','));
         });
 
-	it('array input', function () {
+	   it('array input', function () {
             assert.equal('1,2,3', Record.cast_to(['1','2','3'], 'array').join(','));
             assert.equal('1;2;3', Record.cast_to([1,2,3], 'array').join(';'));
             assert.equal('A:B:C', Record.cast_to(["A", 'B', "C"], 'Array').join(':'));
         });
  
-	it('array of keyed hashes ', function () {
+	   it('array of keyed hashes ', function () {
             assert.equal('1,2,3', Record.cast_to([{key: 1},{key:2},{key:3}], 'array','key').join(','));
             assert.equal('A', Record.cast_to([{key: "A"},{key: 'B'},{key: 'C'}], 'Array','key')[0]);
         });
@@ -27,7 +27,7 @@ describe('Record', function() {
         	{ message: 'm1', warning: 'w1', error: ['e1a','e1b'] },
         	{ messages: ['m2a','m2b'], warnings: ['w2a','w2b']},
         	{ errors : 'e3'}
-        ]
+        ];
 
         var merged = Record.merge_Messages(results);
 
@@ -38,17 +38,34 @@ describe('Record', function() {
         });
     });
 
+    describe('* to_Legacy', function () {
+        var data = { 
+            received: '2001-02-03', 
+            other: 'misc', 
+        };
+
+        var Stock = require('../../../api/models/Stock');
+        var legacy = Record.to_Legacy(data, Stock.legacy_map);
+        var keys = Object.keys(legacy);
+
+
+        it('legacy Stock fields', function () {
+            assert.equal('2001-02-03', legacy.Stock_Received);
+            assert.equal('misc', legacy.other);
+        });
+    });
+
     describe('* parseValue', function () {
-	it('id fields', function () {
-		assert.equal('"id"', Record.parseValue('<id>', { model: 'user' }) );
-		// assert.equal("Plate_ID", Record.parseValue('<id>', { model: 'container' }) );
-	});
-	it('null values', function () {
-		assert.equal('null', Record.parseValue(null, { model: 'user' }) );
-		assert.equal('null', Record.parseValue('<NULL>', { model: 'container' }) );
-		assert.equal(14, Record.parseValue('<NULL>', { defaultTo: 14 }) );
-		assert.equal('hello', Record.parseValue(undefined, { defaultTo: 'hello' }) );
-	});
+    	it('id fields', function () {
+    		assert.equal('"id"', Record.parseValue('<id>', { model: 'user' }) );
+    		// assert.equal("Plate_ID", Record.parseValue('<id>', { model: 'container' }) );
+    	});
+    	it('null values', function () {
+    		assert.equal('null', Record.parseValue(null, { model: 'user' }) );
+    		assert.equal('null', Record.parseValue('<NULL>', { model: 'container' }) );
+    		assert.equal(14, Record.parseValue('<NULL>', { defaultTo: 14 }) );
+    		assert.equal('hello', Record.parseValue(undefined, { defaultTo: 'hello' }) );
+    	});
     });
 
     describe('* preChangeHistory', function () {
@@ -83,30 +100,39 @@ describe('Record', function() {
     	it('standard fields', function () {
     		Record.parseMetaFields('lab_protocol',['name','id','status'])
     		.then ( function (parsed) { 
-    			assert.equal('name,id,status', parsed.fields.join(','));
-    			assert.equal(1, parsed.id_index);
-	    		console.log('Parsed Fields: ' + JSON.stringify(parsed));
+                console.log('Parsed: ' + JSON.stringify(parsed));
+                var keys = Object.keys(parsed['fields']);
+    			assert.equal('name,id,status', keys.join(','));
+    			assert.equal(1, parsed['ids'].index);
     		})
     		.catch ( function (err) {
+                assert('',err);
     			console.log("Error: " + err);
     		});
     	});
 
     	it('alias fields', function () {
+            var parsed = {};
     		Record.parseMetaFields('container',['id','target_format'])
-    		.then (function (parsed) {
-	    		assert.equal('Plate_ID,FK_Plate_Format__ID', parsed.fields.join(','))
-    			assert.equal(0, parsed.id_index)
-	    		console.log('Parsed Attributes: ' + JSON.stringify(parsed));
+    		.then (function (result) {
+                parsed = result;
+                console.log('Parsed: ' + JSON.stringify(parsed));
+                assert.equal('Plate_ID', parsed[fields].id)
+                assert.equal('FK_Plate_Format__ID', parsed['fields'].target_format)
+                assert.equal(0, parsed['ids'].index)
     		})
     		.catch ( function (err) {
-    			console.log("Error: " + err);
+                assert('',err);
+    			console.log("alias Error: " + err);
     		});
-    	});
+
+
+   	});
 
     	it('attributes fields', function () {
     		Record.parseMetaFields('container',['Matrix_Barcode'])
     		.then (function (parsed) {
+                assert.equal(1, parsed.attributes.length);
 	    		assert.equal('Matrix_Barcode', parsed.attributes[0].name);
 	    		assert.equal('66', parsed.attributes[0].id);
     			assert.equal(null, parsed.id_index)
