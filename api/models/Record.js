@@ -15,6 +15,65 @@ module.exports = {
 
 	},
 
+	reverse_Map : function (map) {
+		var keys = Object.keys(map);
+
+		var reverseMap = {};
+		for (var i=0; i<keys.length; i++) {
+			var key = keys[i];
+			var val = map[key];
+
+			reverseMap[val] = key;
+		}
+
+		return reverseMap;
+	},
+
+	from_Legacy : function (data, map) {
+		// gets data in mew format from legacy data format ... 
+		var mapped_keys = Object.keys(map);
+		var input_keys  = Object.keys(data);
+
+		var reverse_Map = Record.reverse_Map(map);
+
+		var mapped = {};
+		for (var i=0; i<input_keys; i++) {
+			var legacy_field = input_keys[i];
+			var new_field = reverse_Map[legacy_field];
+
+			if (reverse_Map[legacy_field]) {
+				mapped[new_field] = data[legacy_field];
+			}
+			else {
+				mapped[legacy_field] = data[legacy_field];
+			}
+		}
+
+
+		return mapped;
+	},
+
+	to_Legacy : function (data, map) {
+		// gets data in legacy format from new data format ... 
+		var mapped_keys = Object.keys(map);
+		var input_keys  = Object.keys(data);
+
+		var mapped = {};
+		for (var i=0; i<input_keys.length; i++) {
+			var new_field = input_keys[i];
+			var legacy_field = map[new_field];
+
+			if (map[new_field]) {
+				mapped[legacy_field] = data[new_field];
+			}
+			else {
+				mapped[new_field] = data[new_field];
+			}
+		}
+
+		return mapped;
+	},
+
 	wrap_result : function (result) {
 		// append config messages to result returned via api
 
