@@ -146,6 +146,9 @@ module.exports.routes = {
   'POST /Rack/newBox'  : 'RackController.createBox',
   'POST /Rack/boxData' : 'RackController.boxData',
 
+  'POST /Stock/receive' : 'StockController.receive',
+  'GET /Stock/receive' : 'StockController.receiveForm',
+
   // Custom Pages 
 
   'GET /demo/protocol': 'DemoController.protocol',
