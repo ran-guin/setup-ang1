@@ -20,6 +20,12 @@ div(id="injected#{element}")
 				each field in fields
 					- var key = alias[field] || field;
 					td(style='padding:10px')
-						b !{record[key]}
+						if href && href[key]
+							- ref = href[key].replace('<' + key + '>', record[key])
+							a(href="#{ref}")
+								b goto !{record[key]} (#{ref})
+						else 
+							b no go !{record[key]} (#{key} : #{href[key]})
 		p &nbsp;
+	F: #{ JSON.stringify(href) }
 
