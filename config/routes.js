@@ -173,6 +173,7 @@ module.exports.routes = {
   'POST /attributes/increment' : 'AttributeController.increment',
 
   'POST /scan-barcode' : 'BarcodeController.scan',
+  'GET /scan-barcode' : 'BarcodeController.scan',
 
   //'POST /completed-step' : 'Lab_protocolController.complete',
 
