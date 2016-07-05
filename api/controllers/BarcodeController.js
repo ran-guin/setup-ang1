@@ -15,7 +15,7 @@ module.exports = {
 
 		var body = req.body || {};
 
-		var barcode = req.body.barcode || req.param('barcode');
+		var barcode = body.barcode || req.param('barcode');
 
 		console.log("Scan: " + JSON.stringify(req.body));
 
