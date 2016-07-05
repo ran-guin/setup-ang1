@@ -1,81 +1,82 @@
-name	Lab_protocol	step_number	instructions	message	Target_format	Target_sample	reset_focus	input_options	input_format	input_defaults	prompt	transfer_type	createdBy	repeatable	id	createdAt	updatedAt
-Do Not Discard This Protocol	1	1			NULL	NULL	NULL				0	NULL	1	NULL	1	NULL	NULL
-Throw Away	1	1			NULL	NULL	NULL				0	NULL	1	NULL	2	NULL	NULL
-Export	1	1			NULL	NULL	NULL				0	NULL	1	NULL	3	NULL	NULL
-Fail Plate	1	1	Standard Protocol Step for Failing Plates	NULL	NULL	NULL	NULL	NULL		NULL	0	NULL	1	NULL	4	NULL	NULL
-Thaw	1	1	Standard Protocol Step for Thawing Plates	NULL	NULL	NULL	NULL	NULL		NULL	0	NULL	1	NULL	5	NULL	NULL
-Get Sample	2	1			NULL	NULL	NULL				1	NULL	1	NULL	10	NULL	NULL
-Aliquot to 384-well Abgene - Culture	2	2			NULL	NULL	NULL				1	Aliquot	1	NULL	11	NULL	NULL
-Centrifuge	2	3			NULL	NULL	NULL	equipment			1	NULL	1	NULL	12	NULL	NULL
-Apply solution	2	4			NULL	NULL	NULL	solution:solution_qty	:	:l	1	NULL	1	NULL	13	NULL	NULL
-Setup tubes with DMSO	3	3		Fill empty tubes with RPMI / 20% DMSO	NULL	NULL	NULL	comments			1	NULL	4	NULL	14	NULL	NULL
-Transfer Whole Blood to 2 ml cryovial	3	4			5	4	NULL	transfer_qty*:Split:comments		750ul:3	1	Transfer	1	NULL	15	NULL	NULL
-New Store Tubes in Box	3	5		Scan Box Barcode	NULL	NULL	NULL	location*:comments			1	NULL	1	NULL	16	NULL	NULL
-Centrifuge	5	1	Centrifuge at 1300 x g for 10 minutes at room temperature	Centrifuge 1300 x g; 10 min (4 deg C)	NULL	NULL	NULL	comments			1	NULL	1	NULL	18	NULL	NULL
-Pre-Print Blood Serum to 2 ml cryovial	4	3			5	5	NULL	Split:comments		2	1	Pre-Print	1	NULL	22	NULL	NULL
-Centrifuge	4	1	Centrifuge 1300 x g; 10 minutes at room temperature	Centrifuge 1300 x g; 10 min (Room Temp)	NULL	NULL	NULL	comments			1	NULL	1	NULL	23	NULL	NULL
-Transfer Blood Serum to 2 ml cryovial	4	4			5	5	NULL	transfer_qty*:Split:comments		1.0ml:2	1	Transfer	4	NULL	24	NULL	NULL
-Transfer to 2 ml cryovial	6	2			5	NULL	NULL	transfer_qty*:Split:comments	:	1.5ml:3	1	Transfer	4	NULL	26	NULL	NULL
-Record Clotting time	4	2			NULL	NULL	NULL	Minutes_Clotted:Thaw_Count:comments			0	NULL	4	NULL	27	NULL	NULL
-Extract Blood Plasma out to 2 ml cryovial	5	5			5	10	1	transfer_qty*:Split:location*:comments	::	1.0ml:2:	1	Transfer	4	NULL	29	NULL	NULL
-Extract White Blood Cells out to 2 ml cryovial	5	6		Extract Buffy Coat	5	7	1	transfer_qty*:location*:comments	:	1.0ml:	1	Transfer	4	NULL	30	NULL	NULL
-Transfer Red Blood Cells to 2 ml cryovial	5	7			5	6	NULL	transfer_qty*:location*:comments	:	1.0ml:	1	Transfer	4	NULL	31	NULL	NULL
-Store cryovials in box	4	5		Scan Box Barcode	NULL	NULL	NULL	location*:comments			1	NULL	1	NULL	32	NULL	NULL
-Store cryovials in box	5	8		Scan Box Barcode	NULL	NULL	NULL	location*:comments			0	NULL	1	NULL	33	NULL	NULL
-Store cryovials in box	6	3		Scan Box Barcode	NULL	NULL	NULL	location*:comments			1	NULL	1	NULL	34	NULL	NULL
-Export Samples	7	1			NULL	NULL	NULL	Waybill_Number*:Shipping_Temp_in_C:Shipper:Data_Logger_Serial_No:comments			1	NULL	1	NULL	35	NULL	NULL
-Receive Sample Shipment	8	1			NULL	NULL	NULL	Max_Transit_Temp_in_C:Min_Transit_Temp_in_C:comments			1	NULL	1	NULL	36	NULL	NULL
-Insert into Transporter Box	9	1		Scan Transporter Box	NULL	NULL	NULL	location*:comments			0	NULL	1	NULL	37	NULL	NULL
-Pre-Print Blood Plasma out to 2 ml cryovial	5	2	pre-print barcodes for plasma cryovials	apply barcodes to cryovials for Plasma	5	10	1	Split:comments		2	1	Pre-Print	1	NULL	38	NULL	NULL
-Pre-Print White Blood Cells out to 2 ml cryovial	5	3	pre-print barcodes for WBC cryovials	apply barcodes to cryovials for White Bl	5	7	1	comments			1	Pre-Print	1	NULL	39	NULL	NULL
-Pre-Print Red Blood Cells out to 2 ml cryovial	5	4	pre-print barcodes for RBC cryovials	apply barcodes to cryovials for Red Bloo	5	6	1	comments			1	Pre-Print	1	NULL	40	NULL	NULL
-Pre-Print Whole Blood to 2 ml cryovial	3	2	Pre-Print Whole Blood out to cryovial	put barcodes on cryovials	5	4	NULL	Split:comments		3	1	Pre-Print	1	NULL	41	NULL	NULL
-Centrifuge	10	1	Centrifuge at 1300 x g for 10 minutes at room temperature	Centrifuge 1300 x g; 10 min (4 deg C)	NULL	NULL	NULL	comments			1	NULL	1	0	42	NULL	NULL
-Extract Blood Plasma out to 2 ml cryovial	10	2			5	10	1	transfer_qty*:Split:location*:comments	::	1.0ml:3:	1	Transfer	4	0	43	NULL	NULL
-Extract White Blood Cells out to 2 ml cryovial	10	3		Extract Buffy Coat	5	7	1	transfer_qty*:Split:location*:comments	::::	1.0ml:1	1	Transfer	1	NULL	44	NULL	NULL
-Transfer Red Blood Cells to 2 ml cryovial	10	4			5	6	NULL	transfer_qty*:Split:comments	::::	1.0ml:1	1	Transfer	1	NULL	45	NULL	NULL
-Store cryovials in box	10	5		Scan Box Barcode	NULL	NULL	NULL	location*:comments			0	NULL	1	0	46	NULL	NULL
-Pre-Print Blood Plasma to 2 ml cryovial	11	1			5	10	NULL	Split:comments		3	1	Pre-Print	1	0	50	NULL	NULL
-Centrifuge	11	2	Centrifuge 1500 x g; 10 minutes at room temperature	Centrifuge 1500 x g; 10 min (Room Temp)	NULL	NULL	NULL	comments			1	NULL	1	NULL	51	NULL	NULL
-Transfer Blood Plasma to 2 ml cryovial	11	4			5	10	NULL	transfer_qty*:Split:comments		1.0ml:3	1	Transfer	4	0	52	NULL	NULL
-Record Clotting time	11	3			NULL	NULL	NULL	Minutes_Clotted:Thaw_Count:comments			0	NULL	4	0	53	NULL	NULL
-Store cryovials in box	11	5		Scan Box Barcode	NULL	NULL	NULL	location:comments			1	NULL	1	0	54	NULL	NULL
-Pre-Print to 2 ml cryovial	6	1			5	NULL	NULL	Split:comments	:	3:	1	Pre-Print	1	NULL	56	NULL	NULL
-Pre-Print Blood Plasma to 1 ml cryovial	12	1	Pre-print plasma barcodes		22	10	NULL	Split:comments	:	3:	1	Pre-Print	1	NULL	57	NULL	NULL
-Centrifuge containers	12	2	Centrifuge containers at 2500 rpm for 10 minutes at room temperature.	Centrifuge 2500 rpm, 10 min, room temp	NULL	NULL	NULL	comments			1	NULL	1	NULL	58	NULL	NULL
-Aliquot Blood Plasma to 1 ml cryovial	12	3		Aliquot 1.0 mL per tube	22	10	NULL	transfer_qty*:Split:comments	::::	1.0ml:3:::	1	Aliquot	1	NULL	59	NULL	NULL
-Pre-Print Blood Plasma to 1 ml cryovial	14	1		Pre-print plasma barcodes	22	10	NULL	Split:comments	:	2:	1	Pre-Print	1	NULL	62	NULL	NULL
-Centrifuge containers	14	2	Centrifuge containers at 2500 rpm for 10 minutes at room temperature.	Centrifuge 2500 rpm, 10 min, room temp	NULL	NULL	NULL	comments			1	NULL	1	NULL	63	NULL	NULL
-Aliquot Blood Plasma to 1 ml cryovial	14	3		Aliquot 1.0 mL per tube	22	10	NULL	transfer_qty*:Split:comments	::::	1.0ml:2:::	1	Aliquot	1	NULL	64	NULL	NULL
-Pool to 50 ml Conical Tube	15	1		Pool sample tubes together	14	NULL	NULL	comments			1	NULL	1	NULL	66	NULL	NULL
-Aliquot to 50 ml Conical Tube	15	2		Split into 2 tubes	14	NULL	NULL	Split:comments	:	2:	0	Aliquot	1	NULL	67	NULL	NULL
-Weigh Tube	16	1	Measure and record Full Tube weight in grams. 		NULL	NULL	NULL	Measured_Tube_Weight_in_g			1	NULL	1	NULL	68	NULL	NULL
-Store samples	16	2			NULL	NULL	NULL	location			1	NULL	1	NULL	69	NULL	NULL
-Transfer DNA to 1.8 ml eppendorf	17	9			23	11	NULL				1	Transfer	1	NULL	71	NULL	NULL
-Incubate	17	2	Incubate sample overnight at 50 C	Incubate sample overnight at 50 C	NULL	NULL	NULL				1	NULL	1	NULL	72	NULL	NULL
-Resuspend	17	8	Resuspend in 1ml of hydration buffer	Resuspend Pellet in 50 ul of DNA Buffer	NULL	NULL	NULL	solution:solution_qty	:	:50ul	1	NULL	1	NULL	74	NULL	NULL
-Store sample	17	10			NULL	NULL	NULL	location			1	NULL	1	NULL	75	NULL	NULL
-Transfer DNA to 1.8 ml eppendorf	18	3		Lyses and remove RBC	23	11	NULL				1	Transfer	1	NULL	76	NULL	NULL
-Digest	18	4		Digest WBC with Protease K	NULL	NULL	NULL				1	NULL	1	NULL	77	NULL	NULL
-Precipitate	18	5		Precipitate, wash and air dry DNA	NULL	NULL	NULL				1	NULL	1	NULL	78	NULL	NULL
-Resuspend	18	6	Resuspend in 1ml of hydration buffer	Resuspend pellet in 1 ml of DNA buffer	NULL	NULL	NULL				1	NULL	1	NULL	79	NULL	NULL
-Store Sample	18	7		Scan target location - 4 C Fridge	NULL	NULL	NULL	location*	:	:	1	NULL	1	NULL	80	NULL	NULL
-Pre-Print DNA to 1.8 ml eppendorf	18	1		Generate DNA barcodes	23	11	NULL				1	Pre-Print	1	0	81	NULL	NULL
-Add PT-LP2 solution and Incubate 10 min	17	3	Add 20?L PT-L2P solution to each tube, mix, incubate on ice for 10 minutes		NULL	NULL	NULL				1	NULL	1	NULL	82	NULL	NULL
-Centrifuge	17	4	Centrifuge at 15,000 x g for 15 minutes at room temperature	Spin 15000 15m RT	NULL	NULL	NULL				1	NULL	1	NULL	83	NULL	NULL
-Transfer supernatant	17	5	Transfer supernatant containing DNA to new tube. Add 5?L glycogen and 0.5mL 95% ethanol, mix &#8805;10X. Incubate at RT for 10 minutes		NULL	NULL	NULL				1	Transfer	1	NULL	84	NULL	NULL
-Centrifuge again	17	6	Centrifuge at 15,000 x g for 2 minutes at RT	Spin 15000 2 min RT	NULL	NULL	NULL				1	NULL	1	NULL	85	NULL	NULL
-Decant	17	7	Discard supernatant. Wash DNA pellet with 70% ethanol, centrifuge (15,000 x g, 2 minutes, RT), discard ethanol, air-dry DNA pellet		NULL	NULL	NULL				1	NULL	1	NULL	86	NULL	NULL
-Transfer  to 1.8 ml eppendorf	17	1	Transfer 0.5mL saliva sample to 1.5mL microfuge tube(s)	Transfer 0.5mL to ufuge tube(s)	23	NULL	NULL	transfer_qty*:Split	:	0.5ml:2	1	Transfer	1	NULL	87	NULL	NULL
-Update Gender Test Results	19	1	Indicate results of Gender Test		NULL	NULL	NULL	Gender_Test_Result			1	NULL	41	2	88	NULL	NULL
-DNA Quantification	20	1	Indicate results of DNA Quantification		NULL	11	NULL	260_280_Ratio:Concentration_ng_per_ul			1	NULL	41	2	89	NULL	NULL
-test step 1	21	1	general instructions	basic message	NULL	NULL	NULL	solution:solution_qty:equipment*:location:Waybill_Number*			1	NULL	0	0	90	NULL	NULL
-Transfer Buffy Coat to Falcon Tubes	22	1	Transfer 1.0 ml of buffy coat to 15 ml Falcon tube	Transfer as indicated	26	7	0	transfer_qty*		1ml	1	Transfer	41	0	91	2016-04-18 07:00:00	2016-04-18 07:00:00
-Mix & Centrifuge	22	2	Mix buffy coat with FG1 and centrifuge @2000 xg for 5 min	Mix with FG1 & Centrifuge	0	0	0	Qiagen_Kit_Lot_Number			1	NULL	41	0	92	2016-04-18 07:00:00	2016-04-18 07:00:00
-Mix & Digest	22	3	Suspend pellet in FG2 buffer/protease, invert 3 times, heat at 65 C for 10 min	Digest with FG2 buffer/protease	0	0	0	location			1	NULL	41	0	93	2016-04-18 07:00:00	2016-04-18 07:00:00
-Precipitate & Centrifuge	22	4	Precipitate DNA with isopropanol and centrifuge @2000 xg for 3 min		0	0	0	location			1	NULL	41	0	94	2016-04-18 07:00:00	2016-04-18 07:00:00
-Wash Pellet	22	5	Wash DNA Pellet with 70% ethanol		0	0	0	DNA_Wash_Cycles		2	1	NULL	41	0	95	2016-04-18 07:00:00	2016-04-18 07:00:00
-Suspend DNA in buffer	22	6	Suspend DNA in 300 ul of TE pH 8.0 buffer		0	0	0	solution:solution_qty			1	NULL	41	0	96	2016-04-18 07:00:00	2016-04-18 07:00:00
-Transfer DNA to 0.5 ml Matrix Tube	22	7			27	0	0	transfer_qty:location:comments		0.3 ml	1	Transfer	41	0	97	2016-04-18 07:00:00	2016-04-18 07:00:00
-Add Picogreen Data	23	2	Upload data from Picogreen protocol	Upload Picogreen data	0	0	0	Picogreen_Lot_Number			1	NULL	41	0	98	2016-04-18 07:00:00	2016-04-18 07:00:00
-Add Qiagen Data	24	2	Upload data from Qiagen Flexigene 	Upload Qiagen Flexigene data	0	0	0	Qiagen_Lot_Number			1	NULL	41	0	99	2016-04-18 07:00:00	2016-04-18 07:00:00
+name	Lab_protocol	step_number	instructions	message	Target_format	Target_sample	reset_focus	input_options	input_format	input_defaults	custom_settings	prompt	transfer_type	createdBy	repeatable	id	createdAt	updatedAt
+Do Not Discard This Protocol	1	1			NULL	NULL	NULL				NULL	0	NULL	1	NULL	1	NULL	NULL
+Throw Away	1	1			NULL	NULL	NULL				NULL	0	NULL	1	NULL	2	NULL	NULL
+Export	1	1			NULL	NULL	NULL				NULL	0	NULL	1	NULL	3	NULL	NULL
+Fail Plate	1	1	Standard Protocol Step for Failing Plates	NULL	NULL	NULL	NULL	NULL		NULL	NULL	0	NULL	1	NULL	4	NULL	NULL
+Thaw	1	1	Standard Protocol Step for Thawing Plates	NULL	NULL	NULL	NULL	NULL		NULL	NULL	0	NULL	1	NULL	5	NULL	NULL
+Get Sample	2	1			NULL	NULL	NULL				NULL	1	NULL	1	NULL	10	NULL	NULL
+Aliquot to 384-well Abgene - Culture	2	2			NULL	NULL	NULL				NULL	1	Aliquot	1	NULL	11	NULL	NULL
+Centrifuge	2	3			NULL	NULL	NULL	equipment			NULL	1	NULL	1	NULL	12	NULL	NULL
+Apply solution	2	4			NULL	NULL	NULL	solution:solution_qty	:	:l	NULL	1	NULL	1	NULL	13	NULL	NULL
+Setup tubes with DMSO	3	3		Fill empty tubes with RPMI / 20% DMSO	NULL	NULL	NULL	comments			NULL	1	NULL	4	NULL	14	NULL	NULL
+Transfer Whole Blood to 2 ml cryovial	3	4			5	4	NULL	transfer_qty*:Split:comments		750ul:3	NULL	1	Transfer	1	NULL	15	NULL	NULL
+New Store Tubes in Box	3	5		Scan Box Barcode	NULL	NULL	NULL	location*:comments			NULL	1	NULL	1	NULL	16	NULL	NULL
+Centrifuge	5	1	Centrifuge at 1300 x g for 10 minutes at room temperature	Centrifuge 1300 x g; 10 min (4 deg C)	NULL	NULL	NULL	comments			NULL	1	NULL	1	NULL	18	NULL	NULL
+Pre-Print Blood Serum to 2 ml cryovial	4	3			5	5	NULL	Split:comments		2	NULL	1	Pre-Print	1	NULL	22	NULL	NULL
+Centrifuge	4	1	Centrifuge 1300 x g; 10 minutes at room temperature	Centrifuge 1300 x g; 10 min (Room Temp)	NULL	NULL	NULL	comments			NULL	1	NULL	1	NULL	23	NULL	NULL
+Transfer Blood Serum to 2 ml cryovial	4	4			5	5	NULL	transfer_qty*:Split:comments		1.0ml:2	NULL	1	Transfer	4	NULL	24	NULL	NULL
+Transfer to 2 ml cryovial	6	2			5	NULL	NULL	transfer_qty*:Split:comments	:	1.5ml:3	NULL	1	Transfer	4	NULL	26	NULL	NULL
+Record Clotting time	4	2			NULL	NULL	NULL	Minutes_Clotted:Thaw_Count:comments			NULL	0	NULL	4	NULL	27	NULL	NULL
+Extract Blood Plasma out to 2 ml cryovial	5	5			5	10	1	transfer_qty*:Split:location*:comments	::	1.0ml:2:	NULL	1	Transfer	4	NULL	29	NULL	NULL
+Extract White Blood Cells out to 2 ml cryovial	5	6		Extract Buffy Coat	5	7	1	transfer_qty*:location*:comments	:	1.0ml:	NULL	1	Transfer	4	NULL	30	NULL	NULL
+Transfer Red Blood Cells to 2 ml cryovial	5	7			5	6	NULL	transfer_qty*:location*:comments	:	1.0ml:	NULL	1	Transfer	4	NULL	31	NULL	NULL
+Store cryovials in box	4	5		Scan Box Barcode	NULL	NULL	NULL	location*:comments			NULL	1	NULL	1	NULL	32	NULL	NULL
+Store cryovials in box	5	8		Scan Box Barcode	NULL	NULL	NULL	location*:comments			NULL	0	NULL	1	NULL	33	NULL	NULL
+Store cryovials in box	6	3		Scan Box Barcode	NULL	NULL	NULL	location*:comments			NULL	1	NULL	1	NULL	34	NULL	NULL
+Export Samples	7	1			NULL	NULL	NULL	Waybill_Number*:Shipping_Temp_in_C:Shipper:Data_Logger_Serial_No:comments			NULL	1	NULL	1	NULL	35	NULL	NULL
+Receive Sample Shipment	8	1			NULL	NULL	NULL	Max_Transit_Temp_in_C:Min_Transit_Temp_in_C:comments			NULL	1	NULL	1	NULL	36	NULL	NULL
+Insert into Transporter Box	9	1		Scan Transporter Box	NULL	NULL	NULL	location*:comments			NULL	0	NULL	1	NULL	37	NULL	NULL
+Pre-Print Blood Plasma out to 2 ml cryovial	5	2	pre-print barcodes for plasma cryovials	apply barcodes to cryovials for Plasma	5	10	1	Split:comments		2	NULL	1	Pre-Print	1	NULL	38	NULL	NULL
+Pre-Print White Blood Cells out to 2 ml cryovial	5	3	pre-print barcodes for WBC cryovials	apply barcodes to cryovials for White Bl	5	7	1	comments			NULL	1	Pre-Print	1	NULL	39	NULL	NULL
+Pre-Print Red Blood Cells out to 2 ml cryovial	5	4	pre-print barcodes for RBC cryovials	apply barcodes to cryovials for Red Bloo	5	6	1	comments			NULL	1	Pre-Print	1	NULL	40	NULL	NULL
+Pre-Print Whole Blood to 2 ml cryovial	3	2	Pre-Print Whole Blood out to cryovial	put barcodes on cryovials	5	4	NULL	Split:comments		3	NULL	1	Pre-Print	1	NULL	41	NULL	NULL
+Centrifuge	10	1	Centrifuge at 1300 x g for 10 minutes at room temperature	Centrifuge 1300 x g; 10 min (4 deg C)	NULL	NULL	NULL	comments			NULL	1	NULL	1	0	42	NULL	NULL
+Extract Blood Plasma out to 2 ml cryovial	10	2			5	10	1	transfer_qty*:Split:location*:comments	::	1.0ml:3:	NULL	1	Transfer	4	0	43	NULL	NULL
+Extract White Blood Cells out to 2 ml cryovial	10	3		Extract Buffy Coat	5	7	1	transfer_qty*:Split:location*:comments	::::	1.0ml:1	NULL	1	Transfer	1	NULL	44	NULL	NULL
+Transfer Red Blood Cells to 2 ml cryovial	10	4			5	6	NULL	transfer_qty*:Split:comments	::::	1.0ml:1	NULL	1	Transfer	1	NULL	45	NULL	NULL
+Store cryovials in box	10	5		Scan Box Barcode	NULL	NULL	NULL	location*:comments			NULL	0	NULL	1	0	46	NULL	NULL
+Pre-Print Blood Plasma to 2 ml cryovial	11	1			5	10	NULL	Split:comments		3	NULL	1	Pre-Print	1	0	50	NULL	NULL
+Centrifuge	11	2	Centrifuge 1500 x g; 10 minutes at room temperature	Centrifuge 1500 x g; 10 min (Room Temp)	NULL	NULL	NULL	comments			NULL	1	NULL	1	NULL	51	NULL	NULL
+Transfer Blood Plasma to 2 ml cryovial	11	4			5	10	NULL	transfer_qty*:Split:comments		1.0ml:3	NULL	1	Transfer	4	0	52	NULL	NULL
+Record Clotting time	11	3			NULL	NULL	NULL	Minutes_Clotted:Thaw_Count:comments			NULL	0	NULL	4	0	53	NULL	NULL
+Store cryovials in box	11	5		Scan Box Barcode	NULL	NULL	NULL	location:comments			NULL	1	NULL	1	0	54	NULL	NULL
+Pre-Print to 2 ml cryovial	6	1			5	NULL	NULL	Split:comments	:	3:	NULL	1	Pre-Print	1	NULL	56	NULL	NULL
+Pre-Print Blood Plasma to 1 ml cryovial	12	1	Pre-print plasma barcodes		22	10	NULL	Split:comments	:	3:	NULL	1	Pre-Print	1	NULL	57	NULL	NULL
+Centrifuge containers	12	2	Centrifuge containers at 2500 rpm for 10 minutes at room temperature.	Centrifuge 2500 rpm, 10 min, room temp	NULL	NULL	NULL	comments			NULL	1	NULL	1	NULL	58	NULL	NULL
+Aliquot Blood Plasma to 1 ml cryovial	12	3		Aliquot 1.0 mL per tube	22	10	NULL	transfer_qty*:Split:comments	::::	1.0ml:3:::	NULL	1	Aliquot	1	NULL	59	NULL	NULL
+Pre-Print Blood Plasma to 1 ml cryovial	14	1		Pre-print plasma barcodes	22	10	NULL	Split:comments	:	2:	NULL	1	Pre-Print	1	NULL	62	NULL	NULL
+Centrifuge containers	14	2	Centrifuge containers at 2500 rpm for 10 minutes at room temperature.	Centrifuge 2500 rpm, 10 min, room temp	NULL	NULL	NULL	comments			NULL	1	NULL	1	NULL	63	NULL	NULL
+Aliquot Blood Plasma to 1 ml cryovial	14	3		Aliquot 1.0 mL per tube	22	10	NULL	transfer_qty*:Split:comments	::::	1.0ml:2:::	NULL	1	Aliquot	1	NULL	64	NULL	NULL
+Pool to 50 ml Conical Tube	15	1		Pool sample tubes together	14	NULL	NULL	comments			NULL	1	NULL	1	NULL	66	NULL	NULL
+Aliquot to 50 ml Conical Tube	15	2		Split into 2 tubes	14	NULL	NULL	Split:comments	:	2:	NULL	0	Aliquot	1	NULL	67	NULL	NULL
+Weigh Tube	16	1	Measure and record Full Tube weight in grams. 		NULL	NULL	NULL	Measured_Tube_Weight_in_g			NULL	1	NULL	1	NULL	68	NULL	NULL
+Store samples	16	2			NULL	NULL	NULL	location			NULL	1	NULL	1	NULL	69	NULL	NULL
+Transfer DNA to 1.8 ml eppendorf	17	9			23	11	NULL				NULL	1	Transfer	1	NULL	71	NULL	NULL
+Incubate	17	2	Incubate sample overnight at 50 C	Incubate sample overnight at 50 C	NULL	NULL	NULL				NULL	1	NULL	1	NULL	72	NULL	NULL
+Resuspend	17	8	Resuspend in 1ml of hydration buffer	Resuspend Pellet in 50 ul of DNA Buffer	NULL	NULL	NULL	solution:solution_qty	:	:50ul	NULL	1	NULL	1	NULL	74	NULL	NULL
+Store sample	17	10			NULL	NULL	NULL	location			NULL	1	NULL	1	NULL	75	NULL	NULL
+Transfer DNA to 1.8 ml eppendorf	18	3		Lyses and remove RBC	23	11	NULL				NULL	1	Transfer	1	NULL	76	NULL	NULL
+Digest	18	4		Digest WBC with Protease K	NULL	NULL	NULL				NULL	1	NULL	1	NULL	77	NULL	NULL
+Precipitate	18	5		Precipitate, wash and air dry DNA	NULL	NULL	NULL				NULL	1	NULL	1	NULL	78	NULL	NULL
+Resuspend	18	6	Resuspend in 1ml of hydration buffer	Resuspend pellet in 1 ml of DNA buffer	NULL	NULL	NULL				NULL	1	NULL	1	NULL	79	NULL	NULL
+Store Sample	18	7		Scan target location - 4 C Fridge	NULL	NULL	NULL	location*	:	:	NULL	1	NULL	1	NULL	80	NULL	NULL
+Pre-Print DNA to 1.8 ml eppendorf	18	1		Generate DNA barcodes	23	11	NULL				NULL	1	Pre-Print	1	0	81	NULL	NULL
+Add PT-LP2 solution and Incubate 10 min	17	3	Add 20?L PT-L2P solution to each tube, mix, incubate on ice for 10 minutes		NULL	NULL	NULL				NULL	1	NULL	1	NULL	82	NULL	NULL
+Centrifuge	17	4	Centrifuge at 15,000 x g for 15 minutes at room temperature	Spin 15000 15m RT	NULL	NULL	NULL				NULL	1	NULL	1	NULL	83	NULL	NULL
+Transfer supernatant	17	5	Transfer supernatant containing DNA to new tube. Add 5?L glycogen and 0.5mL 95% ethanol, mix &#8805;10X. Incubate at RT for 10 minutes		NULL	NULL	NULL				NULL	1	Transfer	1	NULL	84	NULL	NULL
+Centrifuge again	17	6	Centrifuge at 15,000 x g for 2 minutes at RT	Spin 15000 2 min RT	NULL	NULL	NULL				NULL	1	NULL	1	NULL	85	NULL	NULL
+Decant	17	7	Discard supernatant. Wash DNA pellet with 70% ethanol, centrifuge (15,000 x g, 2 minutes, RT), discard ethanol, air-dry DNA pellet		NULL	NULL	NULL				NULL	1	NULL	1	NULL	86	NULL	NULL
+Transfer  to 1.8 ml eppendorf	17	1	Transfer 0.5mL saliva sample to 1.5mL microfuge tube(s)	Transfer 0.5mL to ufuge tube(s)	23	NULL	NULL	transfer_qty*:Split	:	0.5ml:2	NULL	1	Transfer	1	NULL	87	NULL	NULL
+Update Gender Test Results	19	1	Indicate results of Gender Test		NULL	NULL	NULL	Gender_Test_Result			NULL	1	NULL	41	2	88	NULL	NULL
+DNA Quantification	20	1	Indicate results of DNA Quantification		NULL	11	NULL	_260_280_Ratio:Concentration_ng_per_ul			NULL	1	NULL	41	2	89	NULL	NULL
+test step 1	21	1	general instructions	basic message	NULL	NULL	NULL	solution:solution_qty:equipment*:location:Waybill_Number*			NULL	1	NULL	0	0	90	NULL	NULL
+Transfer Buffy Coat to Falcon Tubes	22	1	Transfer 1.0 ml of buffy coat to 15 ml Falcon tube	Transfer as indicated	26	7	0	transfer_qty*		1ml	NULL	1	Transfer	41	0	91	2016-04-18 07:00:00	2016-04-18 07:00:00
+Mix & Centrifuge	22	2	Mix buffy coat with FG1 and centrifuge @2000 xg for 5 min	Mix with FG1 & Centrifuge	0	0	0	Qiagen_Kit_Lot_Number			NULL	1	NULL	41	0	92	2016-04-18 07:00:00	2016-04-18 07:00:00
+Mix & Digest	22	3	Suspend pellet in FG2 buffer/protease, invert 3 times, heat at 65 C for 10 min	Digest with FG2 buffer/protease	0	0	0	location			NULL	1	NULL	41	0	93	2016-04-18 07:00:00	2016-04-18 07:00:00
+Precipitate & Centrifuge	22	4	Precipitate DNA with isopropanol and centrifuge @2000 xg for 3 min		0	0	0	location			NULL	1	NULL	41	0	94	2016-04-18 07:00:00	2016-04-18 07:00:00
+Wash Pellet	22	5	Wash DNA Pellet with 70% ethanol		0	0	0	DNA_Wash_Cycles		2	NULL	1	NULL	41	0	95	2016-04-18 07:00:00	2016-04-18 07:00:00
+Suspend DNA in buffer	22	6	Suspend DNA in 300 ul of TE pH 8.0 buffer		0	0	0	solution:solution_qty			NULL	1	NULL	41	0	96	2016-04-18 07:00:00	2016-04-18 07:00:00
+Transfer DNA to 0.5 ml Matrix Tube	22	7			27	0	0	transfer_qty:location:comments		0.3 ml	NULL	1	Transfer	41	0	97	2016-04-18 07:00:00	2016-04-18 07:00:00
+Add Picogreen Data	23	2	Upload data from Picogreen protocol	Upload Picogreen data	0	0	0	Picogreen_Lot_Number			NULL	1	NULL	41	0	98	2016-04-18 07:00:00	2016-04-18 07:00:00
+Transfer DNA to cryovial	24	1	Extract DNA from White Blood Cells 	Extract DNA from White Blood Cells and suspend in TE Buffer	0	0	0	solution:solution_qty:Qiagen_Lot_Number	:350 ul:		NULL	1	Transfer	41	0	99	2016-04-18 07:00:00	2016-04-18 07:00:00
+Standard Thaw	25	1	Update Thaw Count for current samples 	Track Thaw Instance and note Thaw Temperature	0	0	0	Thaw_Count:Thaw_Temp			NULL	1	NULL	4	0	100	2016-04-18 07:00:00	2016-04-18 07:00:00

@@ -17,6 +17,8 @@ module.exports = {
 
 	},
 
+	models : [ 'container', 'prep' ],  // models with attributes...
+
 	insertHash : function (model, id, att_id, value) {
 		var hash = {};
 
@@ -73,61 +75,73 @@ module.exports = {
 	clone : function (table, sources, targets, resetData, options) {
 		var split = options.split || 1;
 		var deferred = q.defer();
-		console.log('clone attributes for ' + table + ' Record(s): ' + targets.join(',' ));
 
-		var source_list = sources.join(',');
-		var fields = 'FK_' + table + '__ID as reference_id, FK_Attribute__ID as id, Attribute_Name name, Attribute_Type type, Attribute_Value as value';
-		var query = "SELECT " + fields + " FROM " + table + '_Attribute, Attribute'
-			+ " WHERE FK_Attribute__ID=Attribute_ID AND Inherited='Yes' AND FK_" + table + '__ID IN (' + source_list + ')';
+		var Mod = sails.models[model];
+		var table = Mod.tableName || model;
 
-		var insertPrefix = "INSERT INTO " + table + '_Attribute (FK_' + table + '__ID, FK_Attribute__ID, Attribute_Value) VALUES ';
+		if ( Attribute.models.indexOf(model) ) {
+			console.log('clone attributes for ' + table + ' Record(s): ' + targets.join(',' ));
 
-		var Map = {};
-		var split_index = {};
-		for (var i=0; i<sources.length; i++) {
-			if ( ! split_index[sources[i]] ) { 
-				split_index[sources[i]] = 0;
-				Map[sources[i]] = [];
+			var source_list = sources.join(',');
+			var fields = 'FK_' + table + '__ID as reference_id, FK_Attribute__ID as id, Attribute_Name name, Attribute_Type type, Attribute_Value as value';
+			var query = "SELECT " + fields + " FROM " + table + '_Attribute, Attribute'
+				+ " WHERE FK_Attribute__ID=Attribute_ID AND Inherited='Yes' AND FK_" + table + '__ID IN (' + source_list + ')';
+
+			var insertPrefix = "INSERT INTO " + table + '_Attribute (FK_' + table + '__ID, FK_Attribute__ID, Attribute_Value) VALUES ';
+
+			var Map = {};
+			var split_index = {};
+			for (var i=0; i<sources.length; i++) {
+				if ( ! split_index[sources[i]] ) { 
+					split_index[sources[i]] = 0;
+					Map[sources[i]] = [];
+				}
+
+				Map[sources[i]][split_index[sources[i]]] = targets[i];
+				split_index[sources[i]]++;
 			}
 
-			Map[sources[i]][split_index[sources[i]]] = targets[i];
-			split_index[sources[i]]++;
+			var target_index
+
+			console.log("Map: " + JSON.stringify(Map));
+
+			Record.query(query, function (err, attributeData){
+				
+				if (err) { deferred.reject("Error retrieving attributes: " + err) }
+				else {
+					if (attributeData.length) {
+						console.log("Attribute Data: " + JSON.stringify(attributeData[0]) + '...');
+						var insert = [];
+						for (j=0; j< split; j++) {
+							for (var i=0; i<attributeData.length; i++) {
+								var att = attributeData[i];
+								var target = Map[att.reference_id][j];
+											
+								var insertion = '(' + target + ',' + att.id + ",'" + att.value + "')"; 
+								insert.push(insertion);	
+							}
+						}
+						var sqlInsert = insertPrefix + insert.join(',');
+
+						Record.query(sqlInsert, function (insertError, attUpdate){
+							if (insertError) { deferred.reject("error updating attributes: " + insertError) }
+							else {
+								deferred.resolve({attributes: attUpdate});
+							}
+						});
+					}
+					else {
+						console.log("no attributes to transfer");
+						deferred.resolve({attributes: {} });
+					}
+				}
+			});
+		}
+		else {
+			console.log('no attributes tracked for ' + model);
+			deferred.resolve();
 		}
 
-		var target_index
-
-		console.log("Map: " + JSON.stringify(Map));
-
-		Record.query(query, function (err, attributeData){
-			console.log("Attribute Data: " + JSON.stringify(attributeData[0]) + '...');
-			if (err) { deferred.reject("Error retrieving attributes: " + err) }
-			else {
-				if (attributeData.length) {
-					var insert = [];
-					for (j=0; j< split; j++) {
-						for (var i=0; i<attributeData.length; i++) {
-							var att = attributeData[i];
-							var target = Map[att.reference_id][j];
-										
-							var insertion = '(' + target + ',' + att.id + ",'" + att.value + "')"; 
-							insert.push(insertion);	
-						}
-					}
-					var sqlInsert = insertPrefix + insert.join(',');
-
-					Record.query(sqlInsert, function (insertError, attUpdate){
-						if (insertError) { deferred.reject("error updating attributes: " + insertError) }
-						else {
-							deferred.resolve({attributes: attUpdate});
-						}
-					});
-				}
-				else {
-					console.log("no attributes to transfer");
-					deferred.resolve({attributes: {} });
-				}
-			}
-		})
 		return deferred.promise;
 	},
 

@@ -94,7 +94,7 @@ module.exports = {
             }
 
             console.log("Insert slot data: " + JSON.stringify(slotData));
-            Record.createNew('Rack',slotData)
+            Record.createNew('Rack', slotData)
             .then ( function (slotResult) {
               deferred.resolve({box: boxResult, slots: slotResult});
             })
@@ -144,7 +144,7 @@ module.exports = {
       ids.push(parent);
     }
       
-    Record.clone('Rack', ids, reset, { id: 'Rack_ID' })
+    Record.clone('rack', ids, reset, { id: 'Rack_ID' })
     .then (function (result) {
       console.log("Cloned rack:  " + JSON.stringify(result));
       deferred.resolve(result);

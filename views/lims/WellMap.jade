@@ -38,6 +38,8 @@ block content
                   label
                     input(type='radio' value = 'Transfer' ng-model="transfer_type" ng-click="validate_Form()") 
                     b &nbsp; Transfer &nbsp; 
+                  br
+                  span(ng-show="transfer_type === 'Transfer'" style='color:red') Note: Current tubes are thrown out during 'Transfer'<BR>(use 'Aliquot' to only remove portion of original sample) 
 
                 div.col-sm-4
                   input.input-lg#transfer_qty(type='text' placeholder=' -- Transfer Qty --', ng-model='transfer_qty' ng-blur="redistribute()" size='16' ng-disabled="transfer_type=='Pre-Print'")
@@ -45,6 +47,7 @@ block content
                   span.lookup(id='Lookup-units' ng-init="loadLookup('units','','units')")
                   br
                   span(style='color: red' ng-show='transfer_qty_errors || units_errors') Transfer Qty + Units Required
+                  span(style='color: red' ng-show="transfer_type === 'Transfer'") Defaults to entire volume in original tube(s)
 
                 div.col-sm-4
                   b Into: 
@@ -100,6 +103,8 @@ block content
 
               div.form-group
                 div.col-sm-4
+                  span IF different Sample Type is being extracted:
+                  br
                   span.lookup(id='Lookup-sample_type' ng-init="loadLookup('sample_type','', 'Extract ?')")
 
                 div.col-sm-4

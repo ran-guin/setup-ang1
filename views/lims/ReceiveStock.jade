@@ -1,0 +1,71 @@
+extends ./../customize/privateLayout
+block content
+
+  // standard input variables: 
+
+  - var config = { };
+  - var init = "initialize(" + JSON.stringify(config) + ")";
+  
+  
+  p &nbsp;
+  div.container
+     div(ng-app='myApp')
+      div(ng-controller="SharedController")
+        div(ng-controller="FancyFormController")
+          div(ng-controller="StockController" ng-init="#{init}")
+          
+
+            include ./../core/errorMsg.jade
+
+            h3 Receive Stock Items:
+
+            include ./../core/angularMessages.jade
+              
+            form(role='form' name='Stock' method='post' action='Stock/receive')
+              div.form-group
+                input.input-lg(type='radio' name='type' required ng-model='type' value='solution') 
+                b &nbsp; Solution / Reagent
+              
+                span &nbsp; &nbsp;
+
+                input.input-lg(type='radio' name='type' ng-model='type' value='equipment') 
+                b &nbsp; Equipment
+  
+              div.form-group
+                input.input-lg(type='number' ng-model='number_in_batch' required placeholder='Number in Batch')              
+
+              div.form-group
+                input.input-lg(type='text' ng-model='lot_number' placeholder='Lot Number') 
+
+              div.form-group
+                input.input-lg(type='date' ng-model='received' placeholder='Received Date')              
+
+              div(ng-show="type === 'solution'")
+                hr 
+                p
+                  b Reagent specific information:
+                div.form-group
+                  input.input-lg(type='text' ng-model='qty' required placeholder='Volume')              
+                  input.input-lg(type='text' ng-model='qty_units' required placeholder='Volume_Units')              
+      
+                div.form-group
+                  input.input-lg(type='date' ng-model='expiry' placeholder='Expiry')              
+
+                div.form-group
+                  input.input-lg(type='text' ng-model='notes' placeholder='Notes')              
+  
+                div.form-group
+                  input.input-lg(type='checkbox' ng-model='barcode')              
+                  b Generate Barcode(s)
+
+                button.btn.btn-lg.btn-primary(type='button' ng-click="save()" ng-disabled="! Stock.$valid") Save New Stock / Reagent Record(s)
+
+              div(ng-show="type !== 'solution'")
+                div.alert.alert-danger
+                  b Stock type is mandatory... {{ type }} not defined
+
+            if debug
+              hr
+              h2.alert.alert-warning Debugging Information:  (hidden in production)
+              b session: #{JSON.stringify(session)} 
+            

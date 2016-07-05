@@ -15,3 +15,14 @@ $(document).on("click", ".dropdown-menu li a", function() {
 	$(this).parents(".dropdown").find('.fill-label').val(label);
 
 });
+
+$(function() {
+     $( "#date" ).datepicker({ dateFormat: 'yy-mm-dd'}); 
+});
+
+$(document).ready( function()  {
+    $(function () {
+        $('[type="date"]').datepicker({ dateFormat: 'yy-mm-dd'});
+    });
+});
+

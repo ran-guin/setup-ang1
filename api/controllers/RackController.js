@@ -47,7 +47,7 @@ module.exports = {
 		}
 
 		console.log("Add daughter to " + parent + ': ' + name + ' = ' + size);
-		Rack.add({ parent: parent, name: name, size: size, type: 'Box'})
+		Rack.addSlottedBox(parent, name, size)
 		.then ( function (result) {
 			console.log("Added Slotted Box " + JSON.stringify(result));
 			if (result.box && result.slots) {
