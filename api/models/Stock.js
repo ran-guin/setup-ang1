@@ -20,7 +20,7 @@ module.exports = {
 		'number_in_batch' : 'Stock_Number_in_Batch',
 		'received' : 'Stock_Received',
 		'type' : 'Stock_Type',
-	}
+	},
 
 	receive : function (data) {
 
