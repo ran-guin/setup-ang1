@@ -1,0 +1,6 @@
+select.centred {
+	text-align: center;
+	-webkit-appearance: button;
+    -moz-appearance: button;
+
+}
