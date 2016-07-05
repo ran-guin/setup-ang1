@@ -23,9 +23,9 @@ div(id="injected#{element}")
 						if href && href[key]
 							- ref = href[key].replace('<' + key + '>', record[key])
 							a(href="#{ref}")
-								b goto !{record[key]} (#{ref})
+								b !{record[key]}
 						else 
-							b no go !{record[key]} (#{key} : #{href[key]})
+							b !{record[key]}
 		p &nbsp;
 	F: #{ JSON.stringify(href) }
 
