@@ -22,7 +22,7 @@ module.exports = {
 		var element = req.param('element') || 'injectedHistory';  // match default in CommonController
 		var include_parents = req.param('include_parents');
 
-		var fields = ['Count(DISTINCT Plate.Plate_ID) as Samples', 'Prep_Name as Step', 'lab_protocol.name as Protocol', 'Prep_DateTime as Completed', 'Group_Concat(DISTINCT Employee_Name) as Completed_By'];
+		var fields = ['Count(DISTINCT Plate.Plate_ID) as Samples', 'Group_Concat(distinct FK_Plate_Set__Number) as Sets', 'Prep_Name as Step', 'lab_protocol.name as Protocol', 'Prep_DateTime as Completed', 'Group_Concat(DISTINCT Employee_Name) as Completed_By'];
 		fields.push("CASE WHEN Max(Attribute_ID) IS NULL THEN '' ELSE GROUP_CONCAT( DISTINCT CONCAT(Attribute_Name,'=',Attribute_Value) SEPARATOR ';<BR>') END as attributes");
 
 		fields.push('Prep_Comments as Comments');
@@ -53,7 +53,7 @@ module.exports = {
 		.then ( function (result) {
 			// console.log("got data: " + JSON.stringify(result));
 
-			return res.render('customize/injectedData', { fields : fields, data : result, title: 'Sample History', element: element});
+			return res.render('customize/injectedData', { fields : fields, data : result, title: 'Sample History', element: element, href: {Sets : "scan-barcode?Set<Sets>"} });
 		})
 		.catch ( function (err) {
 			return res.json("error injecting data");
@@ -164,7 +164,7 @@ module.exports = {
 	    .catch ( function (err) {
 	    	console.log("Error uploading Matrix File: ");
 	    	console.log(err);
-	    	
+
 			return res.render('lims/Container', { 
 				plate_ids: ids, 
 				Samples: Samples
