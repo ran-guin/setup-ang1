@@ -79,6 +79,8 @@ function wellController ($scope, $rootScope, $http, $q ) {
 
         console.log("INIT Map");
         $scope.form_validated = false;
+
+        $scope.transfer_qty_units = 'ml';
         // $scope.redistribute();
     }
 
@@ -94,18 +96,17 @@ function wellController ($scope, $rootScope, $http, $q ) {
             document.getElementById('transfer_qty').style = "border-color: green";
         }
 
-        if ( $scope.units_label && $scope.units_id && $scope.units_label !== '?') { 
+        if ( $scope.transfer_qty_units) { 
             $scope.units_errors = false;
-            document.getElementById('units-lookup').style = "border-color: green";
+            document.getElementById('transfer_qty_units').style = "border-color: green";
         }
         else if ($scope.transfer_type === 'Aliquot') { 
             $scope.units_errors = true;
-            console.log("MISSING " + $scope.units_label + ' OR  ' + $scope.units_id);
-            document.getElementById("units-lookup").style = "border-color: red";
+            document.getElementById("transfer_qty_units").style = "border-color: red";
         }
         else {
             $scope.units_errors = false;
-            document.getElementById("units-lookup").style = "border-color: green";            
+            document.getElementById("transfer_qty_units").style = "border-color: green";            
         }
 
 
@@ -194,7 +195,7 @@ function wellController ($scope, $rootScope, $http, $q ) {
 
             $scope.Transfer = {
                     qty: $scope.transfer_qty,
-                    qty_units : $scope.units_label,
+                    qty_units : $scope.transfer_qty_units,
                     Container_format : $scope.container_format_id,
                     Sample_type : $scope.sample_type_id,
             };
