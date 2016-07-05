@@ -51,6 +51,97 @@ app.controller('FancyFormController',
     		//return "\n<div class='container' style='padding:20px'>\n" + view + "</div>\n";
     	}
 
+
+        $scope.units = {
+            'ul' :  1/1000,
+            'ml' : 1,
+            'ug' : 1/1000000,
+            'mg' : 1/1000,
+            'g'  : 1
+        };
+
+        $scope.units_options = [
+            {id: 0, name: '-- Units --'},
+            {id : 1, name : 'ul'},
+            {id : 2, name : 'ml'},
+            {id : 3, name : 'ug'},
+            {id : 4, name : 'mg'},
+            {id : 5, name : 'g'}
+        ];
+
+        $scope.units_lookup = $scope.units_options[0].name;
+
+        $scope.set_dropdown_default = function (name, label, target_name) {
+            for (var i=0; i<$scope[name].length; i++) {
+                if ($scope[name][i].name === label) {
+                    $scope[target_name] = i;
+                }
+
+            }
+        }
+
+        $scope.setup_Dropdown = function (element, enumType, defaultTo, prompt, ref) {
+            // convert ENUM('A','B','C') to dropdown menu ... 
+            //
+            // Usage example (jade):
+            //
+            //  select( 
+            //    ng-model='xyz' 
+            //    ng-init="setup_Dropdown('xyz', \"EN\UM('A','B','C')\", 'B')" 
+            //    ng-options="item.id as item.name for item in dropdownList['xyz']"
+            //  )
+ 
+
+            $scope.message(element + " : " + enumType + ' : ' + defaultTo);
+
+            if (!prompt) { prompt = '' }
+            if (! ref) { ref = 'name' }  // name or id
+
+            var defaultVal = ''; 
+            if (enumType) {
+                var enums = enumType.match(/ENUM\(.*\)/i);
+                if (enums) {
+                    var options = enums[0].replace(/^ENUM\('/i, '').replace(/'\)$/,'')
+                    var list = options.split(/','/);
+
+                    $scope.message("OPT: " + list);
+                    
+                    if ( ! $scope.dropdownList ) { $scope.dropdownList = {} }
+                    $scope.dropdownList[element] = [ { id: 0, name: prompt }];
+
+                    for (var i=0; i<list.length; i++) {
+                        var id = i+1;
+                        id = id.toString();
+                        $scope.dropdownList[element].push( { id: id, name: list[i] });
+                        if ( defaultTo && defaultTo === list[i]) {
+                            defaultVal = $scope.dropdownList[element][ $scope.dropdownList[element].length-1][ref];
+                        }
+                    }
+
+                    //$scope[element] = $scope.dropdownList[element][ref];
+                    // console.log(JSON.stringify( $scope.dropdownList ));
+                    // console.log(element + " DEFAULT = " + JSON.stringify($scope[element]));
+
+                    $scope[element] = defaultVal;
+                    console.log("DROPDOWN LIST: " + JSON.stringify( $scope.dropdownList ));
+                    console.log("default to " + JSON.stringify($scope[element]));
+                }
+            }
+
+        }
+
+        $scope.setElement = function (element, val) {
+            $scope[element] = val;
+            console.log("El: " + element + ' -> ' + val);
+            $scope.tqu = null;
+            $scope.tqu = 'ul';
+            $scope.transfer_qty_units = 'ul';
+        }
+
+        $scope.$watch("tqu", function (value) {
+            $scope['transfer_qty_units'] = $scope.tqu;
+        }); 
+
         $scope.normalize_units = function (field) {
             // convert quantities to same units as original to ensure ongoing calculated volumes are correct.
             // when removing or adding 250 ul to a container with 2 ml, the 250 ul should be converted to the original units (eg 0.25 ml)
@@ -73,7 +164,13 @@ app.controller('FancyFormController',
                 var conflict = 0;
                 if (new_units === orig_units) { }
                 else {
-                    newVal = $scope.convert(val, new_units, old_units);
+                    if ($scope.units[old_units] && $scope.units[new_units]) {
+                        newval = val * $scope.units[old_units]/$scope.units[new_units];
+                    }
+                    else {
+                        $scope.error(new_units + " Units not yet defined - cannot auto convert");
+                    }
+                    //newVal = $scope.convert(val, new_units, old_units);
                     conflict++;
                 }
                 values.push(newVal);
