@@ -13,8 +13,9 @@ module.exports = {
 	
 	scan: function (req, res) {
 
-		var model = req.body.model;
-		var barcode = req.body.barcode;
+		var body = req.body || {};
+
+		var barcode = req.body.barcode || req.param('barcode');
 
 		console.log("Scan: " + JSON.stringify(req.body));
 
