@@ -22,3 +22,4 @@ Test Protocol	0	Active	Test input 	NULL	NULL	0	21	NULL	NULL
 DNA Extraction	41	Active	DNA Extraction Protocol	NULL	4	0	22	2016-05-05 00:00:00	2016-05-05
 Picogreen Protocol	41	Active	Picogreen Protocol	NULL	NULL	0	23	2016-06-05 00:00:00	2016-05-05
 Qiagen Flexigene 	41	Active	Qiagen Flexigene Protocol	NULL	4	0	24	2016-06-05 00:00:00	2016-05-05
+Thaw Samples 	41	Active	Track Thawing of Samples	NULL	4	0	25	2016-06-05 00:00:00	2016-05-05

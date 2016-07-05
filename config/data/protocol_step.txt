@@ -68,7 +68,7 @@ Centrifuge again	17	6	Centrifuge at 15,000 x g for 2 minutes at RT	Spin 15000 2 
 Decant	17	7	Discard supernatant. Wash DNA pellet with 70% ethanol, centrifuge (15,000 x g, 2 minutes, RT), discard ethanol, air-dry DNA pellet		NULL	NULL	NULL				NULL	1	NULL	1	NULL	86	NULL	NULL
 Transfer  to 1.8 ml eppendorf	17	1	Transfer 0.5mL saliva sample to 1.5mL microfuge tube(s)	Transfer 0.5mL to ufuge tube(s)	23	NULL	NULL	transfer_qty*:Split	:	0.5ml:2	NULL	1	Transfer	1	NULL	87	NULL	NULL
 Update Gender Test Results	19	1	Indicate results of Gender Test		NULL	NULL	NULL	Gender_Test_Result			NULL	1	NULL	41	2	88	NULL	NULL
-DNA Quantification	20	1	Indicate results of DNA Quantification		NULL	11	NULL	260_280_Ratio:Concentration_ng_per_ul			NULL	1	NULL	41	2	89	NULL	NULL
+DNA Quantification	20	1	Indicate results of DNA Quantification		NULL	11	NULL	_260_280_Ratio:Concentration_ng_per_ul			NULL	1	NULL	41	2	89	NULL	NULL
 test step 1	21	1	general instructions	basic message	NULL	NULL	NULL	solution:solution_qty:equipment*:location:Waybill_Number*			NULL	1	NULL	0	0	90	NULL	NULL
 Transfer Buffy Coat to Falcon Tubes	22	1	Transfer 1.0 ml of buffy coat to 15 ml Falcon tube	Transfer as indicated	26	7	0	transfer_qty*		1ml	NULL	1	Transfer	41	0	91	2016-04-18 07:00:00	2016-04-18 07:00:00
 Mix & Centrifuge	22	2	Mix buffy coat with FG1 and centrifuge @2000 xg for 5 min	Mix with FG1 & Centrifuge	0	0	0	Qiagen_Kit_Lot_Number			NULL	1	NULL	41	0	92	2016-04-18 07:00:00	2016-04-18 07:00:00
@@ -78,5 +78,5 @@ Wash Pellet	22	5	Wash DNA Pellet with 70% ethanol		0	0	0	DNA_Wash_Cycles		2	NULL
 Suspend DNA in buffer	22	6	Suspend DNA in 300 ul of TE pH 8.0 buffer		0	0	0	solution:solution_qty			NULL	1	NULL	41	0	96	2016-04-18 07:00:00	2016-04-18 07:00:00
 Transfer DNA to 0.5 ml Matrix Tube	22	7			27	0	0	transfer_qty:location:comments		0.3 ml	NULL	1	Transfer	41	0	97	2016-04-18 07:00:00	2016-04-18 07:00:00
 Add Picogreen Data	23	2	Upload data from Picogreen protocol	Upload Picogreen data	0	0	0	Picogreen_Lot_Number			NULL	1	NULL	41	0	98	2016-04-18 07:00:00	2016-04-18 07:00:00
-Transfer DNA to cryovial	24	2	Extract DNA from White Blood Cells 	Extract DNA from White Blood Cells	0	0	0	Qiagen_Lot_Number			NULL	1	Transfer	41	0	99	2016-04-18 07:00:00	2016-04-18 07:00:00
-Suspend DNA	24	3	Suspend DNA in TE Buffer 	Suspend DNA in TE Buffer	0	0	0	solution_qty	350 ul		NULL	1	NULL	41	0	100	2016-04-18 07:00:00	2016-04-18 07:00:00
+Transfer DNA to cryovial	24	1	Extract DNA from White Blood Cells 	Extract DNA from White Blood Cells and suspend in TE Buffer	0	0	0	solution:solution_qty:Qiagen_Lot_Number	:350 ul:		NULL	1	Transfer	41	0	99	2016-04-18 07:00:00	2016-04-18 07:00:00
+Standard Thaw	25	1	Update Thaw Count for current samples 	Track Thaw Instance and note Thaw Temperature	0	0	0	Thaw_Count:Thaw_Temp			NULL	1	NULL	4	0	100	2016-04-18 07:00:00	2016-04-18 07:00:00
