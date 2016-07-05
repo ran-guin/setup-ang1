@@ -53,7 +53,7 @@ module.exports = {
 		.then ( function (result) {
 			// console.log("got data: " + JSON.stringify(result));
 
-			return res.render('customize/injectedData', { fields : fields, data : result, title: 'Sample History', element: element, href: {Sets : "scan-barcode?Set<Sets>"} });
+			return res.render('customize/injectedData', { fields : fields, data : result, title: 'Sample History', element: element, href: {Sets : "scan-barcode?barcode=Set<Sets>"} });
 		})
 		.catch ( function (err) {
 			return res.json("error injecting data");
