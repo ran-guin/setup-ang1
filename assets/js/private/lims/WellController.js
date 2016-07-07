@@ -88,25 +88,30 @@ function wellController ($scope, $rootScope, $http, $q ) {
         
         if (! $scope.transfer_qty && $scope.transfer_type==='Aliquot') { 
             $scope.transfer_qty_errors = true;
-            document.getElementById('transfer_qty').style = "border-color: red";
+            var testElement = document.getElementById('transfer_qty') || {} ;
+            testElement.style = "border-color: red";
 
         }
         else { 
-            $scope.transfer_qty_errors = false
-            document.getElementById('transfer_qty').style = "border-color: green";
+            $scope.transfer_qty_errors = false;
+            var testElement = document.getElementById('transfer_qty') || {};
+            testElement.style = "border-color: green";
         }
 
         if ( $scope.transfer_qty_units) { 
             $scope.units_errors = false;
-            document.getElementById('transfer_qty_units').style = "border-color: green";
+            var testElement = document.getElementById('transfer_qty_units') || {};
+            testElement.style = "border-color: green";
         }
         else if ($scope.transfer_type === 'Aliquot') { 
             $scope.units_errors = true;
-            document.getElementById("transfer_qty_units").style = "border-color: red";
+            var testElement = document.getElementById("transfer_qty_units") || {};
+            testElement.style = "border-color: red";
         }
         else {
             $scope.units_errors = false;
-            document.getElementById("transfer_qty_units").style = "border-color: green";            
+            testElement = document.getElementById("transfer_qty_units") || {};
+            testElement.style = "border-color: green";            
         }
 
 
@@ -149,6 +154,7 @@ function wellController ($scope, $rootScope, $http, $q ) {
 
     $scope.redistribute = function redistribute () {
 
+        console.log('update lookups..');
         $scope.updateLookups();
 
         if ($scope.fill_by.match(/row/i)) { 
@@ -166,7 +172,8 @@ function wellController ($scope, $rootScope, $http, $q ) {
 
         $scope.reset_split_mode();
         $scope.reset_pack_mode();
-        
+
+        console.log('validate');
         $scope.validate_Form();
 
         console.log("Target Samples: " + $scope.N * $scope.splitX);
