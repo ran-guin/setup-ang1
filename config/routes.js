@@ -120,6 +120,7 @@ module.exports.routes = {
 
   'POST /uploadData' : 'Record_APIController.uploadData',
 
+  'GET /test' : 'TestController.test',
   /***************************************************************************
   *                                                                          *
   * Custom routes here...                                                    *
