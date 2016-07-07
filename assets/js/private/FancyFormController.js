@@ -279,4 +279,60 @@ app.controller('FancyFormController',
             }
         }
 
-}]);
+}])
+.directive('myDatepicker', function ($parse) {
+   return {
+      restrict: "AEC",
+      replace: true,
+      transclude: false,
+
+      // template: 'Name: {{customer.name}} Address: {{customer.address}}',
+
+      compile: function (element, attrs) {
+         var modelAccessor = $parse(attrs.ngModel);
+
+         var html = "<input class='input-lg' type='text' id='" + attrs.id + "' >" +
+            "</input>";
+
+         var newElem = $(html);
+         element.replaceWith(newElem);
+
+         
+         return function (scope, element, attrs, controller) {
+
+            var processChange = function () {
+
+                var defaultDate = element.datepicker("getDate");
+                var date;
+
+               // if default date is '' or 0, then new Date() returns 1970-01-01... so avoid this... 
+               if (defaultDate) { date = new Date(defaultDate) }
+               else { date = new Date() }
+
+               scope.$apply(function (scope) {
+                  // Change bound variable
+                  modelAccessor.assign(scope, date);
+               });
+            };
+
+            element.datepicker({
+               dateFormat : 'yy-mm-dd',
+               inline: true,
+               onClose: processChange,
+               onSelect: processChange
+            });
+
+            scope.$watch(modelAccessor, function (val) {
+               var date;
+
+                if (val) { date = new Date(val) }
+
+                element.datepicker("setDate", date);
+            });
+
+         };
+         
+      }
+
+   };
+});
