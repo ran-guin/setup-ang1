@@ -660,7 +660,7 @@ module.exports = {
 
 			if (Mod.tableType && Mod.tableType.match(/lookup/i) ) { }
 			// else { sails.config.messages.push(msg) }
-			console.log("resolved");
+			console.log("successfully created new " + table + ' record(s)');
 			deferred.resolve(result);
 		})
 		.catch ( function (err) {
