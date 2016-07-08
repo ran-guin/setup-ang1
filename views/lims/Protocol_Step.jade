@@ -109,10 +109,9 @@ block content
 
                             else if fType.match(/ENUM/i)
                               div.form-group
-                                label.col-sm-2.control-label(for="#{fld}#{Snum}") #{alias} ()
+                                label.col-sm-2.control-label(for="#{fld}#{Snum}") #{alias}
                                 div.col-sm-6
-                                  select.input-lg(name='#{fld}#{Snum}' ng-model='#{fld}#{Snum}' ng-init="setup_Dropdown('#{fld}#{Snum}', \"#{fType}\", '#{def}', '- ? -', 'name')" ng-options="item.name as item.name for item in dropdownList['#{fld}#{Snum}']")
-
+                                  dropdown(placeholder="#{alias}" list="MenuList['#{fld}#{Snum}']" selected="#{fld}#{Snum}" property="name" track='name' default="#{def}" ng-init="setup_Menu('#{fld}#{Snum}', \"#{fType}\", '#{def}', '- ? -', 'name')")
                             else 
                               div.form-group
                                 label.col-sm-2.control-label(for='#{fld}#{Snum}') #{alias}
