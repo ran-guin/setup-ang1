@@ -18,42 +18,34 @@ block content
     hr
 
     div(ng-app='myApp')
-      div(ng-controller="FancyFormController")
-            
-        include ./../core/errorMsg.jade
+      div(ng-controller="SharedController")
+        div(ng-controller="FancyFormController")
+              
+          include ./../core/errorMsg.jade
 
-        form(role='form' name='adminForm' method='post' action="#{sails.config.root}/record/list" enctype='form-data')
-          input(type='hidden' name='test' value='testval')
-          span.dropdown(id='model')
+          form(role='form' name='adminForm' method='post' action="#{sails.config.root}/record/list" enctype='form-data')
+            input(type='hidden' name='test' value='testval')
 
-            //input.fill-id(type='hidden' id='model-id' name='model-id' value='0') 
-            input.fill-label(type='hidden' id='model-label' name='model-label' value='?') 
+            dropdown(placeholder="Select Table ..." track='name' list="MenuList['table']" selected='table' ng-init="setup_Menu('table', 'Plate_Format,Sample_Type')" property='name')
 
+            span &nbsp; &nbsp;
+   
+            button.btn.btn-primary(type='submit' ng-disabled="!table") List
+            b {{ table }}
+          hr
 
-            button.btn.btn-default.dropdown-toggle(type='button' data-toggle='dropdown' id = 'model' ng-model='model' name='model') -- Select Database Table -- &nbsp;
-                span.caret
-            ul.dropdown-menu
-              each model in lookups
-                li 
-                  a(href='#' ng-click="setField('table','#{model}')" onclick='return false;') #{model}
-          span &nbsp; &nbsp;
-          button.btn.btn-primary(type='submit' ng-disabled="!table") List
-          span &nbsp; &nbsp;
+          form(role='form' name='adminForm' method='post' action="#{sails.config.root}/Rack/newBox" enctype='form-data')
 
-        hr
-
-        form(role='form' name='adminForm' method='post' action="#{sails.config.root}/Rack/newBox" enctype='form-data')
-
-          h3 Create Slotted Box:
-          div.form-group
-            div.col-sm-3
-              input.input-lg.form-control(type='text' name = 'name' ng-model='name' placeholder='-- Box Name (eg B3) -- ')
-            div.col-sm-3
-              input.input-lg.form-control(type='text' name = 'parent' ng-model='parent' required placeholder ='-- Scan Parent Shelf / Rack --')
-            div.col-sm-3
-              span.lookup(id='Lookup-Capacity' ng-init="loadLookup('rack:Capacity','', 'Select Target Size')") 
-            div.col-sm-3
-              button.btn.btn-lg.btn-primary(type='submit' ng-disabled="!name || !parent") Generate Box Record
+            h3 Create Slotted Box:
+            div.form-group
+              div.col-sm-3
+                input.input-lg.form-control(type='text' name = 'name' ng-model='name' placeholder='-- Box Name (eg B3) -- ')
+              div.col-sm-3
+                input.input-lg.form-control(type='text' name = 'parent' ng-model='parent' required placeholder ='-- Scan Parent Shelf / Rack --')
+              div.col-sm-3
+                span.lookup(id='Lookup-Capacity' ng-init="loadLookup('rack:Capacity','', 'Select Target Size')") 
+              div.col-sm-3
+                button.btn.btn-lg.btn-primary(type='submit' ng-disabled="!name || !parent") Generate Box Record
    
 
 
