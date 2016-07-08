@@ -10,9 +10,8 @@ function stockController ($scope, $rootScope, $http, $q) {
 
     $scope.context = 'Receiving';
 
-    $scope.type = 'not yet chosen';
-
-
+    $scope.expiry_date = '2015-09-11';  // UTC time ? ... seems to convert to local time (subtracts day ?)
+    
     $scope.save = function () {
     	var StockData = {
     		'number_in_batch' : $scope.number_in_batch,
@@ -24,14 +23,19 @@ function stockController ($scope, $rootScope, $http, $q) {
     	var data = { Stock : StockData };
 
 
-    	if ($scope.type === 'solution') {
+    	if ($scope.type === 'Reagent') {
     		var ReagentData = {
-    			'expiry'  : $scope.expiry,
-    			'number_in_batch' : $scope.number_in_batch,
+    			'expiry'            : $scope.expiry,
+    			'number_in_batch'   : $scope.number_in_batch,
+                'qty'               : $scope.qty,
+                'qty_units'         : $scope.qty_units,
+                'notes'             : $scope.notes
     		};
 
     		data['Reagent'] = ReagentData;
     	}
+
+        console.log("Post Stock data: " + JSON.stringify(data));
 
     	$http.post("Stock/receive", data)
     	.then (function (result) {

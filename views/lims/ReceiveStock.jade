@@ -23,12 +23,12 @@ block content
               
             form(role='form' name='Stock' method='post' action='Stock/receive')
               div.form-group
-                input.input-lg(type='radio' name='type' required ng-model='type' value='solution') 
+                input.input-lg(type='radio' name='type' required ng-model='type' value='Reagent') 
                 b &nbsp; Solution / Reagent
               
                 span &nbsp; &nbsp;
 
-                input.input-lg(type='radio' name='type' ng-model='type' value='equipment') 
+                input.input-lg(type='radio' name='type' ng-model='type' value='Equipment') 
                 b &nbsp; Equipment
   
               div.form-group
@@ -38,18 +38,18 @@ block content
                 input.input-lg(type='text' ng-model='lot_number' placeholder='Lot Number') 
 
               div.form-group
-                input.input-lg(type='date' ng-model='received' placeholder='Received Date')              
+                div.input-lg.my-datepicker#received(type="text" ng-model="received")
 
-              div(ng-show="type === 'solution'")
+              div(ng-show="type === 'Reagent'")
                 hr 
                 p
                   b Reagent specific information:
                 div.form-group
                   input.input-lg(type='text' ng-model='qty' required placeholder='Volume')              
                   input.input-lg(type='text' ng-model='qty_units' required placeholder='Volume_Units')              
-      
+
                 div.form-group
-                  input.input-lg(type='date' ng-model='expiry' placeholder='Expiry')              
+                  div.input-lg.my-datepicker#expiry_date(type="text" ng-model="expiry_date")          
 
                 div.form-group
                   input.input-lg(type='text' ng-model='notes' placeholder='Notes')              
@@ -60,7 +60,7 @@ block content
 
                 button.btn.btn-lg.btn-primary(type='button' ng-click="save()" ng-disabled="! Stock.$valid") Save New Stock / Reagent Record(s)
 
-              div(ng-show="type !== 'solution'")
+              div(ng-show="type !== 'Reagent'")
                 div.alert.alert-danger
                   b Stock type is mandatory... {{ type }} not defined
 

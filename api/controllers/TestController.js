@@ -8,7 +8,12 @@
 module.exports = {
 
 
-	test: function (req, res) {
+	test : function (req, res) {
+		
+		res.render("customize/Test");
+	},
+
+	print: function (req, res) {
 
 		// check printer list
 	    var Printer = require('node-printer');

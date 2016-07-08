@@ -4,8 +4,7 @@
  * @description :: TODO: You might write a short summary of how this model works and what it represents here.
  * @docs        :: http://sailsjs.org/documentation/concepts/models-and-orm/models
  */
-
-module.exports = {
+ module.exports = {
 
 	tableName: 'Solution',
 	migrate: 'safe',
@@ -20,6 +19,7 @@ module.exports = {
 		'number_in_batch' : 'Number_in_Batch',
 		'expiry' : 'Solution_Expiry',
 		'qty'    : 'Solution_Quantity',
+		'qty_units' : 'Solution_Quantity_Units',
 		'type'   : 'Solution_Type',
 		'Stock'  : 'FK_Stock__ID',
 		'rack'   : 'FK_Rack__ID',

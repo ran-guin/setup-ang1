@@ -20,6 +20,7 @@ module.exports = {
 		'number_in_batch' : 'Stock_Number_in_Batch',
 		'received' : 'Stock_Received',
 		'type' : 'Stock_Type',
+		'lot_number' : 'Lot_Number',
 	},
 
 	receive : function (data) {
@@ -40,34 +41,44 @@ module.exports = {
 
 			Record.createNew('stock', StockData)
 			.then ( function (stock) {
-				var stock_id = stock.insertId;
+				
+				console.log(JSON.stringify(stock));
+				if (stock.insertId) {
+					var stock_id = stock.insertId;
 		
-				if (type === 'solution') {
-					// Add individual Reagent records
-					var ReagentData = data['Reagent'];
+					console.log("Add additional records for each " + type);
+					if (type === 'Reagent') {
+						// Add individual Reagent records
+						console.log('load data...' + JSON.stringify(data));
+						var ReagentData = data['Reagent'];
+						console.log("Reagent data : " + JSON.stringify(ReagentData));
 
-					ReagentData['Stock'] = stock_id;
+						ReagentData['Stock'] = stock_id;
 
-					console.log("Pre ß	Reagent Data: " + JSON.stringify(ReagentkData));
-					ReagentData = Record.to_Legacy(ReagentData, Solution.legacy_map);
-					console.log("Reagent Data: " + JSON.stringify(ReagentkData));
+						console.log("Pre & Reagent Data: " + JSON.stringify(ReagentData));
+						ReagentData = Record.to_Legacy(ReagentData, Solution.legacy_map);
+						console.log("Reagent Data: " + JSON.stringify(ReagentData));
 
-					Record.createNew('solution', ReagentData)
-					.then ( function (result) {
-						if (barcode) {
-							console.log("print reagent barcodes ...");
-						}
-						else {
-							console.log("suppress barcodes...");
-						}
-						deferred.resolve(result);
-					})
-					.catch ( function (err) {
-						deferred.reject(err);
-					});
+						Record.createNew('solution', ReagentData)
+						.then ( function (result) {
+							if (barcode) {
+								console.log("print reagent barcodes ...");
+							}
+							else {
+								console.log("suppress barcodes...");
+							}
+							deferred.resolve(result);
+						})
+						.catch ( function (err) {
+							deferred.reject(err);
+						});
+					}
+					else {
+						deferred.reject("Not set up yet for " + type + ' types ...');
+					}
 				}
 				else {
-					deferred.reject("Not set up yet for " + type + ' types ...');
+					deferred.reject("No Stock ID generated ?");
 				}
 			})
 			.catch ( function (err) {
