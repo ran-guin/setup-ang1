@@ -16,7 +16,7 @@ Attribute_ID	Attribute_Name	Attribute_Format	Attribute_Type	FK_Grp__ID	Inherited
 17	Lipedemia Observed		ENUM('Yes','No')	2	Yes	Plate	Editable	NULL
 18	Contamination During Pipetting		ENUM('Yes','No')	3	Yes	Plate	Editable	NULL
 19	Contamination Type		Text	3	Yes	Plate	Editable	NULL
-20	Processing Note		Text	3	Yes	Plate	Editable	NULL
+20	Process_Note		Text	3	Yes	Plate	Editable	NULL
 21	Clotting Observed		ENUM('Yes','No')	3	Yes	Plate	Editable	NULL
 23	Post Centrifugation Fibrin Clot Observed		ENUM('Yes','No')	3	Yes	Plate	Editable	NULL
 24	Patient_Service_Centre		FK_Service_Centre__ID	2	Yes	Source	Editable	NULL
@@ -58,7 +58,7 @@ Attribute_ID	Attribute_Name	Attribute_Format	Attribute_Type	FK_Grp__ID	Inherited
 64	Untracked_Thaw_Count		Int	3	Yes	Source	Editable	
 65	Untracked_Thaw_Count		Int	3	Yes	Plate	Editable	
 66	Matrix_Barcode		Int	3	Yes	Plate	Editable	
-67	Picogreen_Lot_Number		Int	3	Yes	Plate	Editable	
+67	Picogreen_Batch_ID		Int	3	Yes	Plate	Editable	
 68	Qiagen_Lot_Number		Int	3	Yes	Plate	Editable	
-69	Adjusted_260_280		Int	3	Yes	Plate	Editable	
-70	Adjusted_260_230_ratio		Int	3	Yes	Plate	Editable	
+69	Adj_260_280		Int	3	Yes	Plate	Editable	
+70	Adj_260_230_ratio		Int	3	Yes	Plate	Editable	
