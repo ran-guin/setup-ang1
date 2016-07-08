@@ -80,53 +80,52 @@ app.controller('FancyFormController',
             }
         }
 
-        $scope.setup_Dropdown = function (element, enumType, defaultTo, prompt, ref) {
+        $scope.setup_Menu = function (element, enumType, defaultTo) {
             // convert ENUM('A','B','C') to dropdown menu ... 
             //
             // Usage example (jade):
             //
             //  select( 
             //    ng-model='xyz' 
-            //    ng-init="setup_Dropdown('xyz', \"EN\UM('A','B','C')\", 'B')" 
-            //    ng-options="item.id as item.name for item in dropdownList['xyz']"
+            //    ng-init="setup_Menu('xyz', \"EN\UM('A','B','C')\", 'B')" 
+            //    ng-options="item.id as item.name for item in MenuList['xyz']"
             //  )
  
+            $rootScope['Gender_Test_Result1'] = { id:1, name: 'M'};
 
             $scope.message(element + " : " + enumType + ' : ' + defaultTo);
 
-            if (!prompt) { prompt = '' }
-            if (! ref) { ref = 'name' }  // name or id
+            // var defaultVal = ''; 
 
-            var defaultVal = ''; 
-            if (enumType) {
-                var enums = enumType.match(/ENUM\(.*\)/i);
-                if (enums) {
-                    var options = enums[0].replace(/^ENUM\('/i, '').replace(/'\)$/,'')
-                    var list = options.split(/','/);
+            var enums = enumType.match(/^ENUM\(.*\)$/i);
+            if (enums) {
+                options = enums[0].replace(/^ENUM\('/i, '').replace(/'\)$/,'');
+            }
+            else { options = enumType }
+            var list = options.split(/'\s*,\s*'/);
 
-                    $scope.message("OPT: " + list);
-                    
-                    if ( ! $scope.dropdownList ) { $scope.dropdownList = {} }
-                    $scope.dropdownList[element] = [ { id: 0, name: prompt }];
+            $scope.message("OPT: " + list);
+            
+            if ( ! $scope.MenuList ) { $scope.MenuList = {} }
+            $scope.MenuList[element] = [];
 
-                    for (var i=0; i<list.length; i++) {
-                        var id = i+1;
-                        id = id.toString();
-                        $scope.dropdownList[element].push( { id: id, name: list[i] });
-                        if ( defaultTo && defaultTo === list[i]) {
-                            defaultVal = $scope.dropdownList[element][ $scope.dropdownList[element].length-1][ref];
-                        }
-                    }
-
-                    //$scope[element] = $scope.dropdownList[element][ref];
-                    // console.log(JSON.stringify( $scope.dropdownList ));
-                    // console.log(element + " DEFAULT = " + JSON.stringify($scope[element]));
-
-                    $scope[element] = defaultVal;
-                    console.log("DROPDOWN LIST: " + JSON.stringify( $scope.dropdownList ));
-                    console.log("default to " + JSON.stringify($scope[element]));
+            for (var i=0; i<list.length; i++) {
+                var id = i+1;
+                id = id.toString();
+                $scope.MenuList[element].push( { id: id, name: list[i] });
+                if ( defaultTo && defaultTo === list[i]) {
+                    //defaultVal = $scope.MenuList[element][ $scope.MenuList[element].length-1][ref];
+                    //$scope[element] = { id: id, name: list[i] };
                 }
             }
+
+            //$scope[element] = $scope.MenuList[element][ref];
+            // console.log(JSON.stringify( $scope.MenuList ));
+            // console.log(element + " DEFAULT = " + JSON.stringify($scope[element]));
+
+            // $scope[element] = defaultVal;
+            console.log("DROPDOWN LIST: " + JSON.stringify( $scope.MenuList ));
+            console.log("default to " + JSON.stringify($scope[element]));
 
         }
 
@@ -278,7 +277,6 @@ app.controller('FancyFormController',
                 $scope.updateLookup(identifier); 
             }
         }
-
 }])
 .directive('myDatepicker', function ($parse) {
    return {
@@ -335,4 +333,110 @@ app.controller('FancyFormController',
       }
 
    };
+})
+.run(function($rootScope) {
+    angular.element(document).on("click", function(e) {
+        $rootScope.$broadcast("documentClicked", angular.element(e.target));
+    });
+})
+.directive("dropdown", function($rootScope) {
+
+    // usage : 
+    //
+    //  may preset attribute in controller if desired:  $scope.options = [ { id: 0, name: 'option 1'}, { id: 2, name: 'option 2'}]
+    //
+    // dropdown(placeholder="Select..." list="options" selected="#{fld}#{Snum}" property="name"  (note: list uses ng-attribute options)
+    // additional attribute options: 
+    //     track='name'  (sets value to name in hash)  (property only controls the displayed value)
+    //     default='option 2'  ( need to set whole model if track is not set, since item is the selected object)
+    //     
+    //  for auto-generating dropdowns from enums or FK_refs, you can initiate the dropdown using:
+    //
+    // ng-init="setup_Menu('#{model}','#{type}') 
+    //  
+    // 
+    //  eg dropdown(placeholder='pick..' list="MenuList['colours']" default='Blue' track:name property:name
+    //         ng-init="set_Dropdown('colours',\"ENUM('Red','Blue','Green')\"))
+    return {
+        restrict: "AEC",
+        template: " \
+            <div class=\"dropdown-container\" ng-class=\"{ show: listVisible }\"> \
+                <div class=\"dropdown-display\" ng-click=\"show();\" ng-class=\"{ clicked: listVisible }\"> \
+                    <span ng-if=\"!isPlaceholder\">{{display}}<\/span> \
+                    <span class=\"placeholder\" ng-if=\"isPlaceholder\">{{placeholder}}<\/span> \
+                    <i class=\"fa fa-angle-down\"><\/i> \
+                <\/div> \
+                <div class=\"dropdown-list\"> \
+                    <div> \
+                        <div ng-repeat=\"item in list\" ng-click=\"select(item)\" ng-class=\"{ selected: isSelected(item) }\"> \
+                            <span>{{property !== undefined ? item[property] : item}}<\/span> \
+                            <i class=\"fa fa-check\"><\/i> \
+                        <\/div> \
+                    <\/div> \
+                <\/div> \
+            <\/div>",
+        scope: {
+            placeholder: "@",
+            list: "=",
+            selected: "=",
+            property: "@",
+            track: '@',
+            default: '@',
+        },
+        link: function(scope) {
+            scope.listVisible = false;
+            scope.isPlaceholder = true;
+           
+            if (scope.default) {
+                scope.selected = scope.default;
+                console.log(" Set default to " + scope.selected)
+            }
+            else {
+                console.log("no default for " + scope.placeholder + scope.track);
+            }
+
+            scope.select = function(item) {
+                scope.isPlaceholder = false;
+
+                if (scope.track) { scope.selected = item[scope.track] }
+                else { scope.selected = item }  // or just item for full object
+            
+                console.log("SET");
+
+            };
+
+            scope.isSelected = function(item) {
+                if (scope.track) {
+                    return item[scope.track] === scope.selected;
+                }
+                else {
+                    return item[scope.property] === scope.selected[scope.property];
+                }
+            };
+
+            scope.show = function() {
+                scope.listVisible = true;
+            };
+
+            $rootScope.$on("documentClicked", function(inner, target) {
+                console.log($(target[0]).is(".dropdown-display.clicked") || $(target[0]).parents(".dropdown-display.clicked").length > 0);
+                if (!$(target[0]).is(".dropdown-display.clicked") && !$(target[0]).parents(".dropdown-display.clicked").length > 0)
+                    scope.$apply(function() {
+                        scope.listVisible = false;
+                    });
+            });
+
+            scope.$watch("selected", function(value) {
+                if (scope.track) { 
+                    scope.isPlaceholder = scope.selected === undefined;
+                    scope.display = scope.selected 
+                }
+                else { 
+                    scope.isPlaceholder = scope.selected[scope.property] === undefined;
+                    scope.display = scope.selected[scope.property] 
+                }
+                console.log('reset display to ' + scope.display);
+            });
+        }
+    }
 });
