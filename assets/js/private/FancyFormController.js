@@ -90,11 +90,10 @@ app.controller('FancyFormController',
             //    ng-init="setup_Menu('xyz', \"EN\UM('A','B','C')\", 'B')" 
             //    ng-options="item.id as item.name for item in MenuList['xyz']"
             //  )
- 
-            $rootScope['Gender_Test_Result1'] = { id:1, name: 'M'};
 
-            $scope.message(element + " : " + enumType + ' : ' + defaultTo);
-
+            if ($scope.messages) {
+                $scope.message(element + " : " + enumType + ' : ' + defaultTo);
+            }
             // var defaultVal = ''; 
 
             var enums = enumType.match(/^ENUM\(.*\)$/i);
@@ -102,9 +101,11 @@ app.controller('FancyFormController',
                 options = enums[0].replace(/^ENUM\('/i, '').replace(/'\)$/,'');
             }
             else { options = enumType }
-            var list = options.split(/'\s*,\s*'/);
 
-            $scope.message("OPT: " + list);
+            var list = options.split(/'?\s*,\s*'?/);
+
+            console.log("Opt: " + list.join(' : '));
+            $scope.messages && $scope.message("OPT: " + list);
             
             if ( ! $scope.MenuList ) { $scope.MenuList = {} }
             $scope.MenuList[element] = [];
