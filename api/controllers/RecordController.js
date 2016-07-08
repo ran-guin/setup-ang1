@@ -221,13 +221,19 @@ module.exports = {
 		var table;
 		var condition = '1';
 
-		if (req.param && req.param('model')) { table = req.param('model'); console.log('param: ') + table }
-		else if (req.body) { 
-			table = req.body.model || req.body['model-label']; 
-			if (req.body.condition) { condition = req.body.condition }
-			console.log("body: " + JSON.stringify(req.body));
+		var body = req.body || {};
+
+		if (req.param && req.param('model')) {}
+		if (body.model || body.table) { 
+			table = req.body.model || req.table; 
+			if (body.condition) { condition = body.condition }
+			console.log("body: " + JSON.stringify(body));
 		}
-		else { console.log('table = ' + table) }
+		else if (req.param('body') || req.param('table') ) {
+			table = req.param('model') || req.param('table');
+		}
+		
+		console.log('table = ' + table);
 
 		var query = "Select * from " + table;
 		console.log("Generate list of " + table + ' records: ' + query);
