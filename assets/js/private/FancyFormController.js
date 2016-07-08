@@ -277,6 +277,9 @@ app.controller('FancyFormController',
                 $scope.updateLookup(identifier); 
             }
         }
+
+        $scope.colours = [ { name: 'Red'}, { name:'White'} , {name: 'Blue'}];
+        $scope.colour = ''; // {name: 'Blue'};
 }])
 .directive('myDatepicker', function ($parse) {
    return {
@@ -359,6 +362,7 @@ app.controller('FancyFormController',
     //         ng-init="set_Dropdown('colours',\"ENUM('Red','Blue','Green')\"))
     return {
         restrict: "AEC",
+        // templateURL: "templates/dropdown.html,
         template: " \
             <div class=\"dropdown-container\" ng-class=\"{ show: listVisible }\"> \
                 <div class=\"dropdown-display\" ng-click=\"show();\" ng-class=\"{ clicked: listVisible }\"> \
@@ -400,18 +404,16 @@ app.controller('FancyFormController',
 
                 if (scope.track) { scope.selected = item[scope.track] }
                 else { scope.selected = item }  // or just item for full object
-            
-                console.log("SET");
-
             };
 
             scope.isSelected = function(item) {
                 if (scope.track) {
                     return item[scope.track] === scope.selected;
                 }
-                else {
+                else if (scope.selected) {
                     return item[scope.property] === scope.selected[scope.property];
                 }
+                else { return false }
             };
 
             scope.show = function() {
@@ -428,12 +430,16 @@ app.controller('FancyFormController',
 
             scope.$watch("selected", function(value) {
                 if (scope.track) { 
-                    scope.isPlaceholder = scope.selected === undefined;
+                    scope.isPlaceholder = (scope.selected === undefined || ! scope.selected);
                     scope.display = scope.selected 
+                    console.log("SELECTED = " + scope.selected);
                 }
-                else { 
+                else if (scope.selected) { 
                     scope.isPlaceholder = scope.selected[scope.property] === undefined;
                     scope.display = scope.selected[scope.property] 
+                }
+                else {
+                    scope.isPlaceholder = true;
                 }
                 console.log('reset display to ' + scope.display);
             });
