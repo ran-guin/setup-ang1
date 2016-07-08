@@ -209,7 +209,7 @@ function uploadController ($scope, $rootScope, $http, $q) {
 					$scope.message("'" + header + "' is a recognized attribute");
 				}
 				else if (el) { 
-					$scope.error("'" + header + "' not a recognized field or attribute - please use a valid field id or attribute as a heading");
+					$scope.error("'" + header + "' not a recognized field or attribute - (case sensitive)");
 					el.style = 'border-color:red';
 					okay = false;
 				}
