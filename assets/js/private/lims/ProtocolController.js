@@ -290,7 +290,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
             'Prep_Name' : $scope.Step.name ,
             'FK_Lab_Protocol__ID' : $scope.Step['Lab_protocol'],
             'FK_Employee__ID' : 1, 
-            'Prep_Action' : $scope['action' + $scope.stepNumber],
+            'Prep_Action' : action,
             'Prep_Comments' : $scope['comments' + $scope.stepNumber],
             'Prep_DateTime' : $scope.timestamp,
             // 'FK_Plate_Set__Number' : $scope.plate_set,  // legacy ... in Plate_Prep... 
@@ -375,7 +375,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
         $scope.updateLookups();  // use lookup dropdowns to populate ng-model
 
         console.log("Transfer ? : " + $scope.Step.transfer_type +  ' = ' + $scope.transfer_type);
-        if ($scope.Step.transfer_type) {
+        if (action != 'Skipped' && $scope.Step.transfer_type) {
 
             var qty = $scope['transfer_qty' + $scope.stepNumber];
             if ( $scope['transfer_qty' + $scope.stepNumber + '_split']) {
