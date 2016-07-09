@@ -65,7 +65,7 @@ module.exports = {
 
     var wells = Rack.wells[size];
     if (! wells || !name || !size) {
-      deferred.reject("not standard size");
+      deferred.reject("not standard size ? " + size);
     }
     else {
 
@@ -96,7 +96,11 @@ module.exports = {
             console.log("Insert slot data: " + JSON.stringify(slotData));
             Record.createNew('Rack', slotData)
             .then ( function (slotResult) {
-              deferred.resolve({box: boxResult, slots: slotResult});
+              var box = boxResult.insertId;
+              var slots = slotResult.affectedRows;
+              
+              var msg = "Added Box #" + box + " with " + slots + ' Slots'
+              deferred.resolve({box: boxResult, slots: slotResult, message: msg});
             })
             .catch (function (err) {
               deferred.reject(err);
