@@ -1,28 +1,3 @@
 extends ./../customize/privateLayout
-block content
-  div.container
-    form
-        h2 #{table} Records
-
-        - var debug = 0;
-
-        hr
-        table.table.table-bordered
-            thead
-                tr
-                    each fld in fields
-                        th.alert.alert-info #{fld}
-                    th.alert.alert-info &nbsp;                    
-                    th.alert.alert-info &nbsp;
-                each record in data
-                    tr
-                    each fld in fields
-                        td
-                            b #{ record[fld] }
-                    td 
-                        a(href='/record/view/' + table + '/' + record.id)
-                            button.btn.btn-warning(type='button') Edit
-                    td
-                        a(href='/record/delete/' + table + '/' + record.id)
-                            button.btn.btn-danger(type='button')
-                                i.fa.fa-close 
+block content	
+  include embedded_list.jade
