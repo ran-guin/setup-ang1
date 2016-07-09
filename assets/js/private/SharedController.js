@@ -152,15 +152,18 @@ app.controller('SharedController',
             //return "\n<div class='container' style='padding:20px'>\n" + view + "</div>\n";
         }
         
-        $scope.injectData = function (url, element, ids ) {
+        $scope.injectData = function (url, element, ids, attribute ) {
             console.log("INJECT HTML");
+
+            if (!attribute) { attribute = 'ids'}
+
             if (! element) { element = 'injectedData' }
 
             if (url.match(/\?/)) { url = url + '&' }
             else { url = url + '?' }
 
-            url = url + 'element=' + element;
-            if (ids) { url = url + '&ids=' + ids }
+            url = url + 'element=' + element + '&'; // enables close button in injected block
+            if (ids) { url = url + attribute + '=' + ids }
 
 
             var el = document.getElementById(element);
