@@ -232,6 +232,8 @@ module.exports = {
 		else if (req.param('body') || req.param('table') ) {
 			table = req.param('model') || req.param('table');
 		}
+
+		var element = body.element || req.param('element') || 'injectedData';  // match default in CommonController
 		
 		console.log('table = ' + table);
 
@@ -252,7 +254,8 @@ module.exports = {
 
 			if (result.length) {
 				if (!fields) { fields = Object.keys(result[0]) }
-				return res.render('record/list', { table : table, fields : fields, data : result });
+				// return res.render('record/embedded_list', { table : table, fields : fields, data : result });
+				return res.render('customize/injectedData', { table : table, fields : fields, data : result, element: element});
 			}
 			else {
 				return res.send("No data");
