@@ -3,7 +3,8 @@ div(id="injected#{element}")
 	h2 #{title}
 		div.navbar-right
 			button.btn.btn-danger.btn-sm(type='button' onclick="document.getElementById('#{element}').innerHTML = ''") Close
-	table.table-bordered(style='width:100%')
+	br
+	table.table-bordered(style='width:100%; background-color:#eee')
 		tr
 			thead
 				each field in fields
