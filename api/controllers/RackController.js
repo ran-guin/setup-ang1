@@ -35,12 +35,15 @@ module.exports = {
 	},
 
 	createBox : function (req, res ) {
-		var size = req.body['Capacity-label'];
-		var name = req.body.name;
 
-		var parent = req.body.parent;
+		var body = req.body || {};
+		console.log("Body: " + JSON.stringify(body));
+		var size = body.size || body['Capacity-label'];
+		var name = body.name;
+		var parent = body.parent;
 
-		var Scanned = Barcode.parse(req.body.parent);
+		var Scanned = Barcode.parse(parent);
+
 		console.log("Parsed " + parent + " : " + JSON.stringify(Scanned));
 		if (Scanned['Rack']) {
 			parent = Scanned['Rack'][0];
@@ -50,6 +53,8 @@ module.exports = {
 		Rack.addSlottedBox(parent, name, size)
 		.then ( function (result) {
 			console.log("Added Slotted Box " + JSON.stringify(result));
+			return res.json({ message : result.message });
+/*
 			if (result.box && result.slots) {
 
 				var box = result.box.insertId;
@@ -62,12 +67,14 @@ module.exports = {
 			}
 
 			return res.render('customize/private_home');
+*/
 		})
 		.catch ( function (err) {
 			console.log("Could not add slotted box: " + err);
 
-			sails.config.errors = Record.parse_standard_error(err);
-			return  res.render('customize/private_home'); 
+			var error = Record.parse_standard_error(err);
+			return res.json({error: error});
+			//return  res.render('customize/private_home'); 
 		})
 	},
 
