@@ -38,7 +38,7 @@ Attribute_ID	Attribute_Name	Attribute_Format	Attribute_Type	FK_Grp__ID	Inherited
 43	Measured_Tube_Weight_in_g	NULL	Decimal	23	No	Plate	Editable	This attribute can be used to calculate accurate volumes. If this attribute is entered and Plate_Format.Wells = 1 and Container Format has defined Empty_Container_Weight_g, the following calculation will be performed: 1. Subtract empty tube weight from entered (measured) weight. 2. convert grams to ml (assuming water density)
 45	VolumePOC	NULL	Decimal	8	No	Plate	Editable	Volume of plasma from commercial lab
 46	VolumeSOC	NULL	Decimal	8	No	Plate	Editable	Volume of serum from commercial lab
-47	260_280_Ratio		Decimal	8	Yes	Plate	Editable	NULL
+47	_260_280_Ratio		Decimal	8	Yes	Plate	Editable	NULL
 48	Gender_Test_Result		ENUM('M','F','U')	8	Yes	Plate	Editable	NULL
 49	Concentration_ng_per_ul		Decimal	8	Yes	Plate	Editable	NULL
 50	Qiagen_Kit_Lot_Number		varchar	3	Yes	Plate	Editable	NULL	NULL
