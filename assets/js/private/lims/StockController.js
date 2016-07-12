@@ -10,14 +10,16 @@ function stockController ($scope, $rootScope, $http, $q) {
 
     $scope.context = 'Receiving';
 
-    $scope.expiry_date = '2015-09-11';  // UTC time ? ... seems to convert to local time (subtracts day ?)
-    
+    $scope.received = $scope.datestamp;
+
     $scope.save = function () {
     	var StockData = {
     		'number_in_batch' : $scope.number_in_batch,
     		'received'        : $scope.received,
     		'lot_number'      : $scope.lot_number,
     		'type'            : $scope.type,
+            'catalog'         : $scope.catalog.id,
+            'notes'           : $scope.notes,
     	};
 
     	var data = { Stock : StockData };
@@ -29,7 +31,6 @@ function stockController ($scope, $rootScope, $http, $q) {
     			'number_in_batch'   : $scope.number_in_batch,
                 'qty'               : $scope.qty,
                 'qty_units'         : $scope.qty_units,
-                'notes'             : $scope.notes
     		};
 
     		data['Reagent'] = ReagentData;
@@ -40,9 +41,12 @@ function stockController ($scope, $rootScope, $http, $q) {
     	$http.post("Stock/receive", data)
     	.then (function (result) {
     		console.log("GOT: " + JSON.stringify(result.data));
+            $scope.message("Added Stock Record(s)")
     	})    	
     	.catch (function (err){
-    		console.log("Error receiving stock: " + err);
+            $scope.error("Error adding Stock Record(s)");
+    		console.log("Error receiving stock: ");
+            console.log( err );
     	});
     }
 
