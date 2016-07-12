@@ -1,0 +1,8 @@
+{
+  "apps" : [{
+    "name"        : "app",
+    "script"      : "app.js",
+    "ignoreWatch" : [ "node_modules", ".tmp", "views", "assets"],
+    "watch"       : [ "api", "assets"],
+    }]
+}
