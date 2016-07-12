@@ -80,6 +80,54 @@ app.controller('FancyFormController',
             }
         }
 
+        $scope.get_List = function (type) {
+
+            var deferred = $q.defer();
+            
+            var enums = type.match(/^ENUM\(.*\)$/i);
+            var ref   = type.match(/^FK[\_\(](.+)(__ID|\))/);
+            
+            var list = [];
+            if (enums) {
+                var options = type[0].replace(/^ENUM\(\'/i, '').replace(/\'\)$/,'');
+                list = options.split(/'?\s*,\s*'?/);
+            }
+            else if (ref) { 
+                console.log("reference dropdown: " + JSON.stringify(ref[1]));
+                var reference = ref[1]; // .replace(/^FK[\_\(]/,'').replace(/(__ID|\))$/,'');
+                console.log('get list from reference: ' + reference);
+                
+                var url = '/lookup/' + reference + '?';
+
+                console.log("get lookup for " + reference);
+                console.log(url);
+                $http.get(url)
+                .then ( function (result) {
+                    console.log("R: " + JSON.stringify(result));
+                    var list = result.data;
+                    var options = [];
+                    for (var i=0; i<list.length; i++) {
+                        options.push( { id: list[i].id, name: list[i].label } );
+                    }
+                    console.log("OPTIONS: " + JSON.stringify(options));
+                    deferred.resolve(options);
+                })
+                .catch ( function (err) {
+                    console.log("GET error...");
+                    console.log(err);
+                    options = [{}];
+                    deferred.reject(err);
+                });
+            }
+            else { 
+                options = type;
+                list = options.split(/'?\s*,\s*'?/);
+                deferred.resolve(list);
+            }
+
+            return deferred.promise;
+        }
+
         $scope.setup_Menu = function (element, enumType, defaultTo) {
             // convert ENUM('A','B','C') to dropdown menu ... 
             //
@@ -96,38 +144,48 @@ app.controller('FancyFormController',
             }
             // var defaultVal = ''; 
 
-            var enums = enumType.match(/^ENUM\(.*\)$/i);
-            if (enums) {
-                options = enums[0].replace(/^ENUM\('/i, '').replace(/'\)$/,'');
-            }
-            else { options = enumType }
+            // var deferred = $q.defer();
 
-            var list = options.split(/'?\s*,\s*'?/);
 
-            console.log("Opt: " + list.join(' : '));
-            $scope.messages && $scope.message("OPT: " + list);
-            
-            if ( ! $scope.MenuList ) { $scope.MenuList = {} }
-            $scope.MenuList[element] = [];
+            $scope.get_List(enumType)
+            .then ( function (list) {          
 
-            for (var i=0; i<list.length; i++) {
-                var id = i+1;
-                id = id.toString();
-                $scope.MenuList[element].push( { id: id, name: list[i] });
+                console.log("Opt: " + list.join(' : '));
+                $scope.messages && $scope.message("OPT: " + list);
+                
+                if ( ! $scope.MenuList ) { $scope.MenuList = {} }
+                $scope.MenuList[element] = [];
+
+                if (list && list[0].constructor === Object ) {
+                    $scope.MenuList[element] = list;
+                }
+                else if (list && list[0] ) {
+                    for (var i=0; i<list.length; i++) {
+                        var id = i+1;
+                        id = id.toString();
+                        $scope.MenuList[element].push( { id: id, name: list[i] });
+                        
+                    }
+                }
+
                 if ( defaultTo && defaultTo === list[i]) {
                     //defaultVal = $scope.MenuList[element][ $scope.MenuList[element].length-1][ref];
                     //$scope[element] = { id: id, name: list[i] };
                 }
-            }
 
-            //$scope[element] = $scope.MenuList[element][ref];
-            // console.log(JSON.stringify( $scope.MenuList ));
-            // console.log(element + " DEFAULT = " + JSON.stringify($scope[element]));
+                //$scope[element] = $scope.MenuList[element][ref];
+                // console.log(JSON.stringify( $scope.MenuList ));
+                // console.log(element + " DEFAULT = " + JSON.stringify($scope[element]));
 
-            // $scope[element] = defaultVal;
-            console.log("DROPDOWN LIST: " + JSON.stringify( $scope.MenuList ));
-            console.log("default to " + JSON.stringify($scope[element]));
+                // $scope[element] = defaultVal;
+                console.log("DROPDOWN LIST: " + JSON.stringify( $scope.MenuList ));
+                console.log("default to " + JSON.stringify($scope[element]));
 
+            })
+            .catch ( function (err) {
+                console.log("Error generating enum list: " + err);
+
+            });
         }
 
         $scope.setElement = function (element, val) {
@@ -368,7 +426,7 @@ app.controller('FancyFormController',
             <div class=\"dropdown-container\" ng-class=\"{ show: listVisible }\"> \
                 <div class=\"dropdown-display\" ng-click=\"show();\" ng-class=\"{ clicked: listVisible }\"> \
                     <span ng-if=\"!isPlaceholder\">{{display}}<\/span> \
-                    <span class=\"placeholder\" ng-if=\"isPlaceholder\">{{placeholder}}<\/span> \
+                    <input class=\"placeholder\" style=\"border: 0px; padding: 5px\" ng-model=\"search\" ng-keypress=\"filter($event)\" type=\"text\" placeholder =\"{{placeholder}}\" ng-if=\"isPlaceholder\"><\/input> \
                     <i class=\"fa fa-angle-down\"><\/i> \
                 <\/div> \
                 <div class=\"dropdown-list\"> \
@@ -397,7 +455,7 @@ app.controller('FancyFormController',
                 console.log(" Set default to " + scope.selected)
             }
             else {
-                console.log("no default for " + scope.placeholder + scope.track);
+                console.log("no default for " + scope.placeholder + ' ' + scope.track);
             }
 
             scope.select = function(item) {
@@ -405,6 +463,23 @@ app.controller('FancyFormController',
 
                 if (scope.track) { scope.selected = item[scope.track] }
                 else { scope.selected = item }  // or just item for full object
+            };
+
+            scope.filter = function(event) {
+                console.log("E: " + event);
+                var key = window.event ? event.keyCode : event.which;
+                if (key) {
+                    var keyval = String.fromCharCode(key);
+                
+                    console.log("K: " + keyval);
+                    for (var i=0; i<scope.list.length; i++) {
+                        if ( scope.list[i].name.charAt(0).toLowerCase() == keyval.toLowerCase() ) {
+                            console.log(keyval.toLowerCase() + ' = ' + scope.list[i].name.charAt(0).toLowerCase());
+                            scope.select(scope.list[i]);
+                            i = scope.list.length;
+                        }
+                    }
+                }
             };
 
             scope.isSelected = function(item) {
