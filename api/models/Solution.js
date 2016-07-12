@@ -23,6 +23,7 @@
 		'type'   : 'Solution_Type',
 		'Stock'  : 'FK_Stock__ID',
 		'rack'   : 'FK_Rack__ID',
-	}
+		'notes'  : 'Solution_Notes',
+ 	}
 };
 
