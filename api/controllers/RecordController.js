@@ -233,11 +233,13 @@ module.exports = {
 			table = req.param('model') || req.param('table');
 		}
 
+		var fields = body.fields || '*';
+
 		var element = body.element || req.param('element') || 'injectedData';  // match default in CommonController
 		
 		console.log('table = ' + table);
 
-		var query = "Select * from " + table;
+		var query = "Select " + fields + " from " + table;
 		console.log("Generate list of " + table + ' records: ' + query);
 
 		var model = sails.models[table] || {};
