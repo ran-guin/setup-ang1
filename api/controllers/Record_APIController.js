@@ -174,6 +174,7 @@ module.exports = {
 		var field     = req.param('field');
 		var label     = req.param('labal');
 		var table = req.param('table');
+		var render = req.param('render') || false;
 
 		var idField = 'id';
 		var nameField = 'name';
@@ -204,7 +205,12 @@ module.exports = {
 			
 			if (field && Mod.attributes[field] && Mod.attributes[field].enum) {
 				var options = Mod.attributes[field].enum;
-				return res.render('core/lookup', { table: table, identifier : identifier, data : { label : options}, prompt: field })
+				if (render) {
+					return res.render('core/lookup', { table: table, identifier : identifier, data : { label : options}, prompt: field })
+				}
+				else {
+					return res.json(result);
+				}
 			}
 			else if (field) {
 				// retrieve distinct list of options from a particular field ... or ...
@@ -217,7 +223,7 @@ module.exports = {
 			}
 		}
 
-		console.log('generate ' + table + ' lookup');
+		console.log('generate ' + table + ' lookup ' + '; Render: ' + render);
 		/*
 		fields = fields + '::';  // extend to ensure array has at least elements..
 
@@ -235,7 +241,12 @@ module.exports = {
 			}
 			
 			//console.log("Lookup: " + JSON.stringify(result));
-			return res.render('core/lookup', { table : table, identifier : identifier, data : result, prompt: prompt, defaultTo: defaultTo });
+			if (render) {
+				return res.render('core/lookup', { table : table, identifier : identifier, data : result, prompt: prompt, defaultTo: defaultTo });
+			}
+			else {
+				return res.json(result);
+			}
 		});
 	},
 
