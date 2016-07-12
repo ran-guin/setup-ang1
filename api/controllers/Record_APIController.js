@@ -134,6 +134,7 @@ module.exports = {
 	enum: function (req, res) {
 		var model = req.param('model');
 		var field = req.param('field');
+		var render = req.param('render') || false;
 
 		var Mod = sails.models[model];
 		if (Mod) {
@@ -152,7 +153,12 @@ module.exports = {
 					data[i].label = options[i];
 				}
 				console.log("Enum Data: " + JSON.stringify(data));
-				return res.render('core/lookup', { table: table, identifier : identifier, data : data, prompt: field })
+				if (render) {
+					return res.render('core/lookup', { table: table, identifier : identifier, data : data, prompt: field })
+				}
+				else {
+					return res.json(data);
+				}
 			}
 			else { return res.json('not an enum') }
 		}
