@@ -277,10 +277,9 @@ app.controller('FancyFormController',
             }
 
             
-        	url = url + '?';
+        	url = url + '?render=1';
             console.log("Call factory lookup with url: " + url + ':' + JSON.stringify(options));
             var got = FancyFormFactory.loadLookup(url, model, options);
-
 
        		console.log("Loaded " + model + " Lookup Table");
     	}
