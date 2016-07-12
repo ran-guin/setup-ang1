@@ -664,8 +664,8 @@ module.exports = {
 			deferred.resolve(result);
 		})
 		.catch ( function (err) {
-			console.log("Error creating record in " + table);
-			console.log(err);
+			console.log("Error creating Record in " + table);
+			console.log(JSON.stringify(err));
 			deferred.reject(err); 
 		});
 
