@@ -22,41 +22,54 @@ block content
             include ./../core/angularMessages.jade
               
             form(role='form' name='Stock' method='post' action='Stock/receive')
-              div.form-group
+              div.form-group.input-lg
+                label.col-md-2.control-label(for='type') 
                 input.input-lg(type='radio' name='type' required ng-model='type' value='Reagent') 
                 b &nbsp; Solution / Reagent
-              
-                span &nbsp; &nbsp;
-
                 input.input-lg(type='radio' name='type' ng-model='type' value='Equipment') 
                 b &nbsp; Equipment
+
+              hr 
   
-              div.form-group
-                input.input-lg(type='number' ng-model='number_in_batch' required placeholder='Number in Batch')              
+              div.form-group.input-lg
+                label.col-md-2.control-label(for='number_in_batch') Items Received: 
+                input.input-lg#number_in_batch(type='number' ng-model='number_in_batch' required placeholder='Number in Batch')              
 
-              div.form-group
-                input.input-lg(type='text' ng-model='lot_number' placeholder='Lot Number') 
+              div.form-group.input-lg
+                label.col-md-2.control-label(for='lot_number') Lot #: 
+                input.input-lg#lot_number(type='text' ng-model='lot_number' placeholder='Lot Number') 
 
-              div.form-group
-                div.input-lg.my-datepicker#received(type="text" ng-model="received")
+              div.form-group.input-lg
+                label.col-md-2.control-label(for='received') Received: 
+                div.input-lg.my-datepicker#received(type="text" defaultTo='2016-03-02' ng-model="received")
 
               div(ng-show="type === 'Reagent'")
                 hr 
-                p
-                  b Reagent specific information:
-                div.form-group
-                  input.input-lg(type='text' ng-model='qty' required placeholder='Volume')              
-                  input.input-lg(type='text' ng-model='qty_units' required placeholder='Volume_Units')              
+                h3 Reagent specific information:
+                
+                div.form-group.input-lg
+                  label.col-md-2.input-lg.control-label(for="catalog") Catalog Item:
+                  // input.col-md-6#catalog(type='text' ng-model='catalog' required placeholder='Volume')
+                  dropdown#catalog(placeholder="Select from Catalog..." list="MenuList['catalog']" selected="catalog" property="name" ng-init="setup_Menu('catalog', 'FK(catalog)')")
+                  div.col-md-4 &nbsp; {{ catalog }}
 
-                div.form-group
-                  div.input-lg.my-datepicker#expiry_date(type="text" ng-model="expiry_date")          
+                div.form-group.input-lg
+                  label.col-md-2.control-label(for='qty') Quantity: 
+                  input.col-md-3.input-lg#qty(type='text' ng-model='qty' required placeholder='Volume')
+                  input.col-md-3.input-lg(type='text' ng-model='qty_units' required placeholder='Volume_Units')
+                  div.col-md-4 &nbsp;
 
-                div.form-group
-                  input.input-lg(type='text' ng-model='notes' placeholder='Notes')              
+                div.form-group.input-lg
+                  label.col-md-2.control-label(for='expiry') Expiry: 
+                  div.col-md-6.input-lg.my-datepicker#expiry(type="text" ng-model="expiry")          
+
+                div.form-group.input-lg
+                  label.col-md-2.control-label(for='notes') Notes: 
+                  input.input-lg#notes(type='text' ng-model='notes' placeholder='Notes')              
   
-                div.form-group
+                div.form-group.input-lg
+                  label.col-md-2.control-label(for='notes') Generate Barcodes: 
                   input.input-lg(type='checkbox' ng-model='barcode')              
-                  b Generate Barcode(s)
 
                 button.btn.btn-lg.btn-primary(type='button' ng-click="save()" ng-disabled="! Stock.$valid") Save New Stock / Reagent Record(s)
 
