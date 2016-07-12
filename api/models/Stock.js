@@ -21,6 +21,8 @@ module.exports = {
 		'received' : 'Stock_Received',
 		'type' : 'Stock_Type',
 		'lot_number' : 'Lot_Number',
+		'notes' : 'Stock_Notes',
+		'catalog' : 'FK_Stock_Catalog__ID',
 	},
 
 	receive : function (data) {
@@ -34,7 +36,7 @@ module.exports = {
 
 		if (StockData && StockData.type) {
 			var type = StockData.type;
-			var N    = StockData.received;
+			var N    = StockData.number_in_batch;
 
 			StockData = Record.to_Legacy(StockData, Stock.legacy_map);
 			console.log("Stock Data: " + JSON.stringify(StockData));
@@ -47,7 +49,8 @@ module.exports = {
 					var stock_id = stock.insertId;
 		
 					console.log("Add additional records for each " + type);
-					if (type === 'Reagent') {
+					console.log(JSON.stringify(data[type]));
+					if (type === 'Reagent' && data['Reagent']) {
 						// Add individual Reagent records
 						console.log('load data...' + JSON.stringify(data));
 						var ReagentData = data['Reagent'];
@@ -59,7 +62,12 @@ module.exports = {
 						ReagentData = Record.to_Legacy(ReagentData, Solution.legacy_map);
 						console.log("Reagent Data: " + JSON.stringify(ReagentData));
 
-						Record.createNew('solution', ReagentData)
+						var Reagents = [];
+						for (var i=0; i<N; i++) {
+							Reagents.push(ReagentData);
+							Reagents[i]['Solution_Number'] = i+1;
+						}
+						Record.createNew('solution', Reagents)
 						.then ( function (result) {
 							if (barcode) {
 								console.log("print reagent barcodes ...");
@@ -74,7 +82,7 @@ module.exports = {
 						});
 					}
 					else {
-						deferred.reject("Not set up yet for " + type + ' types ...');
+						deferred.reject("Problem parsing " + type + ' data ...');
 					}
 				}
 				else {
