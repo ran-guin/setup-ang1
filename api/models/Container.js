@@ -468,7 +468,7 @@ module.exports = {
 			var resetSource = result.source;
 			var resetClone  = result.clone;
 
-			console.log("\n*** Reset: " + JSON.stringify(result));
+			console.log("\n*** Reset Values: " + JSON.stringify(result));
 
 			Container.retrieve_PrePrinted(ids)
 			.then (function (retrieved) {
@@ -498,7 +498,8 @@ module.exports = {
 					console.log("Clone Plates: " + clone_ids.join(','));
 					Record.clone('Plate', clone_ids, _.extend(resetTarget, resetClone), Options)
 					.then ( function (cloneData) {
-						
+						console.log("Cloned Plates.");
+
 						if (resetSource && Object.keys(resetSource).length) {
 							console.log("Update Source: " + JSON.stringify(resetSource));
 							Record.update('container', clone_ids, resetSource)
@@ -514,7 +515,7 @@ module.exports = {
 							deferred.resolve(newIds);
 						})
 						.catch (function (err) {
-							sails.deferred.warning("non-fatal Error encountered printing labels");
+							sails.warning("non-fatal Error encountered printing labels");
 							deferred.resolve(newIds);
 						});
 						
