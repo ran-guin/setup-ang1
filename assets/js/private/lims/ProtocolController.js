@@ -423,11 +423,12 @@ function protocolController ($scope, $rootScope, $http, $q) {
 
         if (action == 'Test') {
             console.log('Targets: ' + JSON.stringify(data['Targets']));
-
         }
         else {
+            console.log("post: " + JSON.stringify(data));
             $http.post(url, data)
             .then ( function (returnVal) {
+                console.log("Returned: " + JSON.stringify(returnVal));
 
                 var result = $scope.parse_messages(returnVal.data);
 
@@ -490,7 +491,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
             })
             .catch ( function (err) {
                 console.log("Encountered error : " + err);
-                $scope.errors.push("Error: " + JSON.stringify(err));
+                $scope.error(err);
             });
         }
     }
