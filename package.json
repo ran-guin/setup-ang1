@@ -6,7 +6,6 @@
   "keywords": [],
   "dependencies": {
     "angular-loading-bar": "^0.8.0",
-    "angular-moment": "^0.10.3",
     "bcrypt": "^0.8.4",
     "bwip-js": "^0.16.0",
     "chai": "^3.5.0",
@@ -31,7 +30,6 @@
     "machinepack-jwt": "^0.1.14",
     "machinepack-jwtauth": "^0.1.8",
     "machinepack-passwords": "^2.3.0",
-    "moment": "^2.10.6",
     "node-printer": "^1.0.2",
     "node-xlsx": "^0.6.0",
     "path": "^0.12.7",
