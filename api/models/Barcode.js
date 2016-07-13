@@ -74,6 +74,9 @@ module.exports = {
   	console.log("Parse " + barcode + " : " + JSON.stringify(P));
   	console.log("classes: " + classes.join(','));
 
+
+	barcode = barcode.replace(/\s/g,'');
+
   	function barcodeId (barcode) {
   		var match = barcode.match(/\d+/,'i');
   		if (match == undefined) { return match }
@@ -129,7 +132,7 @@ module.exports = {
   		}
   	}
 
-    if (barcode != '') { errors.push("Unrecognized string in barcode: " + barcode) }
+    if (barcode != '') { errors.push("Unrecognized string in barcode: '" + barcode + "'") }
   	Scanned['Unformatted'] = barcode;
 
   	if (errors.length) { console.log("Errors: " + JSON.stringify(errors)) }
