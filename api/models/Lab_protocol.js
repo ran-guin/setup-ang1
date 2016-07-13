@@ -195,13 +195,13 @@ module.exports = {
 			console.log("Send Prep data: " + JSON.stringify(data['Prep']));
 
 			var promises = [];
-			promises.push( Record.createNew('Prep', data['Prep'] ) );
+			promises.push( Record.createNew('prep', data['Prep'] ) );
 
 			if (data['status'] && data['status'].match(/complete/i)) {
 				// Add update record to Prep table indicating that the protocol has been completed ... 
 				var lab_protocol_id = data['Prep']['FK_Lab_Protocol__ID'];
 				promises.push( 
-					Record.createNew('Prep',{ 
+					Record.createNew('prep',{ 
 						Prep_Name : 'Completed Protocol', 
 						Prep_Action: 'Completed', 
 						FK_Lab_Protocol__ID: lab_protocol_id, 
@@ -229,7 +229,7 @@ module.exports = {
 					}
 				
 					var promises2 = [];
-					promises2.push( Record.createNew('Plate_Prep', data['Plate'] ) )
+					promises2.push( Record.createNew('plate_prep', data['Plate'] ) )
 
 				}
 				
