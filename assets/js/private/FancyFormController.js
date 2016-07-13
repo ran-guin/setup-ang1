@@ -84,13 +84,15 @@ app.controller('FancyFormController',
 
             var deferred = $q.defer();
             
-            var enums = type.match(/^ENUM\(.*\)$/i);
+            var enums = type.match(/^ENUM\('(.*)'\)$/i);
             var ref   = type.match(/^FK[\_\(](.+)(__ID|\))/);
             
             var list = [];
             if (enums) {
-                var options = type[0].replace(/^ENUM\(\'/i, '').replace(/\'\)$/,'');
+                var options = enums[1]  ;
                 list = options.split(/'?\s*,\s*'?/);
+                console.log("Enums: " + list.join(', '));
+                deferred.resolve(list);
             }
             else if (ref) { 
                 console.log("reference dropdown: " + JSON.stringify(ref[1]));
@@ -122,6 +124,7 @@ app.controller('FancyFormController',
             else { 
                 options = type;
                 list = options.split(/'?\s*,\s*'?/);
+                console.log("Simple List: " + list.join(', '));
                 deferred.resolve(list);
             }
 
@@ -146,6 +149,7 @@ app.controller('FancyFormController',
 
             // var deferred = $q.defer();
 
+            console.log("Generate enums for " + enumType);
 
             $scope.get_List(enumType)
             .then ( function (list) {          
@@ -422,11 +426,11 @@ app.controller('FancyFormController',
         restrict: "AEC",
         // templateURL: "templates/dropdown.html,
         template: " \
-            <div class=\"dropdown-container\" ng-class=\"{ show: listVisible }\"> \
+            <div class=\"dropdown-container input-lg\" ng-class=\"{ show: listVisible }\"> \
                 <div class=\"dropdown-display\" ng-click=\"show();\" ng-class=\"{ clicked: listVisible }\"> \
                     <span ng-if=\"!isPlaceholder\">{{display}}<\/span> \
-                    <input class=\"placeholder\" style=\"border: 0px; padding: 5px\" ng-model=\"search\" ng-keypress=\"filter($event)\" type=\"text\" placeholder =\"{{placeholder}}\" ng-if=\"isPlaceholder\"><\/input> \
-                    <i class=\"fa fa-angle-down\"><\/i> \
+                    <input class=\"placeholder\" style=\"border: 0px; padding: 5px; width:100%\" ng-model=\"search\" ng-keypress=\"filter($event)\" type=\"text\" placeholder =\"{{placeholder}}\" ng-if=\"isPlaceholder\"><\/input> \
+                    <i class=\"fa fa-angle-down navbar-right\"><\/i> \
                 <\/div> \
                 <div class=\"dropdown-list\"> \
                     <div> \
