@@ -496,7 +496,7 @@ module.exports = {
 					var clone_ids = _.pluck(Transfer,'source_id');
 					Options['id'] = Container.alias('id');
 					console.log("Clone Plates: " + clone_ids.join(','));
-					Record.clone('Plate', clone_ids, _.extend(resetTarget, resetClone), Options)
+					Record.clone('container', clone_ids, _.extend(resetTarget, resetClone), Options)
 					.then ( function (cloneData) {
 						console.log("Cloned Plates.");
 
