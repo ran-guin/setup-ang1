@@ -308,6 +308,7 @@ module.exports = {
 		}
 		else if (options.transfer_type === 'Transfer' ) {
 			resetSource['Plate_Status'] = 'Thrown Out';
+			resetSource['Current_Volume'] = 0;
 		}
 
 		if (target.qty) {
