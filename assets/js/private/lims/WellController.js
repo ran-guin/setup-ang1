@@ -81,7 +81,7 @@ function wellController ($scope, $rootScope, $http, $q ) {
         $scope.form_validated = false;
 
         $scope.transfer_qty_units = 'ml';
-        // $scope.redistribute();
+        $scope.redistribute();
     }
 
     $scope.validate_Form = function validated_form() {
