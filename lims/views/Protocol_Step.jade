@@ -11,8 +11,8 @@ block content
 
 
     - start = steps[0];
-    - flds = ['FK_Equipment__ID', 'FK_Solution__ID', 'Solution_Qty', 'Solution_Qty_Units', 'Transfer_Qty', 'Transfer_Qty_Units', 'Thaw_Time'];
-    - units = { 'Solution_Qty' : 'Solution_Qty_Units', 'Transfer_Qty' : 'Transfer_Qty_Units'};
+    - flds = ['FK_Equipment__ID', 'FK_Solution__ID', 'Solution_Quantity', 'Solution_Quantity_Units', 'Transfer_Qty', 'Transfer_Qty_Units', 'Thaw_Time'];
+    - units = { 'Solution_Quantity' : 'Solution_Quantity_Units', 'Transfer_Qty' : 'Transfer_Qty_Units'};
     - aliases = { 'FK_Equipment__ID' : 'Equip', 'FK_Solution__ID' : 'Sol' }
     - attributes = {'Thaw_Time' : 'integer' }
     - stepInput = start['Input'].split(':');
@@ -49,11 +49,11 @@ block content
                   div.col-sm-4
                     input.form-control(type='text', placeholder = "-- Scan --" id = '#{fld}') 
                   div.col-sm-3
-                    input.form-control(type='text', placeholder = " -- Qty --" id='Solution_Qty') 
+                    input.form-control(type='text', placeholder = " -- Qty --" id='Solution_Quantity') 
                   div.col-sm-3
                     // *** Generate Dropdown for ENUM Values *** //
                     div.dropdown
-                        button.btn.btn-default.dropdown-toggle(type='button' data-toggle='dropdown' id = 'Solution_Qty_Units') Units &nbsp;
+                        button.btn.btn-default.dropdown-toggle(type='button' data-toggle='dropdown' id = 'Solution_Quantity_Units') Units &nbsp;
                             span.caret
                         ul.dropdown-menu
                             each opt,j in options
@@ -61,8 +61,8 @@ block content
                                     a(href='#') #{j} : #{opt}
 
                   - prompted[fld]=1;
-                  - prompted['Solution_Qty']=1;
-                  - prompted['Solution_Qty_Units']=1;
+                  - prompted['Solution_Quantity']=1;
+                  - prompted['Solution_Quantity_Units']=1;
 
                 if units[fld] && ! prompted[fld]
                   - prompted[fld] = 1;
