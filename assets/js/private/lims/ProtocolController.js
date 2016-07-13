@@ -304,8 +304,8 @@ function protocolController ($scope, $rootScope, $http, $q) {
             'plate_list' : 'FK_Plate__ID',
             'solution' : 'FK_Solution__ID',
             'equipment' : 'FK_Equipment__ID',
-            'solution_qty' : 'Solution_Qty',
-            'solution_qty_units' : 'Solution_Qty_Units',
+            'solution_qty' : 'Solution_Quantity',
+            'solution_qty_units' : 'Solution_Quantity_Units',
             'transfer_qty' : 'Transfer_Quantity',
             'transfer_qty_units' : 'Transfer_Quantity_Units'
         };
