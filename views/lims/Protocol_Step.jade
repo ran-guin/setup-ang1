@@ -121,7 +121,10 @@ block content
                                   div.help-block.with-errors(style='color:red' ng-show="form#{Snum}.#{fld}#{Snum}.$invalid" ng-model="#{fld}#{Snum}_errors") #{alias} is Mandatory
                                 if fld.match(/_qty/)
                                   div.col-sm-2
-                                    span.lookup(id='Lookup-units' ng-init="loadLookup('units', '::#{fld}_units#{Snum}', 'units','','#{def}')")
+                                    - units = [ { name: 'ml'}, { name: 'ul'}]      
+                                    dropdown(placeholder='units..' list="MenuList['#{fld}_units#{Snum}']" selected="#{fld}_units#{Snum}" property='name' track='name', ng-init="setup_Menu('#{fld}_units#{Snum}','ml,ul,nl')") 
+
+                                    // span.lookup(id='Lookup-units' ng-init="loadLookup('units', '::#{fld}_units#{Snum}', 'units','','#{def}')") UNITS  
                                 // if fld == 'Split'
                                   div.col-sm-6(ng-show="Split#{Snum} > 1") 
                                     label
