@@ -7,6 +7,10 @@ dropdown {
   display: block;
   width: 250px;
 }
+dropdown.mini-dropdown > div {
+  float: left;
+  width: 100px;
+}
 dropdown > div {
   float: left;
   width: 100%;
