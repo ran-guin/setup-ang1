@@ -72,11 +72,11 @@ module.exports = {
 
 	},
 
-	clone : function (table, sources, targets, resetData, options) {
+	clone : function (model, sources, targets, resetData, options) {
 		var split = options.split || 1;
 		var deferred = q.defer();
 
-		var Mod = sails.models[model];
+		var Mod = sails.models[model] || {};
 		var table = Mod.tableName || model;
 
 		if ( Attribute.models.indexOf(model) ) {
@@ -124,7 +124,10 @@ module.exports = {
 						var sqlInsert = insertPrefix + insert.join(',');
 
 						Record.query(sqlInsert, function (insertError, attUpdate){
-							if (insertError) { deferred.reject("error updating attributes: " + insertError) }
+							if (insertError) { 
+								var parsed_error = Record.parse_standard_error(insertError);
+								deferred.reject("error updating attributes: " + parsed_error) 
+							}
 							else {
 								deferred.resolve({attributes: attUpdate});
 							}
@@ -218,7 +221,8 @@ module.exports = {
 				deferred.resolve(AttResult);
 			})
 			.catch ( function (err) {
-				deferred.reject("Error saving attributes: " + err);
+				console.log("Error saving attributes: " + err);
+				deferred.reject(err);
 			});
 		}
 
