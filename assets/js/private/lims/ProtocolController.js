@@ -700,57 +700,60 @@ function protocolController ($scope, $rootScope, $http, $q) {
 
         $scope.Step = $scope.Steps[$scope.stepNumber-1];
 
-        $scope.input = $scope.Step['input_options'].split(':');
-        $scope.defaults = $scope.Step['input_defaults'].split(':');
-        $scope.formats   = $scope.Step['input_format'].split(':');
+        if (! $scope.Step ) { $scope.error("No Steps Defined for this Protocol !") }
+        else {
+            $scope.input = $scope.Step['input_options'].split(':');
+            $scope.defaults = $scope.Step['input_defaults'].split(':');
+            $scope.formats   = $scope.Step['input_format'].split(':');
 
-        var name = $scope.Step['name'];
+            var name = $scope.Step['name'];
 
-        $scope.Show = {};
-        $scope.Default = {};
-        $scope.Format = {};
-        $scope.comments = '';
+            $scope.Show = {};
+            $scope.Default = {};
+            $scope.Format = {};
+            $scope.comments = '';
 
-        console.log("parse input for next step... ");
-        var Attributes = { Plate : [], Prep : [] };
-        for (var i=0; i<$scope.input.length; i++) {
-            var input = $scope.input[i];
-            var mandatory = input.match(/\*$/);
-            var key = input.replace('*','');
-            var id = key + $scope.stepNumber;
+            console.log("parse input for next step... ");
+            var Attributes = { Plate : [], Prep : [] };
+            for (var i=0; i<$scope.input.length; i++) {
+                var input = $scope.input[i];
+                var mandatory = input.match(/\*$/);
+                var key = input.replace('*','');
+                var id = key + $scope.stepNumber;
 
-            $scope.Show[key] = true;
-            if ($scope.defaults.length > i) {
-                var def = $scope.defaults[i] || '';
-                if (key.match(/\_qty$/)) {
-                    var units = def.match(/[a-zA-Z]+/);
-                    if (units && units.length) {
-                        console.log(JSON.stringify(units));
+                $scope.Show[key] = true;
+                if ($scope.defaults.length > i) {
+                    var def = $scope.defaults[i] || '';
+                    if (key.match(/\_qty$/)) {
+                        var units = def.match(/[a-zA-Z]+/);
+                        if (units && units.length) {
+                            console.log(JSON.stringify(units));
 
-                        $scope.Default[key + '_units'] = units[0]; // units only
-                        $scope[key + '_units' + $scope.stepNumber] = units[0];
-                        def = def.replace(units[0],''); // strip units 
+                            $scope.Default[key + '_units'] = units[0]; // units only
+                            $scope[key + '_units' + $scope.stepNumber] = units[0];
+                            def = def.replace(units[0],''); // strip units 
+                        }
+                        $scope.Default[key] = def;          // value only
+                        $scope[id] = def;
                     }
-                    $scope.Default[key] = def;          // value only
-                    $scope[id] = def;
+                    else {
+                        console.log(key + " default = " + def)
+                        $scope.Default[key] = def;         // not qty requiring units
+                        $scope[id] = def;
+                    }
                 }
-                else {
-                    console.log(key + " default = " + def)
-                    $scope.Default[key] = def;         // not qty requiring units
-                    $scope[id] = def;
-                }
+                if ($scope.formats.length > i) { $scope.Format[key] = $scope.formats[i] }
             }
-            if ($scope.formats.length > i) { $scope.Format[key] = $scope.formats[i] }
-        }
-        console.log("Attributes: " + JSON.stringify(Attributes));
-        console.log("Step: " + $scope.stepNumber + ' / ' + $scope.steps);
-        console.log("Step: " + JSON.stringify($scope.Step));
-        console.log("Show: " + JSON.stringify($scope.Show));
-        console.log("Defaults: " + JSON.stringify($scope.Default));
-        console.log("Format: " + JSON.stringify($scope.Format));
-        console.log("Input: " + JSON.stringify($scope.input));
+            console.log("Attributes: " + JSON.stringify(Attributes));
+            console.log("Step: " + $scope.stepNumber + ' / ' + $scope.steps);
+            console.log("Step: " + JSON.stringify($scope.Step));
+            console.log("Show: " + JSON.stringify($scope.Show));
+            console.log("Defaults: " + JSON.stringify($scope.Default));
+            console.log("Format: " + JSON.stringify($scope.Format));
+            console.log("Input: " + JSON.stringify($scope.input));
 
-        $scope.errMsg = '';
+            $scope.errMsg = '';
+        }
     }
 
     $scope.ngalert = function ngalert(msg) {
