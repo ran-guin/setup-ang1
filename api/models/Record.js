@@ -131,7 +131,11 @@ module.exports = {
 			if (err) { 
 				console.log("query promise error: " + query);
 				console.log(err);
-				deferred.reject(err);
+
+				var parsed_error = Record.parse_standard_error(err);
+				console.log("Parsed: " + parsed_error);
+
+				deferred.reject(parsed_error);
 			}
 			else { deferred.resolve(result) }
 		});
@@ -306,7 +310,7 @@ module.exports = {
 
 		if (! options) { options = {} }
 		if (options.debug) {			
-			console.log("Cloning: " + ids.join(','));
+			console.log("Cloning " + model + ' : ' + ids.join(','));
 			console.log("* RESET: " + JSON.stringify(resetData));
 			console.log("* Options: " + JSON.stringify(options));
 		}
@@ -314,8 +318,8 @@ module.exports = {
 		var idField = options.id || 'id';
 		var table = model;
 
-		var Mod = sails.models[model];
-		if (Mod && Mod.tableName) { table = Mod.tableName }
+		var Mod = sails.models[model] || {};
+		var table = Mod.tableName || model;
 
 		var query = "SELECT * from " + table + " WHERE " + idField + ' IN (' + ids.join(',') + ')';	
 		
@@ -402,8 +406,10 @@ module.exports = {
 					newData.push(addData);
 				}
 
+				console.log("create clones..." + JSON.stringify(newData));
 				Record.createNew(model, newData)
 				.then (function (newResponse) {
+					console.log('created clone records for ' + model);
 					var target_id = newResponse.insertId;
 					var target_count = newResponse.affectedRows;
 					var target_ids = [];
@@ -412,24 +418,31 @@ module.exports = {
 							var nextId = target_id + i;
 							target_ids.push(nextId);
 						}
+
 						Attribute.clone(model, ids, target_ids, resetData, options)
 						.then (function (data1) {
 							console.log("attribute update: " + JSON.stringify(data1));
 							deferred.resolve({ data: data, insertIds: target_ids, created: newResponse, attributes: data1});
 						})
 						.catch ( function (err2) {
-							deferred.reject({error :err2, model: model, ids: ids, target_ids: target_ids});
+							console.log("failed to clone attributes");
+							deferred.reject(err2);
 						});	
 					}
 					else if (target_count == 0) {
-						deferred.reject({ error: "No target records created", response: newResponse });
+						console.log("no target records");
+						deferred.reject("No target records created");
 					}
 					else {
-						deferred.reject({error: "Target count != Source count", sources: ids, targets: target_ids});
+						console.log("targets != sources");
+						deferred.reject("Target count != Source count");
 					}
 				})
 				.catch ( function (err3) {
-					deferred.reject({error: err3, model: model, data: data, reset: resetData});
+					console.log(err3);
+					console.log("Error creating new Clone records");
+					// deferred.reject({error: err3, model: model, data: data, reset: resetData});
+					deferred.reject(err3);
 				});
 			}
 		});
@@ -611,6 +624,7 @@ module.exports = {
 		var Values = [];
 		var onDuplicate = '';
 
+		console.log(model + ' : ' + Mod + ' -> ' + Mod.tableName + '=' + table);
 		console.log("insertion data: " + JSON.stringify(data[0]) + '...');
 		
 		for (var index=0; index<data.length; index++) {
@@ -966,10 +980,28 @@ module.exports = {
         //   eg 'Error creating \\w+' : "<match> - no record created" -> yields "Error creating Employee - no record created" 
         //
         var Map = {
-            'Duplicate entry' : "Duplicate entry encountered",
+            "Duplicate entry \'.+\' encountered" : "<match>",
             'Unknown column'  : "Unrecognized column in database (?) - please inform LIMS administrator",
             "Error saving \\w+" : "<match>",
         };
+
+        console.log("Parse " + message.constructor + ' message ' + message);
+
+        if (message.constructor === Object) {
+        	message = JSON.stringify(message);
+        }
+        else if (message.constructor === Array ) {
+        	message = message.join('; ');
+        }
+        else if (message.constructor === String) {
+
+        }
+        else { 
+        	var string = message.toString();
+        	message = string;
+        }
+
+		console.log(message);        
 
         var strings = Object.keys(Map);
 
