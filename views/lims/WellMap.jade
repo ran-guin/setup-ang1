@@ -42,16 +42,22 @@ block content
                   span(ng-show="transfer_type === 'Transfer'" style='color:red') Note: Current tubes are thrown out during 'Transfer'<BR>(use 'Aliquot' to only remove portion of original sample) 
 
                 div.col-sm-4
-                  input.input-lg#transfer_qty(type='text' placeholder=' -- Transfer Qty --', ng-model='transfer_qty' ng-blur="redistribute()" size='16' ng-disabled="transfer_type=='Pre-Print'")
-                  span &nbsp;
-                  span.lookup(id='Lookup-units' ng-init="loadLookup('units','','units')")
+                  div.form-group
+                      input.input-lg#transfer_qty(type='text' placeholder=' -- Transfer Qty --', ng-model='transfer_qty' ng-blur="redistribute()" size='16' ng-disabled="transfer_type=='Pre-Print'")
+                      // span.lookup(id='Lookup-units' ng-init="loadLookup('units','','units')")
+                      dropdown.mini-dropdown(placeholder='units..' list="MenuList['transfer_qty_units']" selected="transfer_qty_units" property='name' track='name', ng-init="setup_Menu('transfer_qty_units','ml,ul,nl')") 
+
                   br
                   span(style='color: red' ng-show='transfer_qty_errors || units_errors') Transfer Qty + Units Required
                   span(style='color: red' ng-show="transfer_type === 'Transfer'") Defaults to entire volume in original tube(s)
 
                 div.col-sm-4
-                  b Into: 
-                  span.lookup(id='Lookup-container_format' ng-init="loadLookup('container_format','', 'Select Target Format')")               
+                  div.form-group
+                    label(for='target_format')
+                      // b Into: 
+                      // span.lookup(id='Lookup-container_format' ng-init="loadLookup('container_format','', 'Select Target Format')")               
+                    dropdown#target_format(placeholder='Target Format...' required list="MenuList['target_format']" selected="target_format" property='name', ng-init="setup_Menu('target_format','FK(container_format)')") 
+
               hr 
 
               div.form-group
@@ -105,14 +111,15 @@ block content
                 div.col-sm-4
                   span IF different Sample Type is being extracted:
                   br
-                  span.lookup(id='Lookup-sample_type' ng-init="loadLookup('sample_type','', 'Extract ?')")
+                  // span.lookup(id='Lookup-sample_type' ng-init="loadLookup('sample_type','', 'Extract ?')")
+                  dropdown#sample_type(placeholder='Extract...' required list="MenuList['sample_type']" selected="sample_type" property='name', ng-init="setup_Menu('sample_type','FK(sample_type)')") 
 
                 div.col-sm-4
                   b Target (optional): 
                   div
                     input.input-lg(type='text' name='target_rack' size=12 ng-model='target_rack' ng-change="validate_target(); redistribute();" placeholder='-- Scan Loc# --')
                 div.col-sm-4 &nbsp;
-                  button.btn.btn-lg.btn-primary(type='button' ng-click="redistribute(); execute_transfer();" ng-disabled="!form_validated") Distribute
+                  button.btn.btn-lg.btn-primary(type='button' ng-click="redistribute(); execute_transfer();" ng-disabled="!form_validated || !target_format") Distribute
                   p &nbsp;
                   input(type='radio' ng-click="use_custom_settings()") 
                   span &nbsp; Custom x 3 sub-aliquot
