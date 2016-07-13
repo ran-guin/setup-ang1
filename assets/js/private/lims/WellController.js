@@ -203,7 +203,7 @@ function wellController ($scope, $rootScope, $http, $q ) {
             $scope.Transfer = {
                     qty: $scope.transfer_qty,
                     qty_units : $scope.transfer_qty_units,
-                    Container_format : $scope.container_format_id,
+                    Container_format : $scope.target_format,
                     Sample_type : $scope.sample_type_id,
             };
 
@@ -444,6 +444,14 @@ function wellController ($scope, $rootScope, $http, $q ) {
         $http.post("/xfer", data)
         .then (function (returnData) {
             console.log("xfer data: " + JSON.stringify(returnData));
+
+            if ( returnData.data && returnData.data.plate_ids) {
+                $scope.message("Transferred " + returnData.data.plate_ids.length + " Samples");
+            }
+            else {
+                $scope.warning("Error retrieving target Samples (?)");
+            }
+
             /*
             if (1) {
                 var incData =  { table: 'Plate', attributes : ['29'], targets : [1] };
