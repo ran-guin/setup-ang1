@@ -80,7 +80,7 @@ app.controller('FancyFormController',
             }
         }
 
-        $scope.get_List = function (type) {
+        $scope.get_List = function (type, condition) {
 
             var deferred = $q.defer();
             
@@ -100,6 +100,7 @@ app.controller('FancyFormController',
                 console.log('get list from reference: ' + reference);
                 
                 var url = '/lookup/' + reference + '?';
+                if (condition) { url = url + 'condition=' + condition }
 
                 console.log("get lookup for " + reference);
                 console.log(url);
@@ -131,7 +132,7 @@ app.controller('FancyFormController',
             return deferred.promise;
         }
 
-        $scope.setup_Menu = function (element, enumType, defaultTo) {
+        $scope.setup_Menu = function (element, enumType, condition, defaultTo) {
             // convert ENUM('A','B','C') to dropdown menu ... 
             //
             // Usage example (jade):
@@ -151,7 +152,7 @@ app.controller('FancyFormController',
 
             console.log("Generate enums for " + enumType);
 
-            $scope.get_List(enumType)
+            $scope.get_List(enumType, condition)
             .then ( function (list) {          
 
                 console.log("Opt: " + list.join(' : '));
@@ -428,13 +429,13 @@ app.controller('FancyFormController',
         template: " \
             <div class=\"dropdown-container input-lg\" ng-class=\"{ show: listVisible }\"> \
                 <div class=\"dropdown-display\" ng-click=\"show();\" ng-class=\"{ clicked: listVisible }\"> \
-                    <span ng-if=\"!isPlaceholder\">{{display}}<\/span> \
-                    <input class=\"placeholder\" style=\"border: 0px; padding: 5px; width:100%\" ng-model=\"search\" ng-keypress=\"filter($event)\" type=\"text\" placeholder =\"{{placeholder}}\" ng-if=\"isPlaceholder\"><\/input> \
-                    <i class=\"fa fa-angle-down navbar-right\"><\/i> \
+                    <input class=\"placeholder\" ng-if=\"isPlaceholder\" style=\"border: 0px; padding: 5px; width:100%\" ng-model=\"search\" ng-keypress=\"filter($event)\" type=\"text\" placeholder =\"{{placeholder}}\"><\/input> \
+                    <input class=\"placeholder\" ng-show=\"!isPlaceholder\" style=\"border: 0px; padding: 5px; width:100%\" ng-model=\"search\" ng-keypress=\"filter($event)\" type=\"text\" placeholder =\"{{display}}\"><\/input> \
+                    <i class=\"fa fa-angle-down\"><\/i> \
                 <\/div> \
                 <div class=\"dropdown-list\"> \
                     <div> \
-                        <div ng-repeat=\"item in list\" ng-click=\"select(item)\" ng-class=\"{ selected: isSelected(item) }\"> \
+                        <div ng-repeat=\"item in list\" ng-click=\"select(item)\" ng-keypress=\"filter($event)\" ng-class=\"{ selected: isSelected(item) }\"> \
                             <span>{{property !== undefined ? item[property] : item}}<\/span> \
                             <i class=\"fa fa-check\"><\/i> \
                         <\/div> \
@@ -482,6 +483,15 @@ app.controller('FancyFormController',
                             i = scope.list.length;
                         }
                     }
+                    scope.search = '';
+                    listVisible=true;
+                    console.log('open list');
+                }
+                else {
+                    scope.choose();
+                    scope.search = '';
+                    scope.listVisible = false;
+                    console.log('close list');
                 }
             };
 
@@ -497,6 +507,27 @@ app.controller('FancyFormController',
 
             scope.show = function() {
                 scope.listVisible = true;
+                console.log('show list');
+
+            };
+
+            scope.choose = function (value) {
+                if (scope.track) { 
+                    scope.isPlaceholder = (scope.selected === undefined || ! scope.selected);
+                    scope.display = scope.selected;
+                    console.log("SELECTED = " + scope.selected);
+                }
+                else if (scope.selected) { 
+                    scope.isPlaceholder = scope.selected[scope.property] === undefined;
+                    scope.display = scope.selected[scope.property];
+                    console.log("selected " + scope.display + ' : ' + scope.isPlaceholder);
+                }
+                else {
+                    scope.isPlaceholder = true;
+                }
+
+                console.log('reset display to ' + scope.display);
+                scope.search = '';
             };
 
             $rootScope.$on("documentClicked", function(inner, target) {
@@ -504,23 +535,13 @@ app.controller('FancyFormController',
                 if (!$(target[0]).is(".dropdown-display.clicked") && !$(target[0]).parents(".dropdown-display.clicked").length > 0)
                     scope.$apply(function() {
                         scope.listVisible = false;
+                        console.log('closed on click list');
+
                     });
             });
 
             scope.$watch("selected", function(value) {
-                if (scope.track) { 
-                    scope.isPlaceholder = (scope.selected === undefined || ! scope.selected);
-                    scope.display = scope.selected 
-                    console.log("SELECTED = " + scope.selected);
-                }
-                else if (scope.selected) { 
-                    scope.isPlaceholder = scope.selected[scope.property] === undefined;
-                    scope.display = scope.selected[scope.property] 
-                }
-                else {
-                    scope.isPlaceholder = true;
-                }
-                console.log('reset display to ' + scope.display);
+                scope.choose(value);
             });
         }
     }

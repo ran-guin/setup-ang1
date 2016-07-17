@@ -111,7 +111,7 @@ block content
                               div.form-group
                                 label.col-sm-2.control-label(for="#{fld}#{Snum}") #{alias}
                                 div.col-sm-6
-                                  dropdown(placeholder="#{alias}" list="MenuList['#{fld}#{Snum}']" selected="#{fld}#{Snum}" property="name" track='name' default="#{def}" ng-init="setup_Menu('#{fld}#{Snum}', \"#{fType}\", '#{def}', '- ? -', 'name')")
+                                  dropdown(placeholder="#{alias}" list="MenuList['#{fld}#{Snum}']" selected="#{fld}#{Snum}" property="name" track='name' default="#{def}" ng-init="setup_Menu('#{fld}#{Snum}', \"#{fType}\",'','#{def}')")
                             else 
                               div.form-group
                                 label.col-sm-2.control-label(for='#{fld}#{Snum}') #{alias}
@@ -185,6 +185,17 @@ block content
                           div.form-group
                             div.col-sm-12
                               b {{ JSON.stringify(Map) }}
+
+              hr
+              // div(ng-if="Custom_Options")
+              div.col-md-6
+                b Source:
+                include SourceMap.jade
+              div.col-md-6
+                b Target:
+                include TargetMap.jade
+              hr
+              b CO: {{ Custom_Options }}
 
             div(ng-if="status=='Completed'")
               include ContainerOptions.jade 

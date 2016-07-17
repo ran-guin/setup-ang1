@@ -154,6 +154,13 @@ function wellController ($scope, $rootScope, $http, $q ) {
 
     $scope.redistribute = function redistribute () {
 
+        $scope.custom_options = JSON.stringify({ target_boxes: [], transfer_type: 'Aliquot', split_mode: 'parallel', available: ['A1','C2'], splitX: 1, pack: 1, pack_wells: 1, fill_by: 'row', target_size: '9x9'}); // testing
+        var test = "{ pack: 1, fill_by: 'row'}";
+        console.log("parse custom options: " + $scope.custom_options);
+        console.log("Test: " + test);
+
+        $scope.parse_custom_options();
+
         console.log('update lookups..');
         $scope.updateLookups();
 
@@ -177,13 +184,14 @@ function wellController ($scope, $rootScope, $http, $q ) {
         $scope.validate_Form();
 
         console.log("Target Samples: " + $scope.N * $scope.splitX);
-        console.log("Target Boxes: " + $scope.N_boxes);
+        console.log("Target Boxes: " + $scope.target_boxes);
 
         $scope.loadWells()
         .then (function (loaded) {
-
+            console.log("loaded wells ok...");
             if (! $scope.newMap) {
                 // initiate mapping //
+                console.log('new map..');
                 var newMap = new wellMapper();
 
                 newMap.colourMap($scope.Samples.length);
@@ -201,11 +209,13 @@ function wellController ($scope, $rootScope, $http, $q ) {
             }  
 
             $scope.Transfer = {
-                    qty: $scope.transfer_qty,
-                    qty_units : $scope.transfer_qty_units,
-                    Container_format : $scope.target_format,
-                    Sample_type : $scope.sample_type_id,
+                qty: $scope.transfer_qty,
+                qty_units : $scope.transfer_qty_units,
+                Container_format : $scope.target_format,
+                Sample_type : $scope.sample_type_id,
             };
+
+            $scope.distribute_Options = $scope.Custom_Options;
 
             $scope.distribute_Options = {
                 fillBy : $scope.fill_by, 
@@ -221,7 +231,7 @@ function wellController ($scope, $rootScope, $http, $q ) {
 
             console.log('call distribute');
             console.log('Transfer: ' + JSON.stringify($scope.Transfer) );
-            console.log('Transfer: ' + JSON.stringify($scope.distribute_Options) );
+            console.log('Options: ' + JSON.stringify($scope.distribute_Options) );
 
             // recalculate mapping //
             $scope.Map = $scope.newMap.distribute(
@@ -233,15 +243,34 @@ function wellController ($scope, $rootScope, $http, $q ) {
             console.log("Samples: " + JSON.stringify($scope.Samples));
             console.log("NEW MAP: " + JSON.stringify($scope.Map));
  
-            console.log("NEW CMAP: " + JSON.stringify($scope.newMap.CMap));
-            console.log("Source Colour Map: " + JSON.stringify($scope.Map.SourceColours));
-            console.log("Target Colour Map: " + JSON.stringify($scope.Map.TargetMap));
-            
+            console.log("NEW CMAP: " + JSON.stringify($scope.Map.CMap));
+            console.log("Source Colour Map: " + JSON.stringify($scope.Map.SourceMap));
+            console.log("Target Colour Map: " + JSON.stringify($scope.Map.TransferMap));           
         })
         .catch ( function (err) {
-            console.log("Error loading wells");
+            console.log("Error loading wells: " + err);
         })
 
+    }
+
+    $scope.parse_custom_options = function () {
+
+        if ($scope.custom_options) {
+            var Custom_Options = JSON.parse($scope.custom_options);
+       
+            if (Custom_Options) {
+                var keys = ['fill_by', 'pack', 'pack_wells', 'splitX', 'split_mode', 'target_size', 'target_boxes', 'available', 'transfer_type'];
+                for (var i=0; i<keys.length; i++) {
+                    if (! $scope[keys[i]]) {
+                        $scope[keys[i]] = Custom_Options[keys[i]];
+                        console.log("Custom Set " + keys[i] + ' -> ' + $scope[keys[i]]);
+                    }
+                }
+            }
+            else {
+                $scope.error("Error parsing custom options");
+            }
+        }
     }
 
     $scope.set_to_default = function set_to_default() {
@@ -369,17 +398,26 @@ function wellController ($scope, $rootScope, $http, $q ) {
 
         if (rack_id) {
             console.log("Load rack " + rack_id);
-            var data = { id: rack_id };
+            var data = { id: rack_id, fill_by: fill_by};
             console.log("SEND: " + JSON.stringify(data));
+
+            $scope.available = {};  // eg { '<box_id>' : [{ id : <slot_id>, position : <pos> } ]} ... ordered based on 'fill_by'
 
             $http.post("/Rack/boxData", data)
             .then (function (returnData) {
                 console.log("rack data: " + JSON.stringify(returnData));
-
+                
+                $scope.available = returnData.data.available;
+                console.log("Available: " + JSON.stringify($scope.available));
                 // define target boxes (only handles one for now ... )
-                $scope.target_boxes = [rack_id];
-                $scope.available[rack_id] = returnData.available_wells;
-                $scope.N_boxes = ' until required (err if not enough)'; // test
+                $scope.target_boxes = Object.keys($scope.available);
+                console.log("target boxes: " + $scope.target_boxes.join(','));
+/*
+                for (var i=0; i<target_boxes.length; i++) {
+                    $scope.available[target_boxes[i]] = available[target_boxes[i]];
+                }
+*/
+                $scope.N_boxes = $scope.target_boxes.length; // test
                 deferred.resolve();
             })
             .catch (function (err) {
@@ -402,6 +440,10 @@ function wellController ($scope, $rootScope, $http, $q ) {
                 console.log("Error retrieving available wells");
                 deferred.reject();
             });
+        }
+        else {
+            console.log("no rack or size");
+            deferred.resolve();
         }
 
         return deferred.promise;

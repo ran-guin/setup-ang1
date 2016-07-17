@@ -12,26 +12,27 @@ module.exports = {
 	
 	boxData: function (req, res) {
 
-		var body = {};
-		if (req.body) { body = req.body }
+		var body = req.body || {};
 
-		var rack_id = req.param('id') || body.id;
+		var rack_id = body.id || req.param('id');
 		var conditions = req.param('conditions') || body.conditions || [];
+		var fill_by = body.fill_by || req.param('fill_by');
 
-		var deferred = q.defer();
+		// var deferred = q.defer();
 
 		console.log("Get contents of Rack " + rack_id);
 		
-		Rack.boxContents(rack_id, conditions)
-		.then (function (data) {
+		Rack.boxContents(rack_id, conditions, { fill_by: fill_by })
+		.then (function (contents) {
 			console.log("Pass along: " + JSON.stringify(contents));
-			deferred.resolve(contents);
+			return res.json(contents);
+			// deferred.resolve(contents);
 		})
 		.catch (function (err) {
-			deferred.reject("Error retrieving box contents: " + JSON.stringify(err));
+			//deferred.reject("Error retrieving box contents: " + JSON.stringify(err));
 		})
 
-		return deferred.promise;
+		// return deferred.promise;
 	},
 
 	createBox : function (req, res ) {
@@ -87,7 +88,7 @@ module.exports = {
 		if (size && wellMap[size] && fillBy.match(/row/i) ) {
 			for (var i=0; i<wellMap[size].length; i++) {
 				for (j=0; j<wellMap[size][i].length; j++) {
-					wells.push(wellMap[size][i][j]);
+					wells.push({ position: wellMap[size][i][j]});
 				}
 			}
 		}
@@ -95,13 +96,13 @@ module.exports = {
 			console.log(JSON.stringify(wellMap));
 			for (var i=0; i<wellMap[size][0].length; i++) {
 				for (j=0; j<wellMap[size].length; j++) {
-					wells.push(wellMap[size][j][i]);
+					wells.push({position: wellMap[size][j][i]});
 				}
 			}
 		}
 		else {
 			console.log("no size or mapping");
-			wells = ['A1'];
+			wells = [ {position: 'A1'} ];
 		}
 
 

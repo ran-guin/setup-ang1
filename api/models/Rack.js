@@ -176,7 +176,7 @@ module.exports = {
       .then ( function (result) {
         if (result.available && result.available[target_rack] && result.available[target_rack].length >= ids.length) {
           for (var i=0; i<ids.length; i++) {
-            wells.push(result.available[i]);
+            wells.push(result.available[i].position);
           }
 
           options.wells = wells;
@@ -290,7 +290,7 @@ module.exports = {
 
   },
 
-  boxContents : function (rack_id, content_types, conditions, options) {
+  boxContents : function (rack_id, conditions, options) {
 
     var deferred = q.defer();
 
@@ -306,6 +306,13 @@ module.exports = {
     
     var rack_ids;
     if (rack_id.constructor === Number) { rack_id = rack_id.toString() }
+
+    console.log("supplied : " + rack_id.constructor + " = " + rack_id);
+    if (rack_id.constructor === String && rack_id.match(/[a-zA-Z]/)) {
+      var Scanned = Barcode.parse(rack_id);
+      console.log("Scanned: " + JSON.stringify(Scanned));
+      rack_id = Scanned['Rack'];
+    }
 
     if (!rack_id) {
       console.log("No Rack ID supplied");
@@ -353,13 +360,16 @@ module.exports = {
     Record.query_promise(query)
     .then ( function (data) {
  
+      console.log(query);
+      console.log(JSON.stringify(data));
+
       var contained = {};
       var available = {};
       for (var i=0; i<data.length; i++) {
         var boxid = data[i].FKParent_Rack__ID;
         var id    = data[i].Rack_ID;
 
-        if (!available[boxid]) { available[boxid] = []}
+        if (!available[boxid]) { available[boxid] = [] }
 
         var position = data[i].Rack_Name;
 
@@ -374,7 +384,9 @@ module.exports = {
             contained[boxid][position][type] = contains;
           }
         }
-        if (! ( contained[boxid] && contained[boxid][position]) )  { available[boxid].push(position) }
+        if (! ( contained[boxid] && contained[boxid][position]) )  { 
+          available[boxid].push( { id: id, position: position.toUpperCase()} );
+        }
 
       }
 

@@ -45,6 +45,22 @@ module.exports = {
 		});
 	},	
 
+	'edit' : function (req, res) {
+		var id = req.param('id');
+
+		var q = "SELECT * FROM protocol_step where id = " + id;
+		console.log(q);
+
+	    Record.query_promise(q)
+	    .then ( function (data) {
+	    	console.log("Loaded Protocol Step: " + JSON.stringify(data));
+			return res.render('lims/Protocol_Step_Editor', { record: data[0] });
+	    })
+	    .catch ( function (err) {
+	    	console.log("Error loading protocol step");
+	    });
+	},
+
 	'list' : function (req, res) {
 
 		var demo = req.param('demo') || 1;

@@ -74,8 +74,7 @@ module.exports = {
   	console.log("Parse " + barcode + " : " + JSON.stringify(P));
   	console.log("classes: " + classes.join(','));
 
-
-	barcode = barcode.replace(/\s/g,'');
+    barcode = barcode.replace(/\s/g,'');
 
   	function barcodeId (barcode) {
   		var match = barcode.match(/\d+/,'i');

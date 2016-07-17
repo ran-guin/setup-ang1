@@ -175,6 +175,22 @@ module.exports = {
 
 	},
 
+	transfer_Location : function (ids, Transfer) {
+		// relocate using WellMapper information (from Transfer hash)
+		// Transfer = [{ batch: 0, target_position: "A2", target_box: '' }, { }]
+		console.log("Relocating samples : " + ids.join(','));
+		console.log(JSON.stringify(Transfer));
+
+		var target_slots   = _.pluck(Transfer,'target_slot');
+		console.log("\n** NEW IDS: " + ids);
+		console.log("\n** Target slots: " + target_slots.join(','));
+
+		if (target_slots && ids && target_slots.length === ids.length) {
+			Record.update('container', ids, { 'FK_Rack__ID' : target_slots });
+		}
+		console.log("Transferred targets to applicable slots...");
+	},
+
 	execute_transfer : function (ids, Transfer, Options) {
 		//
 		// Input: 
@@ -239,6 +255,7 @@ module.exports = {
 				Container.postTransferUpdates(ids, target_ids, Transfer, Options)
 				.then (function (finalResponse) {
 					console.log("completed transfer");
+
 					deferred.resolve(finalResponse);
 				})
 				.catch ( function (err) {
