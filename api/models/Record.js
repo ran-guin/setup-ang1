@@ -453,7 +453,11 @@ module.exports = {
 	update : function (model, ids, data, options) {
 		// Wrapper for updating records in database
 		// This also add change history records in database if change_history specified in model attributes.
-
+		// eg:
+		//   Record.update('user',[1,2,3], { access : 'Admin'});
+		//
+		//   Record.update('user', [1,2,3], { name : [ 'Adam','Boris','Clyde'] });
+		//  
 		console.log("Update " + model + ": " + ids);
 		console.log(JSON.stringify(data));
 
@@ -487,6 +491,7 @@ module.exports = {
 
 		var deferred = q.defer();
 		
+
 		var list = ids.join(',');
 		
 		var query = "UPDATE " + table;
@@ -510,7 +515,7 @@ module.exports = {
 		var condition = conditions.join(' AND ');
 		
 		var SetEach = [];
-		if (data) {
+		if (data && table && idField) {
 			var fields = Object.keys(data);
 			var Set = [];
 			for (var i=0; i<fields.length; i++) {
@@ -556,6 +561,7 @@ module.exports = {
 				query = query + " WHERE " + condition;
 				console.log("\n UPDATE: " + model + ': ' + query);
 				promises.push( Record.query_promise(query) );
+				console.log("\n** Update: " + query);
 			}
 		
 			if (SetEach.length) {
@@ -592,7 +598,7 @@ module.exports = {
 			});
 		}
 		else {
-			console.log("nothing to update");
+			console.log("no data or table / idField :" + table + ' / ' + idField);
 			deferred.resolve();
 		}
 
