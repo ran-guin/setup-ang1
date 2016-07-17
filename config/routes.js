@@ -153,7 +153,7 @@ module.exports.routes = {
   // Custom Pages 
 
   'GET /demo/protocol': 'DemoController.protocol',
-
+  'GET /protocol_step/edit/:id' : 'Lab_protocolController.edit',
 
   // Demo Pages 
   'GET /demo/test': 'DemoController.test',
