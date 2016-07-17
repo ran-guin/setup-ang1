@@ -43,16 +43,17 @@ block content
                 label.col-md-2.control-label(for='received') Received: 
                 div.input-lg.my-datepicker#received(type="text" defaultTo='2016-03-02' ng-model="received")
 
-              div(ng-show="type === 'Reagent'")
+              div(ng-if="type === 'Reagent'")
                 hr 
                 h3 Reagent specific information:
                 
                 div.form-group.input-lg
                   label.col-md-2.input-lg.control-label(for="catalog") Catalog Item:
                   // input.col-md-6#catalog(type='text' ng-model='catalog' required placeholder='Volume')
-                  dropdown#catalog(placeholder="Select from Catalog..." list="MenuList['catalog']" selected="catalog" property="name" ng-init="setup_Menu('catalog', 'FK(catalog)')")
+                  div.col-md-6
+                    dropdown#catalog(placeholder="Select from Catalog..." list="MenuList['catalog']" selected="catalog" property="name" ng-init="setup_Menu('catalog', 'FK(catalog)',\"Stock_Catalog_Type='Reagent'\")")
                   div.col-md-4 &nbsp; {{ catalog }}
-
+                    button.btn.btn-primary(-type='button') Add Item to Catalog
                 div.form-group.input-lg
                   label.col-md-2.control-label(for='qty') Quantity: 
                   input.col-md-3.input-lg#qty(type='text' ng-model='qty' required placeholder='Volume')
@@ -65,7 +66,42 @@ block content
 
                 div.form-group.input-lg
                   label.col-md-2.control-label(for='notes') Notes: 
-                  input.input-lg#notes(type='text' ng-model='notes' placeholder='Notes')              
+                  div.col-md-10
+                    input.input-lg#notes(type='text' ng-model='notes' placeholder='Notes')
+  
+                div.form-group.input-lg
+                  label.col-md-2.control-label(for='notes') Generate Barcodes: 
+                  input.input-lg(type='checkbox' ng-model='barcode')              
+
+                button.btn.btn-lg.btn-primary(type='button' ng-click="save()" ng-disabled="! Stock.$valid") Save New Stock / Reagent Record(s)
+
+              div(ng-if="type === 'Equipment'")
+                hr 
+                h3 Reagent specific information:
+                
+                div.form-group.input-lg
+                  label.col-md-2.input-lg.control-label(for="catalog") Catalog Item:
+                  // input.col-md-6#catalog(type='text' ng-model='catalog' required placeholder='Volume')
+                  div.col-md-6
+                    dropdown#catalog(placeholder="Select from Catalog..." list="MenuList['catalog']" selected="catalog" property="name" ng-init="setup_Menu('catalog', 'FK(catalog)',\"Stock_Catalog_Type='Equipment'\")")
+                  div.col-md-4 &nbsp; {{ catalog }}
+                    button.btn.btn-primary(-type='button') Add Item to Catalog
+
+                div.form-group.input-lg
+                  label.col-md-2.control-label(for='qty') Quantity: 
+                  div.col-md-6
+                    input.col-md-6.input-lg#qty(type='text' ng-model='qty' required placeholder='Quantity')
+                    input.col-md-6.input-lg(type='text' ng-model='qty_units' required placeholder='Units')
+                  div.col-md-4 &nbsp;
+
+                div.form-group.input-lg
+                  label.col-md-2.control-label(for='expiry') Expiry: 
+                  div.col-md-6.input-lg.my-datepicker#expiry(type="text" ng-model="expiry")          
+
+                div.form-group.input-lg
+                  label.col-md-2.control-label(for='notes') Notes: 
+                  div.col-md-10
+                    input.input-lg#notes(type='text' ng-model='notes' placeholder='Notes')
   
                 div.form-group.input-lg
                   label.col-md-2.control-label(for='notes') Generate Barcodes: 
