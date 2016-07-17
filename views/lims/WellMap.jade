@@ -115,11 +115,11 @@ block content
                   dropdown#sample_type(placeholder='Extract...' required list="MenuList['sample_type']" selected="sample_type" property='name', ng-init="setup_Menu('sample_type','FK(sample_type)')") 
 
                 div.col-sm-4
-                  b Target (optional): 
+                  b Target : 
                   div
-                    input.input-lg(type='text' name='target_rack' size=12 ng-model='target_rack' ng-change="validate_target(); redistribute();" placeholder='-- Scan Loc# --')
+                    input.input-lg(type='text' required name='target_rack' size=12 ng-model='target_rack' ng-blur="validate_target(); redistribute();" placeholder='-- Scan Loc# --')
                 div.col-sm-4 &nbsp;
-                  button.btn.btn-lg.btn-primary(type='button' ng-click="redistribute(); execute_transfer();" ng-disabled="!form_validated || !target_format") Distribute
+                  button.btn.btn-lg.btn-primary(type='button' ng-click="redistribute(); execute_transfer();" ng-disabled="!form_validated || !target_format || !target_rack") Distribute
                   p &nbsp;
                   input(type='radio' ng-click="use_custom_settings()") 
                   span &nbsp; Custom x 3 sub-aliquot
