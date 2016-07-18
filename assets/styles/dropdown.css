@@ -15,6 +15,14 @@ dropdown > div {
   float: left;
   width: 100%;
 }
+dropdown.mandatory > div > div.dropdown-display > input {
+  border: solid 1px red !important;
+  border-radius: 6px;
+}
+dropdown > div > div.dropdown-display > input {
+  border-radius: 6px;
+  border: solid 1px #ccc;
+}
 dropdown > div > div.dropdown-display {
   float: left;
   width: 100%;
@@ -23,6 +31,7 @@ dropdown > div > div.dropdown-display {
   cursor: pointer;
   border: solid 1px #DDD;
   box-sizing: border-box;
+  border-radius: 6px;
 }
 dropdown > div > div.dropdown-display > * {
   float: left;
