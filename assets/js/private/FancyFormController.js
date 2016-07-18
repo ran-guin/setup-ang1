@@ -142,10 +142,7 @@ app.controller('FancyFormController',
             //    ng-init="setup_Menu('xyz', \"EN\UM('A','B','C')\", 'B')" 
             //    ng-options="item.id as item.name for item in MenuList['xyz']"
             //  )
-
-            if ($scope.messages) {
-                $scope.message(element + " : " + enumType + ' : ' + defaultTo);
-            }
+            
             // var defaultVal = ''; 
 
             // var deferred = $q.defer();
@@ -154,9 +151,6 @@ app.controller('FancyFormController',
 
             $scope.get_List(enumType, condition)
             .then ( function (list) {          
-
-                console.log("Opt: " + list.join(' : '));
-                $scope.messages && $scope.message("OPT: " + list);
                 
                 if ( ! $scope.MenuList ) { $scope.MenuList = {} }
                 $scope.MenuList[element] = [];
@@ -429,7 +423,7 @@ app.controller('FancyFormController',
         template: " \
             <div class=\"dropdown-container input-lg\" ng-class=\"{ show: listVisible }\"> \
                 <div class=\"dropdown-display\" ng-click=\"show();\" ng-class=\"{ clicked: listVisible }\"> \
-                    <input class=\"placeholder\" ng-if=\"isPlaceholder\" style=\"border: 0px; padding: 5px; width:100%\" ng-model=\"search\" ng-keypress=\"filter($event)\" type=\"text\" placeholder =\"{{placeholder}}\"><\/input> \
+                    <input class=\"placeholder\" ng-if=\"isPlaceholder\" style=\"padding: 5px; width:100%\" ng-model=\"search\" ng-keypress=\"filter($event)\" type=\"text\" placeholder =\"{{placeholder}}\"><\/input> \
                     <input class=\"placeholder\" ng-show=\"!isPlaceholder\" style=\"border: 0px; padding: 5px; width:100%\" ng-model=\"search\" ng-keypress=\"filter($event)\" type=\"text\" placeholder =\"{{display}}\"><\/input> \
                     <i class=\"fa fa-angle-down\"><\/i> \
                 <\/div> \
