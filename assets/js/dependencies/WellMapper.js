@@ -181,27 +181,33 @@ function wellMapper() {
 
     },
 
-    this.next_available = function (batch_index) {
+    this.next_available = function (batch_index, target_index) {
 
         var batch = 0;
         if (this.target_boxes.length) { 
             batch = this.target_boxes[batch_index];
-            console.log("set batch to " + batch);
         }
         else {
             console.log("FAILED : " + JSON.stringify(this.target_boxes));
             batch = 0;
         }
 
-        if (! this.target_count[batch]) { this.target_count[batch] = 0 }
         
-        var x = 'A';
-        var y = 1;
-        var target_index = this.target_count[batch] || 0;
+        var x;
+        var y;
 
-        if (this.available && this.available[batch]) {
+        if (this.available && this.available[batch] && this.available[batch].length > target_index+1) {
+            target_index++;
+        }
+        else {
+            batch_index++;
+            target_index = 0;
+            batch = this.target_boxes[batch_index];
+        }
+
+        if (this.available[batch] && this.available[batch][target_index]) {
             var next = this.available[batch][target_index] || { position: 'A1' };
-            
+        
             if (next.position) {
                 x = next.position;
                 if (x) { y = next.position.replace(x,'') }
@@ -209,26 +215,16 @@ function wellMapper() {
             else {
                 console.log("NEXT ? " + JSON.stringify(next));
             }
-        }   
-        else { 
-            console.log('next well in ' + batch + ' not defined ');  
-            console.log(JSON.stringify(this.available))
-        }
-
-        if (this.available && this.available[batch] && this.available[batch].length > target_index) {
-            target_index++;
         }
         else {
-            batch_index++;
-            target_index = 0;
-            console.log(target_index + ">= " + this.available[batch].length + " : last avail well in " + batch )
+            console.log("Insufficient available wells");
+            x = ''; y = '';
         }
+
         
-        this.target_count[batch] = target_index;
         this.total_target_count++;       
 
         x = x.toUpperCase();
-        console.log(target_index + " NEXT = " + x + y);
         return { x: x, y: y, batch_index: batch_index, target_index: target_index};
     },
 
@@ -349,11 +345,12 @@ function wellMapper() {
 
         var batch_index = 0;
 
-        var next = this.next_available(batch_index);
-        x = next.x;
-        y = next.y;
-        target_index = next.target_index;
+        var next = this.next_available(batch_index, -1);
         
+        var x = next.x;
+        var y = next.y;
+        var target_index = next.target_index;
+
         // var Xfer = [];
 
        //var Colour = [];
@@ -394,33 +391,20 @@ function wellMapper() {
         }
         var target = 0;
 
-        console.log("\n*** BATCH PROCESSING ");
-        console.log(JSON.stringify(batches));
-
-        console.log(sources.length + ' x ' + pack_wells);
-        console.log("AVAILABLE: ");
-        console.log(JSON.stringify(this.available));
-
-        
-
         var List = {};
         var Static = {};
 
         var options = Object.keys(Target);
 
-        console.log("ORIGINAL PACK " + pack_wells);
         for (var i=0; i<options.length; i++) {
-            console.log(i);
             var opt = Target[options[i]];
 
             if (opt && opt.constructor === String && opt.match(/,/) ){
                 opt = opt.split(/\s*,\s*/);
             }
 
-            console.log(options[i] + ":" + opt);
             if (opt && opt.constructor === Array) {
                 List[options[i]] = [];
-                console.log("options length = " + opt.length);
                 if (this.splitX > 1) {
                     if (this.split_mode === 'serial') {
                         pack_wells = pack_wells || 1; 
@@ -533,7 +517,7 @@ function wellMapper() {
                         }
                     }
 
-                    console.log(i + ' box #' + batch_index + '-' + target_position + ' = container #' + sources[i].id + ' from ' + sources[i].position);
+                    console.log(i + ' box #' + batch_index + '-' + target_index + ':' + target_position + ' = container #' + sources[i].id + ' from ' + sources[i].position);
 
                     if (! TransferMap[batch_index]) { TransferMap[batch_index] = {} }
                     // if (! TargetColours[batch_index]) { TargetColours[batch_index] = {} }
@@ -612,7 +596,7 @@ function wellMapper() {
 
                     // next...
                     if (this.fill_by === 'row' || this.fill_by === 'column') {
-                        var next = this.next_available(batch_index);
+                        var next = this.next_available(batch_index,target_index);
                         x = next.x;
                         y = next.y;
                         target_index = next.target_index;
