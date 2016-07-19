@@ -235,7 +235,11 @@ module.exports = {
 		console.log("Executing Container Transfer ... ");
 		var deferred = q.defer();
 
-		if (ids) {
+		if (ids && Transfer && Options.transfer_type === 'Move') {
+			console.log("only relocating samples");
+			deferred.resolve( { plate_ids: ids });
+		}
+		else if (ids) {
 			// allow input ids (first parameter) to be either:
 			//   - string "1,2,3"
 			//   - array [1,2,3]
