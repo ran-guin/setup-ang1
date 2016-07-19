@@ -412,11 +412,19 @@ function wellController ($scope, $rootScope, $http, $q ) {
                 // define target boxes (only handles one for now ... )
                 $scope.target_boxes = Object.keys($scope.available);
                 console.log("target boxes: " + $scope.target_boxes.join(','));
-/*
-                for (var i=0; i<target_boxes.length; i++) {
-                    $scope.available[target_boxes[i]] = available[target_boxes[i]];
+
+                var target_boxes = $scope.target_boxes;
+
+                if (! target_boxes.length) {
+                    $scope.error("No target wells in " + $scope.target_rack);
                 }
-*/
+                
+                for (var i=0; i<target_boxes.length; i++) {    
+                    if (! $scope.available[target_boxes[i]] || !$scope.available[target_boxes[i]].length) { 
+                        $scope.error("No target wells available in " + $scope.target_rack);
+                    }
+                }
+
                 $scope.N_boxes = $scope.target_boxes.length; // test
                 deferred.resolve();
             })
