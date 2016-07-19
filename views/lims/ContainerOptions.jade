@@ -39,7 +39,7 @@ form(role='form' method = 'post' action= "/transfer")
   table.table
     tr
       td(style='width:30%')
-        h2 Transfer To: 
+        h2 Relocate Samples: 
       td(style='width:40%; vertical-align:middle')
           //span.lookup(id='Lookup-container_format' ng-init="loadLookup('container_format','', 'Select Target Format')") 
           span.lookup(id='Lookup-Capacity' ng-init="loadLookup('rack:Capacity','', 'Select Target Size')") 
@@ -47,5 +47,5 @@ form(role='form' method = 'post' action= "/transfer")
           // b &nbsp; Split X: 
           // input(name='split' type='text' size='5px')
       td(style='width:30%; vertical-align:middle')
-          button.btn.btn-lg.btn-success(type='submit' ng-click="updateLookups()") Transfer Samples
+          button.btn.btn-lg.btn-success(type='submit' ng-click="updateLookups()") Relocate Samples
   
