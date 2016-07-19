@@ -36,7 +36,7 @@ function adminController ($scope, $rootScope, $http, $q ) {
 		$scope.reset_messages();
 		if ($scope.parent) {
 			var parent = $scope.parent.replace(/^LOC/i,'');
-			var Bnum = "CAST (Mid(Slot.Rack_Name, 2, 2) AS UNSIGNED)";
+			var Bnum = "CAST(Mid(Slot.Rack_Name, 2, 2) AS UNSIGNED)";
 			var q  = "SELECT Rack.Rack_Type as type," + Bnum + " AS Bnum FROM Rack LEFT JOIN Rack as Slot ON Slot.FKParent_Rack__ID=Rack.Rack_ID WHERE Rack.Rack_ID = " + parent + " ORDER BY " + Bnum;
 
 			var rack_alias = 'Loc #';
