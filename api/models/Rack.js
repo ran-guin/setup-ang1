@@ -345,10 +345,10 @@ module.exports = {
     if (fill_by === 'unsorted') {}
     else if (fill_by === 'row') {
       order.push( 'LEFT(Rack_Name,1)');
-      order.push( 'CAST (Mid(Rack_Name,2,2) AS UNSIGNED)');
+      order.push( 'CAST(Mid(Rack_Name,2,2) AS UNSIGNED)');
     }
     else if (fill_by == 'column') {
-      order.push( 'CAST (Mid(Rack_Name,2,2) AS UNSIGNED)');      
+      order.push( 'CAST(Mid(Rack_Name,2,2) AS UNSIGNED)');      
       order.push( 'LEFT(Rack_Name,1)');
     }
     else {
