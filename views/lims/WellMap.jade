@@ -30,8 +30,8 @@ block content
               div.form-group
                 div.col-sm-4
                   label
-                    input.input(type='radio' value = 'Pre-Print' ng-model="transfer_type" ng-click="validate_Form()")
-                    b &nbsp; Pre-Print &nbsp;
+                    input.input(type='radio' value = 'Move' ng-model="transfer_type" ng-click="validate_Form()")
+                    b &nbsp; Move &nbsp;
                   label
                     input(type='radio' value = 'Aliquot' ng-model="transfer_type" ng-click="validate_Form()")
                     b &nbsp; Aliquot &nbsp;                
@@ -40,8 +40,9 @@ block content
                     b &nbsp; Transfer &nbsp; 
                   br
                   span(ng-show="transfer_type === 'Transfer'" style='color:red') Note: Current tubes are thrown out during 'Transfer'<BR>(use 'Aliquot' to only remove portion of original sample) 
+                  span(ng-show="transfer_type === 'Move'" style='color:red') Note: Sanples remain in their current tube containers<BR>(use 'Aliquot' or 'Transfer' to move samples to new tubes) 
 
-                div.col-sm-4
+                div.col-sm-4(ng-show="transfer_type !== 'Move'")
                   div.form-group
                       input.input-lg#transfer_qty(type='text' placeholder=' -- Transfer Qty --', ng-model='transfer_qty' ng-blur="redistribute()" size='16' ng-disabled="transfer_type=='Pre-Print'")
                       // span.lookup(id='Lookup-units' ng-init="loadLookup('units','','units')")
@@ -51,7 +52,7 @@ block content
                   span(style='color: red' ng-show='transfer_qty_errors || units_errors') Transfer Qty + Units Required
                   span(style='color: red' ng-show="transfer_type === 'Transfer'") Defaults to entire volume in original tube(s)
 
-                div.col-sm-4
+                div.col-sm-4(ng-if="transfer_type !== 'Move'")
                   div.form-group
                     label(for='target_format')
                       // b Into: 
@@ -62,9 +63,9 @@ block content
 
               div.form-group
                 div.col-sm-4
-                  b &nbsp; Split X: 
-                  input.input-lg(name='splitX' ng-model='splitX' type='text' ng-change="redistribute()" size='3' default='1' tooltip="example")
-
+                  div(ng-show="transfer_type !== 'Move'")
+                    b &nbsp; Split X: 
+                    input.input-lg(name='splitX' ng-model='splitX' type='text' ng-change="redistribute()" size='3' default='1' tooltip="example")
 
                 div.col-sm-4
                   div
@@ -108,7 +109,7 @@ block content
               hr
 
               div.form-group
-                div.col-sm-4
+                div.col-sm-4(ng-show="transfer_type !== 'Move'")
                   span IF different Sample Type is being extracted:
                   br
                   // span.lookup(id='Lookup-sample_type' ng-init="loadLookup('sample_type','', 'Extract ?')")
@@ -119,7 +120,7 @@ block content
                   div
                     input.input-lg(type='text' required name='target_rack' size=12 ng-model='target_rack' ng-blur="validate_target(); redistribute();" placeholder='-- Scan Loc# --')
                 div.col-sm-4 &nbsp;
-                  button.btn.btn-lg.btn-primary(type='button' ng-click="redistribute(); execute_transfer();" ng-disabled="!form_validated || !target_format || !target_rack") Distribute
+                  button.btn.btn-lg.btn-primary(type='button' ng-click="redistribute(); execute_transfer();" ng-disabled="!form_validated || (transfer_type !== 'Move' && !target_format) || !target_rack") Relocate Samples
                   p &nbsp;
                   input(type='radio' ng-click="use_custom_settings()") 
                   span &nbsp; Custom x 3 sub-aliquot
