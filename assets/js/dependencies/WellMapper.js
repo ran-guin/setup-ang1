@@ -167,7 +167,7 @@ function wellMapper() {
 
     this.from = function ( sources ) {
         // test data //
-        var rows = ['A', 'B','C', 'D', 'E', 'F', 'G','H'];
+        var rows = ['A', 'B', 'C', 'D', 'E', 'F', 'G','H'];
         var cols = [1,2,3,4,5,6, 7, 8, 9, 10, 11, 12];
        
 
@@ -184,11 +184,11 @@ function wellMapper() {
     this.next_available = function (batch_index, target_index) {
 
         var batch = 0;
-        if (this.target_boxes.length) { 
+        if (this.target_boxes.length && this.target_boxes[batch_index]) { 
             batch = this.target_boxes[batch_index];
         }
         else {
-            console.log("FAILED : " + JSON.stringify(this.target_boxes));
+            console.log("FAILED to find batch " + batch_index + " from: " + JSON.stringify(this.target_boxes));
             batch = 0;
         }
 
@@ -228,6 +228,43 @@ function wellMapper() {
         return { x: x, y: y, batch_index: batch_index, target_index: target_index};
     },
 
+    this.available_wells = function (size, fill_by) {
+    
+        var rows = [];
+        var cols = [];
+
+        if (size === '1') {
+            rows = ['A'];
+            cols = [1];
+        }
+        else if (size === '9x9') {
+            rows = ['A','B','C','D','E','F','G','H'];
+            cols = [1,2,3,4,5,6,7,8,9,10,11,12];
+        }
+        else if (size === '8x12') {
+            rows = ['A','B','C','D','E','F','G','H','I'];
+            cols = [1,2,3,4,5,6,7,8,9,10,11];
+        }
+
+        var avail = [];
+        if (fill_by === 'row') {
+            for (var i = 0; i< rows.length; i++) {
+                for (var j=0; j< cols.length; j++) {
+                    avail.push( { position: rows[i] + cols[j].toString() })
+                }
+            }
+        }
+        else if (fill_by === 'column') {
+            for (var i = 0; i< cols.length; i++) {
+                for (var j=0; j< rows.length; j++) {
+                    avail.push( { position: rows[j] + cols[i].toString() })                    
+                }
+            }            
+        }
+
+        return avail;
+    }
+
     this.initialize = function (sources, Target, Options ) {
         //var sources = [{ id: 1, type: 'blood', position: 'A1'}, { id : 2, type : 'blood', position : 'A2'}];
         
@@ -263,11 +300,25 @@ function wellMapper() {
  
         this.target_count = {};
 
+
+        if (! this.target_boxes ) {
+            this.target_boxes = ['TBD'];
+            
+            var avail = [];
+            if (this.target_size && this.fill_by) {
+                avail = this.available_wells(this.target_size, this.fill_by);
+            }
+            console.log("\n* Default Wells Available: " + JSON.stringify(avail));
+
+            this.available = { 'TBD' : avail };  // test temporary .. 
+        }
+
+
         var boxes_required = 0;
         if (Options.available) {
             if (Options.available.constructor === Object) {
                 // specifically supplied for each target box
-                this.available = Options.available;
+                this.available = Options.available || [];
             }
             else {
                 var boxes_required = Math.ceil( this.source_count * this.splitX / Options.available.length );   // test only
@@ -301,9 +352,9 @@ function wellMapper() {
         };
 
         console.log("Initialized:\nsplit = " + this.splitX + "\nfillBy = " + this.fill_by + "\npack_wells = " + this.pack_wells + "\nmode = " + this.split_mode + "\ntarget_size = " + this.target_size + "\ntarget boxes = " + JSON.stringify(this.target_boxes));
-        console.log("Available" +JSON.stringify(this.available)); 
+        console.log("Available: " +JSON.stringify(this.available)); 
 
-        this.target_boxes = Options.target_boxes || [];       // target box ids 
+        this.target_boxes = this.Options.target_boxes;       // target box ids 
         //this.available = Options.available || {};   // hash of available wells keyed on target box ids
     }
 
