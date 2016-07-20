@@ -3,7 +3,9 @@ block content
 
   - targets = [];
   - config1 = { plate_ids : plate_ids, Samples : Samples, target_size: target_size, Target : target, Options : options, sizes : sizes};
-  - var init1 = "initialize(" + JSON.stringify(config1) + ")";
+
+  - var init_options = { distribute : 1 };
+  - var init1 = "initialize(" + JSON.stringify(config1) + ',' + JSON.stringify(init_options) + ")";
   - config2 = { plate_ids : plate_ids, Samples : Samples};
   - var init2 = "initialize(" + JSON.stringify(config2) + ")";
   
