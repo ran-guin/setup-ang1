@@ -41,4 +41,7 @@ div(ng-if="Map.Transfer && Map.SourceMap")
 							div(ng-if="! box['#{row}#{col}']")
 								div.wellmap(style='background-color: #666')
 									span &nbsp;	
-		hr
+		div(ng-show='debug || 1')
+			hr
+			b Transfer : {{ JSON.stringify(Map.Transfer) }}
+			b Map : {{ Map.SourceMap }}
