@@ -13,9 +13,8 @@ function wellController ($scope, $rootScope, $http, $q ) {
     $scope.map = {};
     $scope.Samples = [];
 
-    $scope.initialize = function initialize(Config) {
-
-        console.log("loaded Well Controller");
+    $scope.initialize = function initialize(Config, options) {
+        console.log("initialize Well Controller");
         // console.log("CONFIG: " + JSON.stringify(Config));
         
         $scope.Config = Config;
@@ -81,7 +80,10 @@ function wellController ($scope, $rootScope, $http, $q ) {
         $scope.form_validated = false;
 
         $scope.transfer_qty_units = 'ml';
-        $scope.redistribute();
+
+        if (options && options.distribute) {
+            $scope.redistribute();
+        }
     }
 
     $scope.validate_Form = function validated_form() {
@@ -152,14 +154,9 @@ function wellController ($scope, $rootScope, $http, $q ) {
         console.log($scope['split_mode'] + ' : reset split example to ' + $scope.splitExample);
     }
 
-    $scope.redistribute = function redistribute () {
+    $scope.redistribute = function redistribute (Transfer, Options) {
 
-        $scope.custom_options = JSON.stringify({ target_boxes: [], transfer_type: 'Aliquot', split_mode: 'parallel', available: ['A1','C2'], splitX: 1, pack: 1, pack_wells: 1, fill_by: 'row', target_size: '9x9'}); // testing
-        var test = "{ pack: 1, fill_by: 'row'}";
-        console.log("parse custom options: " + $scope.custom_options);
-        console.log("Test: " + test);
-
-        $scope.parse_custom_options();
+        var deferred = $q.defer();
 
         console.log('update lookups..');
         $scope.updateLookups();
@@ -208,26 +205,34 @@ function wellController ($scope, $rootScope, $http, $q ) {
                 $scope.newMap = newMap;
             }  
 
-            $scope.Transfer = {
-                qty: $scope.transfer_qty,
-                qty_units : $scope.transfer_qty_units,
-                Container_format : $scope.target_format,
-                Sample_type : $scope.sample_type_id,
-            };
+            if (Transfer) {
+                $scope.Transfer = Transfer;
+            }
+            else {
+                $scope.Transfer = {
+                    qty: $scope.transfer_qty,
+                    qty_units : $scope.transfer_qty_units,
+                    Container_format : $scope.target_format,
+                    Sample_type : $scope.sample_type_id,
+                };
+            }
 
-            $scope.distribute_Options = $scope.Custom_Options;
-
-            $scope.distribute_Options = {
-                fillBy : $scope.fill_by, 
-                pack : $scope.pack,
-                pack_wells : $scope.pack_wells,
-                split : $scope.splitX,
-                split_mode : $scope.split_mode,
-                target_size : $scope.target_size,
-                target_boxes : $scope.target_boxes,
-                available : $scope.available,
-                transfer_type : $scope.transfer_type,
-            };
+            if (Options) {
+                $scope.distribute_Options = Options;
+            }
+            else {
+                $scope.distribute_Options = {
+                    fillBy : $scope.fill_by, 
+                    pack : $scope.pack,
+                    pack_wells : $scope.pack_wells,
+                    split : $scope.splitX,
+                    split_mode : $scope.split_mode,
+                    target_size : $scope.target_size,
+                    target_boxes : $scope.target_boxes,
+                    available : $scope.available,
+                    transfer_type : $scope.transfer_type,
+                };
+            }
 
             console.log('call distribute');
             console.log('Transfer: ' + JSON.stringify($scope.Transfer) );
@@ -246,14 +251,19 @@ function wellController ($scope, $rootScope, $http, $q ) {
             console.log("NEW CMAP: " + JSON.stringify($scope.Map.CMap));
             console.log("Source Colour Map: " + JSON.stringify($scope.Map.SourceMap));
             console.log("Target Colour Map: " + JSON.stringify($scope.Map.TransferMap));           
+        
+            deferred.resolve($scope.Map);
         })
         .catch ( function (err) {
             console.log("Error loading wells: " + err);
-        })
+            deferred.reject(err);
+        });
+
+        return deferred.promise;
 
     }
 
-    $scope.parse_custom_options = function () {
+    $scope.parse_custom_options_OLD = function () {
 
         if ($scope.custom_options) {
             var Custom_Options = JSON.parse($scope.custom_options);
