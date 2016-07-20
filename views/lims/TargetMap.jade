@@ -4,6 +4,10 @@ h4 Target Map
 - var rows = ['A'];
 - var cols = [1];
 
+if !target_size
+	if Samples && Samples[0]
+		- target_size = Samples[0].box_size;
+
 if target_size == '1'
 	- rows = ['A'];
 	- cols = [1];
@@ -15,7 +19,6 @@ if target_size == '9x9'
 if target_size == '8x12'
 	- rows = ['A','B','C','D','E','F','G','H'];
 	- cols = [1,2,3,4,5,6,7,8,9,10,11,12];
-
 
 - var lightbg = '#fff';
 - var darkbg  = '#000';
@@ -40,4 +43,8 @@ div(ng-if="Map.Transfer && Map.TransferMap")
 							div(ng-if="! batch['#{row}#{col}'] ")
 								div.wellmap(style='background-color: #666')
 									span &nbsp;	
-		hr
+
+		div(ng-show='debug || 1')
+			hr
+			b Transfer : {{ JSON.stringify(Map.Transfer) }}
+			b Map : {{ Map.TransferMap }}
