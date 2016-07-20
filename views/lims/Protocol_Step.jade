@@ -13,7 +13,7 @@ block content
 
     - var configParams = { protocol: protocol, plate_ids: plate_ids, plate_set: plate_set, Samples: Samples, Steps : Steps, Attributes: attributes, last_step: last_step};
 
-    - var init = "initialize(" + JSON.stringify(configParams) + ")";
+    - var init = "initialize(" + JSON.stringify(configParams) + ')';
 
     //- flds = fields || []; 
     //- units = { 'solution_qty' : 'solution_qty_units', 'transfer_qty' : 'transfer_qty_units'};
@@ -187,15 +187,15 @@ block content
                               b {{ JSON.stringify(Map) }}
 
               hr
-              // div(ng-if="Custom_Options")
-              div.col-md-6
-                b Source:
-                include SourceMap.jade
-              div.col-md-6
-                b Target:
-                include TargetMap.jade
-              hr
-              b CO: {{ Custom_Options }}
+
+              div(ng-if="Custom_Options && Custom_Options.transfer_type")
+                div.col-md-6
+                  b Source:
+                  include SourceMap.jade
+                div.col-md-6
+                  b Target:
+                  include TargetMap.jade
+                hr
 
             div(ng-if="status=='Completed'")
               include ContainerOptions.jade 
@@ -204,15 +204,18 @@ block content
 
             p &nbsp;
             p &nbsp;
-            div.alert.alert-danger(ng-if="debug") 
+            div.alert.alert-danger(ng-if="debug || 1") 
               br
-              h3 Debugging 
+              h3 Debugging
 
+              custom: {{ Custom_Options }}               
               hr
+              h5 Step: {{ Step }}
+              hr
+
               b comment: {{ comments }}
               h5 Defaults: {{ Default }}
               h5 Att : {{ AttributePrompt }}
-              h5 Details: {{ Step }}
               h5 Steps : {{ Steps }}
               h5 ids: {{ plate_ids }}
               h5 Samples: {{ Samples }}
