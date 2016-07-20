@@ -8,7 +8,8 @@ function protocolController ($scope, $rootScope, $http, $q) {
     $scope.context = 'Protocol';
     $scope.stepNumber = 1;
 
-    $scope.initialize = function (config) {
+    $scope.initialize = function (config, options) {
+
         if (config && config['Samples']) {
             // both protocol tracking and standard Container page 
  
@@ -97,19 +98,16 @@ function protocolController ($scope, $rootScope, $http, $q) {
                 $scope.attribute_list = Object.keys($scope.Attributes);
             }
 
-            $scope.user = 'Ran';  // TEMP
             $scope.PrepFields = [];
             
             // well specific attributes handled in WellController //
             // eg SplitFields, split_mode, distribution_mode, target_format etc.
             
+            $scope.user = 'Ran';  // TEMP - use payload ... 
             $scope.FK_Employee__ID = 2;  // test data 
+
             console.log("Steps: " + JSON.stringify($scope.Steps) );
             $scope.reload();
-
-            $scope['target_format'] = 3;  // Test only 
-            console.log("protocol initialization complete...");
-            console.log('ids: ' + $scope.plate_ids + '=' + $scope.plate_list);
 
             $scope.SplitFields = {};
 
@@ -377,34 +375,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
         console.log("Transfer ? : " + $scope.Step.transfer_type +  ' = ' + $scope.transfer_type);
         if (action != 'Skipped' && $scope.Step.transfer_type) {
 
-            var qty = $scope['transfer_qty' + $scope.stepNumber];
-            if ( $scope['transfer_qty' + $scope.stepNumber + '_split']) {
-                qty = $scope['transfer_qty' + $scope.stepNumber + '_split'].split(',');
-            }  
-            var qty_units = $scope['units_label'];
-            console.log("Q = " + JSON.stringify(qty) + ' ' + qty_units);
-
-            var Target = { 
-                'Container_format' : $scope.Step.Target_format,
-                'Sample_type'   : $scope.Step.Target_sample,
-                'qty'           : qty,
-                'qty_units'     : qty_units,
-            };
-
-            var Options = {
-                'transfer_type' : $scope.Step.transfer_type,
-                'reset_focus'   : $scope.Step.reset_focus,
-                'split'         : $scope['Split' + $scope.stepNumber],
-                'pack'          : $scope.pack_wells,
-                'distribution_mode' : $scope['distribution_mode' + $scope.stepNumber],
-            }
-
-            console.log("Distribute: ");
-            console.log("Target: " + JSON.stringify(Target));
-            console.log("Options: " + JSON.stringify(Options));
-
             // Define Data ...
-
  
             var Map = $scope.distribute($scope.Samples, Target, Options);  // change to promise (test.. )
  
@@ -648,31 +619,63 @@ function protocolController ($scope, $rootScope, $http, $q) {
         console.log($scope.list_mode + ' -> reset list example to ' + $scope.listExample);
     }
 
-    $scope.distribute = function distribute (Sources, Target, Options) {
+    $scope.distribute = function distribute () {
         var targetKey = 'transfer_type' + $scope.stepNumber;
 
-        console.log("Transfer Type = " + $scope.Step.transfer_type);
+        var qty = $scope['transfer_qty' + $scope.stepNumber];
+        if ( $scope['transfer_qty' + $scope.stepNumber + '_split']) {
+            qty = $scope['transfer_qty' + $scope.stepNumber + '_split'].split(',');
+        }  
+        var qty_units = $scope['units_label'];
+        console.log("Q = " + JSON.stringify(qty) + ' ' + qty_units);
 
-        if (Target) {
+        var Target = { 
+            'Container_format' : $scope.Step.Target_format,
+            'Sample_type'   : $scope.Step.Target_sample,
+            'qty'           : qty,
+            'qty_units'     : qty_units,
+        };
 
-            var newMap = new wellMapper();
- 
-            newMap.from(Sources);
-            $scope.newMap = newMap;
+        var Options = {
+            'transfer_type' : $scope.Step.transfer_type,
+            'reset_focus'   : $scope.Step.reset_focus,
+            'split'         : $scope.Step['split'],   // $scope['Split' + $scope.stepNumber],
+            'pack'          : $scope.Step['pack'],    // $scope.pack_wells,
+            'distribution_mode' : $scope['distribution_mode' + $scope.stepNumber],
+            'fillBy'  : $scope.Step['fill_by'],
+            'target_size' : $scope.Step['target_size'],
+        }
 
-            $scope.Map = $scope.newMap.distribute(Sources, Target, Options);
-            
+        console.log("Distribute: ");
+        console.log("Target: " + JSON.stringify(Target));
+        console.log("Options: " + JSON.stringify(Options));
+
+        var newMap = new wellMapper();
+
+        console.log("New Map: " + JSON.stringify(newMap));
+
+        newMap.from($scope.Samples);
+        $scope.newMap = newMap;
+
+        // $scope.Map = $scope.newMap.distribute(Sources, Target, Options);
+        
+        console.log("call well redistribution...");
+        $scope.redistribute(Target, Options)
+        .then ( function (Map) {
+            // $scope.Map = Map;
+
             var warnings = $scope.Map.warnings;
             if (warnings && warnings.length) { $scope.warnings = warnings }
 
-            console.log("map: " + JSON.stringify($scope.Map.Transfer));
+            console.log("map: " + JSON.stringify($scope.Map));
 
-        }
-        else {
-            $scope.Map = {};
-            console.log("distribution N/A");
-        }
-        return $scope.Map;
+            return $scope.Map;
+        })
+        .catch ( function (err) {
+            console.log("Error calling redistribute");
+            console.log(err);
+            return {};
+        });
     }
 
     $scope.showErrors = function showErrors() {
@@ -705,6 +708,13 @@ function protocolController ($scope, $rootScope, $http, $q) {
             $scope.input = $scope.Step['input_options'].split(':');
             $scope.defaults = $scope.Step['input_defaults'].split(':');
             $scope.formats   = $scope.Step['input_format'].split(':');
+
+            var custom_options = $scope.Step['custom_settings'];
+
+            console.log("\n** Load custom options: " + custom_options);
+            $scope.parse_custom_options(custom_options);
+
+            if ($scope.Step['transfer_type']) { $scope.distribute() }
 
             var name = $scope.Step['name'];
 
@@ -755,6 +765,34 @@ function protocolController ($scope, $rootScope, $http, $q) {
             $scope.errMsg = '';
         }
     }
+
+    $scope.parse_custom_options = function (custom_options) {
+        
+        var Opts = {};
+        if (custom_options) { 
+            Opts = JSON.parse(custom_options)
+        }
+
+        var keys = ['split', 'pack', 'fill_by', 'Target_format', 'Target_sample', 'transfer_type', 'reset_focus'];
+        for (var i=0; i<keys.length; i++) {
+            if ( $scope[ keys[i] + $scope.stepNumber ] ) {
+                $scope.Step[keys[i]] = $scope[ keys[i] + $scope.stepNumber];
+                console.log("manually set custom key: " + keys[i] + ' = ' + $scope[ keys[i]]);
+            }
+            else if (Opts[keys[i]]) {
+                $scope.Step[keys[i]] = $scope[ keys[i] + $scope.stepNumber] || Opts[keys[i]];
+                console.log("Custom: " + keys[i] + ' = ' + Opts[keys[i]]);
+            }
+        }
+
+        if ($scope.Step['transfer_type'] && ! $scope.Step['target_size']) {
+            $scope.Step['target_size'] = $scope.Samples[0].box_size;
+            console.log("Use box size of original sample: " + $scope.Step['target_size']);
+        }
+
+        $scope.Custom_Options = Opts;
+    }
+
 
     $scope.ngalert = function ngalert(msg) {
         console.log("NG ALERT: " + msg);
