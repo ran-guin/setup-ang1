@@ -461,6 +461,8 @@ module.exports = {
 		console.log("Update " + model + ": " + ids);
 		console.log(JSON.stringify(data));
 
+		var deferred = q.defer();
+
 		if (!options) { options = {} }
 
 		var table = model;
@@ -487,10 +489,7 @@ module.exports = {
 			else {
 				console.log("no " + model + " model :  id alias left as " + idField);
 			}
-		}
-
-		var deferred = q.defer();
-		
+		}		
 
 		var list = ids.join(',');
 		
