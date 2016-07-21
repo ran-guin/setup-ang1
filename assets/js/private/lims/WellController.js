@@ -90,6 +90,7 @@ function wellController ($scope, $rootScope, $http, $q ) {
         
         if (! $scope.transfer_qty && $scope.transfer_type==='Aliquot') { 
             $scope.transfer_qty_errors = true;
+            console.log("missing qty for aliquot");
             var testElement = document.getElementById('transfer_qty') || {} ;
             testElement.style = "border-color: red";
 
@@ -107,6 +108,7 @@ function wellController ($scope, $rootScope, $http, $q ) {
         }
         else if ($scope.transfer_type === 'Aliquot') { 
             $scope.units_errors = true;
+            console.log("missing qty units for aliquot");
             var testElement = document.getElementById("transfer_qty_units") || {};
             testElement.style = "border-color: red";
         }
@@ -118,9 +120,13 @@ function wellController ($scope, $rootScope, $http, $q ) {
 
 
         if ($scope.transfer_qty_errors || $scope.units_errors) {
+            console.log("failed validation");
             $scope.form_validated = false ;
         }
-        else { $scope.form_validated = true }
+        else {
+            console.log("passed validation"); 
+            $scope.form_validated = true;
+        }
 
     }
 
@@ -157,6 +163,8 @@ function wellController ($scope, $rootScope, $http, $q ) {
     $scope.redistribute = function redistribute (Transfer, Options) {
 
         var deferred = $q.defer();
+
+        $scope.reset_messages();
 
         console.log('update lookups..');
         $scope.updateLookups();
@@ -308,20 +316,20 @@ function wellController ($scope, $rootScope, $http, $q ) {
 
         if (volumes.length && min > 1.0 ) {
             $scope.splitX = 5;
-            $scope.pack_wells = 8;
-            $scope.fill_by = 'column';
-            $scope.split_mode = 'serial';
             $scope.transfer_qty = "200,200,500,500,100";
             $scope.redistribute();
         }
         else {
             $scope.splitX = 4;
-            $scope.pack_wells = 8;
-            $scope.fill_by = 'column';
-            $scope.split_mode = 'serial';
+
             $scope.transfer_qty = "200,200,500,100";
             $scope.redistribute();            
         }
+
+        $scope.pack_wells = 8;
+        $scope.fill_by = 'column';
+        $scope.split_mode = 'serial';
+        $scope.target_format = { id : 15, name : 'cryovial' };
 
         $scope.messages.push("Using Custom Data Matrix Sample Distribution Settings " + version);
     }
@@ -411,7 +419,7 @@ function wellController ($scope, $rootScope, $http, $q ) {
 
         var rack_name;
         if (! rack_id && size ) {
-            rack_name = 'B' + size;
+            rack_name = 'B' + size;   // default target box to benchtop rack  ... (standard Box: 'B9x9' and/or 'B8x12' )
         }
 
         console.log("Load rack " + rack_id + ' ' + rack_name);
@@ -426,55 +434,86 @@ function wellController ($scope, $rootScope, $http, $q ) {
             $http.post("/Rack/boxData", data)
             .then (function (returnData) {
                 console.log("rack data: " + JSON.stringify(returnData));
-                
-                $scope.available = returnData.data.available;
+
+                $scope.available = returnData.data.available || {};
                 console.log("Available: " + JSON.stringify($scope.available));
                 // define target boxes (only handles one for now ... )
+               
+
                 $scope.target_boxes = Object.keys($scope.available);
                 console.log("target boxes: " + $scope.target_boxes.join(','));
+                var firstBox = $scope.target_boxes[0] || '';
+
+                if ($scope.available && $scope.available[firstBox] && $scope.available[firstBox].length) { 
+                    $scope.message($scope.available[firstBox].length + ' wells available in ' + returnData.data.name);
+                    $scope.target_rack = returnData.data.id;
+                }
+                else if (returnData.data.name) { 
+                    $scope.warning("no wells available in " + returnData.data.name )
+                    $scope.target_boxes = [];
+                } 
+                else if (! returnData.data.id) {
+                    $scope.error("Invalid Box specified : " + $scope.target_rack + " ? ");
+                }
 
                 $scope.N_boxes = $scope.target_boxes.length;
 
                 var target_boxes = $scope.target_boxes;
 
                 if (! target_boxes.length) {
-                    $scope.error("No target wells in " + $scope.target_rack);
-                }
-                
-                for (var i=0; i<target_boxes.length; i++) {    
-                    if (! $scope.available[target_boxes[i]] || !$scope.available[target_boxes[i]].length) { 
-                        $scope.error("No target wells available in " + $scope.target_rack);
-                    }
+                    $scope.error("No valid target boxes");
+                    $scope.target_rack = '';
+                    $scope.target_boxes = [];
                 }
 
-                $scope.N_boxes = $scope.target_boxes.length; // test
-                deferred.resolve();
+                var boxes = [];
+                for (var i=0; i<target_boxes.length; i++) {    
+                    if (target_boxes[i] && ! $scope.available[target_boxes[i]] || !$scope.available[target_boxes[i]].length) { 
+                        $scope.error("No target wells available in Box" + $scope.target_boxes[i]);
+                        $scope.target_rack = '';
+                    }
+                    else {
+                        boxes.push(target_boxes[i]);
+                    }
+                }
+                $scope.target_boxes = boxes;   // clear boxes with no available wells .... 
+
+                console.log("Target rack: " + $scope.target_rack + '; from ' + JSON.stringify($scope.target_boxes));
+
+                if ($scope.target_rack && $scope.target_boxes.length) {
+                    $scope.N_boxes = $scope.target_boxes.length; // test
+                    deferred.resolve();
+                }
+                else if (size) {
+                    // prompt user for target box 
+                    console.log("choose size: " + size);
+                    $http.get('/Rack/wells?size=' + size + '&fill_by=' + fill_by)
+                    .then ( function (wells) {
+                        console.log("loaded wells: " + JSON.stringify(wells));
+                        $scope.available = wells.data;
+
+                        $scope.N_boxes = Math.ceil($scope.N * $scope.splitX / wells.data.length);
+                        console.log("GOT : " + JSON.stringify($scope.available)); 
+                        deferred.resolve();
+                    })
+                    .catch ( function (wells) {
+                        console.log("Error retrieving available wells");
+                        deferred.reject();
+                    });
+                }
+                else {
+                    console.log("no rack or size");
+                    deferred.resolve();
+                }                   
             })
             .catch (function (err) {
                 console.log("Error loading Rack info: " + JSON.stringify(err) );
                 deferred.reject(err);
             });
         } 
-        else if (size) {
-            console.log("choose size: " + size);
-            $http.get('/Rack/wells?size=' + size + '&fill_by=' + fill_by)
-            .then ( function (wells) {
-                console.log("loaded wells: " + JSON.stringify(wells));
-                $scope.available = wells.data;
+        
 
-                $scope.N_boxes = Math.ceil($scope.N * $scope.splitX / wells.data.length);
-                console.log("GOT : " + JSON.stringify($scope.available)); 
-                deferred.resolve();
-            })
-            .catch ( function (wells) {
-                console.log("Error retrieving available wells");
-                deferred.reject();
-            });
-        }
-        else {
-            console.log("no rack or size");
-            deferred.resolve();
-        }
+ 
 
         return deferred.promise;
     }
