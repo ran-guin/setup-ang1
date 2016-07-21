@@ -218,11 +218,14 @@ function wellController ($scope, $rootScope, $http, $q ) {
             }
 
             if (Options) {
+                Options['target_boxes'] = $scope.target_boxes;
+                Options['available'] = $scope.available;  // reset in loadWells...
+
                 $scope.distribute_Options = Options;
             }
             else {
                 $scope.distribute_Options = {
-                    fillBy : $scope.fill_by, 
+                    fill_by : $scope.fill_by, 
                     pack : $scope.pack,
                     pack_wells : $scope.pack_wells,
                     split : $scope.splitX,
@@ -406,10 +409,17 @@ function wellController ($scope, $rootScope, $http, $q ) {
         var size    = $scope.target_size;
         var fill_by = $scope.fill_by;
 
-        if (rack_id) {
-            console.log("Load rack " + rack_id);
-            var data = { id: rack_id, fill_by: fill_by};
-            console.log("SEND: " + JSON.stringify(data));
+        var rack_name;
+        if (! rack_id && size ) {
+            rack_name = 'B' + size;
+        }
+
+        console.log("Load rack " + rack_id + ' ' + rack_name);
+        var data = { id: rack_id, name: rack_name, fill_by: fill_by};
+
+        console.log("SEND: " + JSON.stringify(data));
+
+        if (rack_id || rack_name) {
 
             $scope.available = {};  // eg { '<box_id>' : [{ id : <slot_id>, position : <pos> } ]} ... ordered based on 'fill_by'
 
@@ -422,6 +432,8 @@ function wellController ($scope, $rootScope, $http, $q ) {
                 // define target boxes (only handles one for now ... )
                 $scope.target_boxes = Object.keys($scope.available);
                 console.log("target boxes: " + $scope.target_boxes.join(','));
+
+                $scope.N_boxes = $scope.target_boxes.length;
 
                 var target_boxes = $scope.target_boxes;
 
@@ -445,7 +457,7 @@ function wellController ($scope, $rootScope, $http, $q ) {
         } 
         else if (size) {
             console.log("choose size: " + size);
-            $http.get('/Rack/wells?size=' + size + '&fillBy=' + fill_by)
+            $http.get('/Rack/wells?size=' + size + '&fill_by=' + fill_by)
             .then ( function (wells) {
                 console.log("loaded wells: " + JSON.stringify(wells));
                 $scope.available = wells.data;
