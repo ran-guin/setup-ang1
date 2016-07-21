@@ -14,15 +14,17 @@ module.exports = {
 
 		var body = req.body || {};
 
-		var rack_id = body.id || req.param('id');
-		var conditions = req.param('conditions') || body.conditions || [];
+		var rack_id = body.id;
+		var rack_name = body.name;
+
+		var conditions = body.conditions || [];
 		var fill_by = body.fill_by || req.param('fill_by');
 
 		// var deferred = q.defer();
 
-		console.log("Get contents of Rack " + rack_id);
+		console.log("Get contents of Rack: " + rack_id + ' ' + rack_name);
 		
-		Rack.boxContents(rack_id, conditions, { fill_by: fill_by })
+		Rack.boxContents({ id: rack_id, name: rack_name, conditions: conditions, fill_by: fill_by })
 		.then (function (contents) {
 			console.log("Pass along: " + JSON.stringify(contents));
 			return res.json(contents);
@@ -81,11 +83,11 @@ module.exports = {
 
 	wells: function (req, res) {
 		var size = req.param('size');
-		var fillBy = req.param('fillBy') || 'row';
+		var fill_by = req.param('fill_by') || 'row';
 
 		var wellMap = Rack.wells;
 		var wells = [];
-		if (size && wellMap[size] && fillBy.match(/row/i) ) {
+		if (size && wellMap[size] && fill_by.match(/row/i) ) {
 			for (var i=0; i<wellMap[size].length; i++) {
 				for (j=0; j<wellMap[size][i].length; j++) {
 					wells.push({ position: wellMap[size][i][j]});
