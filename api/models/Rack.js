@@ -295,8 +295,7 @@ module.exports = {
     var deferred = q.defer();
 
     var tables = ['Rack'];
-    var fields = ['count(*) as Count', ' Rack.Rack_ID', 'Rack.FKParent_Rack__ID', 'Rack.Rack_Name', 'Rack.Rack_Type'];
-
+    var fields = ['count(*) as Count', 'Rack.Rack_Name as slot', 'Rack.Rack_ID as id', 'Rack.FKParent_Rack__ID as box_id', 'Rack.Rack_Type'];
     if (!options) { options = {} }
 
     var rack_id = options.id;
@@ -308,42 +307,45 @@ module.exports = {
     var content_types = ['Plate','Solution'];
     
     var rack_ids;
-    if (rack_id.constructor === Number) { rack_id = rack_id.toString() }
-
-    console.log("supplied : " + rack_id.constructor + " = " + rack_id);
-
-    if (rack_id.constructor === String && rack_id.match(/[a-zA-Z]/)) {
+    if (rack_id && rack_id.constructor === Number) { rack_id = rack_id.toString() }
+    else if (rack_id && rack_id.constructor === String && rack_id.match(/[a-zA-Z]/)) {
       var Scanned = Barcode.parse(rack_id);
       console.log("Scanned: " + JSON.stringify(Scanned));
-      rack_id = Scanned['Rack'];
+      rack_ids = Scanned['Rack'];
     }
-
-    if (!rack_id) {
-      console.log("No Rack ID supplied");
-      // deferred.reject('no rack id');
-    }
-    else if (rack_id.constructor === Array) {
+    else if (rack_id && rack_id.constructor === Array) {
       rack_ids = rack_id;
     }
-    else if (rack_id.match(/,/) ) {
+    else if (rack_id && rack_id.match(/,/) ) {
       rack_ids = rack_id.split(/\s*,\s*/);
+    }
+    else if (!rack_id) {
+      console.log("No Rack ID supplied");
+      // deferred.reject('no rack id');
     }
     else {
       rack_ids = [rack_id];
     }
 
     // Box specific conditions //
-    conditions.push("Rack_Type = 'Slot'");
+    conditions.push("Rack.Rack_Type = 'Slot'");
 
-    if (rack_ids.length) {
-      conditions.push("FKParent_Rack__ID IN (" + rack_ids.join(',') + ')');
+    if (rack_ids && rack_ids.length) {
+      conditions.push("Rack.FKParent_Rack__ID IN (" + rack_ids.join(',') + ')');
     }
     else if (rack_name) {
-      tables.push('Rack as Parent on Parent.Rack_ID=Rack.FKParent_Rack__ID');
+      tables.push('Rack as Parent');
+      fields.push('Parent.Rack_Name as box_name');
+      fields.push('Parent.Rack_Alias as box_alias');
+
+      conditions.push("Parent.Rack_ID=Rack.FKParent_Rack__ID");
       conditions.push("Parent.Rack_Name = '" + rack_name + "'");
     }
     else if (rack_alias) {
-      tables.push('Rack as Parent on Parent.Rack_ID=Rack.FKParent_Rack__ID');
+      tables.push('Rack as Parent');
+      fields.push('Parent.Rack_Name as box_name');
+      fields.push('Parent.Rack_Alias as box_alias');
+      conditions.push("Parent.Rack_ID=Rack.FKParent_Rack__ID");
       conditions.push("Parent.Rack_Alias = '" + rack_name + "'");      
     }
 
@@ -351,8 +353,8 @@ module.exports = {
 
     for (var i=0; i<content_types.length; i++) {
       var content_type = content_types[i]; 
-      left_joins.push(content_type + " ON " + content_type + ".FK_Rack__ID=Rack_ID");
-      fields.push("GROUP_CONCAT(" + content_type + "_ID)");
+      left_joins.push(content_type + " ON " + content_type + ".FK_Rack__ID=Rack.Rack_ID");
+      fields.push("GROUP_CONCAT(" + content_type + "_ID) AS " + content_type);
     }
 
     var order = [];
@@ -379,35 +381,52 @@ module.exports = {
 
       var contained = {};
       var available = {};
-      for (var i=0; i<data.length; i++) {
-        var boxid = data[i].FKParent_Rack__ID;
-        var id    = data[i].Rack_ID;
 
-        if (!available[boxid]) { available[boxid] = [] }
 
-        var position = data[i].Rack_Name;
+      if (data.length) {
+        var contentData = {
+          id : data[0].box_id,
+          name : data[0].box_name,
+          alias : data[0].box_alias
+        };
 
-        for (j=0; j<content_types.length; j++) {
-          var type = content_types[j];
-          if (data[i][type + '_ID']) {
-            var contains = data[i][type + '_ID'];
-            if (!contained[boxid]) { 
-              contained[boxid] = {}
+        for (var i=0; i<data.length; i++) {
+          var boxid = data[i].box_id;
+          var id    = data[i].id;
+
+          if (!available[boxid]) { available[boxid] = [] }
+
+          var position = data[i].slot;
+
+          for (j=0; j<content_types.length; j++) {
+            var type = content_types[j];
+            if (data[i][type]) {
+              var contains = data[i][type];
+              if (!contained[boxid]) { 
+                contained[boxid] = {}
+              }
+              if (! contained[boxid][position]) { contained[boxid][position] = {} }
+              contained[boxid][position][type] = contains;
             }
-            if (! contained[boxid][position]) { contained[boxid][position] = {} }
-            contained[boxid][position][type] = contains;
           }
-        }
-        if (! ( contained[boxid] && contained[boxid][position]) )  { 
-          available[boxid].push( { id: id, position: position.toUpperCase()} );
+          if (! ( contained[boxid] && contained[boxid][position]) )  { 
+            available[boxid].push( { id: id, position: position.toUpperCase()} );
+          }
+
         }
 
+        console.log("Contains: " + JSON.stringify(contained));
+        console.log("Available: " + JSON.stringify(available));
+        
+        contentData['contains'] = contained;
+        contentData['available'] = available;
+
+        deferred.resolve(contentData);
       }
-
-      console.log("Contains: " + JSON.stringify(contained));
-      console.log("Available: " + JSON.stringify(available));
-
-      deferred.resolve({ contains: contained, available: available});
+      else {
+        deferred.resolve({});
+      }
+      
     })
     .catch ( function (err) {
       console.log("Error: " + err);
