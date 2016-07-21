@@ -329,8 +329,7 @@ function wellController ($scope, $rootScope, $http, $q ) {
         $scope.pack_wells = 8;
         $scope.fill_by = 'column';
         $scope.split_mode = 'serial';
-        $scope.target_format = { id : 15, name : 'cryovial' };
-
+ 
         $scope.messages.push("Using Custom Data Matrix Sample Distribution Settings " + version);
     }
 
