@@ -251,8 +251,9 @@ module.exports = {
 		if (ids && Transfer && Options.transfer_type === 'Move') {
 			console.log("only relocating samples");
 
-			Container.transfer_Location(results.plate_ids, Transfer)
+			Container.transfer_Location(ids, Transfer)
 			.then (function (result) {
+				console.log("Transferred : " + ids.join(','));
 				deferred.resolve( { plate_ids: ids });
 			})
 			.catch (function (err) {
