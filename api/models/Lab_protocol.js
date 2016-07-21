@@ -47,15 +47,14 @@ module.exports = {
 
 		var deferred = q.defer();
 
-		console.log("\n*** COMPLETE Lab Protocol: " + JSON.stringify(data));
+		console.log("\n*** COMPLETE Lab Protocol ***");
+		// console.log(JSON.stringify(data));
 		
 		var ids = data['ids'] || data['plate_ids'];  // array version of same list ...
 		console.log("\n* IDS: " + JSON.stringify(ids));
 
 		ids = Record.cast_to(ids, 'array');
 		var plate_list = ids.join(',');
-
-		console.log("\n* IDS: " + JSON.stringify(ids) + ' : ' + JSON.stringify(plate_list));
 
 		if (ids.length > 0) {
 
@@ -73,7 +72,7 @@ module.exports = {
 				var firstPrepResult = result.Prep[0];
 				var first_prep_id = [ firstPrepResult.insertId ];
 
-				console.log("\nPrep ID: (just inserted)" + last_prep_id );
+				console.log("\nPrep ID: (just inserted) " + last_prep_id );
 				console.log("Transfer: (supplied by POST) " + JSON.stringify(data['Transfer']));
 				console.log("Options: " + JSON.stringify(data['Transfer_Options']));
 				//console.log("Custom: " + JSON.stringify(data['CustomData']));
@@ -105,7 +104,8 @@ module.exports = {
 					}
 					else { returnData = result }
 
-					// before returning ... check if samples are to be moved ... 
+					// before returning ... check if samples are to be moved ... // test - redundant now that relocation is in execute_transfer ? ...
+					/* 
 					if (data['Move']) {
 						var moveIds = ids;
 						var target_location = data['Move'];
@@ -145,7 +145,8 @@ module.exports = {
 						console.log("No sample relocation requested");
 						deferred.resolve(returnData);
 					}
-
+					*/
+					deferred.resolve(returnData);
 				})
 				.catch ( function (Qerr) {
 					// sails.config.warnings.push('There was a glitch somewhere in the step saving process');
@@ -192,8 +193,6 @@ module.exports = {
 		}
 		
 		else if (data && data['Prep']) {
-			console.log("Send Prep data: " + JSON.stringify(data['Prep']));
-
 			var promises = [];
 			promises.push( Record.createNew('prep', data['Prep'] ) );
 
