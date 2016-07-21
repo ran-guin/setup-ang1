@@ -172,7 +172,7 @@ module.exports = {
     var create = options.create;
 
     if (pack ) {
-      Rack.boxContents(target_rack)
+      Rack.boxContents({ id: target_rack })
       .then ( function (result) {
         if (result.available && result.available[target_rack] && result.available[target_rack].length >= ids.length) {
           for (var i=0; i<ids.length; i++) {
@@ -290,16 +290,19 @@ module.exports = {
 
   },
 
-  boxContents : function (rack_id, conditions, options) {
+  boxContents : function (options) {
 
     var deferred = q.defer();
 
     var tables = ['Rack'];
-    var fields = ['count(*) as Count', ' Rack_ID', 'FKParent_Rack__ID', 'Rack_Name', 'Rack_Type'];
+    var fields = ['count(*) as Count', ' Rack.Rack_ID', 'Rack.FKParent_Rack__ID', 'Rack.Rack_Name', 'Rack.Rack_Type'];
 
-    if (!conditions) { conditions = [] }
-    if (! options ) { options = {} }
+    if (!options) { options = {} }
 
+    var rack_id = options.id;
+    var rack_name = options.name;
+    var rack_alias = options.alias;
+    var conditions = options.conditions || [];
     var fill_by = options.fill_by || 'row';
 
     var content_types = ['Plate','Solution'];
@@ -308,6 +311,7 @@ module.exports = {
     if (rack_id.constructor === Number) { rack_id = rack_id.toString() }
 
     console.log("supplied : " + rack_id.constructor + " = " + rack_id);
+
     if (rack_id.constructor === String && rack_id.match(/[a-zA-Z]/)) {
       var Scanned = Barcode.parse(rack_id);
       console.log("Scanned: " + JSON.stringify(Scanned));
@@ -316,7 +320,7 @@ module.exports = {
 
     if (!rack_id) {
       console.log("No Rack ID supplied");
-      deferred.reject('no rack id');
+      // deferred.reject('no rack id');
     }
     else if (rack_id.constructor === Array) {
       rack_ids = rack_id;
@@ -330,33 +334,43 @@ module.exports = {
 
     // Box specific conditions //
     conditions.push("Rack_Type = 'Slot'");
-    conditions.push("FKParent_Rack__ID IN (" + rack_ids.join(',') + ')');
+
+    if (rack_ids.length) {
+      conditions.push("FKParent_Rack__ID IN (" + rack_ids.join(',') + ')');
+    }
+    else if (rack_name) {
+      tables.push('Rack as Parent on Parent.Rack_ID=Rack.FKParent_Rack__ID');
+      conditions.push("Parent.Rack_Name = '" + rack_name + "'");
+    }
+    else if (rack_alias) {
+      tables.push('Rack as Parent on Parent.Rack_ID=Rack.FKParent_Rack__ID');
+      conditions.push("Parent.Rack_Alias = '" + rack_name + "'");      
+    }
 
     var left_joins = [];
-
 
     for (var i=0; i<content_types.length; i++) {
       var content_type = content_types[i]; 
       left_joins.push(content_type + " ON " + content_type + ".FK_Rack__ID=Rack_ID");
-      fields.push(content_type + '_ID');
+      fields.push("GROUP_CONCAT(" + content_type + "_ID)");
     }
 
     var order = [];
     if (fill_by === 'unsorted') {}
     else if (fill_by === 'row') {
-      order.push( 'LEFT(Rack_Name,1)');
-      order.push( 'CAST(Mid(Rack_Name,2,2) AS UNSIGNED)');
+      order.push( 'LEFT(Rack.Rack_Name,1)');
+      order.push( 'CAST(Mid(Rack.Rack_Name,2,2) AS UNSIGNED)');
     }
     else if (fill_by == 'column') {
-      order.push( 'CAST(Mid(Rack_Name,2,2) AS UNSIGNED)');      
-      order.push( 'LEFT(Rack_Name,1)');
+      order.push( 'CAST(Mid(Rack.Rack_Name,2,2) AS UNSIGNED)');      
+      order.push( 'LEFT(Rack.Rack_Name,1)');
     }
     else {
       console.log("need to specify fill by column or row (or unsorted)");
     }
       
-    var query = Record.build_query({tables: tables, fields: fields, left_joins: left_joins, conditions: conditions, group: ['Rack_ID'] , order: order });
-
+    var query = Record.build_query({tables: tables, fields: fields, left_joins: left_joins, conditions: conditions, group: ['Rack.Rack_ID'] , order: order });
+    console.log(query);
     Record.query_promise(query)
     .then ( function (data) {
  
