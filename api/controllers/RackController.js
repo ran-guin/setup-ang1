@@ -18,7 +18,7 @@ module.exports = {
 		var rack_name = body.name;
 
 		var conditions = body.conditions || [];
-		var fill_by = body.fill_by || req.param('fill_by');
+		var fill_by = body.fill_by || 'row';
 
 		// var deferred = q.defer();
 
