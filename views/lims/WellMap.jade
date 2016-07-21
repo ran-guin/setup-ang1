@@ -54,12 +54,12 @@ block content
                   span(style='color: red' ng-show='transfer_qty_errors || units_errors') Transfer Qty + Units Required
                   span(style='color: red' ng-show="transfer_type === 'Transfer'") Defaults to entire volume in original tube(s)
 
-                div.col-sm-4(ng-if="transfer_type !== 'Move'")
-                  div.form-group
+                div.col-sm-4(ng-show="transfer_type !== 'Move'")
+                  div.form-group.input-lg
                     label(for='target_format')
                       // b Into: 
                       // span.lookup(id='Lookup-container_format' ng-init="loadLookup('container_format','', 'Select Target Format')")               
-                    dropdown#target_format(placeholder='Target Format...' required list="MenuList['target_format']" selected="target_format" property='name', ng-init="setup_Menu('target_format','FK(container_format)')") 
+                    dropdown#target_format(style='width:100%' placeholder='Target Format...' required list="MenuList['target_format']" selected="target_format" property='name', track='id' ng-init="setup_Menu('target_format','FK(container_format)')") 
 
               hr 
 
