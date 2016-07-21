@@ -491,10 +491,9 @@ module.exports = {
 			}
 		}		
 
+		var query = "UPDATE " + table;
 		var list = ids.join(',');
 		
-		var query = "UPDATE " + table;
-
 		var conditions = options.conditions || [];
 
 		if (options.include_tables) {
@@ -558,9 +557,8 @@ module.exports = {
 			if (Set.length) {
 				query = query + " SET " + Set.join(',');
 				query = query + " WHERE " + condition;
-				console.log("\n UPDATE: " + model + ': ' + query);
-				promises.push( Record.query_promise(query) );
 				console.log("\n** Update: " + query);
+				promises.push( Record.query_promise(query) );
 			}
 		
 			if (SetEach.length) {
@@ -576,7 +574,8 @@ module.exports = {
 					
 					if (subSet) {
 						var subquery = "UPDATE " + table + " SET " + subSet.join(',') + " WHERE " + idField  + ' = ' + ids[j];
-						console.log("subquery: " + subquery);
+						
+						if (j === 0 || j === SetEach.length-1) { console.log("subquery: " + subquery + '...') }
 						promises.push(Record.query_promise(subquery));
 					}
 				}
@@ -1054,7 +1053,7 @@ module.exports = {
     			Record.query_promise(query)
     			.then (function (result) {
 
-    				console.log("ADD PRE CHANGE HISTORY :" + JSON.stringify(result));
+    				// console.log("ADD PRE CHANGE HISTORY :" + JSON.stringify(result));
     				deferred.resolve(result);
     			})
     			.catch ( function (err) {
@@ -1088,7 +1087,7 @@ module.exports = {
     			console.log(query);
     			Record.query_promise(query)
     			.then (function (result) {
-    				console.log("ADD POST CHANGE HISTORY :" + JSON.stringify(result));
+    				// console.log("ADD POST CHANGE HISTORY :" + JSON.stringify(result));
     				deferred.resolve(result);
     			})
     			.catch ( function (err) {
