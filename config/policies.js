@@ -75,8 +75,9 @@ module.exports.policies = {
   },
   
   'rack' : {
-    'boxData' : 'true',
-  }
+    'boxData' : true,
+  },
+
   //'lab_protocol' : 'sessionAuth",
 
   'attribute' : {
