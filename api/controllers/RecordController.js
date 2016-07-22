@@ -215,8 +215,6 @@ module.exports = {
 		console.log("Update...");
 	},
 
-
-
 	list : function (req, res) {
 		var table;
 		var condition = '1';
@@ -234,9 +232,10 @@ module.exports = {
 		}
 
 		var fields = body.fields || '*';
-
 		var element = body.element || req.param('element') || 'injectedData';  // match default in CommonController
 		
+		var iconify = body.iconify;
+
 		console.log('table = ' + table);
 
 		var query = "Select " + fields + " from " + table;
@@ -257,7 +256,7 @@ module.exports = {
 			if (result.length) {
 				if (!fields) { fields = Object.keys(result[0]) }
 				// return res.render('record/embedded_list', { table : table, fields : fields, data : result });
-				return res.render('customize/injectedData', { table : table, fields : fields, data : result, element: element});
+				return res.render('customize/injectedData', { table : table, fields : fields, data : result, element: element, iconify: iconify});
 			}
 			else {
 				return res.send("No data");
