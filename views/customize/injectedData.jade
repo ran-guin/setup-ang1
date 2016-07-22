@@ -17,17 +17,13 @@
 //    - iconify (shrink longer output into icons)
 //          eg { 'A' { title : 'A values', icon: 'question-circle' } - uses fa.fa-question-circle for icon to tooltip... 
 //
-- glob = 'Glob'
+
 div(id="injected#{element}")
 	- var alias = {};
 	h2 #{title}
 		div.navbar-right
 			button.btn.btn-danger.btn-sm(type='button' onclick="document.getElementById('#{element}').innerHTML = ''") Close
 	br
-
-	a(href='#' onclick="return false;" tooltip='instructions' data-toggle="popover" data-placement="left" data-trigger="focus" title="Instructions" data-content="Content...")
-		i.fa.fa-question-circle
-
 
 	include genericModal.jade
 
