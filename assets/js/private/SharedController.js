@@ -152,24 +152,42 @@ app.controller('SharedController',
             //return "\n<div class='container' style='padding:20px'>\n" + view + "</div>\n";
         }
         
-        $scope.injectData = function (url, element, ids, attribute ) {
-            console.log("INJECT HTML");
+        $scope.injectData = function (url, element, ids, attribute, options) {
+            console.log("INJECT HTML ");
+            
+            var opt  = {};
+            if (options) { opt = JSON.parse(options) }
+            var iconify = opt.iconify;
 
             if (!attribute) { attribute = 'ids'}
-
             if (! element) { element = 'injectedData' }
 
-            if (url.match(/\?/)) { url = url + '&' }
-            else { url = url + '?' }
+            var method = 'POST';  // default 
+            if (url.match(/\?/)) { 
+                method = 'GET';
+                url = url + '&'
+            }
+            else {
+                url = url + '?';
+            }
 
             url = url + 'element=' + element + '&'; // enables close button in injected block
             if (ids) { url = url + attribute + '=' + ids }
 
+            var data = {
+                element : element,
+                attribute : ids,
+                iconify : iconify,
+            };
 
             var el = document.getElementById(element);
             if (el) {
                 console.log("Calling: " + url);
-                $http.get(url)
+                $http({
+                    method : method,
+                    url : url, 
+                    data : data,
+                })
                 .then ( function (result) {
                     console.log("Got API Data...");
 
