@@ -35,7 +35,7 @@ div(ng-if="Map.Transfer && Map.TransferMap")
 						if col <= 6 
 							- bg=lightbg;
 
-						td					
+						td
 							div(ng-if="batch['#{row}#{col}'] && Map.Transfer[batch['#{row}#{col}']['target_index']]")
 								a(href='#' data-toggle='tooltip' title="{{ Map.Transfer[batch['#{row}#{col}']['target_index']]['qty'] }}  {{ Map.Transfer[batch['#{row}#{col}']['target_index']]['qty_units'] }} from #{{ Map.Transfer[batch['#{row}#{col}']['target_index']]['source_id'] }}" style='color:#{bg}') 
 									div.wellmap( style="background-color:{{ batch['#{row}#{col}']['colour_code'] }}")
