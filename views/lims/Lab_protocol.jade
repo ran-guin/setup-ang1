@@ -7,10 +7,11 @@ block content
       each step,i in steps
         - name = step.name;
         - id   = step.id;
+        - num = step.step_number
         - message = step.message;
         
         li 
-          a(href="/protocol_step/edit/#{id}") #{name} 
+          a(href="/protocol_step/edit/#{id}") #{num} - #{name} 
             i [ #{message} ] 
 
       
