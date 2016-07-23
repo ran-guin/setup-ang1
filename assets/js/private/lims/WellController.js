@@ -91,29 +91,30 @@ function wellController ($scope, $rootScope, $http, $q ) {
         if (! $scope.transfer_qty && $scope.transfer_type==='Aliquot') { 
             $scope.transfer_qty_errors = true;
             var testElement = document.getElementById('transfer_qty') || {} ;
-            testElement.style = "border-color: red";
-
+            testElement.style = "border-color: red; border-width: 2px;";
         }
         else { 
             $scope.transfer_qty_errors = false;
             var testElement = document.getElementById('transfer_qty') || {};
-            testElement.style = "border-color: green";
+            testElement.style = "border-color: green; border-width: 2px;";
         }
 
-        if ( $scope.transfer_qty_units) { 
-            $scope.units_errors = false;
-            var testElement = document.getElementById('transfer_qty_units') || {};
-            testElement.style = "border-color: green";
-        }
-        else if ($scope.transfer_type === 'Aliquot') { 
-            $scope.units_errors = true;
-            var testElement = document.getElementById("transfer_qty_units") || {};
-            testElement.style = "border-color: red";
+        if ($scope.transfer_qty) {
+            if ( $scope.transfer_qty_units) { 
+                $scope.units_errors = false;
+                var testElement = document.getElementById('transfer_qty_units') || {};
+                testElement.style = "border-color: green; border-width: 2px;";
+            }
+            else { 
+                $scope.units_errors = true;
+                var testElement = document.getElementById("transfer_qty_units") || {};
+                testElement.style = "border-color: red; border-width: 2px;";
+            }
         }
         else {
             $scope.units_errors = false;
             testElement = document.getElementById("transfer_qty_units") || {};
-            testElement.style = "border-color: green";            
+            testElement.style = "border-color: green; border-width: 2px;";            
         }
 
 
