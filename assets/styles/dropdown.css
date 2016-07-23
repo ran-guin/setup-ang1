@@ -2,6 +2,23 @@
   position: relative;
   z-index: 2;
 }
+
+input.preaddon {
+  border-top-right-radius: 0px;
+  border-bottom-right-radius: 0px;  
+}
+dropdown.addon > div {
+  padding: 0px !important;
+  border-top-left-radius: 0px;
+  border-bottom-left-radius: 0px;
+  background-color: #eeeeee;
+}
+dropdown.addon > div > div.dropdown-display > input {
+  border-top-left-radius: 0px;
+  border-bottom-left-radius: 0px;
+  background-color: #eeeeee;
+}
+
 dropdown {
   float: left;
   display: block;
