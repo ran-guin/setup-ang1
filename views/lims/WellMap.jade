@@ -45,10 +45,17 @@ block content
                   span(ng-show="transfer_type === 'Move'" style='color:red') Note: Sanples remain in their current tube containers<BR>(use 'Aliquot' or 'Transfer' to move samples to new tubes) 
 
                 div.col-sm-4(ng-show="transfer_type !== 'Move'")
-                  div.form-group
-                      input.input-lg#transfer_qty(type='text' placeholder=' -- Transfer Qty --', ng-model='transfer_qty' ng-blur="redistribute()" size='16' ng-disabled="transfer_type=='Pre-Print'")
-                      // span.lookup(id='Lookup-units' ng-init="loadLookup('units','','units')")
-                      dropdown.mini-dropdown(placeholder='units..' list="MenuList['transfer_qty_units']" selected="transfer_qty_units" property='name' track='name', ng-init="setup_Menu('transfer_qty_units','ml,ul,nl')") 
+                  // div.form-group
+                  table
+                    tr
+                      td(width='100%')
+                        // preaddon & addon custom css only necessary for special type: dropdown 
+                        input.input-lg.preaddon#transfer_qty(type='text' aria-describedBy='tqu' placeholder=' -- Transfer Qty --', ng-model='transfer_qty' ng-blur="redistribute()" size='16' ng-disabled="transfer_type=='Pre-Print'")
+                        // span.lookup(id='Lookup-units' ng-init="loadLookup('units','','units')")
+                      
+                      // include Units.jade
+                      td
+                        dropdown.mini-dropdown.addon#transfer_qty_units(placeholder='units..' list="MenuList['transfer_qty_units']" selected="transfer_qty_units" property='name' track='name', ng-init="setup_Menu('transfer_qty_units','ml,ul,nl')") 
 
                   br
                   span(style='color: red' ng-show='transfer_qty_errors || units_errors') Transfer Qty + Units Required
