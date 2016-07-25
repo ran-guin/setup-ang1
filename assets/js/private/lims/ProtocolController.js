@@ -377,10 +377,10 @@ function protocolController ($scope, $rootScope, $http, $q) {
 
             // Define Data ...
  
-            var Map = $scope.distribute($scope.Samples, Target, Options);  // change to promise (test.. )
+            // var Map = $scope.distribute($scope.Samples, Target, Options);  // change to promise (test.. )
  
-            data['Transfer_Options'] = Map.Options;
-            data['Transfer'] = Map.Transfer;
+            data['Transfer_Options'] = $scope.Map.Options;
+            data['Transfer'] = $scope.Map.Transfer;
         } 
 
         var loc = 'location' + $scope.stepNumber;
@@ -642,7 +642,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
             'split'         : $scope.Step['split'],   // $scope['Split' + $scope.stepNumber],
             'pack'          : $scope.Step['pack'],    // $scope.pack_wells,
             'distribution_mode' : $scope['distribution_mode' + $scope.stepNumber],
-            'fillBy'  : $scope.Step['fill_by'],
+            'fill_by'  : $scope.Step['fill_by'],
             'target_size' : $scope.Step['target_size'],
         }
 

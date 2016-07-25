@@ -178,6 +178,9 @@ module.exports = {
 	transfer_Location : function (ids, Transfer) {
 		// relocate using WellMapper information (from Transfer hash)
 		// Transfer = [{ batch: 0, target_position: "A2", target_box: '' }, { }]
+
+		var deferred = q.defer();
+
 		console.log("Relocating samples : " + ids.join(','));
 		console.log(JSON.stringify(Transfer));
 
@@ -186,9 +189,19 @@ module.exports = {
 		console.log("\n** Target slots: " + target_slots.join(','));
 
 		if (target_slots && ids && target_slots.length === ids.length) {
-			Record.update('container', ids, { 'FK_Rack__ID' : target_slots });
+			Record.update('container', ids, { 'FK_Rack__ID' : target_slots })
+			.then ( function (result) {
+				deferred.resolve(result);
+			})
+			.catch ( function (err) {
+				console.log("Error transferring location: " + err);
+				deferred.reject(err);
+			});
 		}
+		else { deferred.resolve() }
+
 		console.log("Transferred targets to applicable slots...");
+		return deferred.promise;
 	},
 
 	execute_transfer : function (ids, Transfer, Options) {
@@ -237,7 +250,16 @@ module.exports = {
 
 		if (ids && Transfer && Options.transfer_type === 'Move') {
 			console.log("only relocating samples");
-			deferred.resolve( { plate_ids: ids });
+
+			Container.transfer_Location(ids, Transfer)
+			.then (function (result) {
+				console.log("Transferred : " + ids.join(','));
+				deferred.resolve( { plate_ids: ids });
+			})
+			.catch (function (err) {
+				console.log("Error relocating samples");
+				deferred.reject(err);
+			});
 		}
 		else if (ids) {
 			// allow input ids (first parameter) to be either:
@@ -260,7 +282,14 @@ module.exports = {
 				.then (function (finalResponse) {
 					console.log("completed transfer");
 
-					deferred.resolve(finalResponse);
+					Container.transfer_Location(target_ids, Transfer)
+					.then (function (result) {
+						deferred.resolve( finalResponse );
+					})
+					.catch (function (err) {
+						console.log("Error relocating target samples");
+						deferred.reject(err);
+					});
 				})
 				.catch ( function (err) {
 					var msg = "problem with post transfer updates ? " + JSON.stringify(err);
@@ -564,7 +593,7 @@ module.exports = {
 	postTransferUpdates : function (old_ids, new_ids, target, options) {
 
 		var deferred = q.defer();
-
+		console.log('post Transfer updates...');
 		if ( ! target ) { target = {} }
 		if ( ! options ) { options = {} }
 
@@ -593,7 +622,7 @@ module.exports = {
 				returnVal['Samples'] = results[0];
 			}
 
-			sails.config.messages.push('Executed Transfer : ' + options.transfer_type);
+			// sails.config.messages.push('Executed Transfer : ' + options.transfer_type);
 			console.log("executed transfer: "); //  + JSON.stringify(returnVal));
 
 			//var messages = Record.merge_Messages(results);

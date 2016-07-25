@@ -198,11 +198,13 @@ function wellMapper() {
 
         if (this.available && this.available[batch] && this.available[batch].length > target_index+1) {
             target_index++;
+            console.log('next index ' + target_index);
         }
         else {
             batch_index++;
             target_index = 0;
             batch = this.target_boxes[batch_index];
+            console.log('reset ' + batch_index );
         }
 
         if (this.available[batch] && this.available[batch][target_index]) {
@@ -217,7 +219,7 @@ function wellMapper() {
             }
         }
         else {
-            console.log("Insufficient available wells");
+            console.log("No more available wells");
             x = ''; y = '';
         }
 
@@ -274,7 +276,7 @@ function wellMapper() {
         if (!Target) { Target = {} }
         if (!Options) { Options = {} }
 
-        this.fill_by = Options.fillBy || 'Row';
+        this.fill_by = Options.fill_by || 'Row';
         this.pack_wells    = Options.pack_wells || Options.pack || 0;
         this.preserve_position = ! this.pack_wells; // unnecessary... 
         this.split_mode = Options.split_mode || 'parallel';
@@ -351,7 +353,7 @@ function wellMapper() {
             transfer_type : this.transfer_type,
         };
 
-        console.log("Initialized:\nsplit = " + this.splitX + "\nfillBy = " + this.fill_by + "\npack_wells = " + this.pack_wells + "\nmode = " + this.split_mode + "\ntarget_size = " + this.target_size + "\ntarget boxes = " + JSON.stringify(this.target_boxes));
+        console.log("Initialized:\nsplit = " + this.splitX + "\nfill_by = " + this.fill_by + "\npack_wells = " + this.pack_wells + "\nmode = " + this.split_mode + "\ntarget_size = " + this.target_size + "\ntarget boxes = " + JSON.stringify(this.target_boxes));
         console.log("Available: " +JSON.stringify(this.available)); 
 
         this.target_boxes = this.Options.target_boxes;       // target box ids 
@@ -575,11 +577,7 @@ function wellMapper() {
   
                     TransferMap[batch_index][target_position] = sources[i];
                     // TargetColours[batch_index][target_position] = this.rgbList[i];
-
-                    console.log("Transfer : " + JSON.stringify(TransferMap[batch_index][target_position]) );
-                    // console.log("Colour : " + JSON.stringify(TargetColours[batch_index][target_position]) );
-                    //rearray.push([sources[i], Container.position(sources[i]), targets[batch_index], target_position]);
-
+ 
                     var target_box = 0;
                     var target_slot = ''; 
                     var target_slot_position;
@@ -587,15 +585,15 @@ function wellMapper() {
                     if (this.target_boxes.length >= batch_index+1) {
                         target_box = this.target_boxes[batch_index];
                     }
+                    
                     if (target_box && this.available[target_box] && this.available[target_box][target_index]) {
                         target_slot = this.available[target_box][target_index].id; 
                         target_slot_position = this.available[target_box][target_index].position;                       
                     }
                     if (! target_slot) {
-                        console.log("TB: " + JSON.stringify(this.target_boxes));
-                        console.log(batch_index + " : " + target_box);
-                        console.log(JSON.stringify(this.available[target_index]));
+                        console.log(batch_index + " : " + target_box + ' (NO SLOT)');
                     }
+                    else { console.log(batch_index +  ':' + target_index + " slot: " + target_slot) }
 
                     var XferData = { 
                         batch: batch_index,
@@ -654,6 +652,7 @@ function wellMapper() {
                         batch_index = next.batch_index;                                
                     }
                     else {
+                        console.log("no fill_by spec ?");
                         // Does not use x and y for positioning above... 
                     }
 
@@ -837,7 +836,7 @@ function wellMapper() {
        for (var i=0; i<this.TransferMap.length; i++) {
             var transfer = this.TransferMap[i];
             var target_positions = Object.keys(transfer);
-            console.log("Transfer: " + JSON.stringify(transfer) + ' x ' + target_positions.length);
+            // console.log("Transfer: " + JSON.stringify(transfer) + ' x ' + target_positions.length);
 
             for (var j=0; j<target_positions.length; j++) {
                 var target = target_positions[j];
