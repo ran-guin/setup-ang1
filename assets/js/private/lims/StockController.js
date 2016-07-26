@@ -12,7 +12,14 @@ function stockController ($scope, $rootScope, $http, $q) {
 
     $scope.received = $scope.datestamp;
 
+    $scope.filter_catalog = function () {
+        console.log("Filter on " + $scope.type);
+        var condition = "Stock_Catalog_Type = '" + $scope.type + "'";
+        $scope.setup_Menu('catalog', 'FK(catalog)',condition)
+    }
+
     $scope.save = function () {
+
     	var StockData = {
     		'number_in_batch' : $scope.number_in_batch,
     		'received'        : $scope.received,
@@ -31,6 +38,7 @@ function stockController ($scope, $rootScope, $http, $q) {
     			'number_in_batch'   : $scope.number_in_batch,
                 'qty'               : $scope.qty,
                 'qty_units'         : $scope.qty_units,
+                'type'              : 'Reagent',
     		};
 
     		data['Reagent'] = ReagentData;
