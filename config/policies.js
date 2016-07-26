@@ -70,7 +70,8 @@ module.exports.policies = {
       'signup' : 'reset',
       'logout' : 'reset',
       'home' : 'reset',   // sessionAuth',
-	     'dashboard'	: "sessionAuth",	
+	     'dashboard'	: "sessionAuth",
+       'getNewPassword' : 'reset',	
 //      '*' : "sessionAuth"
   },
   
