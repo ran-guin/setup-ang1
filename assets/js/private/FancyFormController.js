@@ -155,7 +155,7 @@ app.controller('FancyFormController',
                 if ( ! $scope.MenuList ) { $scope.MenuList = {} }
                 $scope.MenuList[element] = [];
 
-                if (list && list[0].constructor === Object ) {
+                if (list && list[0] && list[0].constructor === Object ) {
                     $scope.MenuList[element] = list;
                 }
                 else if (list && list[0] ) {
