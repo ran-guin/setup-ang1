@@ -23,6 +23,8 @@
 							b #{session.payload.db_user}
 						li Access: 
 							b #{ session.payload.access }
+						li alDente ID: 
+							b #{ session.payload.alDenteID }
 					hr
 					a(href="#{sails.config.root}/logout")
 						button.btn.btn-danger(type="submit") Logout
