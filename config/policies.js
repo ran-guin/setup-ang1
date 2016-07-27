@@ -56,6 +56,7 @@ module.exports.policies = {
   record_API: {
     'lookup' : true,
     'enum'   : 'reset',
+    'search' : true,
   },
 
   record: {
