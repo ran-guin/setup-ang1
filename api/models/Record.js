@@ -15,6 +15,76 @@ module.exports = {
 
 	},
 
+	get_fields : function (table) {		
+		var deferred = q.defer();
+		var model = table;
+
+		Record.query_promise("desc " + table)
+		.then (function (result) {
+			if (result.length == 0 ) {
+				deferred.reject("no table found");
+			}
+			else {
+				/*
+				if ( sails.models[model] && sails.models[model]['attributes']['role'] && sails.models[model]['attributes']['role']['xdesc']) {
+					console.log('load extra info...' + sails.models[model]['attributes']['role']['xdesc'])
+				}
+				*/
+				var recordModel;
+				console.log("check for model: " + model + " : " + table);
+				if (sails.models[model]) {
+					console.log(model + ' Access: ' + sails.models[model]['access']);
+					console.log("MODEL:cp  " + sails.models[model]);
+					recordModel = sails.models[model];
+				}
+
+				var Fields = [];
+				for (var i=0; i<result.length; i++) {
+					var fld = result[i]['Field'];
+					var type = result[i]['Type'] || 'undefined';
+					var options = [];
+					var lookup = {};
+
+					console.log("Field: " + fld + ": " + type);
+					if (recordModel && recordModel.attributes  && recordModel.attributes[fld]) {
+					    if (recordModel.attributes[fld]['type']) {
+		                    if (recordModel.attributes[fld]['enum']) {
+		                        type = 'enum';
+		                      	options = recordModel.attributes[fld]['enum'];
+		                    } 
+		                    else if (recordModel.attributes[fld]['type'] == 'boolean') {
+		                        type = 'boolean';
+		                      	//options = recordModel.attributes[fld]['enum'];
+		                    }
+		                    else if (recordModel.attributes[fld]['type'] === 'int') {
+		                    	type = 'number';
+		                    }
+		                }
+		                else if (recordModel.attributes[fld]['collection']) {
+		                    type = 'list link';
+		                }
+		                else if (recordModel.attributes[fld]['model']) {
+		                    type = 'lookup';
+		                    options.lookup = recordModel.attributes[fld]['model'];
+						} 
+					}
+
+					if (fld == 'id' || fld == 'createdAt' || fld == 'updatedAt') {
+						type = 'Hidden'
+					}
+
+					Fields.push({'Field' : fld, 'Type' : type, 'Options' : options, 'Lookup' : lookup});
+				}
+				deferred.resolve(Fields);								
+			}
+		})
+		.catch ( function (err) {
+			deferred.reject(err);
+		});
+
+		return deferred.promise;
+	},
+
 	reverse_Map : function (map) {
 		var keys = Object.keys(map);
 
