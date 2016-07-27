@@ -132,87 +132,43 @@ module.exports = {
 		var condition = req.param('condition') || '1';
 
 		if (id) { condition = condition + " AND " + table + '.id' + "=" + id }
-
-		//
 			
 		console.log("retrieving " + model + ' model');
 		var table = sails.models[model].tableName || model;
 
-		Record.query("desc " + table, 
-			function (err, result) {
-				if (err) {
+		console.log('get fields...');
+		Record.get_fields(table)
+		.then ( function (result) {
+			console.log("parsed fields from table: " + JSON.stringify(result));
+				var promises = [];
+				var edit = 1;
+
+				if (edit) {
+					promises.push( Record.query_promise("SELECT * FROM " + table + " WHERE " + condition) );
+				}
+
+				q.all(promises)
+				.then (function (data) {
+					console.log("DATA: " + JSON.stringify(data));
+
+					var Fields = result;
+
+					var access = '';   // store access permissions in database ? ... or in model ... 
+					var input = { table: table, fields: Fields, access: access, action: 'Add', data: data};
+					console.log("Render form with " + JSON.stringify(input));
+					return res.render('record/form', input);
+				})
+				.catch (function (err) {
+					console.log("Error loading data: " + err);
 					return res.negotiate(err);
-	     		}
-
-				if (!result) {
-					console.log('no record results');
-					return res.send('');
-				}
-
-				if ( sails.models[model] && sails.models[model]['attributes']['role'] && sails.models[model]['attributes']['role']['xdesc']) {
-					console.log('load extra info...' + sails.models[model]['attributes']['role']['xdesc'])
-				}
-
-				var recordModel;
-				console.log("check for model: " + model + " : " + table);
-				if (sails.models[model]) {
-					console.log(model + ' Access: ' + sails.models[model]['access']);
-					console.log("MODEL:cp  " + sails.models[model]);
-					recordModel = sails.models[model];
-				}
-
-				var Fields = [];
-				for (var i=0; i<result.length; i++) {
-					var fld = result[i]['Field'];
-					var type = result[i]['Type'] || 'undefined';
-					var options = [];
-					var lookup = {};
-
-					console.log("Field: " + fld + ": " + type);
-					if (recordModel && recordModel.attributes  && recordModel.attributes[fld]) {
-					    if (recordModel.attributes[fld]['type']) {
-	                        if (recordModel.attributes[fld]['enum']) {
-	                            type = 'enum';
-	                          	options = recordModel.attributes[fld]['enum'];
-	                        } 
-	                        else if (recordModel.attributes[fld]['type'] == 'boolean') {
-	                            type = 'boolean';
-	                          	//options = recordModel.attributes[fld]['enum'];
-	                        } 
-	                    }
-	                    else if (recordModel.attributes[fld]['collection']) {
-	                        type = 'list link';
-	                    }
-	                    else if (recordModel.attributes[fld]['model']) {
-	                        type = 'lookup';
-	                        options.lookup = recordModel.attributes[fld]['model'];
-
-//	                        var refmodel = recordModel.attributes[fld]['model'];
-//	                       	if (refmodel && sails.models[refmodel]) {
-//	                        	options.lookup = sails.models[refmodel].tableName || refmodel;
-//	                        }
-
-	                    	lookup = {'1' : '123', '2' : '456'};	
-						} 
-					}
-
-					if (fld == 'id' || fld == 'createdAt' || fld == 'updatedAt') {
-						type = 'Hidden'
-					}
-
-					Fields.push({'Field' : fld, 'Type' : type, 'Options' : options, 'Lookup' : lookup});
-				}
-
-				var access = '';   // store access permissions in database ? ... or in model ... 
-				var data = { table: table, fields: Fields, access: access, action: 'Add'};
-				console.log("Render form with " + JSON.stringify(data));
-				res.render('record/form', data);
+				});
 			}
 		);
 	},
 
 	update: function (req, res) {
 		console.log("Update...");
+		return res.json({ results: [ { 'id' : 1, 'name' : 'Ran'} ] });
 	},
 
 	list : function (req, res) {
