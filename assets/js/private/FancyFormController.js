@@ -337,6 +337,7 @@ app.controller('FancyFormController',
 
         $scope.colours = [ { name: 'Red'}, { name:'White'} , {name: 'Blue'}];
         $scope.colour = ''; // {name: 'Blue'};
+
 }])
 .directive('myDatepicker', function ($parse) {
    return {
@@ -539,4 +540,86 @@ app.controller('FancyFormController',
             });
         }
     }
-});
+})
+.directive('autocomplete', ['$http', function($http) {
+    return function (scope, element, attrs) {
+        element.autocomplete({
+            minLength:3,
+            source:function (request, response) {
+                var url = "/Record/search";
+
+                if (attrs.search) {                    
+                    var table = attrs.search;
+                    var label = 'name';
+                    if (attrs.search.match(/:/) ) {
+                        var params = attrs.search.split(':');
+                        table = params[0];
+                        label = params[1];
+                    }
+                    
+                    var searchScope = {};
+                    searchScope[table] = [label, 'id'];
+
+                    var params = { scope : searchScope, search : request.term};
+                    // params = { scope : scope, search : request.term };
+
+                    console.log('post search ' + table + ' : ' + url);
+                    console.log(JSON.stringify(searchScope));
+                    
+                    $http.post(url, params)
+                    .success ( function(data) {
+                        console.log("GOT: " + JSON.stringify(data));
+                        response(data.results);
+                    })
+                    .error ( function (err) {
+                        console.log("Error: ");
+                    });
+                }
+                else {
+                    console.log("no search parameters");
+                }
+            },
+            focus:function (event, ui) {
+                element.val(ui.item.name);
+                return false;
+            },
+            select:function (event, ui) {
+                // scope[attrs.ngModel].selected = ui.item.id;
+                console.log('set ' + attrs.ngModel + ' id to ' + ui.item.id + ": " + ui.item.name);
+
+                // scope[attrs.ngModel].id = ui.item.id;
+                var label = attrs.label || 'name';
+                var track = attrs.track || 'id';
+
+                if (attrs.ngModel.match(/\./)) {
+                    var model = attrs.ngModel.split('.');
+                    scope[model[0]][model[1]] = ui.item[label];
+                    scope[model[0]][model[1] + '_id'] = ui.item[track];
+                }
+                else {
+                    scope[attrs.ngModel] = ui.item[label];
+                    scope[attrs.ngModel + '_id'] = ui.item[track];
+                }
+                // scope.myModel = ui.item;
+                // scope.myModelId.selected = ui.item.id;
+
+                scope.$apply();
+                return false;
+            },
+            change:function (event, ui) {
+                if (ui.item === null) {
+                    // scope.myModelId.selected = null;
+                
+                    // scope[attrs.ngModel] = null;
+                    scope[attrs.ngModel + '_id']    = null;
+                    console.log('clear');
+                }
+            }
+        }).data("ui-autocomplete")._renderItem = function (ul, item) {
+            return $("<li class='input-lg'></li>")
+                .data("item.autocomplete", item)
+                .append("<a class='input-lg'>" + item.name + "</a>")
+                .appendTo(ul);
+        };
+    }
+}]);
