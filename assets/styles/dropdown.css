@@ -18,6 +18,9 @@ dropdown.addon > div > div.dropdown-display > input {
   border-bottom-left-radius: 0px;
   background-color: #eeeeee;
 }
+dropdown-container {
+  padding-top: 0px !important;
+}
 
 dropdown {
   float: left;
@@ -44,7 +47,7 @@ dropdown > div > div.dropdown-display {
   float: left;
   width: 100%;
   background: white;
-  height: 40px;
+  height: 46px;  /* 46px */
   cursor: pointer;
   border: solid 1px #DDD;
   box-sizing: border-box;
@@ -53,8 +56,8 @@ dropdown > div > div.dropdown-display {
 dropdown > div > div.dropdown-display > * {
   float: left;
   height: 100%;
-  height: 40px;
-  line-height: 40px !important;
+  height: 46px;
+  line-height: 46px !important;
   display: inline-block;
   vertical-align: middle;
 }
@@ -109,8 +112,8 @@ dropdown > div > div.dropdown-list > div > div.selected {
   color: white;
 }
 dropdown > div > div.dropdown-list > div > div > * {
-  height: 40px;
-  line-height: 40px !important;
+  height: 46px;
+  line-height: 46px !important;
   display: inline-block;
   vertical-align: middle;
 }
