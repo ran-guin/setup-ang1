@@ -63,8 +63,6 @@ block content
                 div.col-sm-4(ng-show="transfer_type !== 'Move'")
                   div.form-group(style='padding-top: 0px; padding-left: 40px')
                     label(for='target_format' style='padding-top: 0px')
-                      // b Into: 
-                      // span.lookup(id='Lookup-container_format' ng-init="loadLookup('container_format','', 'Select Target Format')")               
                     dropdown.mandatory#target_format(style='width:100%' placeholder='Target Format...' required list="MenuList['target_format']" selected="target_format" property='name' track='id' ng-init="setup_Menu('target_format','FK(container_format)')")        
               hr 
 
@@ -142,11 +140,11 @@ block content
               table.table()
                 tr
                   td(style='width:50%')
-                    h2 Source Samples: [ size: {{ Samples[0].box_size }} ]
+                    h2 Source Samples: [ size: {{ active.Samples[0].box_size }} ]
                     include SourceMap.jade
                     hr
                     // ul
-                      li(ng-repeat="source in Samples")
+                      li(ng-repeat="source in active.Samples")
                         b id={{source.id}} posn={{source.position}}
 
                     table
@@ -156,7 +154,7 @@ block content
                       tr(ng-repeat="row in source_rows")
                         td {{ row }}
                         td(ng-repeat="col in source_cols" style="background-color:#{{ rgbList[ $parent.$index*source_cols.length + $index ] }}" ) 
-                          span(data-toggle="tooltip" title="{{Samples[$parent.$index*source_cols.length + $index].id}}") &nbsp; &nbsp; &nbsp;
+                          span(data-toggle="tooltip" title="{{active.Samples[$parent.$index*source_cols.length + $index].id}}") &nbsp; &nbsp; &nbsp;
                   td(style='width:50%')
                     h2 Target Samples: [ size: {{ target_size }} ]
                     include TargetMap.jade
@@ -187,7 +185,7 @@ block content
               if debug 
 
                 div.alert.alert-warning Debugging Information:  (hidden in production)
-                  h2 Samples:  [{{ Samples.length }} samples]
+                  h2 Samples:  [{{ active.Samples.length }} samples]
                   h4 plate_ids: #{plate_ids}
                   h5 target: #{target}
                   h5 target_size: #{JSON.stringify(target_size)}
@@ -196,26 +194,26 @@ block content
                   
                   h4 
                     b Samples: 
-                    span {{ Samples[0] }}, {{ Samples[1] }} ...{{ Samples[Samples.length-1] }}
+                    span {{ active.Samples[0] }}, {{ active.Samples[1] }} ...{{ active.Samples[active.Samples.length-1] }}
                     p &nbsp;
                     b Target: {{ target }}
 
                   h4 
                     b Options:
                     ul
-                      li Split: {{ splitX }}
-                      li Split_mode: {{ split_mode }}
-                      li Pack: {{ pack }} : {{ pack_wells }}
-                      li Fill By: {{ fill_by }}
-                      li Transfer Qty: {{ transfer_qty }} {{ units_label }}
+                      li Split: {{ Options.splitX }}
+                      li Split_mode: {{ Options.split_mode }}
+                      li Pack: {{ Options.pack }} : {{ Options.pack_wells }}
+                      li Fill By: {{ Options.fill_by }}
+                      li Transfer Qty: {{ Transfer.transfer_qty }} {{ units }}
                       li Target Container: {{ Plate_Format }}
-                      li Transfer Type: {{ transfer_type }}
-                      li Available: {{ available }}
+                      li Transfer Type: {{ Options.transfer_type }}
+                      li Available: {{ Options.available }}
                       li Target Boxes: {{ target_boxes }}
                   hr
                   h4 Target: {{ target }}
                   hr
-                  h5 Options: {{ options }}
+                  h5 Options: {{ Options }}
                   hr
                   button(type='button' ng-click="redistribute()") Distribute
                   span &nbsp; &nbsp;
@@ -242,7 +240,7 @@ block content
 
                   table.table.table-bordered
                     tr(ng-repeat="colour in colours") 
-                        td(ng-repeat="hue in colourMap[colour]" style="background-color:#" + "{{hue}}" ) {{hue}}
+                        td(ng-repeat="hue in colourMap[colour]" style="background-color:#" + "{{hue}}" ) {{ hue }}
 
                   h3 Angular Transfer / Samples: 
                   b Transfer: {{ Map.Transfer }}

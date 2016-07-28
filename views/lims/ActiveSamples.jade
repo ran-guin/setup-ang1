@@ -1,32 +1,32 @@
 div.section-block.bg-info
     span Active Samples: 
-    b {{N}} x 
-    b(style='color:red') {{sample_type}} 
-    b in {{container_format}}
+    b {{ active.N }} x 
+    b(style='color:red') {{ active.sample_type }} 
+    b in {{ active.container_format }}
     span &nbsp;
 
-    button.btn.btn-primary.btn-sm(type='button' ng-show="!injectedAlready()" ng-click="injectData('/Container/summary','', plate_ids)") ?
+    button.btn.btn-primary.btn-sm(type='button' ng-show="!injectedAlready()" ng-click="injectData('/Container/summary','', active.plate_ids)") ?
     button.btn.btn-danger.btn-sm(type='button' ng-show='injectedAlready()' ng-click='uninjectData()') x    
 
     span.navbar.navbar-right 
 
-      button.btn.btn-primary.btn-sm(type='button' ng-show="include_parents && !injectedAlready('injectedHistory')" ng-click="injectData('/Container/history?include_parents=1','injectedHistory', plate_ids)") Long History
-      button.btn.btn-primary.btn-sm(type='button' ng-show="!include_parents && !injectedAlready('injectedHistory')" ng-click="injectData('/Container/history','injectedHistory', plate_ids)") Short History
+      button.btn.btn-primary.btn-sm(type='button' ng-show="include_parents && !injectedAlready('injectedHistory')" ng-click="injectData('/Container/history?include_parents=1','injectedHistory', active.plate_ids)") Long History
+      button.btn.btn-primary.btn-sm(type='button' ng-show="!include_parents && !injectedAlready('injectedHistory')" ng-click="injectData('/Container/history','injectedHistory', active.plate_ids)") Short History
       span &nbsp;
       input(type='checkbox' label='include Parent' ng-model='include_parents') 
       span &nbsp; include parents &nbsp; &nbsp; 
       button.btn.btn-danger.btn-sm(type='button' ng-show="injectedAlready('injectedHistory')" ng-click="uninjectData('injectedHistory')") x    
       span &nbsp; &nbsp; &nbsp; &nbsp;
 
-      b {{user}} &nbsp;
+      b {{ user }} &nbsp;
       span {{ timestamp }} &nbsp; &nbsp;
 
-    div(ng-show="Samples && Samples[0] && Samples[0].last_step")
+    div(ng-show="active.Samples && active.Samples[0] && active.Samples[0].last_step")
       hr
       u Progress: 
-      b {{Samples[0].last_protocol}} [ {{Samples[0].protocol_status}} ] &nbsp; &nbsp;
+      b {{ active.Samples[0].last_protocol }} [ {{ active.Samples[0].protocol_status}} ] &nbsp; &nbsp;
        
-      span (completed '{{Samples[0].last_step}}')  
+      span (completed '{{ active.Samples[0].last_step }}')  
 
 
 div#injectedData
