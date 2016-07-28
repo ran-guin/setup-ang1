@@ -211,48 +211,47 @@ module.exports = {
 		var identifier = model;
 
 		var select;
+		
+		var Mod = sails.models[model] || {};
+		
+		table = table || Mod.tableName || model;
 
-		if (sails.models[model]) {
-			var Mod = sails.models[model];
-			table = table || Mod.tableName || model;
+		if (Mod.lookupCondition) {
+			condition = condition + ' AND ' + Mod.lookupCondition;
+		}
 
-			if (Mod.lookupCondition) {
-				condition = condition + ' AND ' + Mod.lookupCondition;
-			}
+		if (Mod.alias) {
+			idField = Mod.alias.id || 'id';
+			nameField = Mod.alias.name || 'name';	
 
-			if (Mod.alias) {
-				idField = Mod.alias.id || 'id';
-				nameField = Mod.alias.name || 'name';	
+			console.log(table + " Set idField to alias: " + idField);	
+		}  
 
-				console.log(table + " Set idField to alias: " + idField);	
-			}  
+		
+		if (!prompt) { 
+			if (Mod.tableAlias) { prompt = '-- Select ' + Mod.tableAlias + ' --' }
+			else { prompt = '-- Select ' + model }
+		}
+		
+		// table = table.toLowerCase();
 
-			
-			if (!prompt) { 
-				if (Mod.tableAlias) { prompt = '-- Select ' + Mod.tableAlias + ' --' }
-				else { prompt = '-- Select ' + model }
-			}
-			
-			table = table.toLowerCase();
-
-			if (field && Mod.attributes[field] && Mod.attributes[field].enum) {
-				var options = Mod.attributes[field].enum;
-				if (render) {
-					return res.render('core/lookup', { table: table, identifier : identifier, data : { label : options}, prompt: field })
-				}
-				else {
-					return res.json(result);
-				}
-			}
-			else if (field) {
-				// retrieve distinct list of options from a particular field ... or ...
-				table = table || model;
-				select = " DISTINCT " + field + ' as label';
+		if (field && Mod.attributes[field] && Mod.attributes[field].enum) {
+			var options = Mod.attributes[field].enum;
+			if (render) {
+				return res.render('core/lookup', { table: table, identifier : identifier, data : { label : options}, prompt: field })
 			}
 			else {
-				// select all values from specified table as lookup .. 
-				select = idField + ' as id, ' + nameField + ' as label';
+				return res.json(result);
 			}
+		}
+		else if (field) {
+			// retrieve distinct list of options from a particular field ... or ...
+			table = table || model;
+			select = " DISTINCT " + field + ' as label';
+		}
+		else {
+			// select all values from specified table as lookup .. 
+			select = idField + ' as id, ' + nameField + ' as label';
 		}
 
 		console.log('generate ' + table + ' lookup ' + '; Render: ' + render);
@@ -263,7 +262,7 @@ module.exports = {
 		var extract = fields.split(':');
 */
 
-		var query = "Select " + select + " from " + table + " WHERE " + condition;
+		var query = "Select " + select + " FROM " + table + " WHERE " + condition;
 
 		console.log("Lookup Query: " + query);
 
