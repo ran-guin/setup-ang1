@@ -157,12 +157,14 @@ app.controller('FancyFormController',
 
                 if (list && list[0] && list[0].constructor === Object ) {
                     $scope.MenuList[element] = list;
+                    console.log(element + " object list = " + JSON.stringify(list));
                 }
                 else if (list && list[0] ) {
                     for (var i=0; i<list.length; i++) {
                         var id = i+1;
                         id = id.toString();
                         $scope.MenuList[element].push( { id: id, name: list[i] });
+                        console.log(element + " array list = " + JSON.stringify(list));
                         
                     }
                 }
@@ -422,10 +424,10 @@ app.controller('FancyFormController',
         restrict: "AEC",
         // templateURL: "templates/dropdown.html,
         template: " \
-            <div class=\"dropdown-container input-lg\" ng-class=\"{ show: listVisible }\"> \
+            <div class=\"dropdown-container\" ng-class=\"{ show: listVisible }\"> \
                 <div class=\"dropdown-display\" ng-click=\"show();\" ng-class=\"{ clicked: listVisible }\"> \
-                    <input class=\"placeholder\" ng-if=\"isPlaceholder\" style=\"padding: 5px; width:100%\" ng-model=\"search\" ng-keypress=\"filter($event)\" type=\"text\" placeholder =\"{{placeholder}}\"><\/input> \
-                    <input class=\"placeholder\" ng-show=\"!isPlaceholder\" style=\"border: 0px; padding: 5px; width:100%\" ng-model=\"search\" ng-keypress=\"filter($event)\" type=\"text\" placeholder =\"{{display}}\"><\/input> \
+                    <input class=\"placeholder input-lg\" ng-if=\"isPlaceholder\" style=\"padding: 5px; width:100%\" ng-model=\"search\" ng-keypress=\"filter($event)\" type=\"text\" placeholder =\"{{placeholder}}\"><\/input> \
+                    <input class=\"placeholder input-lg\" ng-show=\"!isPlaceholder\" style=\"border: 0px; padding: 5px; width:100%\" ng-model=\"search\" ng-keypress=\"filter($event)\" type=\"text\" placeholder =\"{{display}}\"><\/input> \
                     <i class=\"fa fa-angle-down\"><\/i> \
                 <\/div> \
                 <div class=\"dropdown-list\"> \
@@ -459,9 +461,10 @@ app.controller('FancyFormController',
 
             scope.select = function(item) {
                 scope.isPlaceholder = false;
-
                 if (scope.track) { scope.selected = item[scope.track] }
                 else { scope.selected = item }  // or just item for full object
+
+                scope.label = item[scope.property];
             };
 
             scope.filter = function(event) {
@@ -509,19 +512,20 @@ app.controller('FancyFormController',
             scope.choose = function (value) {
                 if (scope.track) { 
                     scope.isPlaceholder = (scope.selected === undefined || ! scope.selected);
-                    scope.display = scope.selected;
-                    console.log("SELECTED = " + scope.selected);
+                    // scope.display = scope.label;
                 }
                 else if (scope.selected) { 
                     scope.isPlaceholder = scope.selected[scope.property] === undefined;
-                    scope.display = scope.selected[scope.property];
-                    console.log("selected " + scope.display + ' : ' + scope.isPlaceholder);
+                    // scope.display = scope.selected[scope.property];
                 }
                 else {
                     scope.isPlaceholder = true;
                 }
+                
+                scope.display = scope.label;
 
                 console.log('reset display to ' + scope.display);
+                console.log("selected: " + JSON.stringify(scope.selected) + ' : ' + scope.property);
                 scope.search = '';
             };
 
@@ -602,6 +606,7 @@ app.controller('FancyFormController',
                 }
                 // scope.myModel = ui.item;
                 // scope.myModelId.selected = ui.item.id;
+                scope.selected    = ui.item;
 
                 scope.$apply();
                 return false;
@@ -612,6 +617,7 @@ app.controller('FancyFormController',
                 
                     // scope[attrs.ngModel] = null;
                     scope[attrs.ngModel + '_id']    = null;
+                    scope.selected = null;
                     console.log('clear');
                 }
             }
