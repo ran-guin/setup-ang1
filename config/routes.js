@@ -57,7 +57,7 @@ module.exports.routes = {
   'GET /login': 'UserController.login',
   'POST /login': 'UserController.login',
 
-  'GET /reset_password' : 'UserController.getNewPassword',
+  'POST /get_new_password' : 'UserController.getNewPassword',
   'POST /reset_password' : 'UserController.resetPassword',
 
   'GET /logout': 'UserController.logout',
@@ -113,7 +113,6 @@ module.exports.routes = {
 
   'POST /Record/search' : 'Record_APIController.search',
   'GET /Record/search' : 'Record_APIController.search',
-
 
   'POST /record/add/:model': 'Record_APIController.save',
   'POST /record/save' : 'Record_APIController.save',
