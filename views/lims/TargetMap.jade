@@ -7,6 +7,8 @@ h4 Target Map
 if !target_size
 	if Samples && Samples[0]
 		- target_size = Samples[0].box_size;
+	// else 
+		- target_size = '9x9'
 
 if target_size == '1'
 	- rows = ['A'];
@@ -42,9 +44,22 @@ div(ng-if="Map.Transfer && Map.TransferMap")
 										b {{ Map.Transfer[ batch['#{row}#{col}' ]['target_index']]['qty'] }}
 							div(ng-if="! batch['#{row}#{col}'] ")
 								div.wellmap(style='background-color: #666')
-									span &nbsp;	
+									span &nbsp;
+		p &nbsp;
+		b Transfer Options:	
+		ul
+			li fill_by: {{ map.Options.fill_by }}
+			li target_size: {{ map.Options.target_size }}
+			li transfer_type: {{ map.Options.transfer_type }}
+			li split: {{ map.Options.split }}
+			li pack: {{ map.Options.pack }}
 
-		div(ng-show='debug || 1')
-			hr
-			b Transfer : {{ JSON.stringify(Map.Transfer) }}
-			b Map : {{ Map.TransferMap }}
+div(ng-show='debug')
+	hr
+	b Map : {{ Map.TransferMap }}
+	br
+	b Transfer: {{ Map.Transfer }}
+	br
+	b Transfer Options: {{ map.Transfer }}
+	br
+	b Options: {{ map.Options }}
