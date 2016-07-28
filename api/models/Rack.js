@@ -307,7 +307,7 @@ module.exports = {
     var content_types = ['Plate','Solution'];
     
     var rack_ids;
-    if (rack_id && rack_id.constructor === Number) { rack_id = rack_id.toString() }
+    if (rack_id && rack_id.constructor === Number) { rack_ids = [ rack_id.toString() ] }
     else if (rack_id && rack_id.constructor === String && rack_id.match(/[a-zA-Z]/)) {
       var Scanned = Barcode.parse(rack_id);
       console.log("Scanned: " + JSON.stringify(Scanned));
@@ -327,10 +327,15 @@ module.exports = {
       rack_ids = [rack_id];
     }
 
+    console.log("Rack: rack_id / rack_name");
     // Box specific conditions //
     conditions.push("Rack.Rack_Type = 'Slot'");
 
     if (rack_ids && rack_ids.length) {
+      tables.push('Rack as Parent');
+      fields.push('Parent.Rack_Name as box_name');
+      fields.push('Parent.Rack_Alias as box_alias');
+      conditions.push("Parent.Rack_ID=Rack.FKParent_Rack__ID");
       conditions.push("Rack.FKParent_Rack__ID IN (" + rack_ids.join(',') + ')');
     }
     else if (rack_name) {
@@ -372,12 +377,13 @@ module.exports = {
     }
       
     var query = Record.build_query({tables: tables, fields: fields, left_joins: left_joins, conditions: conditions, group: ['Rack.Rack_ID'] , order: order });
+    
+    console.log("GET Rack Contents");
     console.log(query);
     Record.query_promise(query)
     .then ( function (data) {
  
-      console.log(query);
-      console.log(JSON.stringify(data));
+      // console.log(JSON.stringify(data));
 
       var contained = {};
       var available = {};
@@ -387,6 +393,7 @@ module.exports = {
         var contentData = {
           id : data[0].box_id,
           name : data[0].box_name,
+          slot : data[0].slot,
           alias : data[0].box_alias
         };
 
@@ -415,8 +422,8 @@ module.exports = {
 
         }
 
-        console.log("Contains: " + JSON.stringify(contained));
-        console.log("Available: " + JSON.stringify(available));
+        // console.log("Contains: " + JSON.stringify(contained));
+        // console.log("Available: " + JSON.stringify(available));
         
         contentData['contains'] = contained;
         contentData['available'] = available;
