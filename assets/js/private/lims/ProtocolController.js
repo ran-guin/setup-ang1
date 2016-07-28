@@ -6,85 +6,94 @@ function protocolController ($scope, $rootScope, $http, $q) {
 
     console.log('loaded protocol controller');        
     $scope.context = 'Protocol';
-    $scope.stepNumber = 1;
+
+    $scope.step = {};       // step specific attributes
+    $scope.protocol = {};   // protocol specific attributes
+    $scope.active = {};     // attributes of active samples
+
+    $scope.step.stepNumber = 1;
 
     $scope.initialize = function (config, options) {
+
+        $scope.initialize_mapper(config, options);
 
         if (config && config['Samples']) {
             // both protocol tracking and standard Container page 
  
             console.log("parsed: " + config['Samples'].constructor);
             if (config['Samples'].constructor === String) {
-                $scope.Samples = JSON.parse(config['Samples'])
+                $scope.active.Samples = JSON.parse(config['Samples'])
             }
             else {
-                $scope.Samples = config['Samples'] || {};   // array of sample info                
+                $scope.active.Samples = config['Samples'] || {};   // array of sample info                
             }
+
+            console.log("S #: " + $scope.active.Samples.length);
 
             $scope.load_Sample_info();
             console.log("loaded");
-            $scope.last_step = config['last_step'];
+            $scope.active.last_step = config['last_step'];
  
             $scope.load_Sample_info();
-            $scope.valid_plate_sets = [];
+            $scope.active.valid_plate_sets = [];
         }
 
         if (config && config['Steps'] && config['protocol']) { 
             console.log("loaded protocol steps");
             $scope.Steps = config['Steps'];
-            $scope.steps = $scope.Steps.length;
-            $scope.protocol = config['protocol'];
+            $scope.protocol.steps = $scope.Steps.length;
+            $scope.active.protocol = config['protocol'];
 
-            $scope.plate_set = config['plate_set'];
+            $scope.active.plate_set = config['plate_set'];
 
-            console.log("plate set " + $scope.plate_set);
+            console.log("plate set " + $scope.active.plate_set);
 
-            if ($scope.plate_set === 'new') {
+            if ($scope.active.plate_set === 'new') {
                 console.log("Generate New plate set...");
                 $scope.save_plate_set();
             }
             else { 
-                console.log("Retrieved existing plate set " + $scope.plate_set);
+                console.log("Retrieved existing plate set " + $scope.active.plate_set);
             }
 
-            if ($scope.last_step && $scope.last_step.protocol && $scope.protocol && $scope.last_step.protocol == $scope.protocol.name) {
-                console.log("noted last step: " + JSON.stringify($scope.last_step));
+            if ($scope.active.last_step && $scope.active.last_step.protocol && $scope.active.protocol && $scope.active.last_step.protocol == $scope.active.protocol.name) {
+                console.log("noted last step: " + JSON.stringify($scope.active.last_step));
                 for (var i=0; i<$scope.Steps.length; i++) {
-                    if ($scope.Steps[i].step_number === $scope.last_step.number) {
+                    if ($scope.Steps[i].step_number === $scope.active.last_step.number) {
                         if (i >= $scope.Steps.length-2) {
                             console.log("Already completed last step ...");
                             $scope.warnings.push('Already completed this step');
                         }
-                        else if ( $scope.last_step.status === 'Completed Protocol') {
-                            $scope.messages.push("Completed '" + $scope.last_step.protocol + "' protocol");
+                        else if ( $scope.active.last_step.status === 'Completed Protocol') {
+                            $scope.messages.push("Completed '" + $scope.active.last_step.protocol + "' protocol");
                         }
-                        else if ( $scope.last_step.status === 'Completed Transfer') {
-                            var format = $scope.Samples[0].container_format;
+                        else if ( $scope.active.last_step.status === 'Completed Transfer') {
+                            var format = $scope.active.Samples[0].container_format;
 
-                            if ($scope.last_step.name.match(format) ) {
+                            if ($scope.active.last_step.name.match(format) ) {
                                 console.log("Target plates found");
-                                $scope.stepNumber = i+2;
-                                $scope.messages.push("Continuing protocol after '" + $scope.last_step.name + "' ...");
+                                $scope.active.stepNumber = i+2;
+                                $scope.messages.push("Continuing protocol after '" + $scope.active.last_step.name + "' ...");
 
                             }
                             else {
-                                console.log($scope.last_step.name + ' not ' + format);
-                                $scope.stepNumber = i+1;
-                                $scope.messages.push("already completed '" + $scope.last_step.name + "' ... repeat if required or fetch target samples to continue protocol");
+                                console.log($scope.active.last_step.name + ' not ' + format);
+                                $scope.active.stepNumber = i+1;
+                                $scope.messages.push("already completed '" + $scope.active.last_step.name + "' ... repeat if required or fetch target samples to continue protocol");
                             }
                         }
                         else {
-                            $scope.stepNumber = i+2;
+                            $scope.active.stepNumber = i+2;
                             console.log("point to next step if applicable");
-                            $scope.messages.push("already completed: '" + $scope.last_step.name + "' ... continuing to next step");
+                            $scope.messages.push("already completed: '" + $scope.active.last_step.name + "' ... continuing to next step");
                         }
                         i = $scope.Steps.length; // stop here.. 
                     }
                 }
             }
             else {
-                console.log("Last Step : " + JSON.stringify($scope.last_step));
-                console.log("Protocol: " + JSON.stringify($scope.protocol));
+                console.log("Last Step : " + JSON.stringify($scope.active.last_step));
+                console.log("Protocol: " + JSON.stringify($scope.active.protocol));
                 $scope.messages.push("Starting new protocol " + $scope.timestamp);
             }
 
@@ -111,72 +120,63 @@ function protocolController ($scope, $rootScope, $http, $q) {
 
             $scope.SplitFields = {};
 
-            $scope.list_mode = 'serial';
+            $scope.step.list_mode = 'serial';
             $scope.listExamples = {
                 'serial' : " x,y,z... -> x,x, y,y, z,z ...",
                 'parallel' : " x,y,z... -> x,y,z... x,y,z...",
                 'split'    : " multiple values applied to respective splits",
             }; 
 
-            $scope.listExample = $scope.listExamples[$scope.list_mode];
+            $scope.step.listExample = $scope.listExamples[$scope.step.list_mode];
         }
         else {
             // No protocol loaded ... 
-            $scope.plate_set = 'new';  // set default .. 
+            $scope.active.plate_set = 'new';  // set default .. 
             $scope.get_plate_sets();
         }
 
-        $scope.LoadPoints = [{ Id: '1', Text: 'loadPointA' },{ Id: '2', Text: 'loadPointB' }];        
-        $scope.cargo = {
-            CargoItems: [{
-                LoadPoint: $scope.LoadPoints[0]
-            }, {
-                LoadPoint: $scope.LoadPoints[1]
-            }]
-        };
         console.log("initialization complete...");
 
     }
 
     $scope.exitThisProtocol = function exitThisProtocol () {
         console.log("Exit Protocol");
-        $scope.status = 'Completed';
+        $scope.protocol.status = 'Completed';
     }
 
     $scope.load_Sample_info = function load_Sample_info () {
-
         var ids = [];
-        for (var i=0; i<$scope.Samples.length; i++) {
-            if ($scope.Samples[i].id) { ids.push($scope.Samples[i].id) }
+        for (var i=0; i<$scope.active.Samples.length; i++) {
+            if ($scope.active.Samples[i].id) { ids.push($scope.active.Samples[i].id) }
         }
-        $scope.plate_list = ids.join(',');
-        $scope.plate_ids  = ids;
+        $scope.active.plate_list = ids.join(',');
+        $scope.active.plate_ids  = ids;
 
-        $scope.N = $scope.plate_ids.length;
+        $scope.active.N = $scope.active.plate_ids.length;
         
-        if ($scope.Samples[0] && $scope.Samples[0]['container_format']) {
-            $scope.container_format = $scope.Samples[0]['container_format'];
+        if ($scope.active.Samples[0] && $scope.active.Samples[0]['container_format']) {
+            $scope.active.container_format = $scope.active.Samples[0]['container_format'];
         }
-        else { $scope.container_format = 'undefined' }
+        else { $scope.active.container_format = 'undefined' }
 
-        if ($scope.Samples[0] && $scope.Samples[0]['sample_type']) {
-            $scope.sample_type = $scope.Samples[0]['sample_type'];
+        if ($scope.active.Samples[0] && $scope.active.Samples[0]['sample_type']) {
+            $scope.active.sample_type = $scope.active.Samples[0]['sample_type'];
         }
-        else { $scope.sample_type = 'undefined' }
+        else { $scope.active.sample_type = 'undefined' }
 
-        // console.log("Samples: " + $scope.plate_list);
+        // console.log("Samples: " + $scope.active.plate_list);
     }
 
     $scope.set_plate_set = function (set) {
-        $scope.plate_set = set;
+        $scope.active.plate_set = set;
     }
 
     $scope.get_plate_sets = function () {
 
-        var count = $scope.plate_ids.length;
+        var count = $scope.active.plate_ids.length;
         console.log("using " + count + ' ids');
 
-        var condition = " FK_Plate__ID IN (" + $scope.plate_ids.join(',') + ") GROUP BY Plate_Set_Number HAVING COUNT(*) = " + count;
+        var condition = " FK_Plate__ID IN (" + $scope.active.plate_ids.join(',') + ") GROUP BY Plate_Set_Number HAVING COUNT(*) = " + count;
         
         var searchData = {
             scope: { 'Plate_Set' : [ 'DISTINCT Plate_Set_Number as PS'] },
@@ -208,16 +208,16 @@ function protocolController ($scope, $rootScope, $http, $q) {
                 console.log("SAVE SET " + JSON.stringify(maxPS));
 
                 var data = [];
-                for (var i=0; i<$scope.Samples.length; i++) {
-                    var record = { FK_Plate__ID : $scope.Samples[i].id, Plate_Set_Number: maxPS+1 , FKParent_Plate_Set__Number: parent }    
+                for (var i=0; i<$scope.active.Samples.length; i++) {
+                    var record = { FK_Plate__ID : $scope.active.Samples[i].id, Plate_Set_Number: maxPS+1 , FKParent_Plate_Set__Number: parent }    
                     data.push(record);
                 }
                 
                 $http.post("Record/save", { model: 'plate_set', data: data} )
                 .then (function (result) {
-                    $scope.plate_set = maxPS + 1;
-                    console.log("SAVED Plate Set: " + $scope.plate_set);
-                    $scope.valid_plate_sets.push($scope.plate_set);
+                    $scope.active.plate_set = maxPS + 1;
+                    console.log("SAVED Plate Set: " + $scope.active.plate_set);
+                    $scope.valid_plate_sets.push($scope.active.plate_set);
                 })
                 .catch ( function (err) {
                     $scope.errors.push("Error saving plate set");
@@ -237,20 +237,21 @@ function protocolController ($scope, $rootScope, $http, $q) {
 
         var state = action || 'Completed';
 
-        $scope['status' + $scope.stepNumber] = state;
+        $scope['status' + $scope.step.stepNumber] = state;
 
-        $scope.stepNumber++;
+        $scope.step.stepNumber++;
         console.log('forward');
         $scope.reload();
     }
  
     $scope.back = function back() {
-        $scope.stepNumber--;
+        $scope.step.stepNumber--;
         console.log('back');
         $scope.reload();
     }
 
-    $scope.reset_Split_mode = function (fields) {
+    // OLD ??? 
+    $scope.reset_Split_fields = function (fields) {
         
         if (! fields) { fields = Object.keys($scope.SplitFields) }
 
@@ -261,16 +262,6 @@ function protocolController ($scope, $rootScope, $http, $q) {
 
     }
 
-    $scope.Prefix = function Prefix (model) {
-        var P = {
-            'solution' : 'Sol',
-            'plate' : 'BCG',
-            'location' : 'Loc',
-            'equipment' : 'Eqp'
-        };
-
-        return P[model];
-    }
 
     $scope.complete = function complete (action) {
 
@@ -289,9 +280,9 @@ function protocolController ($scope, $rootScope, $http, $q) {
             'FK_Lab_Protocol__ID' : $scope.Step['Lab_protocol'],
             'FK_Employee__ID' : 1, 
             'Prep_Action' : action,
-            'Prep_Comments' : $scope['comments' + $scope.stepNumber],
+            'Prep_Comments' : $scope['comments' + $scope.step.stepNumber],
             'Prep_DateTime' : $scope.timestamp,
-            // 'FK_Plate_Set__Number' : $scope.plate_set,  // legacy ... in Plate_Prep... 
+            // 'FK_Plate_Set__Number' : $scope.active.plate_set,  // legacy ... in Plate_Prep... 
          };
 
         console.log("PREP DATA: " + JSON.stringify(PrepData));
@@ -308,15 +299,15 @@ function protocolController ($scope, $rootScope, $http, $q) {
             'transfer_qty_units' : 'Transfer_Quantity_Units'
         };
 
-        $scope['plate_list_split'] = $scope.plate_list;  // test.. should be reverse split
-        console.log("split Data to " + $scope.N + ' values');
+        $scope['plate_list_split'] = $scope.active.plate_list;  // test.. should be reverse split
+        console.log("split Data to " + $scope.active.N + ' values');
 
-        var PlateData = $scope.splitData(PlateInfo, $scope.N, map);
+        var PlateData = $scope.splitData(PlateInfo, $scope.active.N, map);
 
-        console.log("load " + $scope.N + ' plate ids...');
-        for (var i=0; i<$scope.N; i++) {
-            PlateData[i]['FK_Plate__ID'] = $scope.Samples[i].id;
-            PlateData[i]['FK_Plate_Set__Number'] = $scope.plate_set;
+        console.log("load " + $scope.active.N + ' plate ids...');
+        for (var i=0; i<$scope.active.N; i++) {
+            PlateData[i]['FK_Plate__ID'] = $scope.active.Samples[i].id;
+            PlateData[i]['FK_Plate_Set__Number'] = $scope.active.plate_set;
         }       
 
         console.log("split " + $scope.input);
@@ -331,7 +322,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
             // Load Attribute Data 
             for (var i=0; i<$scope.attribute_list.length; i++) {
                 var att = $scope.Attributes[ $scope.attribute_list[i] ];
-                var key = att.name + $scope.stepNumber;
+                var key = att.name + $scope.step.stepNumber;
                 if (att.type == 'Count' && att.model == 'Plate') { 
                     $scope[key] = '<increment>';
                     PlateAttributes[att.id] = $scope[key];
@@ -357,10 +348,10 @@ function protocolController ($scope, $rootScope, $http, $q) {
         }
 
         var status = 'In Process';
-        if ( $scope.stepNumber >= $scope.steps ) { status = 'Complete' }
+        if ( $scope.step.stepNumber >= $scope.protocol.steps ) { status = 'Complete' }
 
         var data =  {
-            'ids': $scope.plate_ids,
+            'ids': $scope.active.plate_ids,
             'Prep' : PrepData,
             'Plate' : PlateData,
             'Plate_Attribute' : PlateAttributes,
@@ -372,30 +363,34 @@ function protocolController ($scope, $rootScope, $http, $q) {
 
         $scope.updateLookups();  // use lookup dropdowns to populate ng-model
 
-        console.log("Transfer ? : " + $scope.Step.transfer_type +  ' = ' + $scope.transfer_type);
-        if (action != 'Skipped' && $scope.Step.transfer_type) {
-
-            // Define Data ...
- 
-            // var Map = $scope.distribute($scope.Samples, Target, Options);  // change to promise (test.. )
- 
-            data['Transfer_Options'] = $scope.Map.Options;
-            data['Transfer'] = $scope.Map.Transfer;
-        } 
-
-        var loc = 'location' + $scope.stepNumber;
+        var loc = 'location' + $scope.step.stepNumber;
         if ( $scope[loc] ) {
             data['Move'] = $scope.SplitFields[loc] || $scope[loc];
             console.log("Move Sample(s) to: " + JSON.stringify(data['Move']) );
         }
 
-        console.log("Send: " + JSON.stringify(data));
-        console.log("Called: " + url);
+        console.log("Transfer ? : " + $scope.Step.transfer_type +  ' = ' + $scope.transfer_type);
 
-        if (action == 'Test') {
-            console.log('Targets: ' + JSON.stringify(data['Targets']));
-        }
-        else {
+        var promises = [];
+        if (action != 'Skipped' && $scope.Step.transfer_type) {
+            // Define Data ...
+            // promises.push( $scope.distribute() ); 
+            console.log("queue distribution..."); 
+            $scope.distribute(); // WellMapper call ... 
+            console.log('distributed');
+        } 
+
+        $q.all(promises)
+        .then (function (result) {
+
+            console.log("Call url: " + url);
+
+            console.log(JSON.stringify(result));
+            if (promises.length) { 
+                data['Transfer_Options'] = $scope.Map.Options;
+                data['Transfer'] = $scope.Map.Transfer;
+            }
+
             console.log("post: " + JSON.stringify(data));
             $http.post(url, data)
             .then ( function (returnVal) {
@@ -420,8 +415,8 @@ function protocolController ($scope, $rootScope, $http, $q) {
                     if ($scope.Step.transfer_type && ! $scope.Step.reset_focus && result.Samples) {
                         console.log("Focus on " + result.Samples.length + " new Sample records ");
 
-                        $scope.Samples = result.Samples;
-                        $scope.save_plate_set( $scope.plate_set );
+                        $scope.active.Samples = result.Samples;
+                        $scope.save_plate_set( $scope.active.plate_set );
                         $scope.load_Sample_info();
                         /*
                         var promiseResults = result;
@@ -432,7 +427,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
                             if (promiseResults[i].Samples) {
                                 console.log("Found regenerated sample list..." + i);
                                 console.log( JSON.stringify(promiseResults[i].Samples) );
-                                $scope.Samples = promiseResults[i].Samples;
+                                $scope.active.Samples = promiseResults[i].Samples;
                 
                                 $scope.load_Sample_info();
                             }
@@ -446,13 +441,13 @@ function protocolController ($scope, $rootScope, $http, $q) {
                         console.log("RETAINED focus " + $scope.Step.reset_focus);
                     }
 
-                    if ($scope.stepNumber < $scope.steps) {
+                    if ($scope.step.stepNumber < $scope.protocol.steps) {
                         console.log('completed... go to next step');
                         $scope.forward(action)
                     }
                     else {
-                        $scope.status = 'Completed';
-                        $scope.messages.push("Completed '" + $scope.protocol.name + "'' Protocol")
+                        $scope.protocol.status = 'Completed';
+                        $scope.messages.push("Completed '" + $scope.active.protocol.name + "'' Protocol")
                     }
                 }
 
@@ -464,7 +459,11 @@ function protocolController ($scope, $rootScope, $http, $q) {
                 console.log("Encountered error : " + err);
                 $scope.error(err);
             });
-        }
+        })
+        .catch (function (err) {
+            console.log("");
+            $scope.error(err);
+        })
     }
 
     /* Retrieve data from fields which are splittable ... eg may accept different values for each of N plate_ids based on comma-delimited list */
@@ -474,7 +473,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
             recordData[n] = {};
             for (var i=0; i< input.length; i++) {
                 var fld = input[i];
-                var key = fld + $scope.stepNumber;
+                var key = fld + $scope.step.stepNumber;
 
                 var mapped = fld;  /* Enable option for mapping field to custom name */
                 if (map && map[fld]) {
@@ -498,8 +497,14 @@ function protocolController ($scope, $rootScope, $http, $q) {
     $scope.splitField = function splitField (field, separator) {
 
         var input = $scope[field];
+        console.log("ENTER SPLITFIELD " + field + " : " + input);
+        if (field.match(/split/i)) {
+            console.log("reset specs");
+            $scope.step.fill_by = 'column';
+            $scope.distribute();
+        }
 
-        var trim = new RegExp($scope.stepNumber + '$');
+        var trim = new RegExp($scope.step.stepNumber + '$');
         var model = field.replace(trim,'');
 
         var prefix = $scope.Prefix(model);
@@ -520,12 +525,12 @@ function protocolController ($scope, $rootScope, $http, $q) {
 
             var input_array = input.split(splitExpr);
   
-            var split = $scope['Split' + $scope.stepNumber];          
+            var split = $scope['Split' + $scope.step.stepNumber];          
             if (split > 1 ) {
                 console.log("Require split to be " + split);
                 if (input_array.length > 1 && input_array.length != split) {
                     $scope.errMsg = "Multiple value count must match split count";
-                    $scope['form' + $scope.stepNumber].$invalid = true;
+                    $scope['form' + $scope.step.stepNumber].$invalid = true;
                     console.log("FAIL");
                 }
             }
@@ -534,8 +539,8 @@ function protocolController ($scope, $rootScope, $http, $q) {
 
             console.log('test: ' + JSON.stringify(input_array) );
 
-            var split = $scope['Split' + $scope.stepNumber] || 1;
-            var Nx = $scope.N * split;
+            var split = $scope['Split' + $scope.step.stepNumber] || 1;
+            var Nx = $scope.active.N * split;
             var entered = input_array.length;
 
             var factor = Nx / entered;
@@ -548,9 +553,9 @@ function protocolController ($scope, $rootScope, $http, $q) {
                  $scope.formDisabled  = false;
             }
             else {
-                // $scope.errMsg = "# of entered values must be factor of " + $scope.N;
-                $scope[field+'_errors'] = "# of entered values must be factor of " + $scope.N;
-                $scope.errors.push("# of entered values must be factor of " + $scope.N);
+                // $scope.errMsg = "# of entered values must be factor of " + $scope.active.N;
+                $scope[field+'_errors'] = "# of entered values must be factor of " + $scope.active.N;
+                $scope.errors.push("# of entered values must be factor of " + $scope.active.N);
                 $scope.formDisabled  = true;
            }
 
@@ -590,7 +595,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
             $scope.SplitFields[field] = array;
  
             if (entered > 1) { 
-                $scope['ListTracking' + $scope.stepNumber] = true;
+                $scope['ListTracking' + $scope.step.stepNumber] = true;
             }  
 
             console.log("\n** SPLIT: " + $scope[field] + ' OR ' + $scope[field + '_split']);
@@ -607,12 +612,12 @@ function protocolController ($scope, $rootScope, $http, $q) {
 
     $scope.reset_list_mode = function reset_list_mode ( mode ) {
 
-        if ($scope['Split' + $scope.stepNumber] > 1) {
+        if ($scope['Split' + $scope.step.stepNumber] > 1) {
             $scope.list_mode = 'split';
         }
         else {
             $scope.list_mode = mode;
-            // $scope.list_mode = $scope['list_mode' + $scope.stepNumber];
+            // $scope.list_mode = $scope['list_mode' + $scope.step.stepNumber];
         }
 
         $scope.listExample = $scope.listExamples[$scope.list_mode];            
@@ -620,11 +625,14 @@ function protocolController ($scope, $rootScope, $http, $q) {
     }
 
     $scope.distribute = function distribute () {
-        var targetKey = 'transfer_type' + $scope.stepNumber;
+        console.log("Distribute samples...");
+        var deferred = $q.defer(); 
 
-        var qty = $scope['transfer_qty' + $scope.stepNumber];
-        if ( $scope['transfer_qty' + $scope.stepNumber + '_split']) {
-            qty = $scope['transfer_qty' + $scope.stepNumber + '_split'].split(',');
+        var targetKey = 'transfer_type' + $scope.step.stepNumber;
+
+        var qty = $scope['transfer_qty' + $scope.step.stepNumber];
+        if ( $scope['transfer_qty' + $scope.step.stepNumber + '_split']) {
+            qty = $scope['transfer_qty' + $scope.step.stepNumber + '_split'].split(',');
         }  
         var qty_units = $scope['units_label'];
         console.log("Q = " + JSON.stringify(qty) + ' ' + qty_units);
@@ -636,15 +644,21 @@ function protocolController ($scope, $rootScope, $http, $q) {
             'qty_units'     : qty_units,
         };
 
+        var split = $scope['Split' + $scope.step.stepNumber] || $scope.Step['split'];
+        var fill =  $scope.map.fill_by || $scope.Step['fill_by'];
+        
         var Options = {
             'transfer_type' : $scope.Step.transfer_type,
             'reset_focus'   : $scope.Step.reset_focus,
-            'split'         : $scope.Step['split'],   // $scope['Split' + $scope.stepNumber],
+            'split'         : $scope['Split' + $scope.step.stepNumber] || $scope.Step['split'],   // $scope['Split' + $scope.step.stepNumber],
             'pack'          : $scope.Step['pack'],    // $scope.pack_wells,
-            'distribution_mode' : $scope['distribution_mode' + $scope.stepNumber],
-            'fill_by'  : $scope.Step['fill_by'],
+            'distribution_mode' : $scope['distribution_mode' + $scope.step.stepNumber],
+            'fill_by'  : $scope.map.fill_by || $scope.Step['fill_by'],
             'target_size' : $scope.Step['target_size'],
         }
+        
+        console.log(" S: " + split + "; F: " + fill);
+
 
         console.log("Distribute: ");
         console.log("Target: " + JSON.stringify(Target));
@@ -654,28 +668,32 @@ function protocolController ($scope, $rootScope, $http, $q) {
 
         console.log("New Map: " + JSON.stringify(newMap));
 
-        newMap.from($scope.Samples);
+        newMap.from($scope.active.Samples);
         $scope.newMap = newMap;
 
         // $scope.Map = $scope.newMap.distribute(Sources, Target, Options);
         
         console.log("call well redistribution...");
-        $scope.redistribute(Target, Options)
+        $scope.redistribute_Samples($scope.active.Samples, Target, Options)
         .then ( function (Map) {
-            // $scope.Map = Map;
-
-            var warnings = $scope.Map.warnings;
+            var warnings = Map.warnings;
             if (warnings && warnings.length) { $scope.warnings = warnings }
 
-            console.log("map: " + JSON.stringify($scope.Map));
+            console.log("\n*** Distribution Map: " + JSON.stringify(Map));
+            
+            $scope.Map = Map.Map;
+            $scope.map.Options = Map.Options;
+            $scope.map.Transfer = Map.Transfer;
 
-            return $scope.Map;
+            deferred.resolve(Map);
         })
         .catch ( function (err) {
             console.log("Error calling redistribute");
             console.log(err);
-            return {};
+            deferred.reject(err);
         });
+
+        return deferred.promise;
     }
 
     $scope.showErrors = function showErrors() {
@@ -701,7 +719,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
 
     $scope.reload = function reload () {
 
-        $scope.Step = $scope.Steps[$scope.stepNumber-1];
+        $scope.Step = $scope.Steps[$scope.step.stepNumber-1];
 
         if (! $scope.Step ) { $scope.error("No Steps Defined for this Protocol !") }
         else {
@@ -729,7 +747,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
                 var input = $scope.input[i];
                 var mandatory = input.match(/\*$/);
                 var key = input.replace('*','');
-                var id = key + $scope.stepNumber;
+                var id = key + $scope.step.stepNumber;
 
                 $scope.Show[key] = true;
                 if ($scope.defaults.length > i) {
@@ -740,7 +758,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
                             console.log(JSON.stringify(units));
 
                             $scope.Default[key + '_units'] = units[0]; // units only
-                            $scope[key + '_units' + $scope.stepNumber] = units[0];
+                            $scope[key + '_units' + $scope.step.stepNumber] = units[0];
                             def = def.replace(units[0],''); // strip units 
                         }
                         $scope.Default[key] = def;          // value only
@@ -755,7 +773,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
                 if ($scope.formats.length > i) { $scope.Format[key] = $scope.formats[i] }
             }
             console.log("Attributes: " + JSON.stringify(Attributes));
-            console.log("Step: " + $scope.stepNumber + ' / ' + $scope.steps);
+            console.log("Step: " + $scope.step.stepNumber + ' / ' + $scope.protocol.steps);
             console.log("Step: " + JSON.stringify($scope.Step));
             console.log("Show: " + JSON.stringify($scope.Show));
             console.log("Defaults: " + JSON.stringify($scope.Default));
@@ -773,20 +791,20 @@ function protocolController ($scope, $rootScope, $http, $q) {
             Opts = JSON.parse(custom_options)
         }
 
-        var keys = ['split', 'pack', 'fill_by', 'Target_format', 'Target_sample', 'transfer_type', 'reset_focus'];
+        var keys = $scope.mapping_keys;
         for (var i=0; i<keys.length; i++) {
-            if ( $scope[ keys[i] + $scope.stepNumber ] ) {
-                $scope.Step[keys[i]] = $scope[ keys[i] + $scope.stepNumber];
+            if ( $scope[ keys[i] + $scope.step.stepNumber ] ) {
+                $scope.Step[keys[i]] = $scope[ keys[i] + $scope.step.stepNumber];
                 console.log("manually set custom key: " + keys[i] + ' = ' + $scope[ keys[i]]);
             }
             else if (Opts[keys[i]]) {
-                $scope.Step[keys[i]] = $scope[ keys[i] + $scope.stepNumber] || Opts[keys[i]];
+                $scope.Step[keys[i]] = $scope[ keys[i] + $scope.step.stepNumber] || Opts[keys[i]];
                 console.log("Custom: " + keys[i] + ' = ' + Opts[keys[i]]);
             }
         }
 
         if ($scope.Step['transfer_type'] && ! $scope.Step['target_size']) {
-            $scope.Step['target_size'] = $scope.Samples[0].box_size;
+            $scope.Step['target_size'] = $scope.active.Samples[0].box_size;
             console.log("Use box size of original sample: " + $scope.Step['target_size']);
         }
 
