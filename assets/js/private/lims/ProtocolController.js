@@ -15,7 +15,6 @@ function protocolController ($scope, $rootScope, $http, $q) {
 
     $scope.initialize = function (config, options) {
 
-        $scope.initialize_mapper(config, options);
 
         if (config && config['Samples']) {
             // both protocol tracking and standard Container page 
@@ -39,7 +38,11 @@ function protocolController ($scope, $rootScope, $http, $q) {
         }
 
         if (config && config['Steps'] && config['protocol']) { 
+         
+            $scope.initialize_mapper(config, options);
+           
             console.log("loaded protocol steps");
+            
             $scope.Steps = config['Steps'];
             $scope.protocol.steps = $scope.Steps.length;
             $scope.active.protocol = config['protocol'];
