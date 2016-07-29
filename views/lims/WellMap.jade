@@ -15,6 +15,7 @@ block content
     div(ng-app='myApp')
      div(ng-controller="SharedController")
       div(ng-controller="FancyFormController")
+       div(ng-controller="LIMSController")
         div(ng-controller="WellMapperController", ng-init="#{init2}")
           div(ng-controller='WellController', ng-init="#{init1}")
             br
@@ -32,89 +33,89 @@ block content
               div.form-group
                 div.col-sm-4
                   label
-                    input.input(type='radio' value = 'Move' ng-model="transfer_type" ng-click="validate_Form()")
+                    input.input(type='radio' value = 'Move' ng-model="map.transfer_type" ng-click="validate_Form()")
                     b &nbsp; Move &nbsp;
                   label
-                    input(type='radio' value = 'Aliquot' ng-model="transfer_type" ng-click="validate_Form()")
+                    input(type='radio' value = 'Aliquot' ng-model="map.transfer_type" ng-click="validate_Form()")
                     b &nbsp; Aliquot &nbsp;                
                   label
-                    input(type='radio' value = 'Transfer' ng-model="transfer_type" ng-click="validate_Form()") 
+                    input(type='radio' value = 'Transfer' ng-model="map.transfer_type" ng-click="validate_Form()") 
                     b &nbsp; Transfer &nbsp; 
                   br
-                  span(ng-show="transfer_type === 'Transfer'" style='color:red') Note: Current tubes are thrown out during 'Transfer'<BR>(use 'Aliquot' to only remove portion of original sample) 
-                  span(ng-show="transfer_type === 'Move'" style='color:red') Note: Sanples remain in their current tube containers<BR>(use 'Aliquot' or 'Transfer' to move samples to new tubes) 
 
-                div.col-sm-4(ng-show="transfer_type !== 'Move'")
+                  span(ng-show="map.transfer_type === 'Transfer'" style='color:red') Note: Current tubes are thrown out during 'Transfer'<BR>(use 'Aliquot' to only remove portion of original sample) 
+                  span(ng-show="map.transfer_type === 'Move'" style='color:red') Note: Sanples remain in their current tube containers<BR>(use 'Aliquot' or 'Transfer' to move samples to new tubes) 
+
+                div.col-sm-4(ng-show="map.transfer_type !== 'Move'")
                   div.form-group
                     table
                       tr
                         td(width='100%')
                           // preaddon & addon custom css only necessary for special type: dropdown 
-                          input.input-lg.preaddon#transfer_qty(type='text' aria-describedBy='tqu' placeholder=' -- Transfer Qty --', ng-model='transfer_qty' ng-blur="redistribute()" size='16' ng-disabled="transfer_type=='Pre-Print'")
+                          input.input-lg.preaddon#transfer_qty(type='text' aria-describedBy='tqu' placeholder=' -- Transfer Qty --', ng-model='map.transfer_qty' ng-blur="redistribute()" size='16' ng-disabled="map.transfer_type=='Pre-Print'")
                           // span.lookup(id='Lookup-units' ng-init="loadLookup('units','','units')")
                         
                         // include Units.jade
                         td
-                          dropdown.mandatory.mini-dropdown.addon#transfer_qty_units(placeholder='units..' list="MenuList['transfer_qty_units']" selected="transfer_qty_units" property='name' track='name', ng-init="setup_Menu('transfer_qty_units','ml,ul,nl')") 
+                          dropdown.mandatory.mini-dropdown.addon#transfer_qty_units(placeholder='units..' list="MenuList['map.transfer_qty_units']" selected="map.transfer_qty_units" property='name' track='name', ng-init="setup_Menu('map.transfer_qty_units','ml,ul,nl')") 
                   br
                   span(style='color: red' ng-show='transfer_qty_errors || units_errors') Transfer Qty + Units Required
-                  span(style='color: red' ng-show="transfer_type === 'Transfer'") Defaults to entire volume in original tube(s)
+                  span(style='color: red' ng-show="map.transfer_type === 'Transfer'") Defaults to entire volume in original tube(s)
 
-                div.col-sm-4(ng-show="transfer_type !== 'Move'")
+                div.col-sm-4(ng-show="map.transfer_type !== 'Move'")
                   div.form-group(style='padding-top: 0px; padding-left: 40px')
-                    label(for='target_format' style='padding-top: 0px')
-                    dropdown.mandatory#target_format(style='width:100%' placeholder='Target Format...' required list="MenuList['target_format']" selected="target_format" property='name' track='id' ng-init="setup_Menu('target_format','FK(container_format)')")        
+                    label(for='map.target_format' style='padding-top: 0px')
+                    dropdown.mandatory#target_format(style='width:100%' placeholder='Target Format...' required list="MenuList['map.target_format']" selected="map.target_format" property='name' track='id' ng-init="setup_Menu('map.target_format','FK(container_format)')")        
               hr 
 
               div.form-group
                 div.col-sm-4
-                  div(ng-show="transfer_type !== 'Move'")
+                  div(ng-show="map.transfer_type !== 'Move'")
                     b &nbsp; Split X: 
-                    input.input-lg(name='splitX' ng-model='splitX' type='text' ng-change="redistribute()" size='3' default='1' tooltip="example")
+                    input.input-lg(name='splitX' ng-model='map.splitX' type='text' ng-change="redistribute()" size='3' default='1' tooltip="example")
 
                 div.col-sm-4
                   div
                     b Pack by: 
                       label
-                        input(type='radio' value = 'row' ng-model="fill_by" ng-click="redistribute();") 
-                        // reset_fill_by(); 
+                        input(type='radio' value = 'row' ng-model="map.fill_by" ng-click="redistribute();") 
+                        // reset_map.fill_by(); 
                         b &nbsp; Row &nbsp;
                       label
-                        input(type='radio' value = 'column' ng-model="fill_by" ng-click="redistribute();")
+                        input(type='radio' value = 'column' ng-model="map.fill_by" ng-click="redistribute();")
                         b &nbsp; Column &nbsp;
                       label
-                        input(type='radio' value = 'position' ng-model="fill_by" ng-click="redistribute();")
+                        input(type='radio' value = 'position' ng-model="map.fill_by" ng-click="redistribute();")
                         b &nbsp; Slot &nbsp;
                 div.col-sm-4
                     div &nbsp; 
                       b {{ fillExample }}
 
-              div.form-group(ng-show="splitX > 1 && fill_by != 'position'")
+              div.form-group(ng-show="map.splitX > 1 && map.fill_by != 'position'")
                 br
                 div.col-sm-4
                     b Distribution: 
                     label
-                      input(type='radio' value = 'serial' ng-model="split_mode" ng-click="reset_split_mode(); redistribute();") 
+                      input(type='radio' value = 'serial' ng-model="map.split_mode" ng-click="reset_split_mode(); redistribute();") 
                       b &nbsp; Serial &nbsp;
                     label
-                      input(type='radio' value = 'parallel' ng-model="split_mode" ng-click="reset_split_mode(); redistribute();")
+                      input(type='radio' value = 'parallel' ng-model="map.split_mode" ng-click="reset_split_mode(); redistribute();")
                       b &nbsp; Parallel &nbsp;
                 div.col-sm-4
                   div(ng-show="split_mode === 'serial' ")
                     b in groups of: 
                     label
-                      input.input-lg(name='pack_wells' type='text' size='6'  ng-model="pack_wells" ng-change="redistribute()")
+                      input.input-lg(name='pack_wells' type='text' size='6'  ng-model="map.pack_wells" ng-change="redistribute()")
                 div.col-sm-4
                     div &nbsp; 
-
-                      b(ng-show="!packExample") {{ splitExample }}
+                      b(ng-show="!map.packExample") {{ splitExample }}
                       br
                       b {{ packExample }}
 
               hr
 
               div.form-group
-                div.col-sm-4(ng-show="transfer_type !== 'Move'")
+                div.col-sm-4(ng-show="map.transfer_type !== 'Move'")
                   span IF different Sample Type is being extracted:
                   br
                   // span.lookup(id='Lookup-sample_type' ng-init="loadLookup('sample_type','', 'Extract ?')")
@@ -123,14 +124,14 @@ block content
                 div.col-sm-4
                   b Target : 
                   div
-                    input.input-lg(type='text' required name='target_rack' size=12 ng-model='target_rack' ng-blur="validate_target(); redistribute();" placeholder='-- Scan Loc# --')
+                    input.input-lg(type='text' required name='map.target_rack' size=12 ng-model='map.target_rack' ng-blur="validate_target(); redistribute();" placeholder='-- Scan Loc# --')
                 div.col-sm-4 &nbsp;
-                  button.btn.btn-lg.btn-primary(type='button' ng-click="redistribute(); execute_transfer();" ng-disabled="!form_validated || (transfer_type !== 'Move' && !target_format) || !target_rack") Relocate Samples
+                  button.btn.btn-lg.btn-primary(type='button' ng-click="redistribute(); execute_transfer();" ng-disabled="!form_validated || (map.transfer_type !== 'Move' && !map.target_format) || !map.target_rack") Relocate Samples
                   p &nbsp;
-                  input(type='radio' ng-click="use_custom_settings()") 
-                  span &nbsp; Custom x 3 sub-aliquot
+                  input(type='radio' ng-click="custom_distribution('Matrix'); redistribute();") 
+                  span &nbsp; Custom Matrix sub-aliquot
                   br
-                  input(type='radio' ng-click="set_to_default(); redistribute()") 
+                  input(type='radio' ng-click="set_defaults(); redistribute()") 
                   span &nbsp; Reset Defaults
               
               p &nbsp;
@@ -156,12 +157,12 @@ block content
                         td(ng-repeat="col in source_cols" style="background-color:#{{ rgbList[ $parent.$index*source_cols.length + $index ] }}" ) 
                           span(data-toggle="tooltip" title="{{active.Samples[$parent.$index*source_cols.length + $index].id}}") &nbsp; &nbsp; &nbsp;
                   td(style='width:50%')
-                    h2 Target Samples: [ size: {{ target_size }} ]
+                    h2 Target Samples: [ size: {{ map.target_size }} ]
                     include TargetMap.jade
                     hr
                     // ul
                       li(ng-repeat="xfer in Map.Xfer")
-                        b {{xfer.source_position}} -> {{xfer.target_position}} : id={{xfer.source_id}} [ {{xfer.qty}} {{xfer.qty_units}}]
+                        b {{xfer.source_position}} -> {{xfer.map.target_position}} : id={{xfer.source_id}} [ {{xfer.qty}} {{xfer.qty_units}}]
 
                     - var i = 0;
                     each plate in targets
@@ -182,7 +183,7 @@ block content
                                     b #{plateMap[index]} 
                                   else 
                                     b 0
-              if debug 
+              if debug || 1
 
                 div.alert.alert-warning Debugging Information:  (hidden in production)
                   h2 Samples:  [{{ active.Samples.length }} samples]
@@ -204,12 +205,12 @@ block content
                       li Split: {{ Options.splitX }}
                       li Split_mode: {{ Options.split_mode }}
                       li Pack: {{ Options.pack }} : {{ Options.pack_wells }}
-                      li Fill By: {{ Options.fill_by }}
+                      li Fill By: {{ Options.map.fill_by }}
                       li Transfer Qty: {{ Transfer.transfer_qty }} {{ units }}
                       li Target Container: {{ Plate_Format }}
                       li Transfer Type: {{ Options.transfer_type }}
                       li Available: {{ Options.available }}
-                      li Target Boxes: {{ target_boxes }}
+                      li Target Boxes: {{ map.target_boxes }}
                   hr
                   h4 Target: {{ target }}
                   hr
