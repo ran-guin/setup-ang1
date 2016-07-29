@@ -12,7 +12,8 @@ block content
   p &nbsp;
   div.container
      div(ng-app='myApp')
-      div(ng-controller="SharedController")
+      div(ng-controller="SharedController")       
+       div(ng-controller="LIMSController")
         div(ng-controller="FancyFormController")
           div(ng-controller="ProtocolController" ng-init="#{init}")
           
