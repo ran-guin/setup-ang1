@@ -8,24 +8,20 @@ function wellController ($scope, $rootScope, $http, $q ) {
 
     $scope.context = 'Wells';
 
-    var map = {};
-    
-    $scope.map = {};
-    $scope.active = {};
-    $scope.active.Samples = [];
-
     $scope.initialize = function initialize(Config, options) {
 
         $scope.initialize_mapper(Config, options);
 
         console.log("initialize Well Controller");
-        // console.log("CONFIG: " + JSON.stringify(Config));
-        
+
         $scope.Config = Config;
 
-        $scope.active.Samples = Config['Samples'] || [];
-        $scope.active.plate_ids = Config['plate_ids'];
-        // console.log("Samples: " + $scope.active.Samples);
+        var Samples = Config['Samples'] || [];
+        if (Samples.length) {
+            console.log("Load " + Samples.length + ' Samples ');
+            $scope.load_active_Samples(Samples);
+        }
+        console.log("Loaded " + $scope.active.Samples.length + ' Samples ');
         console.log("source 1: " + $scope.active.Samples[0]);
 
         $scope.targets = [];
@@ -34,13 +30,6 @@ function wellController ($scope, $rootScope, $http, $q ) {
         $scope.options = Config['Options'];
         $scope.sizes   = Config['sizes'];
 
-        //$scope.source_size = Config['size'] || $scope.sizes[0];
-        if (Config['target_size']) {
-            // Transfer UI 
-            $scope.target_size    = Config['target_size'] || $scope.sizes[0];
-        }
-        
-        $scope.map = Config['map'] || {}; 
         $scope.target_rows = $scope.target.rows || ['A'];
         $scope.target_cols = $scope.target.cols || [1];
 
@@ -66,20 +55,20 @@ function wellController ($scope, $rootScope, $http, $q ) {
 
         console.log("QTY: " + $scope.transfer_qty);
         var Target = { 
-            'Container_format' : $scope.target_format,
-            'Sample_type'   : $scope.target_sample,
-            'qty'           : $scope.transfer_qty,
-            'qty_units'     : $scope.transfer_qty_units,
+            'Container_format' : $scope.map.target_format,
+            'Sample_type'   : $scope.map.target_sample,
+            'qty'           : $scope.map.transfer_qty,
+            'qty_units'     : $scope.map.transfer_qty_units,
         };
 
         var Options = {
-        'transfer_type' : $scope.map.transfer_type,
-            'reset_focus'   : $scope.reset_focus,
-            'split'         : $scope.splitX,   // $scope['Split' + $scope.stepNumber],
-            'pack'          : $scope.pack,    // $scope.pack_wells,
-            'distribution_mode' : $scope.distribution_mode,
-            'fill_by'  : $scope.fill_by,
-            'target_size' : $scope.target_size,
+            'transfer_type' : $scope.map.transfer_type,
+            'reset_focus'   : $scope.map.reset_focus,
+            'split'         : $scope.map.splitX,   // $scope['Split' + $scope.stepNumber],
+            'pack'          : $scope.map.pack,    // $scope.pack_wells,
+            'distribution_mode' : $scope.map.distribution_mode,
+            'fill_by'  :    $scope.map.fill_by,
+            'target_size' : $scope.map.target_size,
         }
 
         console.log("Redistribute ... ");
@@ -87,7 +76,7 @@ function wellController ($scope, $rootScope, $http, $q ) {
         $scope.redistribute_Samples($scope.active.Samples, Target, Options)
         .then ( function (result) {
             console.log("MAP: " + JSON.stringify(result.Map));
-            $scope.Map = result.Map;
+            // $scope.Map = result.Map;
             $scope.test = "ERE";
         })
         .catch ( function (err) {
@@ -167,35 +156,6 @@ function wellController ($scope, $rootScope, $http, $q ) {
                 $scope.error("Error parsing custom options");
             }
         }
-    }
-
-    $scope.use_custom_settings  = function use_custom_settings() {
-
-        var volumes = _.pluck($scope.active.Samples, 'qty');
-        var version = '[mid qty version]';
-
-        var min = _.min(volumes);
-        var max = _.max(volumes);
-
-        $scope.messages.push("Original Volumes Detected: Minimum: " + min + '; Maximum: ' + max );
-
-        if (volumes.length && min > 1.0 ) {
-            $scope.splitX = 5;
-            $scope.transfer_qty = "200,200,500,500,100";
-            $scope.redistribute();
-        }
-        else {
-            $scope.splitX = 4;
-
-            $scope.transfer_qty = "200,200,500,100";
-            $scope.redistribute();            
-        }
-
-        $scope.pack_wells = 8;
-        $scope.fill_by = 'column';
-        $scope.split_mode = 'serial';
- 
-        $scope.messages.push("Using Custom Data Matrix Sample Distribution Settings " + version);
     }
 
     $scope.distribute = function distribute() {
