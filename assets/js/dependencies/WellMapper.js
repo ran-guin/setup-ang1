@@ -41,6 +41,8 @@ function wellMapper() {
     this.rgbList = [];
     this.Map = {};
 
+    this.sample_remaining = {};
+
     this.colourMap = function (length, options) {
 
         if (!options) { options = {} }
@@ -379,6 +381,8 @@ function wellMapper() {
 
         var Transfers = [];
         var warnings = [];
+    
+        this.reset_qty_adjustments();
 
         var targetMap = [];
         if (! Target) { Target = {} };
@@ -506,9 +510,12 @@ function wellMapper() {
                 // single value only 
                 Static[options[i]] = opt;
                 console.log("\n* Static " + options[i] + ' = ' + JSON.stringify(opt));
+            
+                if (options[i] === 'qty') {
+                    console.log("No quantity adjustments required");
+                }
             }
         }
-        console.log("\n** LIST: " + JSON.stringify(List));
 
         console.log("Lists");
         var lists = Object.keys(List);
@@ -613,6 +620,7 @@ function wellMapper() {
                     };
 
                     var TargetData = {
+                        source_index: i,
                         batch: batch_index,
                         source_id: sources[i].id,
                         target_position: target_position,
@@ -634,8 +642,14 @@ function wellMapper() {
                     // Add multiplexed values (comma-delimited list entered)
                     for (var list_index=0; list_index<lists.length; list_index++) {
                         var opt = lists[list_index];
+
+                        if (opt === 'qty' && Static['qty_units']) { 
+                            TargetData[opt] = this.adjust_quantity(sources[i], List[opt][target], Static['qty_units']);
+                        }
+                        else {
                          // XferData[opt] = List[opt][target];
-                         TargetData[opt] = List[opt][target];
+                            TargetData[opt] = List[opt][target];
+                        }
                     }
 
                     TransferMap[batch_index][target_position] = MapData;
@@ -851,6 +865,73 @@ function wellMapper() {
         console.log("mapped...");
         return [ id_list.join(','), position_list.join(','), targets.join(',') ];
     }
+
+    this.adjust_quantity = function (source, extract, extract_units) {
+        console.log("adjust extraction of " + extract + extract_units);
+        
+        var current_volume = this.sample_remaining[source.id];
+        if (current_volume == null) { current_volume = source.qty }
+
+        console.log(".. remaining volume = " + current_volume.toFixed(6) + source.qty_units);
+
+        var min = extract.match(/min:(\d+)/i);
+        var max = extract.match(/max:(\d+)/i);
+
+        if (min && min[1]) { 
+            min = min[1];
+        }
+        else { min = 0 }
+
+        if ( max && max[1] ) {
+            max = max[1];
+        }
+        else if (min) {            
+            max = min;
+        }
+        else {
+            max = extract;
+        }
+
+        if (source.qty_units !== extract_units) { 
+            if (source.qty_units === 'ml' && extract_units === 'ul') {
+                if (max) { max = max/1000 }
+                if (min) { min = min/1000 }
+            }
+            else {
+                console.log("Correct for unit variation between " + source.qty_units + ' and ' + extract_units);
+            }
+        }
+
+        console.log("Extract : " + extract + extract_units + " [ " + min + ' : ' + max + ' ]');
+        if (current_volume <= 0 ) { 
+            console.log("No sample available to extract ... ");
+            return 0;
+        } 
+        else if (current_volume < min ) { 
+            // skipping well (less than min specified)
+            console.log("Not sufficient sample available to extract ... ");
+            this.unfilled.push("batch# " + source.batch + " : " + source.target_slot_position);
+            return 0;
+        }  
+        else if (current_volume >= max) { 
+            // OKAY - no adjustment req'd  
+            this.sample_remaining[source.id] = current_volume - max;  
+            return max;
+        }
+        else { 
+            // More than min, but less than max volume available ... 
+            this.sample_remaining[source.id] = 0;
+            this.partially_filled.push("batch# " + source.batch + " : " + source.target_slot_position);
+            console.log("extract remaining volume only: " + current_volume + " ( > " + min + ')');
+            return current_volume;
+        }
+    }    
+
+    this.reset_qty_adjustments = function () {
+        this.sample_remaining = {};
+        this.partially_filled = [];
+        this.unfilled = [];
+    }
 }
 
 /* Unit Tests */
@@ -938,4 +1019,5 @@ describe('wellMapper()', function() {
         });
 
     });
+
 });
