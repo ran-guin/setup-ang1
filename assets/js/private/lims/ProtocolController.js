@@ -14,6 +14,10 @@ function protocolController ($scope, $rootScope, $http, $q) {
 
     $scope.initialize = function (config, options) {
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> 8562cb699e2d3ed7a85244d54c9f6a44aa8184fa
         if (config && config['Samples']) {
             // both protocol tracking and standard Container page 
  
@@ -30,10 +34,17 @@ function protocolController ($scope, $rootScope, $http, $q) {
         }
 
         if (config && config['Steps'] && config['protocol']) { 
+<<<<<<< HEAD
 
             $scope.initialize_mapper(config, options);
 
+=======
+         
+            $scope.initialize_mapper(config, options);
+           
+>>>>>>> 8562cb699e2d3ed7a85244d54c9f6a44aa8184fa
             console.log("loaded protocol steps");
+            
             $scope.Steps = config['Steps'];
             $scope.protocol.steps = $scope.Steps.length;
             $scope.active.protocol = config['protocol'];

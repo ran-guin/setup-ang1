@@ -192,7 +192,7 @@ function wellController ($scope, $rootScope, $http, $q ) {
         console.log("Found format: " + format + '=' + $scope['Plate_Format-id']);
 
         var data = { 
-            ids: $scope.plate_ids,
+            ids: $scope.active.plate_ids,
             Transfer: $scope.Map.Transfer,
             Options : {
                 transfer_type: $scope.transfer_type,
