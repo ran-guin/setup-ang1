@@ -226,16 +226,4 @@ app.controller('SharedController',
             $scope[element] = false;
         }
 
-        // Custom methods ... 
-    $scope.Prefix = function Prefix (model) {
-        var P = {
-            'solution' : 'Sol',
-            'plate' : 'BCG',
-            'location' : 'Loc',
-            'equipment' : 'Eqp'
-        };
-
-        return P[model];
-    }
-
 }]);
