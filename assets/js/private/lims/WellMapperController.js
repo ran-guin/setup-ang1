@@ -10,11 +10,33 @@ function wellMapperController ($scope, $rootScope, $http, $q ) {
 
     $scope.initialize_mapper = function (config, options) {
     	$scope.set_defaults(config);
+        
+        $scope.static_presets();
+        $scope.map.config = config;
+
+        // initialize variables to track available wells if applicable in target boxes.
+        $scope.map.target_boxes = [];
+        $scope.map.available = {};
+
+        if (config['target_size']) { $scope.map.target_size = config['target_size'] }
+        else if (config['Samples'] && config['Samples'].length && config['Samples'][0].box_size) {
+            console.log("set target default size to size of first sample container");
+            $scope.map.target_size = config['Samples'][0].box_size;
+        }
+        else {
+            console.log("No default target size could be determined");
+        }
  
-        $scope.Samples = config['Samples'];
-        $scope.Samples_init = config['Samples'];
- 
- 		$scope.map.splitExamples = { 
+        $scope.map.packExample = $scope.map.packExamples[$scope.map.pack_mode + '-' + $scope.map.split_mode + '-' + $scope.map.fill_by] || '';
+
+	    $scope.mapping_keys = ['split', 'pack', 'fill_by', 'Target_format', 'Target_sample', 'transfer_type', 'reset_focus'];
+		for (var i=0; i<$scope.mapping_keys.length; i++) {
+			console.log($scope.mapping_keys[i] + ' = ' + $scope.map[ $scope.mapping_keys[i] ]);
+		}    
+    }
+
+    $scope.static_presets = function () {
+        $scope.map.splitExamples = { 
             'serial-row' : "eg A1, A1, A2, A2, B1, B1, B2, B2",
             'serial-column' : "eg A1, A1, B1, B1, A2, A2, B2, B2",
             'serial-position' : "grouping and serial/parallel modes n/a",
@@ -38,17 +60,6 @@ function wellMapperController ($scope, $rootScope, $http, $q ) {
             'batch-serial-column'  : "eg [N=2] A1,B1, A1,B1 ... C1,D1, C1, D1", 
             'batch-parallel-column'  : "grouping not applicable in parallel mode", 
         };           
- 
-        // initialize variables to track available wells if applicable in target boxes.
-        $scope.target_boxes = [];
-        $scope.available = {};
- 
-        $scope.map.packExample = $scope.map.packExamples[$scope.map.pack_mode + '-' + $scope.map.split_mode + '-' + $scope.map.fill_by] || '';
-
-	    $scope.mapping_keys = ['split', 'pack', 'fill_by', 'Target_format', 'Target_sample', 'transfer_type', 'reset_focus'];
-		for (var i=0; i<$scope.mapping_keys.length; i++) {
-			console.log($scope.mapping_keys[i] + ' = ' + $scope[ $scope.mapping_keys[i] ]);
-		}    
     }
 
     $scope.loadWells = function (Transfer, Options) {
@@ -126,6 +137,9 @@ function wellMapperController ($scope, $rootScope, $http, $q ) {
 
                 var boxData = {available: available, target_boxes: target_boxes };
 
+                $scope.map.target_boxes = target_boxes;
+                $scope.map.available    = available;
+
                 if (target_rack && target_boxes.length) {
                     N_boxes = target_boxes.length; // test
                     deferred.resolve( boxData );
@@ -171,15 +185,15 @@ function wellMapperController ($scope, $rootScope, $http, $q ) {
         console.log("Fill by " + $scope.map.fill_by);
         
         if ($scope.map.fill_by.match(/row/i)) { 
-            $scope.source_by_Row();
+            $scope.source_by_Row(Samples);
             // $scope.map.split_mode = 'serial';
         }
         else if ($scope.map.fill_by.match(/col/i) ) { 
-            $scope.source_by_Col();
+            $scope.source_by_Col(Samples);
             // $scope.map.split_mode = 'serial';
         }
         else if ($scope.map.fill_by.match(/pos/i)) {
-            $scope.source_by_Slot();
+            $scope.source_by_Slot(Samples);
             // $scope.map.split_mode = 'parallel';
         }
 
@@ -188,9 +202,12 @@ function wellMapperController ($scope, $rootScope, $http, $q ) {
 
         console.log("Transfer: " + JSON.stringify(Transfer));
         console.log("Options: " + JSON.stringify(Options));
+    
+        $scope.map.Options = Options;
+        $scope.map.Transfer = Transfer;
 
         console.log("Target Samples: " + $scope.N * $scope.map.splitX);
-        console.log("Target Boxes: " + $scope.target_boxes);
+        console.log("Target Boxes: " + $scope.map.target_boxes);
 
         var newMap;
 
@@ -264,6 +281,7 @@ function wellMapperController ($scope, $rootScope, $http, $q ) {
             console.log("Source Colour Map: " + JSON.stringify(Map.SourceMap));
             console.log("Target Colour Map: " + JSON.stringify(Map.TransferMap));           
 
+            $scope.Map = Map;
             deferred.resolve( { Map : Map, Transfer: Transfer, Options: Options} );
         })
         .catch ( function (err) {
@@ -277,12 +295,16 @@ function wellMapperController ($scope, $rootScope, $http, $q ) {
 
     // Reset Triggers ... 
 
-    $scope.set_defaults = function set_defaults(Config) {
+    $scope.set_defaults = function (Config) {
+        if (!Config) { Config = $scope.map.config }
+
         $scope.map.fill_by = Config['fill_by'] || 'row';
         $scope.map.splitX   = Config['Split'] || 1;
         $scope.map.pack_wells   = Config['pack'] || 0;            // applicable only for splitting with parallel mode (if N wells pipetted together)
         $scope.map.split_mode    = Config['mode'] || 'parallel';  // serial or parallel...appliable only for split (eg A1, A1, A2, A2... or A1, A2... A1, A2...)
         $scope.map.transfer_type = Config['transfer_type'] || 'Transfer';
+        $scope.map.transfer_qty = Config['transfer_qty'] || '';
+        $scope.map.transfer_qty_units = Config['transfer_qty_units'] || 'ml';
     }
 
     $scope.reset_pack_mode = function reset_pack_mode () {
@@ -360,7 +382,7 @@ function wellMapperController ($scope, $rootScope, $http, $q ) {
         
         var SampleList = Samples;
         if (! $scope.ordered) {
-            SampleList = _.sortByNat($scope.Samples, function(sample) {
+            SampleList = _.sortByNat(Samples, function(sample) {
                 var batch = sample.batch || 0; 
                 var string = batch.toString() + '_' + sample.position.substring(1,3) + '_' + sample.position.substring(0,1);
                 return string;
@@ -386,7 +408,34 @@ function wellMapperController ($scope, $rootScope, $http, $q ) {
         return Samples;
     }
 
-    $scope.reset_Samples = function reset_Samples () {
-        $scope.Samples = $scope.Samples_init;
+    // Custom sample distribution settings //
+
+    $scope.custom_distribution = function use_custom_settings(version) {
+
+        var volumes = _.pluck($scope.active.Samples, 'qty');
+        var version = '[mid qty version]';
+
+        var min = _.min(volumes);
+        var max = _.max(volumes);
+
+        $scope.messages.push("Original Volumes Detected: Minimum: " + min + '; Maximum: ' + max );
+
+        if (volumes.length && min > 1.0 ) {
+            $scope.map.splitX = 5;
+            $scope.map.transfer_qty = "<min:200>,<min:200>,<min:500>,<min:500>,<max:100>";
+            $scope.map.transfer_qty_units = 'ul';
+        }
+        else {
+            $scope.map.splitX = 4;
+            $scope.map.transfer_qty = "<min:200>,<min:200>,<min:500>,<max:100>";
+            $scope.map.transfer_qty_units = 'ul';
+        }
+
+        $scope.map.pack_wells = 8;
+        $scope.map.fill_by = 'column';
+        $scope.map.split_mode = 'serial';
+
+        $scope.messages.push("Using Custom Data Matrix Sample Distribution Settings " + version);
     }
+
 }]);
