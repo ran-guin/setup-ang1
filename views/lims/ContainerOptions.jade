@@ -21,7 +21,7 @@ form(role='form' method='post' action="/Lab_protocol/run" enctype='form-data')
       td(style='width:30%; vertical-align:middle')
         button.btn.btn-lg.btn-success(type='submit' ng-disabled=0) Run Protocol 
         br
-        input(type='radio' name='plate_set' ng-model='plate_set' value='new') 
+        input(type='radio' name='plate_set' ng-model='plate_set' value='new' ng-init='plate_set = "new"') 
         span &nbsp; Create New Set 
         br
         div(ng-show="valid_plate_sets.length")
