@@ -25,8 +25,6 @@ function protocolController ($scope, $rootScope, $http, $q) {
             $scope.load_active_Samples(Samples);
             
             $scope.active.last_step = config['last_step'];
- 
-            $scope.active.valid_plate_sets = [];
         }
 
         if (config && config['Steps'] && config['protocol']) { 
@@ -40,7 +38,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
 
             var plate_set = config['plate_set'];
             console.log("plate set " + plate_set);
-            if ($plate_set === 'new') {
+            if (plate_set === 'new') {
                 $scope.load_plate_set({ Samples : $scope.active.Samples });
             }
             else {
@@ -139,33 +137,6 @@ function protocolController ($scope, $rootScope, $http, $q) {
         $scope.active.plate_set = set;
     }
 
-    $scope.get_plate_sets = function () {
-        var count = $scope.active.plate_ids.length;
-        console.log("using " + count + ' ids');
-
-        var condition = " FK_Plate__ID IN (" + $scope.active.plate_ids.join(',') + ") GROUP BY Plate_Set_Number HAVING COUNT(*) = " + count;
-        
-        var searchData = {
-            scope: { 'Plate_Set' : [ 'DISTINCT Plate_Set_Number as PS'] },
-            condition : condition,
-        };
-
-        $http.post('/Record/search', searchData)
-        .then ( function (result) {
-            console.log("RESULT: " + JSON.stringify(result));
-            $scope.valid_plate_sets = [];
-            if (result.data && result.data[0] && result.data[0][0]) {
-                for (var i=0; i<result.data[0].length; i++) {
-                    $scope.valid_plate_sets.push(result.data[0][i].PS);
-                }
-            }
-            console.log("Retrieved SET: " + JSON.stringify($scope.valid_plate_sets));
-        })
-        .catch ( function (err) { 
-            console.log("Error getting sets: " + err);
-        }); 
-    }
-
     $scope.forward = function forward(action) {
 
         var state = action || 'Completed';
@@ -194,7 +165,6 @@ function protocolController ($scope, $rootScope, $http, $q) {
         }
 
     }
-
 
     $scope.complete = function complete (action) {
 
@@ -360,7 +330,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
                     }
                     else {
                         $scope.protocol.status = 'Completed';
-                        $scope.messages.push("Completed '" + $scope.active.protocol.name + "'' Protocol")
+                        $scope.messages.push("Completed '" + $scope.active.protocol.name + "'' Protocol...")
                     }
                 }
 
