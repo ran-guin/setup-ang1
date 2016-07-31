@@ -13,7 +13,7 @@ block content
 
     - var configParams = { record: record };
 
-    - var init = "initialize(" + JSON.stringify(record) + ")";
+    - var init = "initialize(" + JSON.stringify(configParams) + ")";
 
     //- flds = fields || []; 
     //- units = { 'solution_qty' : 'solution_qty_units', 'transfer_qty' : 'transfer_qty_units'};
@@ -23,5 +23,157 @@ block content
     div(ng-app='myApp')
       div(ng-controller="SharedController")
        div(ng-controller="FancyFormController")
-        div(ng-controller="Protocol_StepController")
+        div(ng-controller="Protocol_StepController" ng-init="#{init}")
           h3 Protocol Editor 
+
+          form.form-horizontal(role='form' width='100%')
+            div.form-group
+              label.control-label.col-sm-2(for='name') Name
+              div.col-sm-10  
+                input.input-lg.form-control#name(type='text' placeholder='Name' ng-model='Record.name')
+              
+            div.form-group
+              label.control-label.col-sm-2(for='instructions') Instructions
+              div.col-sm-10  
+                input.input-lg.form-control#instructions(type='text' placeholder='Instructions' ng-model='Record.instructions')
+
+            div.form-group
+              label.control-label.col-sm-2(for='step_message') Message
+              div.col-sm-10  
+                input.input-lg.form-control#message(placeholder='Message' ng-model='Record.message')
+
+
+            div.form-group
+              div.col-sm-offset-2.col-sm-10
+                div.checkbox
+                  label
+                    input(type='checkbox' ng-model='transfer_step')
+                    b &nbsp; Transfer
+
+            div(ng-if="transfer_step")
+
+              div.form-group
+                div.col-sm-offset-2.col-sm-10
+                  div.checkbox
+                    label
+                      input(type='text' ng-model='transfer_type')
+
+              div.form-group
+                div.col-sm-offset-2.col-sm-10
+                  div.checkbox
+                    label
+                      input(type='text' placeholder='Target Container Type' ng-model='target_container')
+  
+              div.form-group
+                div.col-sm-offset-2.col-sm-10
+                  div.checkbox
+                    label
+                      input(type='text' placeholder='Change Sample Type' ng-model='target_sample')
+
+              div.form-group
+                div.col-sm-offset-2.col-sm-2
+                  div.checkbox
+                    label
+                      input(type='checkbox' ng-model='input.transfer_qty')
+                      b &nbsp; Split
+                div.col-sm-3
+                  input(type='number' ng-model='default.transfer_qty')
+                div.col-sm-3
+                  input(type='number' ng-model='format.transfer_qty')
+                div.col-sm-2
+                  div.checkbox
+                    label
+                      input(type='checkbox' ng-model='mandatory.transfer_qty')
+                      b &nbsp; Mandatory
+
+
+              div.form-group
+                div.col-sm-offset-2.col-sm-2
+                  div.checkbox
+                    label
+                      input(type='checkbox' ng-model='input.split')
+                      b &nbsp; Split
+                div.col-sm-3
+                  input(type='number' ng-model='default.split')
+                div.col-sm-3
+                  input(type='number' ng-model='format.split')
+                div.col-sm-2
+                  div.checkbox
+                    label
+                      input(type='checkbox' ng-model='mandatory.split')
+                      b &nbsp; Mandatory
+
+              div.form-group
+                div.col-sm-offset-2.col-sm-5
+                  div.checkbox
+                    label
+                      input(type='checkbox' ng-model='reset_focus')
+                      b &nbsp; Reset_Focus
+
+            hr
+            h3 Input        
+
+            div.form-group
+              label.control-label.col-sm-2(for='input_options') Input
+              div.col-sm-10  
+                input.input-lg.form-control#input_options(placeholder='Input' ng-model='Record.input_options')
+
+            div.form-group
+              label.control-label.col-sm-2(for='input_format') Format              
+              div.col-sm-10  
+                input.input-lg.form-control#input_format(placeholder='Format' ng-model='Record.input_format')
+
+            div.form-group                  
+              label.control-label.col-sm-2(for='input_defaults') Defaults
+              div.col-sm-10  
+                input.input-lg.form-control#input_defaults(placeholder='Defaults' ng-model='Record.input_defaults')
+
+            div.form-group
+              label.control-label.col-sm-2(for='custom_options') Custom_Settings
+              div.col-sm-10  
+                input.input-lg.form-control#custom_options(placeholder="Custom" ng-model='Record.custom_options')
+
+            hr
+            h3 Options
+
+           div.form-group
+              div.col-sm-offset-2.col-sm-2
+                div.checkbox
+                  label
+                    input(type='checkbox' ng-model='input.solution_qty')
+                    b &nbsp; Split
+              div.col-sm-3
+                input(type='number' ng-model='default.solution_qty')
+              div.col-sm-3
+                input(type='number' ng-model='format.solution_qty')
+              div.col-sm-2
+                div.checkbox
+                  label
+                    input(type='checkbox' ng-model='mandatory.solution_qty')
+                    b &nbsp; Mandatory
+
+            div.form-group
+              div.col-sm-offset-2.col-sm-10
+                div.checkbox
+                  label
+                    input(type='checkbox' ng-model='Record.prompt')
+                    b &nbsp; Prompt
+
+            div.form-group
+              div.col-sm-offset-2.col-sm-10
+                div.checkbox
+                  label
+                    input(type='checkbox' ng-model='Record.repeatable')
+                    b &nbsp; Repeatable
+
+
+          if debug || 1
+            div.alert-warning
+              hr
+              h3 Direct
+              b #{ JSON.stringify(record) }
+
+
+
+              h3 Angular
+              b Record: {{ JSON.stringify(record) }}
