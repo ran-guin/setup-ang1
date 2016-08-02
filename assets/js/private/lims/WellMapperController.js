@@ -281,6 +281,12 @@ function wellMapperController ($scope, $rootScope, $http, $q ) {
             console.log("Source Colour Map: " + JSON.stringify(Map.SourceMap));
             console.log("Target Colour Map: " + JSON.stringify(Map.TransferMap));           
 
+            if ( Map.warnings && Map.warnings.length ) { 
+                for (var i=0; i<Map.warnings.length; i++ ) {
+                    $scope.warning(Map.warnings[i]);
+                } 
+            }
+
             $scope.Map = Map;
             deferred.resolve( { Map : Map, Target: Target, Options: Options} );
         })
