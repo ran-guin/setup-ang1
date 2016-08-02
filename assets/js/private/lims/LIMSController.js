@@ -10,7 +10,14 @@ function limsController ($scope, $rootScope, $http, $q) {
     $scope.active.Samples = [];
  
     $scope.active.valid_plate_sets = [];
-    
+
+    $scope.active.plate_set = 'new';  // set default ..  
+
+    $scope.set_active_attribute = function (attr, val) {
+        // accessor to local attributes
+        $scope.active[attr] = val;
+    }
+
     // Custom methods ... 
     $scope.Prefix = function Prefix (model) {
         var P = {
@@ -24,33 +31,117 @@ function limsController ($scope, $rootScope, $http, $q) {
     }
 
     // Methods to set 'active' scope attributes (eg active.Samples, active.plate_set ... )
-   	$scope.load_active_Samples = function (Samples) {
+    $scope.load_active_Samples = function (Samples) {
 
-   		$scope.active.Samples = Samples;
-   		
-   		if (! $scope.original_Samples ) { $scope.original_Samples = Samples }
+            $scope.active.Samples = Samples;
+            console.log("loaded...");
+            $scope.active.last_step = Samples[0].last_step;
+            
+            if (! $scope.original_Samples ) { $scope.original_Samples = Samples }
 
-        var ids = [];
-        for (var i=0; i<Samples.length; i++) {
-            if (Samples[i].id) { ids.push(Samples[i].id) }
-        }
-        $scope.active.plate_list = ids.join(',');
-        $scope.active.plate_ids  = ids;
+            // preset standardized values from first sample ... 
+            if (Samples[0] && Samples[0]['container_format']) {
+                $scope.active.container_format = Samples[0]['container_format'];
+            }
+            else { $scope.active.container_format = 'undefined' }
 
-        $scope.active.N = $scope.active.plate_ids.length;
+            if (Samples[0] && Samples[0]['sample_type']) {
+                $scope.active.sample_type = Samples[0]['sample_type'];
+            }
+            else { $scope.active.sample_type = 'undefined' }
+
+            var ids = [];
+            var Contexts = {};
+            for (var i=0; i<Samples.length; i++) {
+                if (Samples[i].id) { ids.push(Samples[i].id) }
+                if (Samples[i].last_step !== $scope.active.last_step) {
+                    $scope.warning("Samples at different stages of pipeline..");
+                }
+
+                var context = Samples[i].sample_type + ' in ' + Samples[i].container_format;
+                console.log(i + " " + context);
+               
+                if (! Contexts[context]) { Contexts[context] = [ Samples[i].id ] }
+                else { Contexts[context].push(Samples[i].id) }
+
+                var contexts = Object.keys(Contexts);
+
+                if (contexts.length > 1) {
+                    $scope.warning("Inconsistent sample type / container formats detected");
+                }
+                $scope.active.Contexts = Contexts;
+            }
+            $scope.active.plate_list = ids.join(',');
+            $scope.active.plate_ids  = ids;
+
+            $scope.active.N = $scope.active.plate_ids.length;
+            
+            console.log(Samples.length + ' samples loaded..');
+            console.log("ACTIVE Loaded " + $scope.active.Samples.length + ' active Samples');
+            
+    }
+
+    // Methods to set 'active' scope attributes (eg active.Samples, active.plate_set ... )
+   	$scope.reload_active_Samples = function (Samples) {
+
+        var deferred = $q.defer();
+        var ids = _.pluck(Samples,'id');
         
-        if (Samples[0] && Samples[0]['container_format']) {
-            $scope.active.container_format = Samples[0]['container_format'];
-        }
-        else { $scope.active.container_format = 'undefined' }
+        console.log("reload active samples... " + ids.join(','));
 
-        if (Samples[0] && Samples[0]['sample_type']) {
-            $scope.active.sample_type = Samples[0]['sample_type'];
-        }
-        else { $scope.active.sample_type = 'undefined' }
+        $http.get('Container/summary?ids=' + ids.join(','))         
+        .then (function (result) {
+            console.log("done reloading summary for " + result.data.length + ' samples');
+            console.log(JSON.stringify(result.data));
 
-        console.log(Samples.length + ' samples loaded..');
-        console.log("ACTIVE Loaded " + $scope.active.Samples.length + ' active Samples');
+            if (result.data && result.data.length) {
+                $scope.load_active_Samples(result.data);
+                $scope.active.valid_plate_sets = [];
+                $scope.load_plate_set({ Samples: result.data, parent : $scope.active.plate_set } );
+
+                console.log("Reloaded: " + JSON.stringify($scope.active_Samples));
+                deferred.resolve();
+            }
+            else {
+                console.log("No Samples found");
+                deferred.reject("no samples loaded");
+            }
+        })
+        .catch ( function (err) {
+            console.log("Error: " + err);
+            $scope.error("Error loading sample data: " + err);
+            deferred.reject(err);
+        });
+
+        return deferred.promise;
+
+    }
+   
+    $scope.get_plate_sets = function () {
+        var count = $scope.active.plate_ids.length;
+        console.log("using " + count + ' ids');
+
+        var condition = " FK_Plate__ID IN (" + $scope.active.plate_ids.join(',') + ") GROUP BY Plate_Set_Number HAVING COUNT(*) = " + count;
+        
+        var searchData = {
+            scope: { 'Plate_Set' : [ 'DISTINCT Plate_Set_Number as PS'] },
+            condition : condition,
+        };
+
+        $http.post('/Record/search', searchData)
+        .then ( function (result) {
+            console.log("RESULT: " + JSON.stringify(result));
+            $scope.active.valid_plate_sets = [];
+            if (result.data && result.data.results && result.data.results.length) {
+                for (var i=0; i<result.data.results.length; i++) {
+                    $scope.active.valid_plate_sets.push(result.data.results[i].PS);
+                }
+            }
+            console.log("Retrieved SET(s): " + JSON.stringify($scope.active.valid_plate_sets));
+        })
+        .catch ( function (err) { 
+            console.log("Error getting sets: " + err);
+        }); 
     }
 
     $scope.get_plate_sets = function () {
@@ -82,22 +173,31 @@ function limsController ($scope, $rootScope, $http, $q) {
 
     $scope.load_plate_set = function ( options ) {
     	// use set = 'new' to create new set 
-
     	if (!options) { options = {} }
     	
     	var Samples = options.Samples;
     	var parent = options.parent;  // specfiy parent (only applicable when saving)
     	var existing_set    = options.existing_set;     // load existing set 
 
-    	if (existing_set) { 
-    		$scope.active.plate_set = set;
+        console.log("load plate set..." + parent + " from " + existing_set);
+
+    	if (existing_set != null) { 
+    		$scope.active.plate_set = existing_set;
 	    	console.log("Retrieved existing plate set: " + $scope.active.plate_set);    		
     	}
     	else {
+            console.log("get PS");
 	        $http.post('/Record/search', { scope : { 'Plate_Set' : [ 'Max(Plate_Set_Number) as MaxPS'] }})
+<<<<<<< HEAD
 	        .then ( function ( result ) {
 	            if (result.data && result.data.results && result.data.results[0]) {
 	                var maxPS = result.data.results[0].MaxPS || 1
+=======
+	        .then ( function (response) {
+                console.log("found: " + JSON.stringify(response));
+	            if (response.data && response.data.results && response.data.results[0]) {
+	                var maxPS = response.data.results[0].MaxPS || 1
+>>>>>>> d2d71533f236e0e82beffb90e8acf70e1a8388b4
 	                console.log("SAVE SET " + JSON.stringify(maxPS));
 
 	                var data = [];
@@ -105,6 +205,7 @@ function limsController ($scope, $rootScope, $http, $q) {
 	                    var record = { FK_Plate__ID : Samples[i].id, Plate_Set_Number: maxPS+1 , FKParent_Plate_Set__Number: parent }    
 	                    data.push(record);
 	                }
+<<<<<<< HEAD
 	           
                     console.log("Save Set: " + JSON.stringify(data));
 	                $http.post("record/save", { model: 'plate_set', data: data} )
@@ -112,6 +213,17 @@ function limsController ($scope, $rootScope, $http, $q) {
 	                    $scope.active.plate_set = maxPS + 1;
 	                    console.log("SAVED Plate Set: " + $scope.active.plate_set);
 	                    $scope.active.valid_plate_sets.push($scope.active.plate_set);
+=======
+	                
+                    console.log("Pre Active list: " + $scope.active.valid_plate_sets.join(','));
+
+	                $http.post("record/save", { model: 'plate_set', data: data} )
+	                .then (function (result) {
+	                    $scope.active.plate_set = maxPS + 1;
+	                    console.log("SAVED Plate Set: " + $scope.active.plate_set);
+                        console.log("Active list: " + $scope.active.valid_plate_sets.join(','));
+	                    // $scope.active.valid_plate_sets.push($scope.active.plate_set);
+>>>>>>> d2d71533f236e0e82beffb90e8acf70e1a8388b4
 	                })
 	                .catch ( function (err) {
 	                    $scope.errors.push("Error saving plate set");
@@ -127,6 +239,7 @@ function limsController ($scope, $rootScope, $http, $q) {
 	            console.log("Error retrieving max plate set");
 	        });
 	    }
+        console.log('finished loading plate set...');
     }
 
     $scope.reset_Samples = function reset_Samples () {

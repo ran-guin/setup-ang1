@@ -62,7 +62,7 @@ function wellMapperController ($scope, $rootScope, $http, $q ) {
         };           
     }
 
-    $scope.loadWells = function (Transfer, Options) {
+    $scope.loadWells = function (Target, Options) {
         // get available wells 
         var deferred = $q.defer();
 
@@ -176,7 +176,7 @@ function wellMapperController ($scope, $rootScope, $http, $q ) {
         return deferred.promise;
     }
 
-    $scope.redistribute_Samples = function  (Samples, Transfer, Options) {
+    $scope.redistribute_Samples = function  (Samples, Target, Options) {
 
         var deferred = $q.defer();
 
@@ -200,18 +200,18 @@ function wellMapperController ($scope, $rootScope, $http, $q ) {
         $scope.reset_split_mode();
         $scope.reset_pack_mode();
 
-        console.log("Transfer: " + JSON.stringify(Transfer));
+        console.log("Target: " + JSON.stringify(Target));
         console.log("Options: " + JSON.stringify(Options));
     
         $scope.map.Options = Options;
-        $scope.map.Transfer = Transfer;
+        $scope.map.Target = Target;
 
         console.log("Target Samples: " + $scope.N * $scope.map.splitX);
         console.log("Target Boxes: " + $scope.map.target_boxes);
 
         var newMap;
 
-        $scope.loadWells(Transfer, Options)
+        $scope.loadWells(Target, Options)
         .then (function (Loaded) {
             console.log("loaded wells ok...");
 
@@ -228,8 +228,8 @@ function wellMapperController ($scope, $rootScope, $http, $q ) {
                 console.log("colour MAP: " + JSON.stringify(newMap.colourMap));
             }  
 
-            if (! Transfer) {
-                Transfer = {
+            if (! Target) {
+                Target = {
                     qty: $scope.transfer_qty,
                     qty_units : $scope.transfer_qty_units,
                     Container_format : $scope.target_format,
@@ -264,13 +264,13 @@ function wellMapperController ($scope, $rootScope, $http, $q ) {
 */
 
             console.log('call distribute using:');
-            console.log('Transfer: ' + JSON.stringify(Transfer) );
+            console.log('Target: ' + JSON.stringify(Target) );
             console.log('Options: ' + JSON.stringify(Options) );
 
             // recalculate mapping //
             Map = newMap.distribute(
                 Samples, 
-                Transfer,
+                Target,
                 Options
             );
             
@@ -282,7 +282,7 @@ function wellMapperController ($scope, $rootScope, $http, $q ) {
             console.log("Target Colour Map: " + JSON.stringify(Map.TransferMap));           
 
             $scope.Map = Map;
-            deferred.resolve( { Map : Map, Transfer: Transfer, Options: Options} );
+            deferred.resolve( { Map : Map, Target: Target, Options: Options} );
         })
         .catch ( function (err) {
             console.log("Error loading wells: " + err);

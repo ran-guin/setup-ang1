@@ -320,7 +320,7 @@ module.exports = {
 			})
 			console.log("* Added " + data.length + " custom records in " + table);
 			// console.log("\nHeaders: " + headers);
-			Record.createNew(table, data, {}, { NULL : "\\N" } )
+			Record.createNew(table, data, {}, { reset: { NULL : "\\N" }} )
 			.then ( function (added) {
 				sails.config.messages('added ' + table + ' record(s)');
 				deferred.resolve(added);
@@ -554,7 +554,6 @@ module.exports = {
 			if (splitModel.length > 0 ) { 
 				table = splitModel[0];
 				idField = splitModel[1];
-				console.log("Split " + model + ' into ' + table + ' : ' + idField);
 			}
 			else {
 				console.log("no " + model + " model :  id alias left as " + idField);
@@ -589,7 +588,6 @@ module.exports = {
 			for (var i=0; i<fields.length; i++) {
 				var setval = data[fields[i]];
 
-				console.log(fields[i] + " SETVAL: " + JSON.stringify(setval));
 				if (setval && setval.constructor === Array) {
 					// If value supplied is an array (matching array of applicable ids), then set values one at a time
 					// (this may be avoided if all of the array elements are identical in which case values may be set in standard way)
@@ -603,7 +601,6 @@ module.exports = {
 						}
 					}
 					else if (setval.length == 1) {
-						console.log("single value for all elements");
 						var setVal = Record.parseValue(setval[0], { model : model });
 						Set.push(fields[i] + " = " + setVal );						
 					}
@@ -673,11 +670,25 @@ module.exports = {
 		return deferred.promise;
 	},	
 
-	createNew : function (model, Tdata, resetData) {
+	createNew : function (model, Tdata, options) {
 		// Bypass waterline create method to enable insertion into models in non-standard format //
 		var debug = 0;
 		var deferred = q.defer();
 		//console.log("\ncreate new record(s) in " + table);
+
+		options = options || {};
+		var resetData   = options.reset;
+
+		var onDuplicate = '';
+		var action = 'INSERT';
+		if ( options.onDuplicate) {
+			if (options.onDuplicate.match(/replace/i)) {
+				action = 'REPLACE';
+			}
+			else {
+				onDuplicate = ' ON DUPLICATE KEY ' + options.onDuplicate;
+			}
+		}
 
 		var Mod = sails.models[model] || {};
 
@@ -696,7 +707,6 @@ module.exports = {
 		if (data.length) { fields = Object.keys(data[0]) || [] }
 
 		var Values = [];
-		var onDuplicate = '';
 
 		console.log(model + ' : ' + Mod + ' -> ' + Mod.tableName + '=' + table);
 		console.log("insertion data: " + JSON.stringify(data[0]) + '...');
@@ -707,21 +717,6 @@ module.exports = {
 				var input_value = data[index][fields[f]];
 
 				var value = Record.parseValue(input_value, { model: model, field: fields[f] });
-				if ( ! index) {
-					// only need to set onDuplicate once if any increment fields are defined 
-					if (input_value && input_value.constructor === String && input_value.match(/<increment>/ ) ) {
-						// only one increment field should be included since there is only one 'on duplcate command at the end '
-						if (onDuplicate) {
-							var msg = "possible onDuplicate conflict detected";
-							console.log(msg);
-							sails.config.warnings.push(msg);
-						}
-						else {
-							value = 1;
-							onDuplicate = " ON DUPLICATE KEY UPDATE " + fields[f] + "=" + fields[f] + " + 1";
-						}
-					}
-				}
 
 				if (resetData && resetData[fields[f]]) {
 					var resetValue = Record.parseValue( resetData[fields[f]], { model: model, field: fields[f], defaultTo : value });
@@ -734,8 +729,8 @@ module.exports = {
 			Values.push( "(" + Vi.join(", ") + ")");
 		}
 
-		var createString = "INSERT INTO " + table + " (" + fields.join(',') + ") VALUES " + Values.join(', ') + onDuplicate;
-		console.log("\nInsert SQL: \nINSERT INTO " + table + " (" + fields.join(',') + ") VALUES " + Values[0] + onDuplicate);
+		var createString = action + " INTO " + table + " (" + fields.join(',') + ") VALUES " + Values.join(', ') + onDuplicate;
+		console.log("\n** Insert SQL: \n" + createString); 
 
 		Record.query_promise(createString)
 		.then ( function (result) {
@@ -1025,7 +1020,6 @@ module.exports = {
 			// account for redundant quotes ... 
 			if (value.constructor === String && value.match(/^\"/) && value.match(/\"$/)) {
 				noQuote = 1;
-				console.log("suppress quotes");
 			}
 		}
 		else if (value && value.constructor === Date) {
@@ -1122,7 +1116,6 @@ module.exports = {
     			console.log(query);
     			Record.query_promise(query)
     			.then (function (result) {
-
     				// console.log("ADD PRE CHANGE HISTORY :" + JSON.stringify(result));
     				deferred.resolve(result);
     			})

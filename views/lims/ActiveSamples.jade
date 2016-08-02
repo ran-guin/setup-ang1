@@ -1,33 +1,32 @@
+span {{ timestamp }}
+br
 div.section-block.bg-info
-    span Active Samples: 
-    b {{ active.N }} x 
-    b(style='color:red') {{ active.sample_type }} 
-    b in {{ active.container_format }}
-    span &nbsp;
+    b Active Samples: &nbsp; 
+      button.btn.btn-primary.btn-sm(type='button' ng-show="!injectedAlready()" ng-click="injectData('/Container/summary?render=1','', active.plate_ids)") ?
+      button.btn.btn-danger.btn-sm(type='button' ng-show='injectedAlready()' ng-click='uninjectData()') x    
+  
+    span.navbar.navbar-right
+        button.btn.btn-primary.btn-sm(type='button' ng-show="include_parents && !injectedAlready('injectedHistory')" ng-click="injectData('/Container/history?include_parents=1','injectedHistory', active.plate_ids)") Long History
+        button.btn.btn-primary.btn-sm(type='button' ng-show="!include_parents && !injectedAlready('injectedHistory')" ng-click="injectData('/Container/history','injectedHistory', active.plate_ids)") Short History
+        span &nbsp;
+        input(type='checkbox' label='include Parent' ng-model='include_parents') 
+        span &nbsp; include parents &nbsp; &nbsp; 
+        button.btn.btn-danger.btn-sm(type='button' ng-show="injectedAlready('injectedHistory')" ng-click="uninjectData('injectedHistory')") x    
+        span &nbsp; &nbsp; &nbsp; &nbsp;
 
-    button.btn.btn-primary.btn-sm(type='button' ng-show="!injectedAlready()" ng-click="injectData('/Container/summary','', active.plate_ids)") ?
-    button.btn.btn-danger.btn-sm(type='button' ng-show='injectedAlready()' ng-click='uninjectData()') x    
+        br
+        br
+        div(ng-show="active.Samples && active.Samples[0] && active.Samples[0].last_step")
+          u Progress: 
+          b {{ active.Samples[0].last_protocol }} [ {{ active.Samples[0].protocol_status}} ] &nbsp; &nbsp;
+          br 
+          span (last step: '{{ active.Samples[0].last_step }}')  
 
-    span.navbar.navbar-right 
-
-      button.btn.btn-primary.btn-sm(type='button' ng-show="include_parents && !injectedAlready('injectedHistory')" ng-click="injectData('/Container/history?include_parents=1','injectedHistory', active.plate_ids)") Long History
-      button.btn.btn-primary.btn-sm(type='button' ng-show="!include_parents && !injectedAlready('injectedHistory')" ng-click="injectData('/Container/history','injectedHistory', active.plate_ids)") Short History
-      span &nbsp;
-      input(type='checkbox' label='include Parent' ng-model='include_parents') 
-      span &nbsp; include parents &nbsp; &nbsp; 
-      button.btn.btn-danger.btn-sm(type='button' ng-show="injectedAlready('injectedHistory')" ng-click="uninjectData('injectedHistory')") x    
-      span &nbsp; &nbsp; &nbsp; &nbsp;
-
-      b {{ user }} &nbsp;
-      span {{ timestamp }} &nbsp; &nbsp;
-
-    div(ng-show="active.Samples && active.Samples[0] && active.Samples[0].last_step")
-      hr
-      u Progress: 
-      b {{ active.Samples[0].last_protocol }} [ {{ active.Samples[0].protocol_status}} ] &nbsp; &nbsp;
-       
-      span (completed '{{ active.Samples[0].last_step }}')  
-
+    p &nbsp;
+    div(ng-repeat="(context, cids) in active.Contexts")
+      b {{ cids.length }} x &nbsp;
+      b(style='color:red') {{ context }} &nbsp;
+      br
 
 div#injectedData
 

@@ -175,9 +175,12 @@ module.exports = {
 
 	},
 
-	'save' : function ( model, ids, data ) {
+	'save' : function ( model, ids, data, options) {
 		var deferred = q.defer();
 
+        if (! options) { options = {} }
+        var onDuplicate = options.onDuplicate;
+            
 		var attModel = model + '_Attribute';   // Legacy
 
 		if (! data 
@@ -193,6 +196,7 @@ module.exports = {
 			console.log("IDS: " + JSON.stringify(ids));
 
 			var add = [];
+			var increments = {};
 
 			for (var i=0; i<atts.length; i++) {
 				for (var j=0; j<ids.length; j++) {
@@ -205,19 +209,40 @@ module.exports = {
 					var val = Record.parseValue(data[atts[i]], { index: j, action: 'insert'} );
 					console.log("\n** Parse " + data[atts[i]] + ' with index: ' + j + ' -> ' + val);
 
-					insertData['Attribute_Value'] = val;					
 					insertData['FK_' + model + '__ID'] = ids[j];
 					insertData['Set_DateTime'] = "<now>";
 					insertData['FK_Employee__ID'] = sails.config.payload.userid;
 
-					add.push(insertData);
+					if (val.match(/<increment>/)) {
+						if (! increments[atts[i]]) { increments[atts[i]] = [] }
+                        insertData['Attribute_Value'] = 1;                    
+						increments[atts[i]].push(insertData);
+					}
+					else {
+                        insertData['Attribute_Value'] = val;                    
+						add.push(insertData);
+					}
 				}
 			}
 
-			console.log(model + " Att data: " + JSON.stringify(add[0]) + '...');
+            var promises = [];
+			if (add.length) { 
+                var options = { onDuplicate : 'REPLACE' };
+                promises.push( Record.createNew(attModel, add, options) );
+                console.log(model + " Att data: " + JSON.stringify(add[0]) + '...');
+            }
 
-			Record.createNew(attModel, add )
-			.then (function (AttResult) {
+			var extras = Object.keys(increments);
+			for (var i=0; i<extras.length; i++) {
+                var datai =  increments[extras[i]];
+                var options = { onDuplicate : "UPDATE Attribute_Value=Attribute_Value+1" }
+				promises.push( Record.createNew(attModel, datai, options) );
+                console.log("Separately add: " + JSON.stringify(datai));
+			}
+
+			q.all(promises)
+			.then (function (response) {
+				var AttResult = response[0];
 				deferred.resolve(AttResult);
 			})
 			.catch ( function (err) {
