@@ -188,16 +188,12 @@ function limsController ($scope, $rootScope, $http, $q) {
     	else {
             console.log("get PS");
 	        $http.post('/Record/search', { scope : { 'Plate_Set' : [ 'Max(Plate_Set_Number) as MaxPS'] }})
-<<<<<<< HEAD
-	        .then ( function ( result ) {
-	            if (result.data && result.data.results && result.data.results[0]) {
-	                var maxPS = result.data.results[0].MaxPS || 1
-=======
+
 	        .then ( function (response) {
                 console.log("found: " + JSON.stringify(response));
 	            if (response.data && response.data.results && response.data.results[0]) {
 	                var maxPS = response.data.results[0].MaxPS || 1
->>>>>>> d2d71533f236e0e82beffb90e8acf70e1a8388b4
+
 	                console.log("SAVE SET " + JSON.stringify(maxPS));
 
 	                var data = [];
@@ -205,17 +201,6 @@ function limsController ($scope, $rootScope, $http, $q) {
 	                    var record = { FK_Plate__ID : Samples[i].id, Plate_Set_Number: maxPS+1 , FKParent_Plate_Set__Number: parent }    
 	                    data.push(record);
 	                }
-<<<<<<< HEAD
-	           
-                    console.log("Save Set: " + JSON.stringify(data));
-	                $http.post("record/save", { model: 'plate_set', data: data} )
-	                .then (function ( response ) {
-	                    $scope.active.plate_set = maxPS + 1;
-	                    console.log("SAVED Plate Set: " + $scope.active.plate_set);
-	                    $scope.active.valid_plate_sets.push($scope.active.plate_set);
-=======
-	                
-                    console.log("Pre Active list: " + $scope.active.valid_plate_sets.join(','));
 
 	                $http.post("record/save", { model: 'plate_set', data: data} )
 	                .then (function (result) {
@@ -223,7 +208,6 @@ function limsController ($scope, $rootScope, $http, $q) {
 	                    console.log("SAVED Plate Set: " + $scope.active.plate_set);
                         console.log("Active list: " + $scope.active.valid_plate_sets.join(','));
 	                    // $scope.active.valid_plate_sets.push($scope.active.plate_set);
->>>>>>> d2d71533f236e0e82beffb90e8acf70e1a8388b4
 	                })
 	                .catch ( function (err) {
 	                    $scope.errors.push("Error saving plate set");
