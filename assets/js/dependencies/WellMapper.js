@@ -42,6 +42,8 @@ function wellMapper() {
     this.Map = {};
 
     this.sample_remaining = {};
+    this.missing_boxes = 0;       // 
+    this.missing_wells = 0;
 
     this.colourMap = function (length, options) {
 
@@ -191,13 +193,12 @@ function wellMapper() {
         }
         else {
             console.log("FAILED to find batch " + batch_index + " from: " + JSON.stringify(this.target_boxes));
-            batch = 0;
         }
-
-        
+       
         var x;
         var y;
 
+        console.log(this.available[batch].length + ' are avail in ' + batch + " of " + target_index);
         if (this.available && this.available[batch] && this.available[batch].length > target_index+1) {
             target_index++;
             console.log('next index ' + target_index);
@@ -221,10 +222,18 @@ function wellMapper() {
             }
         }
         else {
-            console.log("No more available wells");
-            x = ''; y = '';
+            console.log("No more available wells in Box " + this.target_boxes[batch_index-1] + ' : ' + target_index);
+            batch = 'TBD-' + this.missing_boxes;
+            target_index = 0;  
+            this.target_boxes[batch_index] = batch;
+            this.missing_boxes++;
+            this.available[batch] = this.available_wells(this.target_size, this.fill_by);
+            console.log(this.target_size + " Avail: " + JSON.stringify(this.available[batch]));
+            x = 'A'; 
+            y = '1';
         }
 
+        if ( batch.match(/^TBD/) ) { this.missing_wells++ }
         
         this.total_target_count++;       
 
@@ -241,13 +250,13 @@ function wellMapper() {
             rows = ['A'];
             cols = [1];
         }
-        else if (size === '9x9') {
+        else if (size === '8x12') {
             rows = ['A','B','C','D','E','F','G','H'];
             cols = [1,2,3,4,5,6,7,8,9,10,11,12];
         }
-        else if (size === '8x12') {
+        else if (size === '9x9') {
             rows = ['A','B','C','D','E','F','G','H','I'];
-            cols = [1,2,3,4,5,6,7,8,9,10,11];
+            cols = [1,2,3,4,5,6,7,8,9];
         }
 
         var avail = [];
@@ -685,7 +694,13 @@ function wellMapper() {
         this.Transfer = Transfer;
         this.TransferMap = TransferMap;
 
-        console.log("completed distribution... ");
+         if (this.missing_boxes) {
+            var msg = this.missing_wells + ' Target samples require target boxes.  Please scan ' + this.missing_boxes + " more Target Boxes";
+            warnings.push(msg);
+            console.log(msg);
+        }
+
+        console.log("completed Distribution... ");
         var data = {
             Transfer: Transfer,         // [ { batch: 0, source_id: 123, qty ; 20, qty_units: 'ml' ...}, { }, ...]
             TransferMap: TransferMap,   // helps with visualization purposes
