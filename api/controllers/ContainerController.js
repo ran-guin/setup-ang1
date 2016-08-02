@@ -64,12 +64,18 @@ module.exports = {
 	summary : function (req, res) { 
 		var ids = req.param('ids');
 		var element = req.param('element') || 'injectedData';   // match default in CommonController
+		var render = req.param('render') || 0;
 
 		var flds = ['id', 'Parent', 'box_id', 'box_size', 'position', 'container_format', 'sample_type', 'qty', 'qty_units', 'attributes'];
 
 		Container.loadData(ids)
 		.then (function (result) {
-			return res.render('customize/injectedData', { fields : flds, data : result, title: 'Sample Info', element: element});		
+			if (render) {
+				return res.render('customize/injectedData', { fields : flds, data : result, title: 'Sample Info', element: element});
+			}
+			else {
+				return res.json(result);
+			}		
 		})
 		.catch ( function (err) {
 			return res.json("error injecting Sample Info");
