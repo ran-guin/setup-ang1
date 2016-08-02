@@ -342,6 +342,7 @@ function wellMapper() {
         
         this.boxes_required = boxes_required;
 
+        this.Target = Target;
         this.Options = {
             split : this.splitX,
             pack  : this.pack_wells,
@@ -650,6 +651,12 @@ function wellMapper() {
                          // XferData[opt] = List[opt][target];
                             TargetData[opt] = List[opt][target];
                         }
+                    }
+                    if (! TargetData['qty']) { 
+                        TargetData['qty'] = sources[i].qty;
+                        TargetData['qty_units'] = sources[i].qty_units;
+                        console.log("default qty transferred to " + sources[i].qty + sources[i].qty_units);
+                        console.log('Source ' + i + ": " + JSON.stringify(sources[i]));
                     }
 
                     TransferMap[batch_index][target_position] = MapData;
