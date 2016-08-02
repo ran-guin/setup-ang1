@@ -361,7 +361,7 @@ module.exports = {
 			resetSource['Current_Volume'] = 0;
 		}
 
-		if (target.qty) {
+		if (target.qty && options.transfer_type !== 'Pre-Print') {
 			var qtyField = Container.alias('qty');
 			var qtyUnits = Container.alias('qty_units');
 
