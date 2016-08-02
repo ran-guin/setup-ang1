@@ -207,7 +207,7 @@ block content
                       include TargetMap.jade
                     hr
 
-              div(ng-if="status=='Completed'")
+              div(ng-show="protocol.status == 'Completed'")
                 include ContainerOptions.jade 
                 include uploadMatrix.jade
                 hr
