@@ -594,8 +594,12 @@ module.exports = {
 
 		var deferred = q.defer();
 		console.log('post Transfer updates...');
+
 		if ( ! target ) { target = {} }
 		if ( ! options ) { options = {} }
+
+		console.log(JSON.stringify(target));
+		console.log(JSON.stringify(options));
 
 		var promises = [];
 
@@ -607,9 +611,9 @@ module.exports = {
 			promises.push( Container.loadData(new_ids) );
 		}
 
-		//if (options.solution_qty) {
+		if (options.solution_qty) {
 			console.log("\n*** Need to add solution quantities if applicable ...");
-		//}
+		}
 
 
 		var returnVal = { plate_ids : new_ids };
