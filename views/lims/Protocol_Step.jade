@@ -94,7 +94,7 @@ block content
                               - def     = defaults[i];
 
                               if attributes[alias]
-                                - fType = attributes[alias].type
+                                - fType = attributes[alias].type || 'text'
                                 if fType === 'Count'
                                   - fType = 'hidden'
                                 // - var attr_index = attributes.indexOf(fld);
@@ -109,7 +109,6 @@ block content
 
                               if fType === 'hidden' 
                                 input(type='hidden' name='#{fld}#{Snum}' id='#{fld}#{Snum}' ng-model='#{fld}#{Snum}' force=1)
-
                               else if fType.match(/ENUM/i)
                                 div.form-group
                                   label.col-sm-2.control-label(for="#{fld}#{Snum}") #{alias}
