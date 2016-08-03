@@ -28,6 +28,7 @@ if target_size == '8x12'
 
 div(ng-if="Map.Transfer && Map.TransferMap")
 	div(ng-repeat="batch in Map.TransferMap")
+		b Box {{ Map.Options.target_boxes[$index] }}
 		table.table-bordered(style="border: 1px solid")
 			each row in rows
 				tr
