@@ -79,6 +79,8 @@ module.exports = {
 
 				var transferred;
 				if (data['Transfer'] && data['Transfer_Options'] && data['Transfer_Options']['transfer_type']) {
+
+					data['Transfer_Options']['Prep'] = last_prep_id;
 					console.log('\n*** call Container.execute_transfer from Lab_protocol Model');
 					promises.push( Container.execute_transfer( ids, data['Transfer'], data['Transfer_Options']) );
 
@@ -100,52 +102,10 @@ module.exports = {
 					// sails.config.messages.push('Saved step...');
 
 					if (transferred) { 
-						returnData = Qdata[transferred-1];
+						returnData = Qdata[transferred-1];  // return data from execute_transfer promise
 					}
-					else { returnData = result }
+					else { returnData = result }            // result not typically used unless transferred.. 
 
-					// before returning ... check if samples are to be moved ... // test - redundant now that relocation is in execute_transfer ? ...
-					/* 
-					if (data['Move']) {
-						var moveIds = ids;
-						var target_location = data['Move'];
-
-						if (transferred) {
-							// regardless of reset_focus, move should apply to target plates from transfer
-							console.log("\n** Check for target plates in: " + JSON.stringify(Qdata[transferred-1]) );
-							moveIds = Qdata[transferred-1].target_ids;
-							
-							if (!moveIds) {
-								var msg = "Error moving target ids - no target ids retrieved";
-								console.log(msg);
-								sails.config.errors.push(msg);
-							}
-							else {
-								var msg = "MOVE transferred samples: " + moveIds.join(',') + ' TO Loc#(s): ' + target_location;
-								console.log(msg);
-								sails.config.messages.push(msg);
-							}
-						}
-						else {
-							var msg = "MOVE current samples: " + moveIds.join(',') + ' TO Loc#(s): ' + target_location;
-							console.log(msg);
-							sails.config.messages.push(msg);
-						}
-
-						// Move Samples as required
-						Container.relocate(moveIds, target_location)
-						.then (function () {
-							deferred.resolve(returnData);
-						})
-						.catch ( function (err) {
-							deferred.resolve(returnData);  // return successfully, but generate error message for user
-						});
-					}
-					else {
-						console.log("No sample relocation requested");
-						deferred.resolve(returnData);
-					}
-					*/
 					deferred.resolve(returnData);
 				})
 				.catch ( function (Qerr) {
