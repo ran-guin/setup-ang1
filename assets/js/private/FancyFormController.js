@@ -7,6 +7,25 @@ app.controller('FancyFormController',
         
         // Support Basic Password Validation and Confirmation
         // usage: ng-model='repeat' ng-key-up="compare(repeat)"
+        $scope.stdForm = {};
+        $scope.stdForm.units = {
+            'ul' :  1/1000,
+            'ml' : 1,
+            'ug' : 1/1000000,
+            'mg' : 1/1000,
+            'g'  : 1
+        };
+
+        $scope.stdForm.units_options = [
+            {id: 0, name: '-- Units --'},
+            {id : 1, name : 'ul'},
+            {id : 2, name : 'ml'},
+            {id : 3, name : 'ug'},
+            {id : 4, name : 'mg'},
+            {id : 5, name : 'g'}
+        ];
+
+        $scope.stdForm.units_lookup = $scope.stdForm.units_options[0].name;
 
         $scope.custom_disable = false;
 
@@ -50,26 +69,6 @@ app.controller('FancyFormController',
     		return view;
     		//return "\n<div class='container' style='padding:20px'>\n" + view + "</div>\n";
     	}
-
-
-        $scope.units = {
-            'ul' :  1/1000,
-            'ml' : 1,
-            'ug' : 1/1000000,
-            'mg' : 1/1000,
-            'g'  : 1
-        };
-
-        $scope.units_options = [
-            {id: 0, name: '-- Units --'},
-            {id : 1, name : 'ul'},
-            {id : 2, name : 'ml'},
-            {id : 3, name : 'ug'},
-            {id : 4, name : 'mg'},
-            {id : 5, name : 'g'}
-        ];
-
-        $scope.units_lookup = $scope.units_options[0].name;
 
         $scope.set_dropdown_default = function (name, label, target_name) {
             for (var i=0; i<$scope[name].length; i++) {
@@ -200,47 +199,6 @@ app.controller('FancyFormController',
         $scope.$watch("tqu", function (value) {
             $scope['transfer_qty_units'] = $scope.tqu;
         }); 
-
-        $scope.normalize_units = function (field) {
-            // convert quantities to same units as original to ensure ongoing calculated volumes are correct.
-            // when removing or adding 250 ul to a container with 2 ml, the 250 ul should be converted to the original units (eg 0.25 ml)
-            //
-            // new values may be re-normalized via a cron job at a different time (eg check for volumes > 1000 or < 0.01 and convert)
-            //
-            // eg normalize_units('qty','reference_units') or normalize_units('solution_qty')
-
-            // UNDER CONSTRUCTION .. 
-            var values = [];
-            var splitField;  // get from current split fields .. 
-
-            for (var i=0; i<Samples.length; i++) {                      
-                var orig_units = Samples[index].qty_units;
-                var new_units = $scope[field + '_units'];
-
-                var val = splitField[i] || $scope[field];
-                var newVal = val;
-
-                var conflict = 0;
-                if (new_units === orig_units) { }
-                else {
-                    if ($scope.units[old_units] && $scope.units[new_units]) {
-                        newval = val * $scope.units[old_units]/$scope.units[new_units];
-                    }
-                    else {
-                        $scope.error(new_units + " Units not yet defined - cannot auto convert");
-                    }
-                    //newVal = $scope.convert(val, new_units, old_units);
-                    conflict++;
-                }
-                values.push(newVal);
-            }
-            if (conflict || splitField[field]) {
-                splitField[field] = values;
-            }
-            else {
-                $scope[field] = values[0];
-            }
-        }
 
         // Automatically Load Lookup Files //
         $scope.loadLookup = function loadLookup(model, labels, prompt, condition, defaultTo) {
