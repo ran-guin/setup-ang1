@@ -201,7 +201,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
          };
 
         console.log("PREP DATA: " + JSON.stringify(PrepData));
-        var PlateInfo = ['plate_list', 'solution', 'equipment','solution_qty','solution_qty_units', 'transfer_qty','transfer_qty_units'];
+        var PlateInfo = ['plate_list', 'solution', 'equipment', 'solution_qty', 'solution_qty_units', 'transfer_qty','transfer_qty_units'];
 
         // Legacy fields //
         var map = {
@@ -214,10 +214,13 @@ function protocolController ($scope, $rootScope, $http, $q) {
             'transfer_qty_units' : 'Transfer_Quantity_Units'
         };
 
+
+        $scope.normalize_units('solution_qty', $scope.step.stepNumber);
+
         $scope['plate_list_split'] = $scope.active.plate_list;  // test.. should be reverse split
         console.log("split Data to " + $scope.active.N + ' values');
 
-        var PlateData = $scope.splitData(PlateInfo, $scope.active.N, map);
+        var PlateData = $scope.splitData(PlateInfo, $scope.active.N, map, { FK: { 'solution' : 'Sol' });
 
         console.log("load " + $scope.active.N + ' plate ids...');
         for (var i=0; i<$scope.active.N; i++) {
@@ -368,7 +371,12 @@ function protocolController ($scope, $rootScope, $http, $q) {
     }
 
     /* Retrieve data from fields which are splittable ... eg may accept different values for each of N plate_ids based on comma-delimited list */
-    $scope.splitData = function ( input, N, map) {
+    $scope.splitData = function ( input, N, map, options) {
+
+        if ( !options ) { options = {} }
+
+        var FK = options.FK || {};
+
         var recordData = [];
         for (var n=0; n<N; n++) {
             recordData[n] = {};
@@ -384,10 +392,13 @@ function protocolController ($scope, $rootScope, $http, $q) {
                 if ($scope[key + '_split']) { 
                     var splitV = $scope[key + '_split'].split(',');
                     recordData[n][mapped] = splitV[n];
+                    console.log(key + " SPLIT " + mapped);
                 }
                 else if ($scope[key]) {
                     recordData[n][mapped] = $scope[key];
+                    console.log("\n** NOT SPLIT " + key);
                 }
+                if ( FK[fld] >= 0 ) { recordData[n][mapped].replace(FK[fld],'') }  // make case insensitive using regexp /i
             }
         }
         console.log('split Plate data: ' + JSON.stringify(recordData));
@@ -549,6 +560,11 @@ function protocolController ($scope, $rootScope, $http, $q) {
         var fill =  $scope.map.fill_by || $scope.Step['fill_by'];
         var size = $scope.Step['target_size'] || $scope.active.Samples[0].box_size;
 
+        var sol = $scope['solution' + $scope.step.stepNumber] || '';
+        sol = sol.replace(/Sol/i, '');
+
+        sol_qty = $scope['solution_qty' + $scope.step.stepNumber + '_split'] || $scope['solution_qty' + $scope.step.stepNumber];
+ 
         var Options = {
             'transfer_type' : $scope.Step.transfer_type,
             'reset_focus'   : $scope.Step.reset_focus,
@@ -557,10 +573,12 @@ function protocolController ($scope, $rootScope, $http, $q) {
             'distribution_mode' : $scope['distribution_mode' + $scope.step.stepNumber],
             'fill_by'  : $scope.map.fill_by || $scope.Step['fill_by'],
             'target_size' : size,
+
+            'solution_qty' : sol_qty,
+            'solution'     : sol,
         }
         
         console.log(" S: " + split + "; F: " + fill + "size: " + size);
-
 
         console.log("Distribute: ");
         console.log("Target: " + JSON.stringify(Target));
@@ -715,5 +733,69 @@ function protocolController ($scope, $rootScope, $http, $q) {
     $scope.ngalert = function ngalert(msg) {
         console.log("NG ALERT: " + msg);
     }
+
+    $scope.normalize_units = function (field, suffix) {
+        // convert quantities to same units as original to ensure ongoing calculated volumes are correct.
+        // when removing or adding 250 ul to a container with 2 ml, the 250 ul should be converted to the original units (eg 0.25 ml)
+        //
+        // new values may be re-normalized via a cron job at a different time (eg check for volumes > 1000 or < 0.01 and convert)
+        //
+        // eg normalize_units('qty','reference_units') or normalize_units('solution_qty')
+
+        // UNDER CONSTRUCTION .. 
+
+        var values = [];
+        var splitField;  // get from current split fields .. 
+
+        if ( !suffix) { suffix = '' }
+        var units_field = field + '_units' + suffix;
+        var field = field + suffix;
+
+        var N = $scope.active.Samples.length;
+
+        if ($scope[field] && $scope[units_field]) {
+
+            console.log(N + ' samples...');
+            for (var i=0; i<N; i++) {                      
+                var orig_units = $scope.active.Samples[i].qty_units;
+                var new_units = $scope[units_field];
+
+                var newVal = $scope[field];
+                if ($scope.SplitFields[field]) {
+                    newVal = $scope.SplitFields[field][i];
+                }
+
+                console.log("convert " + new_units + " to " + orig_units);
+                console.log(newVal.constructor);
+                var conflict = 0;
+                if (new_units === orig_units) { }
+                else {
+                    if ($scope.stdForm.units[orig_units] && $scope.stdForm.units[new_units]) {
+                        var factor =  $scope.stdForm.units[new_units] / $scope.stdForm.units[orig_units];
+                        newVal = newVal * factor;
+                        console.log(newVal + ' x ' + factor + ' -> ' + newVal);
+                        console.log(newVal.constructor);
+                    }
+                    else {
+                        $scope.error(new_units + " Units not yet defined - cannot auto convert");
+                    }
+                    //newVal = $scope.convert(val, new_units, old_units);
+                    conflict++;
+                }
+                values.push(newVal);
+            }
+
+            console.log(JSON.stringify(values));
+
+            if (conflict && $scope.SplitFields[field]) {
+                $scope.SplitFields[field] = values;
+                $scope[field + '_split'] = values.join(',');
+            }
+            else {
+                $scope[field] = values[0];
+                console.log("Reset " + field + ' to ' + values[0]);
+            }
+        }
+    }    
 
 }]);
