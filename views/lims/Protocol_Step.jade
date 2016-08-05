@@ -113,7 +113,7 @@ block content
                                 div.form-group
                                   label.col-sm-2.control-label(for="#{fld}#{Snum}") #{alias}
                                   div.col-sm-6
-                                    dropdown(placeholder="#{alias}" list="MenuList['#{fld}#{Snum}']" selected="#{fld}#{Snum}" property="name" track='name' default="#{def}" ng-init="setup_Menu('#{fld}#{Snum}', \"#{fType}\",'','#{def}')")
+                                    my-dropdown(placeholder="#{alias}" list="MenuList['#{fld}#{Snum}']" selected="#{fld}#{Snum}" property="name" track='name' default="#{def}" ng-init="setup_Menu('#{fld}#{Snum}', \"#{fType}\",'','#{def}')")
                               else 
                                 div.form-group
                                   label.col-sm-2.control-label(for='#{fld}#{Snum}') #{alias}
@@ -124,7 +124,7 @@ block content
                                   if fld.match(/_qty/)
                                     div.col-sm-2
                                       - units = [ { name: 'ml'}, { name: 'ul'}]      
-                                      dropdown(placeholder='units..' list="MenuList['#{fld}_units#{Snum}']" selected="#{fld}_units#{Snum}" property='name' track='name', ng-init="setup_Menu('#{fld}_units#{Snum}','ml,ul,nl')") 
+                                      my-dropdown(placeholder='units..' list="MenuList['#{fld}_units#{Snum}']" selected="#{fld}_units#{Snum}" property='name' track='name', ng-init="setup_Menu('#{fld}_units#{Snum}','ml,ul,nl')") 
 
                                       // span.lookup(id='Lookup-units' ng-init="loadLookup('units', '::#{fld}_units#{Snum}', 'units','','#{def}')") UNITS  
                                   // if fld == 'Split'
