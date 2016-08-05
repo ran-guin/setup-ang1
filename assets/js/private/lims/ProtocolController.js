@@ -121,6 +121,15 @@ function protocolController ($scope, $rootScope, $http, $q) {
             }; 
 
             $scope.step.listExample = $scope.listExamples[$scope.step.list_mode];
+
+            if ($scope.active.last_protocol_id === $scope.Step.Lab_protocol) {
+                if ($scope.active.last_step.name === $scope.Step.name) {
+                    $scope.warning("This step has already been completed... (do you want to use progeny instead ?)");
+                }
+                else if ($scope.active.last_step.name === 'Completed Protocol') {
+                    $scope.warning("This protocol has already been completed... (do you want to use progeny instead ?)");
+                }
+            }
         }
         else {
             // No protocol loaded ... 
@@ -129,13 +138,6 @@ function protocolController ($scope, $rootScope, $http, $q) {
         }
 
         console.log("initialization complete...");
-        if ($scope.active.last_step.name === $scope.Step.name) {
-            console.log("STEPDIFF ERROR");
-            $scope.warning("This step has already been completed... use progeny if continuing");
-        }
-        else {
-            console.log("STEPDIFF: " + $scope.active.last_step.name + ' vs ' + $scope.Step.name);
-        }
     }
 
     $scope.exitThisProtocol = function exitThisProtocol () {
@@ -309,9 +311,14 @@ function protocolController ($scope, $rootScope, $http, $q) {
                 data['Transfer_Options'] = $scope.map.Options;
                 data['Transfer'] = $scope.Map.Transfer;
                 console.log("transfer detected");
+
+                if (PlateData[0] && PlateData[0].Solution_Quantity) {
+                    // pass solution quantities as options to add to target qty ... 
+                    data['Transfer_Options']['solution_qty'] = _.pluck(PlateData,'Solution_Quantity');
+                }
             }
 
-            console.log("post: " + JSON.stringify(data));
+            console.log("\n** POST: " + JSON.stringify(data));
             $http.post(url, data)
             .then ( function (returnVal) {
                 console.log("Returned: " + JSON.stringify(returnVal));
@@ -381,6 +388,8 @@ function protocolController ($scope, $rootScope, $http, $q) {
         if ( !options ) { options = {} }
 
         var FK = options.FK || {};
+        console.log("Parse INPUT DATA");
+        console.log(JSON.stringify(input));
 
         var recordData = [];
         for (var n=0; n<N; n++) {
@@ -398,28 +407,27 @@ function protocolController ($scope, $rootScope, $http, $q) {
                 if ($scope[key + '_split']) { 
                     var splitV = $scope[key + '_split'].split(',');
                     value = splitV[n];
-                    console.log(key + " SPLIT " + mapped);
                 }
                 else if ($scope[key]) {
                     value = $scope[key];
-                    console.log("\n** NOT SPLIT " + key);
                 }
                 
-                var prefix = $scope.Prefix[fld];
-                if (value.constructor === Object && value.id) {
+                var prefix = $scope.Prefix(fld);
+
+                if (value && value.constructor === Object && value.id) {
                     value = value.id;
                     console.log("Converted dropdown object to id " + value);
                 }
-                else if (prefix) {
+                else if (prefix && value) {
                     var regex = new RegExp(prefix, 'i');
                     value = value.replace(regex, '');
                     console.log("replace prefix " + prefix + ' -> ' + value);
                 }
 
-                recordData[n][mapped] = value;
+                if (value) { recordData[n][mapped] = value }
             }
         }
-        console.log('split Plate data: ' + JSON.stringify(recordData));
+        console.log('split input data: ' + JSON.stringify(recordData));
         return recordData;
     }
 
@@ -427,7 +435,6 @@ function protocolController ($scope, $rootScope, $http, $q) {
     $scope.splitField = function splitField (field, separator) {
 
         var input = $scope[field];
-        console.log("ENTER SPLITFIELD " + field + " : " + input);
         if (field.match(/split/i)) {
             console.log("reset specs");
             $scope.step.fill_by = 'column';
@@ -466,8 +473,6 @@ function protocolController ($scope, $rootScope, $http, $q) {
             }
 
             if (prefix && (input_array.length > 1) && (input_array[0] == '')) { input_array.shift() }  // remove first element 
-
-            console.log('test: ' + JSON.stringify(input_array) );
 
             var split = $scope['Split' + $scope.step.stepNumber] || 1;
             var Nx = $scope.active.N * split;
@@ -565,7 +570,6 @@ function protocolController ($scope, $rootScope, $http, $q) {
             qty = $scope['transfer_qty' + $scope.step.stepNumber + '_split'].split(',');
         }  
         var qty_units = $scope['units_label'];
-        console.log("Q = " + JSON.stringify(qty) + ' ' + qty_units);
 
         var Target = { 
             'Container_format' : $scope.Step.Target_format,
@@ -578,11 +582,6 @@ function protocolController ($scope, $rootScope, $http, $q) {
         var fill =  $scope.map.fill_by || $scope.Step['fill_by'];
         var size = $scope.Step['target_size'] || $scope.active.Samples[0].box_size;
 
-        var sol = $scope['solution' + $scope.step.stepNumber] || '';
-        sol = sol.replace(/Sol/i, '');
-
-        sol_qty = $scope['solution_qty' + $scope.step.stepNumber + '_split'] || $scope['solution_qty' + $scope.step.stepNumber];
- 
         var Options = {
             'transfer_type' : $scope.Step.transfer_type,
             'reset_focus'   : $scope.Step.reset_focus,
@@ -591,13 +590,8 @@ function protocolController ($scope, $rootScope, $http, $q) {
             'distribution_mode' : $scope['distribution_mode' + $scope.step.stepNumber],
             'fill_by'  : $scope.map.fill_by || $scope.Step['fill_by'],
             'target_size' : size,
-
-            'solution_qty' : sol_qty,
-            'solution'     : sol,
         }
         
-        console.log(" S: " + split + "; F: " + fill + "size: " + size);
-
         console.log("Distribute: ");
         console.log("Target: " + JSON.stringify(Target));
         console.log("Options: " + JSON.stringify(Options));
