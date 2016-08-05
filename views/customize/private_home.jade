@@ -4,9 +4,12 @@ block content
   div.main.container
                
     h3 Dashboard
-      .navbar-right 
-        a(href="/admin")
-          button.btn.btn-danger(type='button') Admin
+      div.navbar-right
+        if sails.config.payload && sails.config.payload.access === 'admin'
+            a(href="/admin")
+              button.btn.btn-danger(type='button') Admin
+        else
+          b Access: #{JSON.stringify(sails.config.payload.user)}
 
     hr 
 
