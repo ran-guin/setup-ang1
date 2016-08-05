@@ -23,34 +23,32 @@ block content
               
             form(role='form' name='Stock' method='post' action='Stock/receive')
   
-              div.form-group.input-lg
-                label.col-md-2.control-label(for='number_in_batch') Items Received: 
+              div.form-group
+                label.input-lg.col-md-2.control-label(for='number_in_batch') Items Received: 
                 input.input-lg#number_in_batch(type='number' ng-model='number_in_batch' required placeholder='Number in Batch')              
 
-              div.form-group.input-lg
-                label.col-md-2.control-label(for='lot_number') Lot #: 
+              div.form-group
+                label.input-lg.col-md-2.control-label(for='lot_number') Lot #: 
                 input.input-lg#lot_number(type='text' ng-model='lot_number' placeholder='Lot Number') 
 
-              div.form-group.input-lg
-                label.col-md-2.control-label(for='received') Received: 
+              div.form-group
+                label.input-lg.col-md-2.control-label(for='received') Received: 
                 div.input-lg.my-datepicker#received(type="text" defaultTo='2016-03-02' ng-model="received")
 
-              div.form-group.input-lg
-                label.col-md-2.control-label(for='type') 
+              div.form-group
+                label.input-lg.col-md-2.control-label(for='type') Type: 
                 input.input-lg(type='radio' name='type' required ng-model='type' value='Reagent' ng-click="filter_catalog()") 
                 b &nbsp; Solution / Reagent
                 input.input-lg(type='radio' name='type' ng-model='type' value='Equipment' ng-click="filter_catalog()") 
                 b &nbsp; Equipment
 
-              hr
-
-              div.form-group.input-lg(ng-show="type")
-                label.col-md-2.input-lg.control-label(for="catalog") Catalog Item:
+              div.form-group(ng-show="type")
+                label.input-lg.col-md-2.control-label(for="catalog") Catalog Item:
                 // input.col-md-6#catalog(type='text' ng-model='catalog' required placeholder='Volume')
                 div.col-md-6
                   my-dropdown#catalog(placeholder="Select from Catalog..." list="MenuList['catalog']" selected="catalog" property="name" ng-init="filter_catalog()")
-                div.col-md-4 &nbsp; {{ catalog }}
-                  a(href='/record/add/stock_catalog') 
+                div.col-md-4 &nbsp;
+                  a(href='/record/add/catalog') 
                     button.btn.btn-primary(type='button') Add Item to Catalog
 
                   // a(href='#' onclick="return false;" data-toggle='modal' data-target='#NewCatalogItem') 
@@ -58,7 +56,8 @@ block content
 
               div(ng-show="type === 'Reagent'")
                 hr 
-                h3 Reagent specific information:
+                b
+                  u Reagent specific information:
                 
                 div.form-group.input-lg
                   label.col-md-2.control-label(for='qty') Quantity: 
