@@ -29,10 +29,12 @@ block content
   
     - var prompt = { desc : "Select to prompt user to complete this step while using user interface (required to track step)" };
     - var transfer = { desc : "Is sample being relocated within this step to a new target container or box location" };
-    - var move = { desc : 'Relocate samples to a new box' }
+    - var move = { desc : 'Relocate samples to a new box (without changing their tube container)' }
     - var aliquot = { desc : 'Transfer portion of sample to a target well (leaving some sample remaining)' }
     - var transfer = { desc : 'Transfer all (or specified volume) of original sample to the target well(s), and throw out original sample container(s)' }
     - var preprint = { desc : 'Generate empty target container ids in preparation for future transfer/aliquot.  <B>This should always be followed at some point in the same protocol by an Aliquot or Transfer step</B>' }
+
+    - var transfer_types = '<UL><LI><U>Transfer:</U> ' + transfer.desc + '</LI><LI><U>Aliquot:</U> ' + aliquot.desc + '</LI><LI><U>Pre-Print:</U> ' + preprint.desc + '</LI><LI><U>Move:</U> ' + move.desc + "</LI></UL>";
 
     - attributes = attributes || {}; // {'Thaw_Time' : 'integer' }
 
@@ -87,30 +89,12 @@ block content
               div.form-group
                 label.input-lg.col-sm-2
                   b Type:
-                div.col-sm-2
-                  input.input-lg#move(type='radio' name='transfer_type' ng-model='transfer_type' value='Move')
-                  label.input-lg(for='move')
-                    span &nbsp; Move &nbsp;                    
-                      a(href='#' onclick="return false;" tooltip='instructions' data-toggle="popover" data-placement="right" data-trigger="focus" title="Description" data-content="#{move.desc}")
-                        i.fa.fa-question-circle
-                div.col-sm-2
-                    input.input-lg#aliquot(type='radio' name='transfer_type' ng-model='transfer_type' value='Aliquot')
-                    label.input-lg(for='aliquot')
-                      &nbsp; Aliquot &nbsp;
-                      a(href='#' onclick="return false;" tooltip='instructions' data-toggle="popover" data-placement="left" data-trigger="focus" title="Description" data-content="#{aliquot.desc}")
-                        i.fa.fa-question-circle
-                div.col-sm-2
-                  input.input-lg(type='radio' name='transfer_type' ng-model='transfer_type' value='Transfer')
-                  label.input-lg(for='transfer')
-                    span &nbsp; Transfer &nbsp;
-                    a(href='#' onclick="return false;" tooltip='instructions' data-toggle="popover" data-placement="left" data-trigger="focus" title="Description" data-content="#{transfer.desc}")
-                      i.fa.fa-question-circle
-                div.col-sm-2
-                  input.input-lg(type='radio' name='transfer_type' ng-model='transfer_type' value='Pre-print')
-                  label.input-lg(for='preprint')
-                    span &nbsp; Pre-Print &nbsp;
-                    a(href='#' onclick="return false;" tooltip='instructions' data-toggle="popover" data-placement="left" data-trigger="focus" title="Description" data-content="#{preprint.desc}")
-                        i.fa.fa-question-circle
+                div.col-sm-6
+                  my-dropdown#move(placeholder="Type" list="MenuList['transfer_type']" selected="transfer_type" property="name" ng-init="setup_Menu('transfer_type', 'Move,Transfer,Aliquot,Pre-Print'); filter_catalog();")
+
+                  span &nbsp; &nbsp;
+                  a(href='#' onclick="return false;" tooltip='description' data-toggle="popover" data-placement="left" data-trigger="focus" title="Transfer Options" data-content="#{transfer_types}" data-html="true")
+                    i.fa.fa-question-circle
 
               div.form-group
                 label.input-lg.col-sm-2
