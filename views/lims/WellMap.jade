@@ -57,7 +57,7 @@ block content
                         
                         // include Units.jade
                         td
-                          dropdown.mandatory.mini-dropdown.addon#transfer_qty_units(placeholder='units..' list="MenuList['map.transfer_qty_units']" selected="map.transfer_qty_units" property='name' track='name', ng-init="setup_Menu('map.transfer_qty_units','ml,ul,nl')") 
+                          my-dropdown.mandatory.mini-dropdown.addon#transfer_qty_units(placeholder='units..' list="MenuList['map.transfer_qty_units']" selected="map.transfer_qty_units" property='name' track='name', ng-init="setup_Menu('map.transfer_qty_units','ml,ul,nl')") 
                   br
                   span(style='color: red' ng-show='transfer_qty_errors || units_errors') Transfer Qty + Units Required
                   span(style='color: red' ng-show="map.transfer_type === 'Transfer'") Defaults to entire volume in original tube(s)
@@ -65,7 +65,7 @@ block content
                 div.col-sm-4(ng-show="map.transfer_type !== 'Move'")
                   div.form-group(style='padding-top: 0px; padding-left: 40px')
                     label(for='map.target_format' style='padding-top: 0px')
-                    dropdown.mandatory#target_format(style='width:100%' placeholder='Target Format...' required list="MenuList['map.target_format']" selected="map.target_format" property='name' track='id' ng-init="setup_Menu('map.target_format','FK(container_format)')")        
+                    my-dropdown.mandatory#target_format(style='width:100%' placeholder='Target Format...' required list="MenuList['map.target_format']" selected="map.target_format" property='name' track='id' ng-init="setup_Menu('map.target_format','FK(container_format)')")        
               hr 
 
               div.form-group
@@ -119,7 +119,7 @@ block content
                   span IF different Sample Type is being extracted:
                   br
                   // span.lookup(id='Lookup-sample_type' ng-init="loadLookup('sample_type','', 'Extract ?')")
-                  dropdown#sample_type(placeholder='Extract...' required list="MenuList['sample_type']" selected="sample_type" property='name', ng-init="setup_Menu('sample_type','FK(sample_type)')") 
+                  my-dropdown#sample_type(placeholder='Extract...' required list="MenuList['sample_type']" selected="sample_type" property='name', ng-init="setup_Menu('sample_type','FK(sample_type)')") 
 
                 div.col-sm-4
                   b Target : 
