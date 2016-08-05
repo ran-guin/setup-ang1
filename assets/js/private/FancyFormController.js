@@ -360,7 +360,7 @@ app.controller('FancyFormController',
         $rootScope.$broadcast("documentClicked", angular.element(e.target));
     });
 })
-.directive("dropdown", function($rootScope) {
+.directive("myDropdown", function($rootScope) {
 
     // usage : 
     //
