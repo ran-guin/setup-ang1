@@ -36,6 +36,8 @@ function limsController ($scope, $rootScope, $http, $q) {
             $scope.active.Samples = Samples;
             console.log("loaded...");
             $scope.active.last_step = Samples[0].last_step;
+            $scope.active.last_protocol = Samples[0].last_protocol;
+            $scope.active.last_protocol_id = Samples[0].last_protocol_id;
             
             if (! $scope.original_Samples ) { $scope.original_Samples = Samples }
 
