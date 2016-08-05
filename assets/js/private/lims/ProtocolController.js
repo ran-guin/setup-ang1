@@ -220,7 +220,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
         $scope['plate_list_split'] = $scope.active.plate_list;  // test.. should be reverse split
         console.log("split Data to " + $scope.active.N + ' values');
 
-        var PlateData = $scope.splitData(PlateInfo, $scope.active.N, map, { FK: { 'solution' : 'Sol' });
+        var PlateData = $scope.splitData(PlateInfo, $scope.active.N, map);
 
         console.log("load " + $scope.active.N + ' plate ids...');
         for (var i=0; i<$scope.active.N; i++) {
@@ -372,7 +372,12 @@ function protocolController ($scope, $rootScope, $http, $q) {
 
     /* Retrieve data from fields which are splittable ... eg may accept different values for each of N plate_ids based on comma-delimited list */
     $scope.splitData = function ( input, N, map, options) {
-
+        // convert input values into recordData 
+        //   converts standard field name to actual DB field names (via map) if necessary
+        //   converts single values to array of N values
+        //   converts comma-delimited list into array of N values if necessary
+        //   converts foreign key values to integer (id only) if applicable
+        //
         if ( !options ) { options = {} }
 
         var FK = options.FK || {};
@@ -389,16 +394,29 @@ function protocolController ($scope, $rootScope, $http, $q) {
                     mapped = map[fld];
                 }
                 
+                var value;
                 if ($scope[key + '_split']) { 
                     var splitV = $scope[key + '_split'].split(',');
-                    recordData[n][mapped] = splitV[n];
+                    value = splitV[n];
                     console.log(key + " SPLIT " + mapped);
                 }
                 else if ($scope[key]) {
-                    recordData[n][mapped] = $scope[key];
+                    value = $scope[key];
                     console.log("\n** NOT SPLIT " + key);
                 }
-                if ( FK[fld] >= 0 ) { recordData[n][mapped].replace(FK[fld],'') }  // make case insensitive using regexp /i
+                
+                var prefix = $scope.Prefix[fld];
+                if (value.constructor === Object && value.id) {
+                    value = value.id;
+                    console.log("Converted dropdown object to id " + value);
+                }
+                else if (prefix) {
+                    var regex = new RegExp(prefix, 'i');
+                    value = value.replace(regex, '');
+                    console.log("replace prefix " + prefix + ' -> ' + value);
+                }
+
+                recordData[n][mapped] = value;
             }
         }
         console.log('split Plate data: ' + JSON.stringify(recordData));
