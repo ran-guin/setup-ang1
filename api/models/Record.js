@@ -1138,11 +1138,12 @@ module.exports = {
     	var fields = Object.keys(data);
     	var Mod = sails.models[model];
 
-    	if (Mod && fields.length) {
+    	if (Mod && fields.length && Mod.track_history) {
     		var track = _.union(Mod.track_history, fields);
 
     		var table = Mod.tableName || model;
-    		var idField = Mod.alias('id') || 'id';
+    		var idField = 'id';
+    		if (Mod.alias && Mod.alias('id')) { idField = Mod.alias('id') }
 
     		if (track.length ) {
     			var query = "SELECT " + idField + ', ' + track.join(',') + " FROM " + table + " WHERE " + idField + " IN (" + ids.join(',') + ')';
@@ -1162,7 +1163,10 @@ module.exports = {
     			deferred.resolve();
     		}
     	}
-    	else { deferred.resolve() }
+    	else {
+    		console.log('no history tracking required'); 
+    		deferred.resolve();
+    	}
     	
     	return deferred.promise;	
     }
