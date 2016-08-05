@@ -357,21 +357,21 @@ module.exports = {
 
 		if ( ! Options.solution_qty ) { Options.solution_qty = 0 }
 		
-		if (Options.transfer_qty) {
-			// Single quantity only ?? or remove
-			resetSource[qtyField] = "<" + qtyField + " - " + Options.transfer_qty + ">";
-
-			resetTarget[qtyField] = Options.transfer_qty + Options.solution_qty;
-			resetTarget[qtyUnits] = Options.transfer_qty_units;
-		}
-		else if (Transfer[0].qty && Options.transfer_type !== 'Pre-Print') {
+		if (Transfer[0].qty && Options.transfer_type !== 'Pre-Print') {
 			resetTarget[qtyUnits] = Transfer[0].qty_units || Options.transfer_qty_units;
 			var quantities = [];
 			var adjustments = [];
+
 			for (var i=0; i<Transfer.length; i++) {		
-					console.log("\n*** Reset target to " + Transfer[i].qty.constructor + Transfer[i].qty + " + " + Options.solution_qty.constructor + Options.solution_qty )
-	
-				var target_qty = Transfer[i].qty.toFloat() + Options.solution_qty.toFloat();
+				
+				var target_qty = Transfer[i].qty;
+				if (Options.solution_qty) {
+					var add_qty = Options.solution_qty[i];
+					if (add_qty.constructor === String) {
+						add_qty = add_qty.parseFloat();
+					}
+					target_qty = target_qty + add_qty; // needs to be text to enable comma-delimited list.. 
+				}
 				quantities.push( target_qty );
 
 				adjustments.push("<" + qtyField + " - " + Transfer[i].qty + ">");		
@@ -380,7 +380,6 @@ module.exports = {
 			resetSource[qtyField] = adjustments;
 		}
 		else if (Options.solution_qty) {
-			console.log("Added " + Options.solution_qty + " to Volume from added Solution");
 			resetTarget[qtyField] = Options.solution_qty;
 		}
 
