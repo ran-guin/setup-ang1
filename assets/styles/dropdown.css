@@ -7,13 +7,13 @@ input.preaddon {
   border-top-right-radius: 0px;
   border-bottom-right-radius: 0px;  
 }
-dropdown.addon > div {
+my-dropdown.addon > div {
   padding: 0px !important;
   border-top-left-radius: 0px;
   border-bottom-left-radius: 0px;
   background-color: #eeeeee;
 }
-dropdown.addon > div > div.dropdown-display > input {
+my-dropdown.addon > div > div.dropdown-display > input {
   border-top-left-radius: 0px;
   border-bottom-left-radius: 0px;
   background-color: #eeeeee;
@@ -22,28 +22,28 @@ dropdown-container {
   padding-top: 0px !important;
 }
 
-dropdown {
+my-dropdown {
   float: left;
   display: block;
   width: 250px;
 }
-dropdown.mini-dropdown > div {
+my-dropdown.mini-dropdown > div {
   float: left;
   width: 100px;
 }
-dropdown > div {
+my-dropdown > div {
   float: left;
   width: 100%;
 }
-dropdown.mandatory > div > div.dropdown-display > input {
+my-dropdown.mandatory > div > div.dropdown-display > input {
   border: solid 1px red !important;
   border-radius: 6px;
 }
-dropdown > div > div.dropdown-display > input {
+my-dropdown > div > div.dropdown-display > input {
   border-radius: 6px;
   border: solid 1px #ccc;
 }
-dropdown > div > div.dropdown-display {
+my-dropdown > div > div.dropdown-display {
   float: left;
   width: 100%;
   background: white;
@@ -53,7 +53,7 @@ dropdown > div > div.dropdown-display {
   box-sizing: border-box;
   border-radius: 6px;
 }
-dropdown > div > div.dropdown-display > * {
+my-dropdown > div > div.dropdown-display > * {
   float: left;
   height: 100%;
   height: 46px;
@@ -61,7 +61,7 @@ dropdown > div > div.dropdown-display > * {
   display: inline-block;
   vertical-align: middle;
 }
-dropdown > div > div.dropdown-display > span {
+my-dropdown > div > div.dropdown-display > span {
   font-size: 14px;
   width: 100%;
   position: relative;
@@ -69,10 +69,10 @@ dropdown > div > div.dropdown-display > span {
   padding-right: 34px;
   padding-left: 10px;
 }
-dropdown > div > div.dropdown-display > span.placeholder {
+my-dropdown > div > div.dropdown-display > span.placeholder {
   color: #AAA;
 }
-dropdown > div > div.dropdown-display > i {
+my-dropdown > div > div.dropdown-display > i {
   position: relative;
   width: 14px;
   margin-left: -24px;
@@ -81,21 +81,21 @@ dropdown > div > div.dropdown-display > i {
   padding-right: 10px;
   text-align: right;
 }
-dropdown > div > div.dropdown-list {
+my-dropdown > div > div.dropdown-list {
   float: left;
   position: relative;
   width: 100%;
   transform: scale(1, 0);
   transition: transform ease 250ms;
 }
-dropdown > div > div.dropdown-list > div {
+my-dropdown > div > div.dropdown-list > div {
   position: absolute;
   width: 100%;
   z-index: 100;
   cursor: pointer;
   background: white;
 }
-dropdown > div > div.dropdown-list > div > div {
+my-dropdown > div > div.dropdown-list > div > div {
   float: left;
   width: 100%;
   padding: 0 10px;
@@ -104,20 +104,20 @@ dropdown > div > div.dropdown-list > div > div {
   border: solid 1px #DDD;
   border-top: none;
 }
-dropdown > div > div.dropdown-list > div > div:hover {
+my-dropdown > div > div.dropdown-list > div > div:hover {
   background: #F0F0F0;
 }
-dropdown > div > div.dropdown-list > div > div.selected {
+my-dropdown > div > div.dropdown-list > div > div.selected {
   background: #2875C7;
   color: white;
 }
-dropdown > div > div.dropdown-list > div > div > * {
+my-dropdown > div > div.dropdown-list > div > div > * {
   height: 46px;
   line-height: 46px !important;
   display: inline-block;
   vertical-align: middle;
 }
-dropdown > div > div.dropdown-list > div > div > span {
+my-dropdown > div > div.dropdown-list > div > div > span {
   float: left;
   width: 100%;
   position: relative;
@@ -125,15 +125,15 @@ dropdown > div > div.dropdown-list > div > div > span {
   box-sizing: border-box;
   color: inherit;
 }
-dropdown > div > div.dropdown-list > div > div > i {
+my-dropdown > div > div.dropdown-list > div > div > i {
   float: left;
   width: 20px;
   margin-left: -20px;
   display: none;
 }
-dropdown > div > div.dropdown-list > div > div.selected > i {
+my-dropdown > div > div.dropdown-list > div > div.selected > i {
   display: inline-block;
 }
-dropdown > div.show > div.dropdown-list {
+my-dropdown > div.show > div.dropdown-list {
   transform: scale(1, 1);
 }
