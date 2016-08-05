@@ -56,28 +56,29 @@ block content
             div.form-group
               label.control-label.col-sm-2(for='step_message') Message
               div.col-sm-10  
-                input.input-lg.form-control#message(placeholder='Message' ng-model='Record.message')
+                input.input-lg.form-control#step_message(placeholder='Message' ng-model='Record.message')
             
             div.form-group
               label.control-label.col-sm-2.input-lg(for='transfer') Transfer / Relocate &nbsp;
                 a(href='#' onclick="return false;" tooltip='instructions' data-toggle="popover" data-placement="left" data-trigger="focus" title="Description" data-content="#{transfer.desc}")
                      i.fa.fa-question-circle
               div.col-sm-10
-                input.input-lg(type='checkbox' ng-model='transfer_step')    
+                input.input-lg#transfer(type='checkbox' ng-model='transfer_step')    
 
             div.form-group
               label.control-label.col-sm-2.input-lg(for='prompt') Prompt &nbsp;
                 a(href='#' onclick="return false;" tooltip='instructions' data-toggle="popover" data-placement="left" data-trigger="focus" title="Description" data-content="#{prompt.desc}")
                      i.fa.fa-question-circle
               div.col-sm-10
-                input.input-lg(type='checkbox' ng-model='Record.prompt')
+                input.input-lg#prompt(type='checkbox' ng-model='Record.prompt')
                   
 
             div.form-group
-              div.col-sm-offset-2.col-sm-10
+              label.control-label.col-sm-2.input-lg(for='repeatable') Repeatable &nbsp;
+              div.col-sm-10
                 div.checkbox
                   label
-                    input.input-lg(type='checkbox' ng-model='Record.repeatable')
+                    input.input-lg#repeatable(type='checkbox' ng-model='Record.repeatable')
                     b &nbsp; Repeatable                   
 
             div(ng-show="transfer_step")
