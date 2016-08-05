@@ -18,7 +18,7 @@ function adminController ($scope, $rootScope, $http, $q ) {
 
 		$http.post('/User/activate', data)
 		.then ( function (response) {
-			var msg = "Activated  " $scope.limsuser.name + " with " + response.data.access + ' access';
+			var msg = "Activated  " + $scope.limsuser.name + " with " + response.data.access + ' access';
 			console.log(msg);
 			$scope.message(msg);
 		})
