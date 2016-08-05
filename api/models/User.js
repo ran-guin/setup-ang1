@@ -43,6 +43,11 @@ module.exports = {
       //required: true
     },
 
+    status: {
+      type: 'string',
+      enum: ['inactive','pending', 'active'],
+      defaultsTo: 'pending',
+    },
     // The timestamp when the the user last logged in
     // (i.e. sent a username and password to the server)
     lastLoggedIn: {
