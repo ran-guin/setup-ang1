@@ -135,6 +135,24 @@ module.exports = {
 
   },
 
+  activate : function (req, res) {
+    var body = req.body || {};
+
+    var user = body.user || {};
+    var userid = user.id;
+    var status = user.status;
+    var access = user.access;
+
+    Record.update('user', [userid], { status : status, access : access})
+    .then (function (response) {
+      return res.json({ id: userid, status : status, access : access});
+    })
+    .catch (function (err) {
+      return res.json(err);
+    });
+    
+  },
+
   home : function (req, res) {
     console.log("Payload = " + JSON.stringify(req.session.payload));
 
