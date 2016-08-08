@@ -972,7 +972,7 @@ module.exports = {
 		if (value === null) { }			
 		else if (value.constructor === String) {
 			if (value.match(/^<user>$/i)) {
-				if (sails.config.payload) { value = sails.config.payload.userid }
+				if (sails.config.payload) { value = sails.config.payload.alDenteID }
 				if (debug) console.log("replacing <user> with " + value);
 			}
 			else if (value.match(/^<increment>$/i) ) {
@@ -1112,12 +1112,18 @@ module.exports = {
     		if (Mod && Mod.alias && Mod.alias('id')) { idField = Mod.alias('id') }
 
     		if (track && track.length) {
-    			var query = "SELECT " + idField + ', ' + track.join(',') + " FROM " + table + " WHERE " + idField + " IN (" + ids.join(',') + ')';
+    			var query = "SELECT " + idField + ' as id, ' + track.join(',') + " FROM " + table + " WHERE " + idField + " IN (" + ids.join(',') + ')';
     			console.log(query);
     			Record.query_promise(query)
     			.then (function (result) {
-    				// console.log("ADD PRE CHANGE HISTORY :" + JSON.stringify(result));
-    				deferred.resolve(result);
+    				Record.save_preHistory(table, result)
+    				.then (function (ok) {
+    					deferred.resolve(result);
+    				})
+    				.catch (function (err) {
+    					console.log("Error saving preHistory");
+    					deferred.reject(err);
+    				})
     			})
     			.catch ( function (err) {
  		   			deferred.reject(err);    				
@@ -1151,8 +1157,14 @@ module.exports = {
     			console.log(query);
     			Record.query_promise(query)
     			.then (function (result) {
-    				// console.log("ADD POST CHANGE HISTORY :" + JSON.stringify(result));
-    				deferred.resolve(result);
+    				Record.save_postHistory(table, result)
+    				.then (function (ok) {
+    					deferred.resolve(result);
+    				})
+    				.catch (function (err) {
+    					console.log("Error saving postHistory");
+    					deferred.reject(err);
+    				})
     			})
     			.catch ( function (err) {
  		   			deferred.reject(err);    				
@@ -1169,6 +1181,51 @@ module.exports = {
     	}
     	
     	return deferred.promise;	
-    }
+    },
+
+    save_preHistory : function (table, data) {
+    	console.log('save preHistory');
+
+    	var deferred = q.defer();
+
+    	if (data.length) {
+
+	    	for (var i=0; i<data.length; i++) {
+
+	    	}
+    	}
+    	else { 
+    		console.log("nothing saved (ok)");
+    		deferred.resolve();
+    	}
+
+    	return deferred.promise;
+    },
+
+    save_postHistory : function (table, data) {
+    	console.log('save postHistory');
+    	var deferred = q.defer();
+
+
+   		if (data.length) {
+	    	var update = { 
+	    		User : sails.config.payload.userid, 
+	    		changed: '<now>',
+	    	};
+
+	    	for (var i=0; i<data.length; i++) {
+					    		
+	    	}
+    	}
+    	else { 
+    		console.log("nothing saved (ok)");
+    		deferred.resolve();
+    	}
+
+    	return deferred.promise;
+
+    },
 
 };
+
+
