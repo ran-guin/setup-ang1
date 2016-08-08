@@ -3,9 +3,9 @@
 //    - Samples   (array of hashes)
 
 form(role='form' method='post' action="/Lab_protocol/run" enctype='form-data')
-  input(type = 'hidden' name='Samples' value='{{ Samples }}')
-  input(type='hidden' id = 'id' name='plate_ids' value="{{plate_ids}}")
-  // b Samples: {{ Samples }}
+  input(type = 'hidden' name='Samples' value='{{ active.Samples }}')
+  input(type='hidden' id = 'id' name='plate_ids' value="{{ active.plate_ids }}")
+  // b Samples: {{ active.Samples }}
   table.table
     tr
       td(style='width:30%')
@@ -21,20 +21,21 @@ form(role='form' method='post' action="/Lab_protocol/run" enctype='form-data')
       td(style='width:30%; vertical-align:middle')
         button.btn.btn-lg.btn-success(type='submit' ng-disabled=0) Run Protocol 
         br
-        input(type='radio' name='plate_set' ng-model='plate_set' value='new') 
+
+        input(type='radio' name='plate_set' ng-model='active.plate_set' value='new') 
         span &nbsp; Create New Set 
         br
-        div(ng-show="valid_plate_sets.length")
+        div(ng-show="active.valid_plate_sets.length")
           a(href='#' onclick='return false' ng-click="hide('existing_list')" ng-show="show['existing_list']") Hide Set(s)
           a(href='#' onclick='return false' ng-click="show('existing_list')" ng-show="!show['existing_list']") Retrieve Existing Set
-          div(ng-repeat='set in valid_plate_sets' ng-show="show['existing_list']")
-            input(type='radio' name='plate_set'  ng-model='plate_set' value='{{set}}' ) 
+          div(ng-repeat='set in active.valid_plate_sets' ng-show="show['existing_list']")
+            input(type='radio' name='plate_set'  ng-model='active.plate_set' value='{{set}}' ) 
             span &nbsp; Retrieve Set # {{ set }}
             br
 
 form(role='form' method = 'post' action= "/transfer")
-  input(type = 'hidden' name='Samples' value='{{ Samples }}')
-  input(type='hidden' id = 'id' name='plate_ids' value="{{plate_ids}}")
+  input(type = 'hidden' name='Samples' value='{{ active.Samples }}')
+  input(type='hidden' id = 'id' name='plate_ids' value="{{ active.plate_ids }}")
 
   table.table
     tr

@@ -34,7 +34,7 @@ div(ng-if="Map.Transfer && Map.SourceMap")
 						if col <= 6 
 							- bg=lightbg;
 
-						td					
+						td
 							div(ng-if="box['#{row}#{col}']")
 								div.wellmap( style="background-color:#{{ box['#{row}#{col}'].colour_code }}")
 									a(href='#' data-toggle='tooltip' title="id# {{ box['#{row}#{col}'].source_id }} " style='color:#{bg}') #{row}#{col}

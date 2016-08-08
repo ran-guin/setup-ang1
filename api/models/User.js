@@ -20,6 +20,14 @@ module.exports = {
       required: true
     },
 
+    FK_Employee__ID : { type : 'int' }, // legacy reference to alDente ID .. 
+
+    access: {
+      type: 'string',
+      enum: ['public', 'lab', 'research', 'admin'],
+      defaultsTo: 'lab',
+    },
+
     // The user's email address
     // e.g. nikola@tesla.com
     email: {
@@ -35,6 +43,11 @@ module.exports = {
       //required: true
     },
 
+    status: {
+      type: 'string',
+      enum: ['inactive','pending', 'active'],
+      defaultsTo: 'pending',
+    },
     // The timestamp when the the user last logged in
     // (i.e. sent a username and password to the server)
     lastLoggedIn: {
@@ -85,7 +98,7 @@ module.exports = {
       var mode = sails.config.environment;
       var connection = undefined;
 
-      var payload = { user: user.name, userid: user.id, access: user.access, url: url};
+      var payload = { user: user.name, userid: user.id, alDenteID: user.alDenteID, access: user.access, url: url};
       
       if (mode) {
         payload['mode'] = mode;

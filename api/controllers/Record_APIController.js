@@ -29,9 +29,13 @@ module.exports = {
 
 	search : function (req, res) {
 
-		var string = req.body.search;
-		var scope = req.body.scope;
-		var condition = req.body.condition || {}
+		var body = req.body || {};
+		console.log("Search API");
+
+		var string = body.search;
+		var scope = body.scope;
+		var condition = body.condition || {};
+		var search    = body.search || '';
 
 		if (! scope ) {
 			// Generic Search 
@@ -49,19 +53,39 @@ module.exports = {
 			var fields = scope[tables[i]];
 			var query = "SELECT " + fields.join(',') + " FROM " + tables[i];
 			
+			var search_condition = '';
+			if (search) {
+				var add_condition = [];
+				for (var i=0; i<fields.length; i++) {
+					add_condition.push(fields[i] + " LIKE '%" + search + "%'");
+				}
+				search_condition = '(' + add_condition.join(' OR ') + ')';
+			}
+
 			if (condition &&  condition.constructor === Object && condition[tables[i]] )  { query = query + " WHERE " + condition[tables[i]] }
 			else if (condition && condition.constructor === String) { query = query + " WHERE " + condition }
+			else { query = query + " WHERE 1"}
 
+			if (search_condition) { query = query + " AND " + search_condition }
 			console.log("\n** Search: " + query);
 			promises.push( Record.query_promise(query));
 		}
+
+		var returnval = { search: search };
 
 		q.all(promises) 
 		.then ( function ( results ) {
 			for (var i=0; i<results.length; i++) {
 				console.log(i + ': ' + JSON.stringify(results[i]));
 			}
-			return res.json(results);
+			if (tables.length === 1) { returnval.results = results[0] }
+			else { returnval.results = results }
+
+			return res.json(returnval);
+		})
+		.catch ( function (err) {
+			console.log("Error searching tables: " + err);
+			return res.json(err);
 		});
 
 	},
@@ -187,46 +211,47 @@ module.exports = {
 		var identifier = model;
 
 		var select;
+		
+		var Mod = sails.models[model] || {};
+		
+		table = table || Mod.tableName || model;
 
-		if (sails.models[model]) {
-			var Mod = sails.models[model];
-			table = table || Mod.tableName || model;
+		if (Mod.lookupCondition) {
+			condition = condition + ' AND ' + Mod.lookupCondition;
+		}
 
-			if (Mod.lookupCondition) {
-				condition = condition + ' AND ' + Mod.lookupCondition;
-			}
+		if (Mod.alias) {
+			idField = Mod.alias.id || 'id';
+			nameField = Mod.alias.name || 'name';	
 
-			if (Mod.alias) {
-				idField = Mod.alias.id || 'id';
-				nameField = Mod.alias.name || 'name';	
+			console.log(table + " Set idField to alias: " + idField);	
+		}  
 
-				console.log(table + " Set idField to alias: " + idField);	
-			}  
+		
+		if (!prompt) { 
+			if (Mod.tableAlias) { prompt = '-- Select ' + Mod.tableAlias + ' --' }
+			else { prompt = '-- Select ' + model }
+		}
+		
+		// table = table.toLowerCase();
 
-			
-			if (!prompt) { 
-				if (Mod.tableAlias) { prompt = '-- Select ' + Mod.tableAlias + ' --' }
-				else { prompt = '-- Select ' + model }
-			}
-			
-			if (field && Mod.attributes[field] && Mod.attributes[field].enum) {
-				var options = Mod.attributes[field].enum;
-				if (render) {
-					return res.render('core/lookup', { table: table, identifier : identifier, data : { label : options}, prompt: field })
-				}
-				else {
-					return res.json(result);
-				}
-			}
-			else if (field) {
-				// retrieve distinct list of options from a particular field ... or ...
-				table = table || model;
-				select = " DISTINCT " + field + ' as label';
+		if (field && Mod.attributes[field] && Mod.attributes[field].enum) {
+			var options = Mod.attributes[field].enum;
+			if (render) {
+				return res.render('core/lookup', { table: table, identifier : identifier, data : { label : options}, prompt: field })
 			}
 			else {
-				// select all values from specified table as lookup .. 
-				select = idField + ' as id, ' + nameField + ' as label';
+				return res.json(result);
 			}
+		}
+		else if (field) {
+			// retrieve distinct list of options from a particular field ... or ...
+			table = table || model;
+			select = " DISTINCT " + field + ' as label';
+		}
+		else {
+			// select all values from specified table as lookup .. 
+			select = idField + ' as id, ' + nameField + ' as label';
 		}
 
 		console.log('generate ' + table + ' lookup ' + '; Render: ' + render);
@@ -237,7 +262,7 @@ module.exports = {
 		var extract = fields.split(':');
 */
 
-		var query = "Select " + select + " from " + table + " WHERE " + condition;
+		var query = "Select " + select + " FROM " + table + " WHERE " + condition;
 
 		console.log("Lookup Query: " + query);
 

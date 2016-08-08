@@ -7,6 +7,25 @@ app.controller('FancyFormController',
         
         // Support Basic Password Validation and Confirmation
         // usage: ng-model='repeat' ng-key-up="compare(repeat)"
+        $scope.stdForm = {};
+        $scope.stdForm.units = {
+            'ul' :  1/1000,
+            'ml' : 1,
+            'ug' : 1/1000000,
+            'mg' : 1/1000,
+            'g'  : 1
+        };
+
+        $scope.stdForm.units_options = [
+            {id: 0, name: '-- Units --'},
+            {id : 1, name : 'ul'},
+            {id : 2, name : 'ml'},
+            {id : 3, name : 'ug'},
+            {id : 4, name : 'mg'},
+            {id : 5, name : 'g'}
+        ];
+
+        $scope.stdForm.units_lookup = $scope.stdForm.units_options[0].name;
 
         $scope.custom_disable = false;
 
@@ -50,26 +69,6 @@ app.controller('FancyFormController',
     		return view;
     		//return "\n<div class='container' style='padding:20px'>\n" + view + "</div>\n";
     	}
-
-
-        $scope.units = {
-            'ul' :  1/1000,
-            'ml' : 1,
-            'ug' : 1/1000000,
-            'mg' : 1/1000,
-            'g'  : 1
-        };
-
-        $scope.units_options = [
-            {id: 0, name: '-- Units --'},
-            {id : 1, name : 'ul'},
-            {id : 2, name : 'ml'},
-            {id : 3, name : 'ug'},
-            {id : 4, name : 'mg'},
-            {id : 5, name : 'g'}
-        ];
-
-        $scope.units_lookup = $scope.units_options[0].name;
 
         $scope.set_dropdown_default = function (name, label, target_name) {
             for (var i=0; i<$scope[name].length; i++) {
@@ -155,14 +154,16 @@ app.controller('FancyFormController',
                 if ( ! $scope.MenuList ) { $scope.MenuList = {} }
                 $scope.MenuList[element] = [];
 
-                if (list && list[0].constructor === Object ) {
+                if (list && list[0] && list[0].constructor === Object ) {
                     $scope.MenuList[element] = list;
+                    console.log(element + " object list = " + JSON.stringify(list));
                 }
                 else if (list && list[0] ) {
                     for (var i=0; i<list.length; i++) {
                         var id = i+1;
                         id = id.toString();
                         $scope.MenuList[element].push( { id: id, name: list[i] });
+                        console.log(element + " array list = " + JSON.stringify(list));
                         
                     }
                 }
@@ -198,47 +199,6 @@ app.controller('FancyFormController',
         $scope.$watch("tqu", function (value) {
             $scope['transfer_qty_units'] = $scope.tqu;
         }); 
-
-        $scope.normalize_units = function (field) {
-            // convert quantities to same units as original to ensure ongoing calculated volumes are correct.
-            // when removing or adding 250 ul to a container with 2 ml, the 250 ul should be converted to the original units (eg 0.25 ml)
-            //
-            // new values may be re-normalized via a cron job at a different time (eg check for volumes > 1000 or < 0.01 and convert)
-            //
-            // eg normalize_units('qty','reference_units') or normalize_units('solution_qty')
-
-            // UNDER CONSTRUCTION .. 
-            var values = [];
-            var splitField;  // get from current split fields .. 
-
-            for (var i=0; i<Samples.length; i++) {                      
-                var orig_units = Samples[index].qty_units;
-                var new_units = $scope[field + '_units'];
-
-                var val = splitField[i] || $scope[field];
-                var newVal = val;
-
-                var conflict = 0;
-                if (new_units === orig_units) { }
-                else {
-                    if ($scope.units[old_units] && $scope.units[new_units]) {
-                        newval = val * $scope.units[old_units]/$scope.units[new_units];
-                    }
-                    else {
-                        $scope.error(new_units + " Units not yet defined - cannot auto convert");
-                    }
-                    //newVal = $scope.convert(val, new_units, old_units);
-                    conflict++;
-                }
-                values.push(newVal);
-            }
-            if (conflict || splitField[field]) {
-                splitField[field] = values;
-            }
-            else {
-                $scope[field] = values[0];
-            }
-        }
 
         // Automatically Load Lookup Files //
         $scope.loadLookup = function loadLookup(model, labels, prompt, condition, defaultTo) {
@@ -337,6 +297,7 @@ app.controller('FancyFormController',
 
         $scope.colours = [ { name: 'Red'}, { name:'White'} , {name: 'Blue'}];
         $scope.colour = ''; // {name: 'Blue'};
+
 }])
 .directive('myDatepicker', function ($parse) {
    return {
@@ -399,7 +360,7 @@ app.controller('FancyFormController',
         $rootScope.$broadcast("documentClicked", angular.element(e.target));
     });
 })
-.directive("dropdown", function($rootScope) {
+.directive("myDropdown", function($rootScope) {
 
     // usage : 
     //
@@ -421,10 +382,10 @@ app.controller('FancyFormController',
         restrict: "AEC",
         // templateURL: "templates/dropdown.html,
         template: " \
-            <div class=\"dropdown-container input-lg\" ng-class=\"{ show: listVisible }\"> \
+            <div class=\"dropdown-container\" ng-class=\"{ show: listVisible }\"> \
                 <div class=\"dropdown-display\" ng-click=\"show();\" ng-class=\"{ clicked: listVisible }\"> \
-                    <input class=\"placeholder\" ng-if=\"isPlaceholder\" style=\"padding: 5px; width:100%\" ng-model=\"search\" ng-keypress=\"filter($event)\" type=\"text\" placeholder =\"{{placeholder}}\"><\/input> \
-                    <input class=\"placeholder\" ng-show=\"!isPlaceholder\" style=\"border: 0px; padding: 5px; width:100%\" ng-model=\"search\" ng-keypress=\"filter($event)\" type=\"text\" placeholder =\"{{display}}\"><\/input> \
+                    <input class=\"placeholder input-lg\" ng-if=\"isPlaceholder\" style=\"padding: 5px; width:100%\" ng-model=\"search\" ng-keypress=\"filter($event)\" type=\"text\" placeholder =\"{{placeholder}}\"><\/input> \
+                    <input class=\"placeholder input-lg\" ng-show=\"!isPlaceholder\" style=\"border: 0px; padding: 5px; width:100%\" ng-model=\"search\" ng-keypress=\"filter($event)\" type=\"text\" placeholder =\"{{display}}\"><\/input> \
                     <i class=\"fa fa-angle-down\"><\/i> \
                 <\/div> \
                 <div class=\"dropdown-list\"> \
@@ -458,9 +419,10 @@ app.controller('FancyFormController',
 
             scope.select = function(item) {
                 scope.isPlaceholder = false;
-
                 if (scope.track) { scope.selected = item[scope.track] }
                 else { scope.selected = item }  // or just item for full object
+
+                scope.label = item[scope.property];
             };
 
             scope.filter = function(event) {
@@ -508,19 +470,20 @@ app.controller('FancyFormController',
             scope.choose = function (value) {
                 if (scope.track) { 
                     scope.isPlaceholder = (scope.selected === undefined || ! scope.selected);
-                    scope.display = scope.selected;
-                    console.log("SELECTED = " + scope.selected);
+                    // scope.display = scope.label;
                 }
                 else if (scope.selected) { 
                     scope.isPlaceholder = scope.selected[scope.property] === undefined;
-                    scope.display = scope.selected[scope.property];
-                    console.log("selected " + scope.display + ' : ' + scope.isPlaceholder);
+                    // scope.display = scope.selected[scope.property];
                 }
                 else {
                     scope.isPlaceholder = true;
                 }
+                
+                scope.display = scope.label;
 
                 console.log('reset display to ' + scope.display);
+                console.log("selected: " + JSON.stringify(scope.selected) + ' : ' + scope.property);
                 scope.search = '';
             };
 
@@ -539,4 +502,88 @@ app.controller('FancyFormController',
             });
         }
     }
-});
+})
+.directive('autocomplete', ['$http', function($http) {
+    return function (scope, element, attrs) {
+        element.autocomplete({
+            minLength:3,
+            source:function (request, response) {
+                var url = "/Record/search";
+
+                if (attrs.search) {                    
+                    var table = attrs.search;
+                    var label = 'name';
+                    if (attrs.search.match(/:/) ) {
+                        var params = attrs.search.split(':');
+                        table = params[0];
+                        label = params[1];
+                    }
+                    
+                    var searchScope = {};
+                    searchScope[table] = [label, 'id'];
+
+                    var params = { scope : searchScope, search : request.term};
+                    // params = { scope : scope, search : request.term };
+
+                    console.log('post search ' + table + ' : ' + url);
+                    console.log(JSON.stringify(searchScope));
+                    
+                    $http.post(url, params)
+                    .success ( function(data) {
+                        console.log("GOT: " + JSON.stringify(data));
+                        response(data.results);
+                    })
+                    .error ( function (err) {
+                        console.log("Error: ");
+                    });
+                }
+                else {
+                    console.log("no search parameters");
+                }
+            },
+            focus:function (event, ui) {
+                element.val(ui.item.name);
+                return false;
+            },
+            select:function (event, ui) {
+                // scope[attrs.ngModel].selected = ui.item.id;
+                console.log('set ' + attrs.ngModel + ' id to ' + ui.item.id + ": " + ui.item.name);
+
+                // scope[attrs.ngModel].id = ui.item.id;
+                var label = attrs.label || 'name';
+                var track = attrs.track || 'id';
+
+                if (attrs.ngModel.match(/\./)) {
+                    var model = attrs.ngModel.split('.');
+                    scope[model[0]][model[1]] = ui.item[label];
+                    scope[model[0]][model[1] + '_id'] = ui.item[track];
+                }
+                else {
+                    scope[attrs.ngModel] = ui.item[label];
+                    scope[attrs.ngModel + '_id'] = ui.item[track];
+                }
+                // scope.myModel = ui.item;
+                // scope.myModelId.selected = ui.item.id;
+                scope.selected    = ui.item;
+
+                scope.$apply();
+                return false;
+            },
+            change:function (event, ui) {
+                if (ui.item === null) {
+                    // scope.myModelId.selected = null;
+                
+                    // scope[attrs.ngModel] = null;
+                    scope[attrs.ngModel + '_id']    = null;
+                    scope.selected = null;
+                    console.log('clear');
+                }
+            }
+        }).data("ui-autocomplete")._renderItem = function (ul, item) {
+            return $("<li class='input-lg'></li>")
+                .data("item.autocomplete", item)
+                .append("<a class='input-lg'>" + item.name + "</a>")
+                .appendTo(ul);
+        };
+    }
+}]);

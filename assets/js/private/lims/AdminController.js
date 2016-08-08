@@ -6,6 +6,28 @@ app.controller('AdminController',
 ['$scope', '$rootScope', '$http', '$q' , 
 function adminController ($scope, $rootScope, $http, $q ) {
 
+	$scope.activate_user = function () {
+
+		var access = 'lab';
+		if ($scope.make_admin) { access = 'admin' }
+
+		var status = 'active';
+		if ($scope.deactivate_user) { status = 'inactive' }
+
+		var data = { user : { id: $scope.limsuser.id, access: access, status: status} };
+
+		$http.post('/User/activate', data)
+		.then ( function (response) {
+			var msg = "Activated  " + $scope.limsuser.name + " with " + response.data.access + ' access';
+			console.log(msg);
+			$scope.message(msg);
+		})
+		.catch ( function (err) {
+			console.log("Error: " + err);
+			$scope.error("Error granting user access: " + err);
+		});
+	}
+
 	$scope.newSlottedBox = function () {
 
 		$scope.reset_messages();

@@ -16,23 +16,52 @@ block content
 
             include ./../core/angularMessages.jade
 
-            form.form-inline#adminForm(role='form' name='adminForm' method='post' action="#{sails.config.root}/record/list" enctype='form-data')
+            div(ng-show="MenuList['limsuser'].length")
+              div.alert.alert-warning
+                b {{ MenuList['limsuser'].length }} User(s) Pending activation 
+            form.form-horizontal#adminForm(role='form' name='adminForm' enctype='form-data')
               div.form-group
-                label.col-sm-4(for='table') Lookup Tables:
-                span#table
-                  dropdown(placeholder="Select Table ..." track='name' list="MenuList['table']" selected='table' ng-init="setup_Menu('table', 'Plate_Format,Sample_Type')" property='name')
-              button.btn.btn-primary.btn-lg(type='button' ng-disabled="!table" ng-click="reset_messages(); injectData('/record/list','injectedList', table, 'table')") View
-                
-            div#injectedList
+                label.input-lg.col-sm-2() Lookup Tables:
+                div.col-sm-4#table
+                  my-dropdown(placeholder="Select Table ..." track='name' list="MenuList['table']" selected='table' ng-init="setup_Menu('table', 'Plate_Format,Sample_Type,Attribute')" property='name')
+              
+                - var options = JSON.stringify({ iconify : { 'Attribute_Description' : 'expand' }});
+                div.col-sm-4
+                  button.btn.btn-primary.btn-lg(type='button' ng-disabled="!table" ng-click="reset_messages(); injectData('/record/list','injectedList', table, 'table', '#{options}')") View
+                div.col-sm-2 &nbsp;
 
-            hr
-                          
-            a(href='/Lab_protocol/list')
-              button.btn.btn-primary Manage Lab Protocols 
+              div#injectedList
+
+              hr
+              div.form-group
+                label.input-lg.col-sm-2(for='lps') Lab Protocols:
+                div.col-sm-4#lps        
+                  a(href='/Lab_protocol/list')
+                    button.btn.btn-primary(type='button') Manage Protocols 
+                div.col-sm-6 &nbsp;
+
+              div.form-group
+                label.input-lg.col-sm-2(for='stock') Stock:
+                div.col-sm-4#stock
+                  a(href='/Stock/receive')
+                    button.btn.btn-primary(type='button') Receive Reagents
+                div.col-sm-6 &nbsp;
+
+              div.form-group(ng-show="MenuList['limsuser'].length")
+                  label.input-lg.col-sm-2(for='user') Activate Users:
+                  div.col-sm-4#user
+                    my-dropdown(placeholder='Select User' list="MenuList['limsuser']" selected='limsuser' ng-init="setup_Menu('limsuser', 'FK(user)', \"status='pending'\")" property='name') 
+                  div.col-sm-2
+                    button.btn-lg.btn-primary(type='button' ng-click="activate_user()") Activate User
+                  div.col-sm-4
+                    input.input-lg#admin(type='checkbox' ng-model='make_admin')
+                    label.input-lg(for='admin') make admin
+              div(ng-show="! MenuList['limsuser'].length")
+                div.col-sm-offset-2
+                  b (no pending users to activate)  
+
 
             p &nbsp;
-            a(href='/Stock/receive')
-              button.btn.btn-primary Receive Stock 
             hr
 
             form.form-inline(role='form' name='adminForm' method='post' action="#{sails.config.root}/Rack/newBox" enctype='form-data')
@@ -47,7 +76,7 @@ block content
               div.form-group
                 label.col-sm-2(for='size') &nbsp; Size: &nbsp;
                 span#size
-                  dropdown.mandatory(placeholder='-- Choose Size --' required ng-init="setup_Menu('size','9x9,8x12')" list="MenuList['size']" property='name' track='name' selected='size')
+                  my-dropdown.mandatory(placeholder='-- Choose Size --' required ng-init="setup_Menu('size','9x9,8x12')" list="MenuList['size']" property='name' track='name' selected='size')
               span &nbsp; &nbsp;             
               button.btn.btn-lg.btn-primary(type='button' ng-click="newSlottedBox()" ng-disabled="!name || !parent || !size") Create
      

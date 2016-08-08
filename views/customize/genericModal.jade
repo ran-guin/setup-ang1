@@ -1,0 +1,20 @@
+.container
+
+	if session.payload
+		// assume payload included ... 
+	else
+		- session.payload = { user: '', access : 'TBD'}
+	
+	div.modal.fade#genericModal
+		div.modal-dialog
+			div.modal-content
+				div.modal-header
+					button.close(type="button" class="close" data-dismiss="modal" aria-label="Close")
+						span(aria-hidden="true") &times;
+					h4.modal-title #{glob}
+				div.modal-body
+					b #{icon}
+					div#insideModal
+				div.modal-footer
+					button.btn.btn-default(type="button button-danger" data-dismiss="modal") Close
+					//#{ JSON.stringify(session.payload) }

@@ -57,6 +57,9 @@ module.exports.routes = {
   'GET /login': 'UserController.login',
   'POST /login': 'UserController.login',
 
+  'POST /get_new_password' : 'UserController.getNewPassword',
+  'POST /reset_password' : 'UserController.resetPassword',
+
   'GET /logout': 'UserController.logout',
 
   'GET /demo' : 'MainController.showDemoPage',
@@ -93,6 +96,7 @@ module.exports.routes = {
   'POST /remote_login/validate' : 'Remote_login.validate',
 
   'GET /admin' : 'UserController.admin',
+  'POST /User/activate' : 'UserController.activate',
   
   'GET /test'  : 'TestController.test',
   'POST /test'  : 'TestController.test',
@@ -110,7 +114,6 @@ module.exports.routes = {
 
   'POST /Record/search' : 'Record_APIController.search',
   'GET /Record/search' : 'Record_APIController.search',
-
 
   'POST /record/add/:model': 'Record_APIController.save',
   'POST /record/save' : 'Record_APIController.save',

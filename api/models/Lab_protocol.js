@@ -47,15 +47,14 @@ module.exports = {
 
 		var deferred = q.defer();
 
-		console.log("\n*** COMPLETE Lab Protocol: " + JSON.stringify(data));
+		console.log("\n*** COMPLETE Lab Protocol ***");
+		// console.log(JSON.stringify(data));
 		
 		var ids = data['ids'] || data['plate_ids'];  // array version of same list ...
 		console.log("\n* IDS: " + JSON.stringify(ids));
 
 		ids = Record.cast_to(ids, 'array');
 		var plate_list = ids.join(',');
-
-		console.log("\n* IDS: " + JSON.stringify(ids) + ' : ' + JSON.stringify(plate_list));
 
 		if (ids.length > 0) {
 
@@ -73,13 +72,15 @@ module.exports = {
 				var firstPrepResult = result.Prep[0];
 				var first_prep_id = [ firstPrepResult.insertId ];
 
-				console.log("\nPrep ID: (just inserted)" + last_prep_id );
+				console.log("\nPrep ID: (just inserted) " + last_prep_id );
 				console.log("Transfer: (supplied by POST) " + JSON.stringify(data['Transfer']));
 				console.log("Options: " + JSON.stringify(data['Transfer_Options']));
 				//console.log("Custom: " + JSON.stringify(data['CustomData']));
 
 				var transferred;
 				if (data['Transfer'] && data['Transfer_Options'] && data['Transfer_Options']['transfer_type']) {
+
+					data['Transfer_Options']['Prep'] = last_prep_id;
 					console.log('\n*** call Container.execute_transfer from Lab_protocol Model');
 					promises.push( Container.execute_transfer( ids, data['Transfer'], data['Transfer_Options']) );
 
@@ -101,51 +102,11 @@ module.exports = {
 					// sails.config.messages.push('Saved step...');
 
 					if (transferred) { 
-						returnData = Qdata[transferred-1];
+						returnData = Qdata[transferred-1];  // return data from execute_transfer promise
 					}
-					else { returnData = result }
+					else { returnData = result }            // result not typically used unless transferred.. 
 
-					// before returning ... check if samples are to be moved ... 
-					if (data['Move']) {
-						var moveIds = ids;
-						var target_location = data['Move'];
-
-						if (transferred) {
-							// regardless of reset_focus, move should apply to target plates from transfer
-							console.log("\n** Check for target plates in: " + JSON.stringify(Qdata[transferred-1]) );
-							moveIds = Qdata[transferred-1].target_ids;
-							
-							if (!moveIds) {
-								var msg = "Error moving target ids - no target ids retrieved";
-								console.log(msg);
-								sails.config.errors.push(msg);
-							}
-							else {
-								var msg = "MOVE transferred samples: " + moveIds.join(',') + ' TO Loc#(s): ' + target_location;
-								console.log(msg);
-								sails.config.messages.push(msg);
-							}
-						}
-						else {
-							var msg = "MOVE current samples: " + moveIds.join(',') + ' TO Loc#(s): ' + target_location;
-							console.log(msg);
-							sails.config.messages.push(msg);
-						}
-
-						// Move Samples as required
-						Container.relocate(moveIds, target_location)
-						.then (function () {
-							deferred.resolve(returnData);
-						})
-						.catch ( function (err) {
-							deferred.resolve(returnData);  // return successfully, but generate error message for user
-						});
-					}
-					else {
-						console.log("No sample relocation requested");
-						deferred.resolve(returnData);
-					}
-
+					deferred.resolve(returnData);
 				})
 				.catch ( function (Qerr) {
 					// sails.config.warnings.push('There was a glitch somewhere in the step saving process');
@@ -192,8 +153,6 @@ module.exports = {
 		}
 		
 		else if (data && data['Prep']) {
-			console.log("Send Prep data: " + JSON.stringify(data['Prep']));
-
 			var promises = [];
 			promises.push( Record.createNew('prep', data['Prep'] ) );
 

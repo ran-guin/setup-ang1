@@ -56,6 +56,7 @@ module.exports.policies = {
   record_API: {
     'lookup' : true,
     'enum'   : 'reset',
+    'search' : true,
   },
 
   record: {
@@ -70,10 +71,15 @@ module.exports.policies = {
       'signup' : 'reset',
       'logout' : 'reset',
       'home' : 'reset',   // sessionAuth',
-	     'dashboard'	: "sessionAuth",	
+	     'dashboard'	: "sessionAuth",
+       'getNewPassword' : 'reset',	
 //      '*' : "sessionAuth"
   },
   
+  'rack' : {
+    'boxData' : true,
+  },
+
   //'lab_protocol' : 'sessionAuth",
 
   'attribute' : {

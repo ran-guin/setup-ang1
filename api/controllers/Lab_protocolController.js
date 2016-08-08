@@ -23,6 +23,7 @@ module.exports = {
 		console.log("view Lab Protocol " + id);
 
 		var q = "SELECT * FROM protocol_step where Lab_protocol = " + id;
+		q = q + " ORDER BY step_number";
 
 	    Record.query(q, function (err, result) {
 	    	if (err) {

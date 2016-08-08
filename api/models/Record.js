@@ -15,6 +15,76 @@ module.exports = {
 
 	},
 
+	get_fields : function (table) {		
+		var deferred = q.defer();
+		var model = table;
+
+		Record.query_promise("desc " + table)
+		.then (function (result) {
+			if (result.length == 0 ) {
+				deferred.reject("no table found");
+			}
+			else {
+				/*
+				if ( sails.models[model] && sails.models[model]['attributes']['role'] && sails.models[model]['attributes']['role']['xdesc']) {
+					console.log('load extra info...' + sails.models[model]['attributes']['role']['xdesc'])
+				}
+				*/
+				var recordModel;
+				console.log("check for model: " + model + " : " + table);
+				if (sails.models[model]) {
+					console.log(model + ' Access: ' + sails.models[model]['access']);
+					console.log("MODEL:cp  " + sails.models[model]);
+					recordModel = sails.models[model];
+				}
+
+				var Fields = [];
+				for (var i=0; i<result.length; i++) {
+					var fld = result[i]['Field'];
+					var type = result[i]['Type'] || 'undefined';
+					var options = [];
+					var lookup = {};
+
+					console.log("Field: " + fld + ": " + type);
+					if (recordModel && recordModel.attributes  && recordModel.attributes[fld]) {
+					    if (recordModel.attributes[fld]['type']) {
+		                    if (recordModel.attributes[fld]['enum']) {
+		                        type = 'enum';
+		                      	options = recordModel.attributes[fld]['enum'];
+		                    } 
+		                    else if (recordModel.attributes[fld]['type'] == 'boolean') {
+		                        type = 'boolean';
+		                      	//options = recordModel.attributes[fld]['enum'];
+		                    }
+		                    else if (recordModel.attributes[fld]['type'] === 'int') {
+		                    	type = 'number';
+		                    }
+		                }
+		                else if (recordModel.attributes[fld]['collection']) {
+		                    type = 'list link';
+		                }
+		                else if (recordModel.attributes[fld]['model']) {
+		                    type = 'lookup';
+		                    options.lookup = recordModel.attributes[fld]['model'];
+						} 
+					}
+
+					if (fld == 'id' || fld == 'createdAt' || fld == 'updatedAt') {
+						type = 'Hidden'
+					}
+
+					Fields.push({'Field' : fld, 'Type' : type, 'Options' : options, 'Lookup' : lookup});
+				}
+				deferred.resolve(Fields);								
+			}
+		})
+		.catch ( function (err) {
+			deferred.reject(err);
+		});
+
+		return deferred.promise;
+	},
+
 	reverse_Map : function (map) {
 		var keys = Object.keys(map);
 
@@ -250,7 +320,7 @@ module.exports = {
 			})
 			console.log("* Added " + data.length + " custom records in " + table);
 			// console.log("\nHeaders: " + headers);
-			Record.createNew(table, data, {}, { NULL : "\\N" } )
+			Record.createNew(table, data, {}, { reset: { NULL : "\\N" }} )
 			.then ( function (added) {
 				sails.config.messages('added ' + table + ' record(s)');
 				deferred.resolve(added);
@@ -461,6 +531,8 @@ module.exports = {
 		console.log("Update " + model + ": " + ids);
 		console.log(JSON.stringify(data));
 
+		var deferred = q.defer();
+
 		if (!options) { options = {} }
 
 		var table = model;
@@ -482,20 +554,15 @@ module.exports = {
 			if (splitModel.length > 0 ) { 
 				table = splitModel[0];
 				idField = splitModel[1];
-				console.log("Split " + model + ' into ' + table + ' : ' + idField);
 			}
 			else {
 				console.log("no " + model + " model :  id alias left as " + idField);
 			}
-		}
+		}		
 
-		var deferred = q.defer();
-		
-
+		var query = "UPDATE " + table;
 		var list = ids.join(',');
 		
-		var query = "UPDATE " + table;
-
 		var conditions = options.conditions || [];
 
 		if (options.include_tables) {
@@ -521,7 +588,6 @@ module.exports = {
 			for (var i=0; i<fields.length; i++) {
 				var setval = data[fields[i]];
 
-				console.log(fields[i] + " SETVAL: " + JSON.stringify(setval));
 				if (setval && setval.constructor === Array) {
 					// If value supplied is an array (matching array of applicable ids), then set values one at a time
 					// (this may be avoided if all of the array elements are identical in which case values may be set in standard way)
@@ -535,7 +601,6 @@ module.exports = {
 						}
 					}
 					else if (setval.length == 1) {
-						console.log("single value for all elements");
 						var setVal = Record.parseValue(setval[0], { model : model });
 						Set.push(fields[i] + " = " + setVal );						
 					}
@@ -559,9 +624,8 @@ module.exports = {
 			if (Set.length) {
 				query = query + " SET " + Set.join(',');
 				query = query + " WHERE " + condition;
-				console.log("\n UPDATE: " + model + ': ' + query);
-				promises.push( Record.query_promise(query) );
 				console.log("\n** Update: " + query);
+				promises.push( Record.query_promise(query) );
 			}
 		
 			if (SetEach.length) {
@@ -577,7 +641,8 @@ module.exports = {
 					
 					if (subSet) {
 						var subquery = "UPDATE " + table + " SET " + subSet.join(',') + " WHERE " + idField  + ' = ' + ids[j];
-						console.log("subquery: " + subquery);
+						
+						if (j === 0 || j === SetEach.length-1) { console.log("subquery: " + subquery + '...') }
 						promises.push(Record.query_promise(subquery));
 					}
 				}
@@ -605,11 +670,25 @@ module.exports = {
 		return deferred.promise;
 	},	
 
-	createNew : function (model, Tdata, resetData) {
+	createNew : function (model, Tdata, options) {
 		// Bypass waterline create method to enable insertion into models in non-standard format //
 		var debug = 0;
 		var deferred = q.defer();
 		//console.log("\ncreate new record(s) in " + table);
+
+		options = options || {};
+		var resetData   = options.reset;
+
+		var onDuplicate = '';
+		var action = 'INSERT';
+		if ( options.onDuplicate) {
+			if (options.onDuplicate.match(/replace/i)) {
+				action = 'REPLACE';
+			}
+			else {
+				onDuplicate = ' ON DUPLICATE KEY ' + options.onDuplicate;
+			}
+		}
 
 		var Mod = sails.models[model] || {};
 
@@ -628,7 +707,6 @@ module.exports = {
 		if (data.length) { fields = Object.keys(data[0]) || [] }
 
 		var Values = [];
-		var onDuplicate = '';
 
 		console.log(model + ' : ' + Mod + ' -> ' + Mod.tableName + '=' + table);
 		console.log("insertion data: " + JSON.stringify(data[0]) + '...');
@@ -639,21 +717,6 @@ module.exports = {
 				var input_value = data[index][fields[f]];
 
 				var value = Record.parseValue(input_value, { model: model, field: fields[f] });
-				if ( ! index) {
-					// only need to set onDuplicate once if any increment fields are defined 
-					if (input_value && input_value.constructor === String && input_value.match(/<increment>/ ) ) {
-						// only one increment field should be included since there is only one 'on duplcate command at the end '
-						if (onDuplicate) {
-							var msg = "possible onDuplicate conflict detected";
-							console.log(msg);
-							sails.config.warnings.push(msg);
-						}
-						else {
-							value = 1;
-							onDuplicate = " ON DUPLICATE KEY UPDATE " + fields[f] + "=" + fields[f] + " + 1";
-						}
-					}
-				}
 
 				if (resetData && resetData[fields[f]]) {
 					var resetValue = Record.parseValue( resetData[fields[f]], { model: model, field: fields[f], defaultTo : value });
@@ -666,8 +729,8 @@ module.exports = {
 			Values.push( "(" + Vi.join(", ") + ")");
 		}
 
-		var createString = "INSERT INTO " + table + " (" + fields.join(',') + ") VALUES " + Values.join(', ') + onDuplicate;
-		console.log("\nInsert SQL: \nINSERT INTO " + table + " (" + fields.join(',') + ") VALUES " + Values[0] + onDuplicate);
+		var createString = action + " INTO " + table + " (" + fields.join(',') + ") VALUES " + Values.join(', ') + onDuplicate;
+		console.log("\n** Insert SQL: \n" + createString); 
 
 		Record.query_promise(createString)
 		.then ( function (result) {
@@ -957,7 +1020,6 @@ module.exports = {
 			// account for redundant quotes ... 
 			if (value.constructor === String && value.match(/^\"/) && value.match(/\"$/)) {
 				noQuote = 1;
-				console.log("suppress quotes");
 			}
 		}
 		else if (value && value.constructor === Date) {
@@ -1054,8 +1116,7 @@ module.exports = {
     			console.log(query);
     			Record.query_promise(query)
     			.then (function (result) {
-
-    				console.log("ADD PRE CHANGE HISTORY :" + JSON.stringify(result));
+    				// console.log("ADD PRE CHANGE HISTORY :" + JSON.stringify(result));
     				deferred.resolve(result);
     			})
     			.catch ( function (err) {
@@ -1077,11 +1138,12 @@ module.exports = {
     	var fields = Object.keys(data);
     	var Mod = sails.models[model];
 
-    	if (Mod && fields.length) {
+    	if (Mod && fields.length && Mod.track_history) {
     		var track = _.union(Mod.track_history, fields);
 
     		var table = Mod.tableName || model;
-    		var idField = Mod.alias('id') || 'id';
+    		var idField = 'id';
+    		if (Mod.alias && Mod.alias('id')) { idField = Mod.alias('id') }
 
     		if (track.length ) {
     			var query = "SELECT " + idField + ', ' + track.join(',') + " FROM " + table + " WHERE " + idField + " IN (" + ids.join(',') + ')';
@@ -1089,7 +1151,7 @@ module.exports = {
     			console.log(query);
     			Record.query_promise(query)
     			.then (function (result) {
-    				console.log("ADD POST CHANGE HISTORY :" + JSON.stringify(result));
+    				// console.log("ADD POST CHANGE HISTORY :" + JSON.stringify(result));
     				deferred.resolve(result);
     			})
     			.catch ( function (err) {
@@ -1101,7 +1163,10 @@ module.exports = {
     			deferred.resolve();
     		}
     	}
-    	else { deferred.resolve() }
+    	else {
+    		console.log('no history tracking required'); 
+    		deferred.resolve();
+    	}
     	
     	return deferred.promise;	
     }

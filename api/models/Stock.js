@@ -52,21 +52,24 @@ module.exports = {
 					console.log(JSON.stringify(data[type]));
 					if (type === 'Reagent' && data['Reagent']) {
 						// Add individual Reagent records
-						console.log('load data...' + JSON.stringify(data));
 						var ReagentData = data['Reagent'];
-						console.log("Reagent data : " + JSON.stringify(ReagentData));
 
 						ReagentData['Stock'] = stock_id;
-
-						console.log("Pre & Reagent Data: " + JSON.stringify(ReagentData));
 						ReagentData = Record.to_Legacy(ReagentData, Solution.legacy_map);
+
 						console.log("Reagent Data: " + JSON.stringify(ReagentData));
 
 						var Reagents = [];
+						
 						for (var i=0; i<N; i++) {
-							Reagents.push(ReagentData);
+
+							var cloned = JSON.stringify(ReagentData);
+							var cloneData = JSON.parse(cloned);
+
+							Reagents.push( cloneData );  // clone
 							Reagents[i]['Solution_Number'] = i+1;
 						}
+						
 						Record.createNew('solution', Reagents)
 						.then ( function (result) {
 							if (barcode) {

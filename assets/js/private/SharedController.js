@@ -91,7 +91,7 @@ app.controller('SharedController',
             console.log("Angular Error: " + msg);
         }
 
-        $scope.parse_standard_error = function (message) {
+        $scope.parse_standard_error = function (message, type) {
             // Convert warning / error messages into more readable format
             // (if <match> is included in value, then the regexp of the key will be evaluated and the match replaced in the value string)
             //   eg 'Error creating \\w+' : "<match> - no record created" -> yields "Error creating Employee - no record created" 
@@ -103,7 +103,7 @@ app.controller('SharedController',
             };
 
             var strings = Object.keys(Map);
-
+            type = type || 'error';
             var errors = [];
             for (var i=0; i<strings.length; i++) {
                 
@@ -121,8 +121,14 @@ app.controller('SharedController',
                 }
             }
 
-            console.log("Parsed Error: " + message);
+            console.log("Parsed " + type + " : " + message);
             if (! errors.length) { errors.push(message) }
+
+            for (var i=0; i<errors.length; i++) {
+                if (type === 'error') { $scope.error( errors[i] ) }
+                else if (type === 'warning') { $scope.warning( errors[i] ) }
+                else { $scope.message( errors[i] )}
+            }
             return errors;
         }
 
@@ -152,29 +158,47 @@ app.controller('SharedController',
             //return "\n<div class='container' style='padding:20px'>\n" + view + "</div>\n";
         }
         
-        $scope.injectData = function (url, element, ids, attribute ) {
-            console.log("INJECT HTML");
+        $scope.injectData = function (url, element, ids, attribute, options) {
+            console.log("INJECT HTML ");
+            
+            var opt  = {};
+            if (options) { opt = JSON.parse(options) }
+            var iconify = opt.iconify;
 
             if (!attribute) { attribute = 'ids'}
-
             if (! element) { element = 'injectedData' }
 
-            if (url.match(/\?/)) { url = url + '&' }
-            else { url = url + '?' }
+            var method = 'POST';  // default 
+            if (url.match(/\?/)) { 
+                method = 'GET';
+                url = url + '&'
+            }
+            else {
+                url = url + '?';
+            }
 
             url = url + 'element=' + element + '&'; // enables close button in injected block
             if (ids) { url = url + attribute + '=' + ids }
 
+            var data = {
+                element : element,
+                attribute : ids,
+                iconify : iconify,
+            };
 
             var el = document.getElementById(element);
             if (el) {
                 console.log("Calling: " + url);
-                $http.get(url)
+                $http({
+                    method : method,
+                    url : url, 
+                    data : data,
+                })
                 .then ( function (result) {
                     console.log("Got API Data...");
 
-                    console.log(JSON.stringify(result));
-                    console.log(JSON.stringify(result.data));
+//                    console.log(JSON.stringify(result));
+//                    console.log(JSON.stringify(result.data));
                     el.innerHTML = $scope.padded( result.data );
                     //el.html($scope.padded( result.data));
                     $scope[element]  = true;
@@ -207,6 +231,5 @@ app.controller('SharedController',
             else { console.log("could not close " + element) }
             $scope[element] = false;
         }
-
 
 }]);

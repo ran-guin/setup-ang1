@@ -64,7 +64,7 @@ module.exports = {
     // Try to look up user using the provided email address
     // User.findOne({
 
-      var query = "SELECT user.id, user.name, encryptedPassword, email, group_concat(distinct access) as access from user left join grp_members__user_groups ON user.id = user_groups LEFT JOIN grp ON grp_members=grp.id "
+      var query = "SELECT user.id, user.name, encryptedPassword, email, user.access, user.FK_Employee__ID as alDenteID FROM user"
       + " WHERE email ='" + tryuser + "' OR user.name = '" + tryuser + "'" 
       + " GROUP BY user.id";
 
@@ -135,6 +135,24 @@ module.exports = {
 
   },
 
+  activate : function (req, res) {
+    var body = req.body || {};
+
+    var user = body.user || {};
+    var userid = user.id;
+    var status = user.status;
+    var access = user.access;
+
+    Record.update('user', [userid], { status : status, access : access})
+    .then (function (response) {
+      return res.json({ id: userid, status : status, access : access});
+    })
+    .catch (function (err) {
+      return res.json(err);
+    });
+    
+  },
+
   home : function (req, res) {
     console.log("Payload = " + JSON.stringify(req.session.payload));
 
@@ -184,46 +202,63 @@ module.exports = {
           // the sign-up form --> signup.jade
             console.log("Create user : " + user);
 
-            User.create({
-              name: user,
-              email: email,
-              encryptedPassword: encryptedPassword,
-              lastLoggedIn: new Date(),
-              gravatarUrl: gravatarUrl,
-              access: 'new',
-            }, function userCreated(err, newUser) {
-              if (err) {
+            var alDenteID; 
+            Record.query_promise("SELECT Employee_ID as alDenteID FROM Employee WHERE Email_Address = '" + email + "'")
+            .then ( function (result) {
+              if (result.length === 1) {
+                alDenteID = result[0].alDenteID;
 
-                console.log("err.invalidAttributes: ", err.invalidAttributes)
+                User.create({
+                  name: user,
+                  email: email,
+                  encryptedPassword: encryptedPassword,
+                  lastLoggedIn: new Date(),
+                  gravatarUrl: gravatarUrl,
+                  access: 'public',
+                  alDenteID: alDenteID,
+                }, function userCreated(err, newUser) {
+                  if (err) {
 
-                // If this is a uniqueness error about the email attribute,
-                // send back an easily parseable status code.
-                if (err.invalidAttributes && err.invalidAttributes.email && err.invalidAttributes.email[0]
-                  && err.invalidAttributes.email[0].rule === 'unique') {
-                  return res.emailAddressInUse();
-                }
+                    console.log("err.invalidAttributes: ", err.invalidAttributes)
 
-                // Otherwise, send back something reasonable as our error response.
-                return res.negotiate(err);
+                    // If this is a uniqueness error about the email attribute,
+                    // send back an easily parseable status code.
+                    if (err.invalidAttributes && err.invalidAttributes.email && err.invalidAttributes.email[0]
+                      && err.invalidAttributes.email[0].rule === 'unique') {
+                      
+                      return res.render('customize/public_home', { error : "Email address already in use" })
+                      // return res.emailAddressInUse();
+                    }
+
+                    // Otherwise, send back something reasonable as our error response.
+                    return res.negotiate(err);
+                  }
+
+                  // Log user in
+                  req.session.User = newUser.id;
+                  
+                  console.log("URL: " + sails.config.globals.url);
+
+                  var payload = { id: newUser.id, access: 'New User', alDenteID: alDenteID, url: sails.config.globals.url };
+                  var token = jwToken.issueToken(payload);
+                  
+                  sails.config.messages.push("Generated new user... you many now log in");
+
+                  console.log('Generated new user: ' + JSON.stringify(payload));
+                  console.log("Token issued: " + token);
+                  
+                  req.session.token = token;
+              
+                  return res.render('customize/public_home', { message : "Registered.  Access pending approval by administrator" })
+                  //return res.json(200, { user: user, token: token });
+                });
               }
-
-              // Log user in
-              req.session.User = newUser.id;
-              
-              console.log("URL: " + sails.config.globals.url);
-              var payload = { id: newUser.id, access: 'New User', url: sails.config.globals.url };
-
-              var token = jwToken.issueToken(payload);
-              
-              sails.config.messages.push("Generated new user... you many now log in");
-
-              console.log('Generated new user: ' + JSON.stringify(payload));
-              console.log("Token issued: " + token);
-              
-              req.session.token = token;
-              
-              return res.render('customize/public_home', { message : "Registered.  Access pending approval by administrator" })
-              //return res.json(200, { user: user, token: token });
+              else if (result.length === 0) {
+                return res.render('customize/public_home', { error : "this email address not in alDente LIMS - please create alDente user first" })
+              }
+              else if (result.length > 1) {
+                return res.render('customize/public_home', { error : "this email address has multiple alDente LIMS users - please check with admin to resolve this first." });                
+              }
 
             });
           }
@@ -231,6 +266,45 @@ module.exports = {
       }
     });
 
+  },
+
+  getNewPassword: function (req, res) {
+    console.log("Reset Password...");
+    var body = req.body || {};
+    var validated = body.oldpassword || 'null';
+    return res.render('customize/ResetPassword', { oldpassword : validated });
+  },
+
+  resetPassword: function (req, res) {
+
+    var body = req.body || {};
+
+    var password = body.password;
+    var confirmed = body.confirm_password;
+
+    if (password && confirmed && password === confirmed) {
+        Passwords.encryptPassword({
+        password: password,
+        difficulty: 10,
+      }).exec({    
+        error: function(err) {
+          return res.negotiate(err);
+        },
+        // OK.
+        success: function(encryptedPassword) {
+          Record.query_promise("UPDATE user SET encryptedPassword = '" + encryptedPassword + "'")
+          .then ( function (result) {
+
+          })
+          .catch ( function (err) {
+            return res.negotiate("Error updating new password");
+          });
+        }
+      });
+    }
+    else {
+      return res.negotiate("Password and confirmation not valid");
+    }
   },
 
   /**

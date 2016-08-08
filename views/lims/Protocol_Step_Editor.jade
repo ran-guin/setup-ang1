@@ -11,13 +11,31 @@ block content
     //    - Steps      (array of hashes)
     //    - attributes (array of hashes)
 
-    - var configParams = { record: record };
+    - var configParams = { record: record, payload: session.payload };
 
     - var init = "initialize(" + JSON.stringify(configParams) + ")";
 
     //- flds = fields || []; 
     //- units = { 'solution_qty' : 'solution_qty_units', 'transfer_qty' : 'transfer_qty_units'};
     - aliases = { 'equipment' : 'Equip', 'solution' : 'Sol' }
+    - var input_options2 = ['transfer_qty', 'split', 'solution_qty', 'solution', 'equipment'];
+
+    - var Options = {};
+    - Options['transfer_qty'] = 'Indicate amount of sample to be aliquoted / transferred per well';
+    - Options['split']        = 'Number of target wells per source well during transfer';
+    - Options['solution_qty'] = 'Track quantity of reagent applied during this step (affects final sample volume if baseline units are the same)';
+    - Options['solution']     = 'Track id of reagent applied during this step';
+    - Options['equipment']    = 'Track id of equipment used during this step';
+  
+    - var prompt = { desc : "Select to prompt user to complete this step while using user interface (required to track step)" };
+    - var transfer = { desc : "Is sample being relocated within this step to a new target container or box location" };
+    - var move = { desc : 'Relocate samples to a new box (without changing their tube container)' }
+    - var aliquot = { desc : 'Transfer portion of sample to a target well (leaving some sample remaining)' }
+    - var transfer = { desc : 'Transfer all (or specified volume) of original sample to the target well(s), and throw out original sample container(s)' }
+    - var preprint = { desc : 'Generate empty target container ids in preparation for future transfer/aliquot.  <B>This should always be followed at some point in the same protocol by an Aliquot or Transfer step</B>' }
+
+    - var transfer_types = '<UL><LI><U>Transfer:</U> ' + transfer.desc + '</LI><LI><U>Aliquot:</U> ' + aliquot.desc + '</LI><LI><U>Pre-Print:</U> ' + preprint.desc + '</LI><LI><U>Move:</U> ' + move.desc + "</LI></UL>";
+
     - attributes = attributes || {}; // {'Thaw_Time' : 'integer' }
 
     div(ng-app='myApp')
@@ -40,132 +58,108 @@ block content
             div.form-group
               label.control-label.col-sm-2(for='step_message') Message
               div.col-sm-10  
-                input.input-lg.form-control#message(placeholder='Message' ng-model='Record.message')
-
+                input.input-lg.form-control#step_message(placeholder='Message' ng-model='Record.message')
+            
+            div.form-group
+              label.control-label.col-sm-2.input-lg(for='transfer') Transfer/Move &nbsp;
+                a(href='#' onclick="return false;" tooltip='instructions' data-toggle="popover" data-placement="left" data-trigger="focus" title="Description" data-content="#{transfer.desc}")
+                     i.fa.fa-question-circle
+              div.col-sm-10
+                input.input-lg#transfer(type='checkbox' ng-model='transfer_step')    
 
             div.form-group
-              div.col-sm-offset-2.col-sm-10
+              label.control-label.col-sm-2.input-lg(for='prompt') Prompt &nbsp;
+                a(href='#' onclick="return false;" tooltip='instructions' data-toggle="popover" data-placement="left" data-trigger="focus" title="Description" data-content="#{prompt.desc}")
+                     i.fa.fa-question-circle
+              div.col-sm-10
+                input.input-lg#prompt(type='checkbox' ng-model='Record.prompt')
+                  
+
+            div.form-group
+              label.control-label.col-sm-2.input-lg(for='repeatable') Repeatable &nbsp;
+              div.col-sm-10
                 div.checkbox
                   label
-                    input(type='checkbox' ng-model='transfer_step')
-                    b &nbsp; Transfer
+                    input.input-lg#repeatable(type='checkbox' ng-model='Record.repeatable')                 
 
-            div(ng-if="transfer_step")
+            div(ng-show="transfer_step")
+              hr
+              h3 Transfer / Relocate Options
+              div.form-group
+                label.input-lg.col-sm-2
+                  b Type:
+                div.col-sm-6
+                  my-dropdown#move(placeholder="Type" list="MenuList['transfer_type']" selected="transfer_type" property="name" track='name' ng-init="setup_Menu('transfer_type', 'Move,Transfer,Aliquot,Pre-Print'); filter_catalog();")
+
+                  span &nbsp; &nbsp;
+                  a(href='#' onclick="return false;" tooltip='description' data-toggle="popover" data-placement="left" data-trigger="focus" title="Transfer Options" data-content="#{transfer_types}" data-html="true")
+                    i.fa.fa-question-circle
 
               div.form-group
-                div.col-sm-offset-2.col-sm-10
+                label.input-lg.col-sm-2
+                  b Target Format:
+                div.col-sm-10
                   div.checkbox
                     label
-                      input(type='text' ng-model='transfer_type')
-
-              div.form-group
-                div.col-sm-offset-2.col-sm-10
-                  div.checkbox
-                    label
-                      input(type='text' placeholder='Target Container Type' ng-model='target_container')
+                      input.input-lg.mandatory(type='text' placeholder='Target Container Type' ng-required="transfer_step" ng-model='target_container' ng-change="set_custom()")
   
               div.form-group
-                div.col-sm-offset-2.col-sm-10
+                label.input-lg.col-sm-2
+                  b Target Sample:
+                div.col-sm-10
                   div.checkbox
                     label
-                      input(type='text' placeholder='Change Sample Type' ng-model='target_sample')
+                      input.input-lg(type='text' placeholder='Change Sample Type' ng-model='target_sample')
 
+              - var xfer_options = ['transfer_qty', 'split']
+              each xfer_option in xfer_options
+                div.form-group
+                  label.input-lg.col-sm-2
+                      b &nbsp; #{xfer_option}
+                  div.col-sm-2
+                    input.input-lg(type='checkbox' ng-model='input.#{xfer_option}' ng-change="set_input()")
+                        
+                  div.col-sm-3(ng-show="input.#{xfer_option}")
+                    input.input-lg(type='text' ng-model='default.#{xfer_option}' ng-change="set_input()")
+                  div.col-sm-3(ng-show="input.#{xfer_option}")
+                    input.input-lg(type='text' ng-model='format.#{xfer_option}' ng-change="set_input()")
+                  div.col-sm-2(ng-show="input.#{xfer_option}")
+                      input.col-sm-2(id='#{xfer_option}_mandatory' type='checkbox' ng-model='mandatory.#{xfer_option}' ng-change="set_input()")
+                      label.col-sm-10(for='#{xfer_option}_mandatory')
+                        b &nbsp; Mandatory
+              
               div.form-group
-                div.col-sm-offset-2.col-sm-2
-                  div.checkbox
-                    label
-                      input(type='checkbox' ng-model='input.transfer_qty')
-                      b &nbsp; Split
-                div.col-sm-3
-                  input(type='number' ng-model='default.transfer_qty')
-                div.col-sm-3
-                  input(type='number' ng-model='format.transfer_qty')
+                label.input-lg.col-sm-2
+                  b &nbsp; Reset_Focus &nbsp;
                 div.col-sm-2
-                  div.checkbox
-                    label
-                      input(type='checkbox' ng-model='mandatory.transfer_qty')
-                      b &nbsp; Mandatory
+                  input.input-lg(type='checkbox' ng-change="set_custom()" ng-model='reset_focus')
 
+              hr   
 
-              div.form-group
-                div.col-sm-offset-2.col-sm-2
-                  div.checkbox
-                    label
-                      input(type='checkbox' ng-model='input.split')
-                      b &nbsp; Split
-                div.col-sm-3
-                  input(type='number' ng-model='default.split')
-                div.col-sm-3
-                  input(type='number' ng-model='format.split')
-                div.col-sm-2
-                  div.checkbox
-                    label
-                      input(type='checkbox' ng-model='mandatory.split')
-                      b &nbsp; Mandatory
-
-              div.form-group
-                div.col-sm-offset-2.col-sm-5
-                  div.checkbox
-                    label
-                      input(type='checkbox' ng-model='reset_focus')
-                      b &nbsp; Reset_Focus
-
-            hr
-            h3 Input        
+            h3 Custom Formatted Fields (not editable)
+            button(type='button' ng-click="reset_originals()") Reset
 
             div.form-group
               label.control-label.col-sm-2(for='input_options') Input
               div.col-sm-10  
-                input.input-lg.form-control#input_options(placeholder='Input' ng-model='Record.input_options')
+                input.input-lg.form-control#input_options(placeholder='Input' ng-model='Record.input_options' disabled)
 
             div.form-group
               label.control-label.col-sm-2(for='input_format') Format              
               div.col-sm-10  
-                input.input-lg.form-control#input_format(placeholder='Format' ng-model='Record.input_format')
+                input.input-lg.form-control#input_format(placeholder='Format' ng-model='Record.input_format' disabled)
 
             div.form-group                  
               label.control-label.col-sm-2(for='input_defaults') Defaults
               div.col-sm-10  
-                input.input-lg.form-control#input_defaults(placeholder='Defaults' ng-model='Record.input_defaults')
+                input.input-lg.form-control#input_defaults(placeholder='Defaults' ng-model='Record.input_defaults' disabled)
 
             div.form-group
-              label.control-label.col-sm-2(for='custom_options') Custom_Settings
+              label.control-label.col-sm-2(for='custom_settings') Custom_Settings
               div.col-sm-10  
-                input.input-lg.form-control#custom_options(placeholder="Custom" ng-model='Record.custom_options')
+                input.input-lg.form-control#custom_settings(placeholder="Custom" ng-model='Record.custom_settings' disabled)
 
             hr
-            h3 Options
-
-           div.form-group
-              div.col-sm-offset-2.col-sm-2
-                div.checkbox
-                  label
-                    input(type='checkbox' ng-model='input.solution_qty')
-                    b &nbsp; Split
-              div.col-sm-3
-                input(type='number' ng-model='default.solution_qty')
-              div.col-sm-3
-                input(type='number' ng-model='format.solution_qty')
-              div.col-sm-2
-                div.checkbox
-                  label
-                    input(type='checkbox' ng-model='mandatory.solution_qty')
-                    b &nbsp; Mandatory
-
-            div.form-group
-              div.col-sm-offset-2.col-sm-10
-                div.checkbox
-                  label
-                    input(type='checkbox' ng-model='Record.prompt')
-                    b &nbsp; Prompt
-
-            div.form-group
-              div.col-sm-offset-2.col-sm-10
-                div.checkbox
-                  label
-                    input(type='checkbox' ng-model='Record.repeatable')
-                    b &nbsp; Repeatable
-
 
           if debug || 1
             div.alert-warning
@@ -177,3 +171,5 @@ block content
 
               h3 Angular
               b Record: {{ JSON.stringify(record) }}
+              b sails.config.payload: #{ JSON.stringify(sails.config.payload) }
+              b session.payload #{ JSON.stringify(session.payload) }

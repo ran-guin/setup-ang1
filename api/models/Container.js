@@ -178,6 +178,9 @@ module.exports = {
 	transfer_Location : function (ids, Transfer) {
 		// relocate using WellMapper information (from Transfer hash)
 		// Transfer = [{ batch: 0, target_position: "A2", target_box: '' }, { }]
+
+		var deferred = q.defer();
+
 		console.log("Relocating samples : " + ids.join(','));
 		console.log(JSON.stringify(Transfer));
 
@@ -186,9 +189,19 @@ module.exports = {
 		console.log("\n** Target slots: " + target_slots.join(','));
 
 		if (target_slots && ids && target_slots.length === ids.length) {
-			Record.update('container', ids, { 'FK_Rack__ID' : target_slots });
+			Record.update('container', ids, { 'FK_Rack__ID' : target_slots })
+			.then ( function (result) {
+				deferred.resolve(result);
+			})
+			.catch ( function (err) {
+				console.log("Error transferring location: " + err);
+				deferred.reject(err);
+			});
 		}
+		else { deferred.resolve() }
+
 		console.log("Transferred targets to applicable slots...");
+		return deferred.promise;
 	},
 
 	execute_transfer : function (ids, Transfer, Options) {
@@ -237,7 +250,16 @@ module.exports = {
 
 		if (ids && Transfer && Options.transfer_type === 'Move') {
 			console.log("only relocating samples");
-			deferred.resolve( { plate_ids: ids });
+
+			Container.transfer_Location(ids, Transfer)
+			.then (function (result) {
+				console.log("Transferred : " + ids.join(','));
+				deferred.resolve( { plate_ids: ids });
+			})
+			.catch (function (err) {
+				console.log("Error relocating samples");
+				deferred.reject(err);
+			});
 		}
 		else if (ids) {
 			// allow input ids (first parameter) to be either:
@@ -260,7 +282,14 @@ module.exports = {
 				.then (function (finalResponse) {
 					console.log("completed transfer");
 
-					deferred.resolve(finalResponse);
+					Container.transfer_Location(target_ids, Transfer)
+					.then (function (result) {
+						deferred.resolve( finalResponse );
+					})
+					.catch (function (err) {
+						console.log("Error relocating target samples");
+						deferred.reject(err);
+					});
 				})
 				.catch ( function (err) {
 					var msg = "problem with post transfer updates ? " + JSON.stringify(err);
@@ -278,120 +307,6 @@ module.exports = {
 			deferred.resolve({});
 		}
 	
-		return deferred.promise;
-	},
-
-	resetData : function (target, options, CustomData) {
-		// Standard fields that are reset for transferred samples (varies depending upon input options)
-		//
-		// Returns:
-		// reset{
-		//	'source' : (hash of changes to source plates)
-		//	'target' : (hash of changes to target plates (both for standard transfer, and for final transfer after pre-print process)
-		//	'clone' : (hash of changes to clone plates only (will also include reset.target changes)
-		//  }
-
-		if (! options) { options = {} }
-		if (! target ) { target = {} }
-			
-		var deferred = q.defer();
-
-		var target_ids = [];
-		
-		var resetSource = {};
-		var resetTarget = {};
-
-		var resetClone = {
-			'Plate_ID' : null,
-			'FKParent_Plate__ID' : '<id>',
-			'FK_Rack__ID' : '<NULL>',
-			'Plate_Created' : '<now>',
-			'FK_Employee__ID' : '<user>' 
-		};
-
-		// Update Volumes if applicable (default to entire qty) 
-		if (target.qty) {
-			resetTarget['Current_Volume'] = target.qty;
-			resetTarget['Current_Volume_Units'] = target.qty_units;
-
-			console.log("track removal of " + target.qty + ' ' + target.qty_units);
-			//Container.updateVolume(ids, -options.qty, options.qty_units, { prep : options.prep_id});
-		}
-
-		if (options.prep) {
-			resetSource['FKLast_Prep__ID'] = options.prep;
-			resetTarget['FKLast_Prep__ID'] = options.prep;
-		}
-
-		if (options.transfer_type === 'Pre-Print') {
-			resetClone['Current_Volume'] = 0;
-			resetClone['Plate_Status'] = 'Pre-Printed';
-		}
-		else if (options.transfer_type === 'Transfer' ) {
-			resetSource['Plate_Status'] = 'Thrown Out';
-			resetSource['Current_Volume'] = 0;
-		}
-
-		if (target.qty) {
-			var qtyField = Container.alias('qty');
-			var qtyUnits = Container.alias('qty_units');
-
-			resetSource[qtyField] = "<" + qtyField + " - " + target.qty + ">";
-
-			resetTarget[qtyField] = target.qty;
-			resetTarget[qtyUnits] = target.qty_units;
-		}
-
-		// Target options 
-		if (target.sample_type) {
-			resetTarget['FK_Sample_Type__ID'] = target.sample_type;
-		}
-
-		if (target.format) {
-			resetTarget['FK_Plate_Format__ID'] = target.format;
-		}	
-
-		// Custom Data
-		if (CustomData && CustomData.length) {
-
-			console.log("Custom Data: ");
-			var resetKeys = Object.keys(CustomData[0]);
-/*
-			for (var i=0; i<CustomData.length; i++) {
-				target_ids.push(CustomData[i].source_id);
-			}
-*/
-			for (var i=1; i<resetKeys.length; i++) {
-				var key = resetKeys[i];
-				var list = Record.cast_to(CustomData, 'Array', key);
-
-				if (key == 'source_id') { target_ids = list }
-				else {
-					var field = Container.alias(key);
-					if (field) { 
-						for (var j=0; j<CustomData.length; j++) {
-							var ref = CustomData[j]['source_id'];
-							var reset = CustomData[j][key];
-
-							if (! resetTarget[field] ) { resetTarget[field] = {} }
-							
-							if (resetTarget[field][ref] && resetTarget[field][ref].constructor === String ) {
-								resetTarget[field][ref] = [resetTarget[field][ref], reset];
-							}
-							else if (resetTarget[field][ref] && resetTarget[field][ref].constructor === Array) {
-								resetTarget[field][ref].push(reset);
-							} 
-							else { resetTarget[field][ref] = reset }
-						}
-					}
-				}
-			}
-		}
-		
-		var reset = { target: resetTarget, clone: resetClone, source: resetSource, target_ids: target_ids}
-		deferred.resolve(reset);
-
-		console.log("regenerated id list: " + target_ids + '. Reset:  ' + JSON.stringify(reset));
 		return deferred.promise;
 	},
 
@@ -439,23 +354,33 @@ module.exports = {
 
 		var qtyField = Container.alias('qty');
 		var qtyUnits = Container.alias('qty_units');
-		if (Options.transfer_qty) {
-			// Single quantity only ?? or remove
-			resetSource[qtyField] = "<" + qtyField + " - " + Options.transfer_qty + ">";
 
-			resetTarget[qtyField] = Options.transfer_qty;
-			resetTarget[qtyUnits] = Options.transfer_qty_units;
-		}
-		else if (Transfer[0].qty) {
+		if ( ! Options.solution_qty ) { Options.solution_qty = 0 }
+		
+		if (Transfer[0].qty && Options.transfer_type !== 'Pre-Print') {
 			resetTarget[qtyUnits] = Transfer[0].qty_units || Options.transfer_qty_units;
 			var quantities = [];
 			var adjustments = [];
-			for (var i=0; i<Transfer.length; i++) {
-				quantities.push( Transfer[i].qty );
+
+			for (var i=0; i<Transfer.length; i++) {		
+				
+				var target_qty = Transfer[i].qty;
+				if (Options.solution_qty) {
+					var add_qty = Options.solution_qty[i];
+					if (add_qty.constructor === String) {
+						add_qty = add_qty.parseFloat();
+					}
+					target_qty = target_qty + add_qty; // needs to be text to enable comma-delimited list.. 
+				}
+				quantities.push( target_qty );
+
 				adjustments.push("<" + qtyField + " - " + Transfer[i].qty + ">");		
 			}
 			resetTarget[qtyField] = quantities;
 			resetSource[qtyField] = adjustments;
+		}
+		else if (Options.solution_qty) {
+			resetTarget[qtyField] = Options.solution_qty;
 		}
 
 		// Target options 
@@ -564,9 +489,13 @@ module.exports = {
 	postTransferUpdates : function (old_ids, new_ids, target, options) {
 
 		var deferred = q.defer();
+		console.log('post Transfer updates...');
 
 		if ( ! target ) { target = {} }
 		if ( ! options ) { options = {} }
+
+		console.log(JSON.stringify(target));
+		console.log(JSON.stringify(options));
 
 		var promises = [];
 
@@ -578,9 +507,9 @@ module.exports = {
 			promises.push( Container.loadData(new_ids) );
 		}
 
-		//if (options.solution_qty) {
+		if (options.solution_qty) {
 			console.log("\n*** Need to add solution quantities if applicable ...");
-		//}
+		}
 
 
 		var returnVal = { plate_ids : new_ids };
@@ -593,7 +522,7 @@ module.exports = {
 				returnVal['Samples'] = results[0];
 			}
 
-			sails.config.messages.push('Executed Transfer : ' + options.transfer_type);
+			// sails.config.messages.push('Executed Transfer : ' + options.transfer_type);
 			console.log("executed transfer: "); //  + JSON.stringify(returnVal));
 
 			//var messages = Record.merge_Messages(results);
