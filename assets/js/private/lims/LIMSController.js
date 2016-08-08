@@ -12,6 +12,12 @@ function limsController ($scope, $rootScope, $http, $q) {
     $scope.active.valid_plate_sets = [];
 
     $scope.active.plate_set = 'new';  // set default ..  
+    $scope.payload = {};
+
+    $scope.initialize_payload = function (config) {
+        if (config && config['payload']) { $scope.payload = config['payload'] }
+        console.log("Payload: " + JSON.stringify($scope.payload));
+    }
 
     $scope.set_active_attribute = function (attr, val) {
         // accessor to local attributes
@@ -28,6 +34,38 @@ function limsController ($scope, $rootScope, $http, $q) {
         };
 
         return P[model];
+    }
+
+    $scope.print_Labels = function (model, ids) {
+
+        var printer = 'Zebra13';
+ 
+        var payload = $scope.payload;
+        if (model && ids.length && payload) {
+            console.log("Test Printer " + model + " : " + ids);
+
+            var params = "database=" + payload.db + '&';
+            params = params + 'host=' + payload.host + '&';
+            params = params + 'user=' + payload.db_user + '&';
+            params = params + 'id=' + ids;
+            pramams = params + 'printer=' + printer;
+
+            $http.get("http://bcgpdev5.bccrc.ca/SDB_rg/cgi-bin/barcode_printer.pl?" + params)
+            .then (function (response) {
+                console.log("Response: " + JSON.stringify(response));
+            })
+            .catch (function (err) {
+                console.log("Error: " + JSON.stringify(err));
+            });
+        }
+        else {
+            if (!payload) { 
+                console.log("No payload supplied to access printer parameters");
+            }
+            else {
+                console.log("No model or ids to print...");
+            }
+        }
     }
 
     // Methods to set 'active' scope attributes (eg active.Samples, active.plate_set ... )
