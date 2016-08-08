@@ -61,7 +61,7 @@ block content
                 input.input-lg.form-control#step_message(placeholder='Message' ng-model='Record.message')
             
             div.form-group
-              label.control-label.col-sm-2.input-lg(for='transfer') Transfer / Relocate &nbsp;
+              label.control-label.col-sm-2.input-lg(for='transfer') Transfer/Move &nbsp;
                 a(href='#' onclick="return false;" tooltip='instructions' data-toggle="popover" data-placement="left" data-trigger="focus" title="Description" data-content="#{transfer.desc}")
                      i.fa.fa-question-circle
               div.col-sm-10
@@ -80,8 +80,7 @@ block content
               div.col-sm-10
                 div.checkbox
                   label
-                    input.input-lg#repeatable(type='checkbox' ng-model='Record.repeatable')
-                    b &nbsp; Repeatable                   
+                    input.input-lg#repeatable(type='checkbox' ng-model='Record.repeatable')                 
 
             div(ng-show="transfer_step")
               hr
@@ -90,7 +89,7 @@ block content
                 label.input-lg.col-sm-2
                   b Type:
                 div.col-sm-6
-                  my-dropdown#move(placeholder="Type" list="MenuList['transfer_type']" selected="transfer_type" property="name" ng-init="setup_Menu('transfer_type', 'Move,Transfer,Aliquot,Pre-Print'); filter_catalog();")
+                  my-dropdown#move(placeholder="Type" list="MenuList['transfer_type']" selected="transfer_type" property="name" track='name' ng-init="setup_Menu('transfer_type', 'Move,Transfer,Aliquot,Pre-Print'); filter_catalog();")
 
                   span &nbsp; &nbsp;
                   a(href='#' onclick="return false;" tooltip='description' data-toggle="popover" data-placement="left" data-trigger="focus" title="Transfer Options" data-content="#{transfer_types}" data-html="true")
@@ -102,7 +101,7 @@ block content
                 div.col-sm-10
                   div.checkbox
                     label
-                      input.input-lg.mandatory(type='text' placeholder='Target Container Type' ng-required="transfer_step" ng-model='target_container')
+                      input.input-lg.mandatory(type='text' placeholder='Target Container Type' ng-required="transfer_step" ng-model='target_container' ng-change="set_custom()")
   
               div.form-group
                 label.input-lg.col-sm-2
@@ -118,14 +117,14 @@ block content
                   label.input-lg.col-sm-2
                       b &nbsp; #{xfer_option}
                   div.col-sm-2
-                    input.input-lg(type='checkbox' ng-model='input.#{xfer_option}')
+                    input.input-lg(type='checkbox' ng-model='input.#{xfer_option}' ng-change="set_input()")
                         
                   div.col-sm-3(ng-show="input.#{xfer_option}")
-                    input.input-lg(type='text' ng-model='default.#{xfer_option}')
+                    input.input-lg(type='text' ng-model='default.#{xfer_option}' ng-change="set_input()")
                   div.col-sm-3(ng-show="input.#{xfer_option}")
-                    input.input-lg(type='text' ng-model='format.#{xfer_option}')
+                    input.input-lg(type='text' ng-model='format.#{xfer_option}' ng-change="set_input()")
                   div.col-sm-2(ng-show="input.#{xfer_option}")
-                      input.col-sm-2(id='#{xfer_option}_mandatory' type='checkbox' ng-model='mandatory.#{xfer_option}')
+                      input.col-sm-2(id='#{xfer_option}_mandatory' type='checkbox' ng-model='mandatory.#{xfer_option}' ng-change="set_input()")
                       label.col-sm-10(for='#{xfer_option}_mandatory')
                         b &nbsp; Mandatory
               
@@ -133,11 +132,13 @@ block content
                 label.input-lg.col-sm-2
                   b &nbsp; Reset_Focus &nbsp;
                 div.col-sm-2
-                  input.input-lg(type='checkbox' ng-model='reset_focus')
+                  input.input-lg(type='checkbox' ng-change="set_custom()" ng-model='reset_focus')
 
               hr   
 
             h3 Custom Formatted Fields (not editable)
+            button(type='button' ng-click="reset_originals()") Reset
+
             div.form-group
               label.control-label.col-sm-2(for='input_options') Input
               div.col-sm-10  
