@@ -193,13 +193,15 @@ function wellMapper() {
         }
         else {
             console.log("FAILED to find batch " + batch_index + " from: " + JSON.stringify(this.target_boxes));
+            batch = 'TBD-0';
+            // this.available[batch] = available_wells(this.target_size, this.fill_by);
         }
        
         var x;
         var y;
 
-        console.log(this.available[batch].length + ' are avail in ' + batch + " of " + target_index);
         if (this.available && this.available[batch] && this.available[batch].length > target_index+1) {
+            console.log(this.available[batch].length + ' are avail in ' + batch + " of " + target_index);
             target_index++;
             console.log('next index ' + target_index);
         }
@@ -210,7 +212,7 @@ function wellMapper() {
             console.log('reset ' + batch_index );
         }
 
-        if (this.available[batch] && this.available[batch][target_index]) {
+        if (this.available && this.available[batch] && this.available[batch][target_index]) {
             var next = this.available[batch][target_index] || { position: 'A1' };
         
             if (next.position) {
@@ -661,7 +663,7 @@ function wellMapper() {
                             TargetData[opt] = List[opt][target];
                         }
                     }
-                    if (! TargetData['qty']) { 
+                    if (TargetData['qty'] == null) { 
                         TargetData['qty'] = sources[i].qty;
                         TargetData['qty_units'] = sources[i].qty_units;
                         console.log("default qty transferred to " + sources[i].qty + sources[i].qty_units);
@@ -897,7 +899,9 @@ function wellMapper() {
         console.log(".. remaining volume = " + current_volume.toFixed(6) + source.qty_units);
 
         var min = extract.match(/min:(\d+)/i);
-        var max = extract.match(/max:(\d+)/i);
+        if (! min) { min = extract.match(/>(\d+)/) }
+
+        var max = extract.match(/max:(\d+)/i) || extract.match(/<(\d+)/) 
 
         if (min && min[1]) { 
             min = min[1];
