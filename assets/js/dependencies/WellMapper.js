@@ -697,7 +697,7 @@ function wellMapper() {
         this.TransferMap = TransferMap;
 
          if (this.missing_boxes) {
-            var msg = this.missing_wells + ' Target samples require target boxes.  Please scan ' + this.missing_boxes + " more Target Boxes";
+            var msg = this.missing_wells + ' Target samples require target boxes.  Please scan ' + this.missing_boxes + " more Target Box(es)";
             warnings.push(msg);
             console.log(msg);
         }
