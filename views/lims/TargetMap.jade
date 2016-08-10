@@ -47,13 +47,15 @@ div(ng-if="Map.Transfer && Map.TransferMap")
 								div.wellmap(style='background-color: #666')
 									span &nbsp;
 		p &nbsp;
-		b Transfer Options:	
-		ul
-			li fill_by: {{ map.Options.fill_by }}
-			li target_size: {{ map.Options.target_size }}
-			li transfer_type: {{ map.Options.transfer_type }}
-			li split: {{ map.Options.split }}
-			li pack: {{ map.Options.pack }}
+	HR
+	b Transfer Options:	
+	ul
+		li fill_by: {{ map.Options.fill_by }}
+		li target_size: {{ map.Options.target_size }}
+		li transfer_type: {{ map.Options.transfer_type }}
+		li split: {{ map.Options.split }}
+		li pack: {{ map.Options.pack }}
+
 
 div(ng-show='debug')
 	hr
