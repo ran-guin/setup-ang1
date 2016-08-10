@@ -32,7 +32,8 @@ module.exports = {
   },
 
   printLabel : function (barcode, code, printer) {
-    // generate print label
+    
+    console.log("print label...");
   },
 
 
@@ -85,6 +86,8 @@ module.exports = {
   	for (var i=0; i< classes.length; i++) {
   		var regex = new RegExp(P[classes[i]] + '\\d+\,?\s*', 'ig');
   		var range = new RegExp(P[classes[i]] + '\\d+\\s*\-\s*' + P[classes[i]] + '\\d+', 'ig');
+
+      // var range2 = new RegExp(P[classes[i]] + '\\d+\\s*\-\s*' + P[classes[i]] + '\\d+', 'ig');
 
   		Scanned[classes[i]] = [];
 
@@ -175,7 +178,8 @@ module.exports = {
           });
         }
         else {
-          deferred.reject("Unidentified barcode string: " + Scanned['Unformatted']);
+          console.log("Unidentified barcode string: " + Scanned['Unformatted']);
+          deferred.resolve(Scanned); 
         }
 
       }
