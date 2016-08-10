@@ -130,6 +130,11 @@ module.exports = {
 
   },
 
+  lab_admin : function (req, res) {
+    return res.render('lims/Lab_Admin', req.session.payload);
+
+  },
+
   admin : function (req, res) {
     return res.render('customize/Admin', req.session.payload);
 
