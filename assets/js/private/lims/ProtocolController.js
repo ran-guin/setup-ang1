@@ -560,7 +560,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
         console.log($scope.list_mode + ' -> reset list example to ' + $scope.listExample);
     }
 
-    $scope.distribute = function distribute () {
+    $scope.distribute = function distribute (reset) {
         console.log("Distribute samples...");
         var deferred = $q.defer(); 
 
@@ -607,6 +607,9 @@ function protocolController ($scope, $rootScope, $http, $q) {
         // $scope.Map = $scope.newMap.distribute(Sources, Target, Options);
         
         console.log("call well redistribution...");
+        
+        Options.reset = reset;
+
         $scope.redistribute_Samples($scope.active.Samples, Target, Options)
         .then ( function (Map) {
             if (Map.warnings) {
@@ -663,7 +666,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
             console.log("\n** Load custom options: " + custom_options);
             $scope.parse_custom_options(custom_options);
 
-            if ($scope.Step['transfer_type']) { $scope.distribute() }
+            if ($scope.Step['transfer_type']) { $scope.distribute(1) }
 
             var name = $scope.Step['name'];
 
