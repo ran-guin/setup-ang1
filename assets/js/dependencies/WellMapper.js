@@ -693,10 +693,13 @@ function wellMapper() {
             }
         } 
 
+ 
         this.Transfer = Transfer;
         this.TransferMap = TransferMap;
 
-         if (this.missing_boxes) {
+        if (this.missing_boxes > 1) {
+            this.missing_wells--; // last call to next_available would generate missing_well ...
+            
             var msg = this.missing_wells + ' Target samples require target boxes.  Please scan ' + this.missing_boxes + " more Target Box(es)";
             warnings.push(msg);
             console.log(msg);
