@@ -63,13 +63,15 @@ function wellMapperController ($scope, $rootScope, $http, $q ) {
     }
 
     $scope.loadWells = function (Target, Options) {
-        // get available wells 
+        // get available wells
         var deferred = $q.defer();
 
         if (! Options) { Options = {} }
-        var rack_id = Options.target_rack || Options.target_boxes[0];
+        var rack_id = Options.target_rack;
         var size    = Options.target_size;
         var fill_by = Options.fill_by;
+
+        if (! rack_id && Options.target_boxes && Options.target_boxes.length) { rack_ID = Options.target_boxes[0] }
 
         var rack_name;
         if (! rack_id && size ) {
@@ -177,10 +179,15 @@ function wellMapperController ($scope, $rootScope, $http, $q ) {
     }
 
     $scope.redistribute_Samples = function  (Samples, Target, Options) {
-
         var deferred = $q.defer();
 
-        $scope.reset_messages();
+        if (Options && Options.reset) {
+            $scope.reset_messages();
+            console.log("Redistribute Samples ");
+        }
+        else {
+            console.log("Redistribute Samples (no reset");            
+        }
 
         console.log("Fill by " + $scope.map.fill_by);
         
@@ -424,9 +431,9 @@ function wellMapperController ($scope, $rootScope, $http, $q ) {
         var min = _.min(volumes);
         var max = _.max(volumes);
 
-        $scope.messages.push("Original Volumes Detected: Minimum: " + min + '; Maximum: ' + max );
+        $scope.message("Original Volumes Detected Between " + min + ' and ' + max );
 
-        if (volumes.length && min > 1.0 ) {
+        if (volumes.length && max > 1.0 ) {
             $scope.map.splitX = 5;
             $scope.map.transfer_qty = ">200,>200,>500,>500,<100";
             $scope.map.transfer_qty_units = 'ul';
@@ -441,7 +448,7 @@ function wellMapperController ($scope, $rootScope, $http, $q ) {
         $scope.map.fill_by = 'column';
         $scope.map.split_mode = 'serial';
 
-        $scope.messages.push("Using Custom Data Matrix Sample Distribution Settings " + version);
+        $scope.message("Using Custom Data Matrix Sample Distribution Settings " + version);
     }
 
 }]);
