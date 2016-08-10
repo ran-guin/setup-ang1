@@ -37,7 +37,7 @@ function limsController ($scope, $rootScope, $http, $q) {
     }
 
     $scope.print_Labels = function (model, ids) {
-
+        // custom method to call api to print barcodes ... 
         var printer = 'Zebra13';
  
         var payload = $scope.payload;
@@ -47,12 +47,20 @@ function limsController ($scope, $rootScope, $http, $q) {
             var params = "database=" + payload.db + '&';
             params = params + 'host=' + payload.host + '&';
             params = params + 'user=' + payload.db_user + '&';
-            params = params + 'id=' + ids;
-            pramams = params + 'printer=' + printer;
+            params = params + 'id=' + ids + '&';
+            params = params + 'printer=' + printer + '&';
 
+            console.log("params: " + params);
             $http.get("http://bcgpdev5.bccrc.ca/SDB_rg/cgi-bin/barcode_printer.pl?" + params)
             .then (function (response) {
                 console.log("Response: " + JSON.stringify(response));
+                if (response.data) {
+                    var success = response.data.match(/SUCCESS: \[(.*?)\]/);
+                    if (success) { 
+                        console.log("Success: " + success[1]);
+                        $scope.message(success[1]);
+                    }
+                }
             })
             .catch (function (err) {
                 console.log("Error: " + JSON.stringify(err));
