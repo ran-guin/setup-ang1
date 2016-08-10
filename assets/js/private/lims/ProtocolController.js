@@ -11,8 +11,11 @@ function protocolController ($scope, $rootScope, $http, $q) {
     $scope.protocol = {};   // protocol specific attributes
 
     $scope.step.stepNumber = 1;
+    $scope.SplitFields = {};
 
     $scope.initialize = function (config, options) {
+        console.log("initialize protocol");
+        $scope.initialize_payload(config);
 
         if (config && config['Samples']) {
             // both protocol tracking and standard Container page 
@@ -110,8 +113,6 @@ function protocolController ($scope, $rootScope, $http, $q) {
 
             console.log("Steps: " + JSON.stringify($scope.Steps) );
             $scope.reload();
-
-            $scope.SplitFields = {};
 
             $scope.step.list_mode = 'serial';
             $scope.listExamples = {

@@ -82,9 +82,10 @@ block content
                   label
                     input.input-lg#repeatable(type='checkbox' ng-model='Record.repeatable')                 
 
-            div(ng-show="transfer_step")
-              hr
-              h3 Transfer / Relocate Options
+            div.alert.alert-info(ng-show="transfer_step")
+              b 
+                u Transfer / Relocate Options
+              p &nbsp;
               div.form-group
                 label.input-lg.col-sm-2
                   b Type:
@@ -97,19 +98,13 @@ block content
 
               div.form-group
                 label.input-lg.col-sm-2
-                  b Target Format:
-                div.col-sm-10
-                  div.checkbox
+                  b Target:
+                div.col-sm-6
                     label
-                      input.input-lg.mandatory(type='text' placeholder='Target Container Type' ng-required="transfer_step" ng-model='target_container' ng-change="set_custom()")
-  
-              div.form-group
-                label.input-lg.col-sm-2
-                  b Target Sample:
-                div.col-sm-10
-                  div.checkbox
+                      my-dropdown.mandatory(placeholder='Container Type' list="MenuList['target_format']" selected='target_format' property='name' ng-init="setup_Menu('target_format','FK(container_format)')")
+                div.col-sm-4
                     label
-                      input.input-lg(type='text' placeholder='Change Sample Type' ng-model='target_sample')
+                      my-dropdown(placeholder='Sample Type' list="MenuList['target_sample']" selected='target_sample' property='name' ng-init="setup_Menu('target_sample','FK(sample_type)')")
 
               - var xfer_options = ['transfer_qty', 'split']
               each xfer_option in xfer_options
@@ -134,9 +129,10 @@ block content
                 div.col-sm-2
                   input.input-lg(type='checkbox' ng-change="set_custom()" ng-model='reset_focus')
 
-              hr   
+            b
+              u Custom Formatted Fields (not editable)
+            p &nbsp;
 
-            h3 Custom Formatted Fields (not editable)
             button(type='button' ng-click="reset_originals()") Reset
 
             div.form-group

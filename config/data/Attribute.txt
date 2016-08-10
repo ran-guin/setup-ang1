@@ -10,21 +10,30 @@ Attribute_ID	Attribute_Name	Attribute_Format	Attribute_Type	FK_Grp__ID	Inherited
 11	First_stored		DateTime	2	Yes	Plate	Editable	NULL
 12	Time_to_freeze		Decimal	2	Yes	Plate	Editable	NULL
 13	Tube_Full		ENUM('Yes','No')	2	No	Source	Editable	NULL
-14	Turbidity Observed		ENUM('Yes','No')	2	Yes	Plate	Editable	NULL
-15	Hematuria Observed		ENUM('Yes','No')	3	Yes	Plate	Editable	NULL
-16	Hemolysis Observed		ENUM('Yes','No')	2	Yes	Plate	Editable	NULL
-17	Lipedemia Observed		ENUM('Yes','No')	2	Yes	Plate	Editable	NULL
-18	Contamination During Pipetting		ENUM('Yes','No')	3	Yes	Plate	Editable	NULL
-19	Contamination Type		Text	3	Yes	Plate	Editable	NULL
+14	Turbidity_Observed		ENUM('Yes','No')	2	Yes	Plate	Editable	NULL
+15	Hematuria_Observed		ENUM('Yes','No')	3	Yes	Plate	Editable	NULL
+16	Hemolysis_Observed		ENUM('Yes','No')	2	Yes	Plate	Editable	NULL
+17	Lipedemia_Observed		ENUM('Yes','No')	2	Yes	Plate	Editable	NULL
+18	Contamination_During_Pipetting		ENUM('Yes','No')	3	Yes	Plate	Editable	NULL
+19	Contamination_Type		Text	3	Yes	Plate	Editable	NULL
 20	Process_Note		Text	3	Yes	Plate	Editable	NULL
+<<<<<<< HEAD
+21	Clotting_Observed		ENUM('Yes','No')	3	Yes	Plate	Editable	NULL
+23	Post_CENT_Fibrin_Clot_Obs		ENUM('Yes','No')	3	Yes	Plate	Editable	NULL
+=======
 21	Clotting Observed		ENUM('Yes','No')	3	Yes	Plate	Editable	NULL
 23	Post_CENT_Fibrin_Cloti_Obs		ENUM('Yes','No')	3	Yes	Plate	Editable	NULL
+>>>>>>> 12558651465cbe3948d673de22d4688c1438f152
 24	Patient_Service_Centre		FK_Service_Centre__ID	2	Yes	Source	Editable	NULL
 25	Replacement_Source_Status		ENUM('Requested','Received','Replacement')	2	No	Source	ReadOnly	NULL
 26	Replacement_for_Source		FKReplacing_Source__ID	2	No	Source	ReadOnly	NULL
 27	Thaw_Count		Count	3	Yes	Plate	Editable	NULL
 28	Thaw_Count		Int	3	Yes	Source	Editable	NULL
+<<<<<<< HEAD
+29	Tube_Weight_Empty		Decimal	1	No	Plate	Editable	NULL
+=======
 29	Tube Weight_Empty		Decimal	1	No	Plate	Editable	NULL
+>>>>>>> 12558651465cbe3948d673de22d4688c1438f152
 30	Sample_Weight_Calc		Decimal	1	No	Plate	Editable	NULL
 31	Saliva_Collection_Device_Model		Varchar	3	No	Source	Editable	NULL
 32	Saliva_Collection_Device_Lot		Varchar	3	No	Source	Editable	NULL
@@ -33,18 +42,31 @@ Attribute_ID	Attribute_Name	Attribute_Format	Attribute_Type	FK_Grp__ID	Inherited
 35	Freezer_Date		DateTime	8	No	Source	Editable	NULL
 41	GENIC_Subject_Code		VARCHAR(3)	8	Yes	Source	NonEditable	NULL
 42	CDG_Batch_Identifier		text	23	No	Submission	Editable	NULL
+<<<<<<< HEAD
+43	Measured_Tube_Weight_in_g	NULL	Decimal	23	No	Plate	Editable	This attribute can be used to calculate accurate volumes. If this attribute is entered and Plate_Format.Wells = 1 and Container Format has defined Empty_Container_Weight_g, the following calculation will be performed: 1. Subtract empty tube weight from entered (measured) weight. 2. convert grams to ml (assuming water density)
+45	VolumePOC	NULL	Decimal	8	No	Plate	Editable	Volume of plasma from commercial lab
+46	VolumeSOC	NULL	Decimal	8	No	Plate	Editable	Volume of serum from commercial lab
+48	Sex_Test_Result		ENUM('M','F','U')	8	Yes	Plate	Editable	NULL
+50	Qiagen_Lot_Number		varchar	3	Yes	Plate	Editable	NULL	NULL
+=======
 43	Tube_Weight_in_g	NULL	Decimal	23	No	Plate	Editable	This attribute can be used to calculate accurate volumes. If this attribute is entered and Plate_Format.Wells = 1 and Container Format has defined Empty_Container_Weight_g, the following calculation will be performed: 1. Subtract empty tube weight from entered (measured) weight. 2. convert grams to ml (assuming water density)
 48	Sex_Test_Result		ENUM('M','F','U')	8	Yes	Plate	Editable	NULL
 49	Concentration_ng_per_ul		Decimal	8	Yes	Plate	Editable	NULL
 50	Qiagen_Kit_Lot_Number		varchar	3	Yes	Plate	Editable	NULL	NULL
+>>>>>>> 12558651465cbe3948d673de22d4688c1438f152
 51	DNA_Wash_Cycles		Int	3	Yes	Plate	Editable	
 52	DNA_230		Decimal	3	Yes	Plate	Editable	
 53	DNA_260		Decimal	3	Yes	Plate	Editable	
 54	DNA_280		Decimal	3	Yes	Plate	Editable	
 55	DNA_320		Decimal	3	Yes	Plate	Editable	
 56	DNA_260_280		Decimal	3	Yes	Plate	Editable	
+<<<<<<< HEAD
+67	DNA_260_280_Adj		Decimal	3	Yes	Plate	Editable	
+68	DNA_260_230_Adj		Decimal	3	Yes	Plate	Editable	
+=======
 56	DNA_260_280_Adj		Decimal	3	Yes	Plate	Editable	
 56	DNA_260_230_Adj		Decimal	3	Yes	Plate	Editable	
+>>>>>>> 12558651465cbe3948d673de22d4688c1438f152
 57	DNA_Conc_UV		Decimal	3	Yes	Plate	Editable	
 58	DNA_UV_Batch		Text	3	Yes	Plate	Editable	
 59	DNA_Conc_Picogreen		Decimal	3	Yes	Plate	Editable	
@@ -55,4 +77,7 @@ Attribute_ID	Attribute_Name	Attribute_Format	Attribute_Type	FK_Grp__ID	Inherited
 64	Untracked_Thaw_Count		Int	3	Yes	Source	Editable	
 65	Untracked_Thaw_Count		Int	3	Yes	Plate	Editable	
 66	Matrix_Barcode		Int	3	Yes	Plate	Editable	
+<<<<<<< HEAD
+=======
 68	Qiagen_Lot_Number		Int	3	Yes	Plate	Editable	
+>>>>>>> 12558651465cbe3948d673de22d4688c1438f152

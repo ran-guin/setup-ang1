@@ -145,13 +145,6 @@ module.exports = {
             var userid   = '';
             var remote_login = sessionInfo;
 
-            if (sessionInfo.match(/nobody/)) {
-              console.log("FAILED TO FIND USER");
-              sessionInfo = "{ 'username' : 'Ran', 'userid' : '4' }";
-              username = 'Ran';
-              userid   = 4;
-            }
-
             // Validate User on LITMUS //
             
             // Try to look up user using the provided email address

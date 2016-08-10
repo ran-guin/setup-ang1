@@ -20,18 +20,21 @@ module.exports.bootstrap = function(cb) {
 
   // sails.sql_helper = require('./../custom_modules/sql-helper.js');
 
-	sails.config.root = process.env.LITMUS_ROOT || '';
+	sails.config.root = sails.config.url_root || ''; // process.env.LITMUS_ROOT || '';
 	sails.config.messages = [];
 	sails.config.warnings = [];
 	sails.config.errors = [];
 
 	var models = Object.keys(sails.models);
 
-	if (process.env.MYSQL_HOST) {
-		console.log("Connection:\n******************\n");
-		console.log("Host: \t" + process.env.MYSQL_HOST + "\n");
-		console.log("DB: \t" + process.env.DEFAULT_MYSQL_DATABASE + "\n");
-		console.log("User: \t" + process.env.DEFAULT_MYSQL_USER + "\n\n");
+	var conn = sails.config.connections[sails.config.models.connection];
+
+	if (conn) {
+		console.log("Connecting to " + sails.config.models.connection + ':');
+		console.log("\n***************************\n");
+		console.log("Host: \t" + conn.host);
+		console.log("DB: \t" + conn.database);
+		console.log("User: \t" + conn.user + "\n");
 	}
 	else {
 		console.log("Connection parameters undefined");

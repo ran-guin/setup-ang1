@@ -5,7 +5,7 @@ block content
   //    - plate_ids (array); 
   //    - Samples   (array of hashes)
 
-  - var config = { plate_ids: plate_ids, Samples: Samples };
+  - var config = { plate_ids: plate_ids, Samples: Samples, payload: sails.config.payload};
   - var init = "initialize(" + JSON.stringify(config) + ")";
   - var sampleList = plate_ids.split(/\s*,\s*/);
   
@@ -28,6 +28,9 @@ block content
               include ContainerOptions.jade 
 
               include uploadMatrix.jade
+
+            hr
+            button(type='button' ng-model='print' ng-click="print_Labels('Plate','55')") Test Barcode Printing (BCG55)
 
             if ! debug
               p &nbsp;

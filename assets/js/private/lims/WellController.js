@@ -53,6 +53,13 @@ function wellController ($scope, $rootScope, $http, $q ) {
 
     $scope.redistribute = function () {
 
+        var target_boxes = [];
+        if ($scope.map.target_rack) {
+            var regex = RegExp($scope.Prefix('location'),'i');
+            var racks = $scope.map.target_rack.replace(regex,'');
+            target_boxes = racks.split(regex);
+        }
+
         console.log("QTY: " + $scope.transfer_qty);
         var Target = { 
             'Container_format' : $scope.map.target_format,
@@ -69,6 +76,7 @@ function wellController ($scope, $rootScope, $http, $q ) {
             'distribution_mode' : $scope.map.distribution_mode,
             'fill_by'  :    $scope.map.fill_by,
             'target_size' : $scope.map.target_size,
+            'target_boxes' : target_boxes,
         }
 
         console.log("Redistribute ... ");

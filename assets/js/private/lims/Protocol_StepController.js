@@ -71,8 +71,13 @@ function protocol_stepController ($scope, $rootScope, $http, $q) {
         for (var i=0; i<transfer_settings.length; i++) {
             var setting = transfer_settings[i];
             
+            var val = $scope[setting];
+            if (setting.match(/^target/) && val.constructor === Object) {
+                val = val.id;
+            }
+
             if ($scope[setting]) { 
-                json = json + '"' + transfer_settings[i] + '" : "' + $scope[transfer_settings[i]] + '", ';
+                json = json + '"' + setting + '" : "' + val + '", ';
             }           
         }
         if (json) { json = "{ " + json + " }" }

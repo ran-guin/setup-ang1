@@ -163,7 +163,7 @@ module.exports = {
 		var fields = {
 			FK_Plate_Format__ID : format_id,
 			Plate_Created       : now(),
-			FK_Employee__ID     : sails.config.userid,
+			FK_Employee__ID     : sails.config.payload.alDenteID,
 			FKLast_Prep__ID     : prep_id,	
 		}
 

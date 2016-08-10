@@ -67,7 +67,7 @@ function wellMapperController ($scope, $rootScope, $http, $q ) {
         var deferred = $q.defer();
 
         if (! Options) { Options = {} }
-        var rack_id = Options.target_rack;
+        var rack_id = Options.target_rack || Options.target_boxes[0];
         var size    = Options.target_size;
         var fill_by = Options.fill_by;
 
@@ -153,7 +153,7 @@ function wellMapperController ($scope, $rootScope, $http, $q ) {
                         
                         boxData.available = wells.data;
 
-                        N_boxes = Math.ceil(N * splitX / wells.data.length);
+                        N_boxes = Math.ceil($scope.active.N * $scope.map.splitX / wells.data.length);
                         console.log("GOT : " + JSON.stringify(boxData)); 
                         deferred.resolve( boxData );
                     })
@@ -206,8 +206,8 @@ function wellMapperController ($scope, $rootScope, $http, $q ) {
         $scope.map.Options = Options;
         $scope.map.Target = Target;
 
-        console.log("Target Samples: " + $scope.N * $scope.map.splitX);
-        console.log("Target Boxes: " + $scope.map.target_boxes);
+        console.log("Target Samples: " + $scope.active.N * $scope.map.splitX);
+        console.log("Target Boxes: " + $scope.map.Options.target_boxes);
 
         var newMap;
 
@@ -428,12 +428,12 @@ function wellMapperController ($scope, $rootScope, $http, $q ) {
 
         if (volumes.length && min > 1.0 ) {
             $scope.map.splitX = 5;
-            $scope.map.transfer_qty = "<min:200>,<min:200>,<min:500>,<min:500>,<max:100>";
+            $scope.map.transfer_qty = ">200,>200,>500,>500,<100";
             $scope.map.transfer_qty_units = 'ul';
         }
         else {
             $scope.map.splitX = 4;
-            $scope.map.transfer_qty = "<min:200>,<min:200>,<min:500>,<max:100>";
+            $scope.map.transfer_qty = ">200,>200,>500,<100";
             $scope.map.transfer_qty_units = 'ul';
         }
 
