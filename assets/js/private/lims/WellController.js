@@ -47,11 +47,11 @@ function wellController ($scope, $rootScope, $http, $q ) {
         $scope.transfer_qty_units = 'ml';
 
         if (options && options.distribute) {
-            $scope.redistribute();
+            $scope.redistribute(1);
         }
     }
 
-    $scope.redistribute = function () {
+    $scope.redistribute = function (reset) {
 
         var target_boxes = [];
         if ($scope.map.target_rack) {
@@ -80,12 +80,12 @@ function wellController ($scope, $rootScope, $http, $q ) {
         }
 
         console.log("Redistribute ... ");
+        Options.reset = reset;
         
         $scope.redistribute_Samples($scope.active.Samples, Target, Options)
         .then ( function (result) {
             console.log("MAP: " + JSON.stringify(result.Map));
             // $scope.Map = result.Map;
-            $scope.test = "ERE";
         })
         .catch ( function (err) {
             console.log("Error redistributing samples");
@@ -219,6 +219,9 @@ function wellController ($scope, $rootScope, $http, $q ) {
 
             if ( returnData.data && returnData.data.plate_ids) {
                 $scope.message("Transferred " + returnData.data.plate_ids.length + " Samples");
+                console.log("Reload active sample data...");
+                $scope.reload_active_Samples($scope.active.Samples);
+                $scope.set_defaults();
             }
             else {
                 $scope.warning("Error retrieving target Samples (?)");
