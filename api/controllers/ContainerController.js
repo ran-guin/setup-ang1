@@ -138,7 +138,8 @@ module.exports = {
 		.then ( function (results) {
 			console.log("\n**Executed transfer: " + JSON.stringify(results));
 			console.log("\n**Relocate using: " + JSON.stringify(Transfer));
-			// Container.transfer_Location(results.plate_ids, Transfer);
+			
+			Container.transfer_Location(results.plate_ids, Transfer);
 			return res.json(results);
 		})
 		.catch ( function (err) {
@@ -151,34 +152,43 @@ module.exports = {
 
 		var MatrixAttribute_ID = 66;
 
+		var body = req.body || {};
 		// Expects 8 rows of 12 columns (A1..H12) //
 	    res.setTimeout(0);
 
-	    var ids = req.body.ids || req.body.plate_ids;
-	    var Samples = JSON.parse(req.body.Samples);
-	    var force = req.body.force || 1;
-	    var file = req.file('MatrixFile');
+	    var samples = body.Samples;
+	    var ids = body.ids || body.plate_ids || _.pluck(Samples, 'id');
 
-	    console.log("IDS: " + JSON.stringify(ids));
+	    if (ids && samples) {
+		    Samples = JSON.parse(samples);
+		    var force = body.force || 1;
+		    var file = req.file('MatrixFile');
 
-	    Upload.uploadMatrixFile(file, Samples, { force: force })
-	    .then ( function (result) {
-	    	console.log("uploaded Matrix File");
-	    	console.log(JSON.stringify(result));
-	    	return res.render('lims/Container', { 
-							plate_ids: ids, 
-							Samples: Samples, 
+		    Upload.uploadMatrixFile(file, Samples, { force: force })
+		    .then ( function (result) {
+		    	console.log("uploaded Matrix File");
+		    	console.log(JSON.stringify(result));
+		    	return res.render('lims/Container', { 
+								plate_ids: ids, 
+								Samples: Samples, 
+				});
+		    })
+		    .catch ( function (err) {
+		    	console.log("Error uploading Matrix File: ");
+		    	console.log(err);
+
+				return res.render('lims/Container', { 
+					plate_ids: ids, 
+					Samples: Samples
+				});
 			});
-	    })
-	    .catch ( function (err) {
-	    	console.log("Error uploading Matrix File: ");
-	    	console.log(err);
-
+		} else {
 			return res.render('lims/Container', { 
 				plate_ids: ids, 
-				Samples: Samples
-			});
-		});
+				Samples: Samples, 
+				errMsg : "Missing ids or Samples",
+			}); 
+		}
 
   	},
 

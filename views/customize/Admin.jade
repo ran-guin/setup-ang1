@@ -10,7 +10,8 @@ block content
     div(ng-app='myApp')
       div(ng-controller="SharedController")
         div(ng-controller="FancyFormController")
-          div(ng-controller="AdminController")
+          div(ng-controller='LIMSController')
+           div(ng-controller="AdminController")
               
             include ./../core/errorMsg.jade
 
@@ -72,13 +73,13 @@ block content
                 input.input-lg.form-control.mandatory#parent(type='text' name = 'parent' ng-model='parent' ng-blur='set_default_name()' required placeholder ='-- Scan Parent Rack --')
               div.form-group
                 label(for='name') &nbsp; &nbsp; Name: &nbsp;
-                input.input-lg.form-control#name(type='text' name = 'name' ng-model='name' placeholder='-- Name (eg B3) -- ')
+                input.input-lg.form-control#name(type='text' name = 'name' ng-model='name' ng-blur="validate_boxname()" placeholder='-- Name (eg B3) -- ')
               div.form-group
                 label.col-sm-2(for='size') &nbsp; Size: &nbsp;
                 span#size
                   my-dropdown.mandatory(placeholder='-- Choose Size --' required ng-init="setup_Menu('size','9x9,8x12')" list="MenuList['size']" property='name' track='name' selected='size')
               span &nbsp; &nbsp;             
-              button.btn.btn-lg.btn-primary(type='button' ng-click="newSlottedBox()" ng-disabled="!name || !parent || !size") Create
+              button.btn.btn-lg.btn-primary(type='button' ng-click="newSlottedBox(); set_default_name()" ng-disabled="!name || !parent || !size") Create
      
 
 

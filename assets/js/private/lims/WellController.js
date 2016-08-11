@@ -44,7 +44,7 @@ function wellController ($scope, $rootScope, $http, $q ) {
         console.log("INIT Map");
         $scope.form_validated = false;
 
-        $scope.transfer_qty_units = 'ml';
+        $scope.map.transfer_qty_units = 'ml';
 
         if (options && options.distribute) {
             $scope.redistribute(1);
@@ -60,7 +60,7 @@ function wellController ($scope, $rootScope, $http, $q ) {
             target_boxes = racks.split(regex);
         }
 
-        console.log("QTY: " + $scope.transfer_qty);
+        console.log("QTY: " + $scope.map.transfer_qty);
         var Target = { 
             'Container_format' : $scope.map.target_format,
             'Sample_type'   : $scope.map.target_sample,
@@ -98,26 +98,26 @@ function wellController ($scope, $rootScope, $http, $q ) {
     }
     $scope.validate_Form = function validated_form() {
         
-        console.log("Validate " + $scope.transfer_type);
-        if (! $scope.transfer_qty && $scope.transfer_type==='Aliquot') { 
-            $scope.transfer_qty_errors = true;
+        console.log("Validate " + $scope.map.transfer_type);
+        if (! $scope.map.transfer_qty && $scope.map.transfer_type==='Aliquot') { 
+            $scope.map.transfer_qty_errors = true;
             console.log("missing qty for aliquot");
             var testElement = document.getElementById('transfer_qty') || {} ;
             testElement.style = "border-color: red; border-width: 2px;";
         }
-        else if ($scope.transfer_qty) { 
-            $scope.transfer_qty_errors = false;
+        else if ($scope.map.transfer_qty) { 
+            $scope.map.transfer_qty_errors = false;
             var testElement = document.getElementById('transfer_qty') || {};
             testElement.style = "border-color: green; border-width: 2px;";
         }
         else {
-            $scope.transfer_qty_errors = false;
+            $scope.map.transfer_qty_errors = false;
             var testElement = document.getElementById('transfer_qty') || {};
             testElement.style = "border-color: null; border-width: 2px;";            
         }
 
-        if ($scope.transfer_qty) {
-            if ( $scope.transfer_qty_units) { 
+        if ($scope.map.transfer_qty) {
+            if ( $scope.map.transfer_qty_units) { 
                 $scope.units_errors = false;
                 var testElement = document.getElementById('transfer_qty_units') || {};
                 testElement.style = "border-color: green; border-width: 2px;";
@@ -135,7 +135,7 @@ function wellController ($scope, $rootScope, $http, $q ) {
         }
 
 
-        if ($scope.transfer_qty_errors || $scope.units_errors) {
+        if ($scope.map.transfer_qty_errors || $scope.units_errors) {
             console.log("failed validation");
             $scope.form_validated = false ;
         }
@@ -183,7 +183,7 @@ function wellController ($scope, $rootScope, $http, $q ) {
         //var Targets = [{"id":200,"position":"A1","container":1000},{"id":201,"position":"A2","container":1000},{"id":202,"position":"A3","container":1000},{"id":203,"position":"B1","container":1000},{"id":204,"position":"B2","container":1000},{"id":205,"position":"B3","container":1000},{"id":206,"position":"C1","container":1000},{"id":207,"position":"C2","container":1000},{"id":208,"position":"C3","container":1000},{"id":209,"position":"D1","container":1000},{"id":210,"position":"D2","container":1000},{"id":211,"position":"D3","container":1000},{"id":212,"position":"A1","container":1001},{"id":213,"position":"A2","container":1001},{"id":214,"position":"A3","container":1001},{"id":215,"position":"B1","container":1001},{"id":216,"position":"B2","container":1001},{"id":217,"position":"B3","container":1001},{"id":218,"position":"C1","container":1001},{"id":219,"position":"C2","container":1001},{"id":220,"position":"C3","container":1001},{"id":221,"position":"D1","container":1001},{"id":222,"position":"D2","container":1001},{"id":223,"position":"D3","container":1001},{"id":224,"position":"A1","container":1002},{"id":225,"position":"A2","container":1002},{"id":226,"position":"A3","container":1002},{"id":227,"position":"B1","container":1002},{"id":228,"position":"B2","container":1002},{"id":229,"position":"B3","container":1002},{"id":230,"position":"C1","container":1002},{"id":231,"position":"C2","container":1002},{"id":232,"position":"C3","container":1002},{"id":233,"position":"D1","container":1002},{"id":234,"position":"D2","container":1002},{"id":235,"position":"D3","container":1002},{"id":236,"position":"A1","container":1003},{"id":237,"position":"A2","container":1003},{"id":238,"position":"A3","container":1003},{"id":239,"position":"B1","container":1003},{"id":240,"position":"B2","container":1003},{"id":241,"position":"B3","container":1003},{"id":242,"position":"C1","container":1003},{"id":243,"position":"C2","container":1003},{"id":244,"position":"C3","container":1003},{"id":245,"position":"D1","container":1003},{"id":246,"position":"D2","container":1003},{"id":247,"position":"D3","container":1003},{"id":248,"position":"A1","container":1004},{"id":249,"position":"A2","container":1004},{"id":250,"position":"A3","container":1004},{"id":251,"position":"B1","container":1004},{"id":252,"position":"B2","container":1004},{"id":253,"position":"B3","container":1004},{"id":254,"position":"C1","container":1004},{"id":255,"position":"C2","container":1004},{"id":256,"position":"C3","container":1004},{"id":257,"position":"D1","container":1004},{"id":258,"position":"D2","container":1004},{"id":259,"position":"D3","container":1004},{"id":260,"position":"A1","container":1005},{"id":261,"position":"A2","container":1005},{"id":262,"position":"A3","container":1005},{"id":263,"position":"B1","container":1005},{"id":264,"position":"B2","container":1005},{"id":265,"position":"B3","container":1005},{"id":266,"position":"C1","container":1005},{"id":267,"position":"C2","container":1005},{"id":268,"position":"C3","container":1005},{"id":269,"position":"D1","container":1005},{"id":270,"position":"D2","container":1005},{"id":271,"position":"D3","container":1005},{"id":272,"position":"A1","container":1006},{"id":273,"position":"A2","container":1006},{"id":274,"position":"A3","container":1006},{"id":275,"position":"B1","container":1006},{"id":276,"position":"B2","container":1006},{"id":277,"position":"B3","container":1006},{"id":278,"position":"C1","container":1006},{"id":279,"position":"C2","container":1006},{"id":280,"position":"C3","container":1006},{"id":281,"position":"D1","container":1006},{"id":282,"position":"D2","container":1006},{"id":283,"position":"D3","container":1006},{"id":284,"position":"A1","container":1007},{"id":285,"position":"A2","container":1007},{"id":286,"position":"A3","container":1007},{"id":287,"position":"B1","container":1007},{"id":288,"position":"B2","container":1007},{"id":289,"position":"B3","container":1007},{"id":290,"position":"C1","container":1007},{"id":291,"position":"C2","container":1007},{"id":292,"position":"C3","container":1007},{"id":293,"position":"D1","container":1007},{"id":294,"position":"D2","container":1007},{"id":295,"position":"D3","container":1007}];
 
         var options = {
-            transfer_type: $scope.transfer_type,
+            transfer_type: $scope.map.transfer_type,
             // prep not necessary, but could be optionally added here ...
             //
             // Target_sample and Target_format qty should already be included in Transfer specs...
@@ -199,11 +199,12 @@ function wellController ($scope, $rootScope, $http, $q ) {
         if (el) { format = el.value }
         console.log("Found format: " + format + '=' + $scope['Plate_Format-id']);
 
+        console.log('execute ' + $scope.map.transfer_type);
         var data = { 
             ids: $scope.active.plate_ids,
             Transfer: $scope.Map.Transfer,
             Options : {
-                transfer_type: $scope.transfer_type,
+                transfer_type: $scope.map.transfer_type,
                 // prep not necessary, but could be optionally added here ...
                 //
                 // Target_sample and Target_format qty should already be included in Transfer specs...

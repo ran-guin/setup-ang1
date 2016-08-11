@@ -71,7 +71,9 @@ function wellMapperController ($scope, $rootScope, $http, $q ) {
         var size    = Options.target_size;
         var fill_by = Options.fill_by;
 
-        if (! rack_id && Options.target_boxes && Options.target_boxes.length) { rack_ID = Options.target_boxes[0] }
+        if (! rack_id && Options.target_boxes && Options.target_boxes.length) { 
+            rack_id = Options.target_boxes[0];
+        }
 
         var rack_name;
         if (! rack_id && size ) {
