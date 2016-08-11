@@ -19,8 +19,8 @@ module.exports = {
 	legacy_map : {
 		'number_in_batch' : 'Stock_Number_in_Batch',
 		'received' : 'Stock_Received',
-		'type' : 'Stock_Type',
-		'lot_number' : 'Lot_Number',
+		// 'type' : 'Stock_Type',
+		'lot_number' : 'Stock_Lot_Number',
 		'notes' : 'Stock_Notes',
 		'catalog' : 'FK_Stock_Catalog__ID',
 	},
@@ -33,9 +33,10 @@ module.exports = {
 		var StockData = data['Stock'];
 
 		var barcode = data['barcode'];
+		var type    = data['type'];
 
-		if (StockData && StockData.type) {
-			var type = StockData.type;
+		if (type) {
+			// var type = StockData.type;
 			var N    = StockData.number_in_batch;
 
 			StockData = Record.to_Legacy(StockData, Stock.legacy_map);
