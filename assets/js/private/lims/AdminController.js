@@ -50,6 +50,7 @@ function adminController ($scope, $rootScope, $http, $q ) {
 			}
 			else if (msg) {
 				$scope.message(msg);
+				$scope.set_default_name();  // set next one if applicable ... 
 			}
 			console.log("admin returned:" + JSON.stringify(result));
 		})
@@ -134,6 +135,6 @@ function adminController ($scope, $rootScope, $http, $q ) {
 			});
 		}
 		else { console.log("no parent or name ... skipping autoset") }
-
+		console.log("...");
 	}
 }]);
