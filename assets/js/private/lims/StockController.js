@@ -14,7 +14,7 @@ function stockController ($scope, $rootScope, $http, $q) {
 
     $scope.filter_catalog = function () {
         console.log("Filter on " + $scope.type);
-        var condition = "Stock_Catalog_Type = '" + $scope.type + "'";
+        var condition = "Stock_Type = '" + $scope.type + "'";
         $scope.setup_Menu('catalog', 'FK(catalog)',condition)
     }
 
@@ -24,12 +24,12 @@ function stockController ($scope, $rootScope, $http, $q) {
     		'number_in_batch' : $scope.number_in_batch,
     		'received'        : $scope.received,
     		'lot_number'      : $scope.lot_number,
-    		'type'            : $scope.type,
+    		// 'type'            : $scope.type,
             'catalog'         : $scope.catalog.id,
             'notes'           : $scope.notes,
     	};
 
-    	var data = { Stock : StockData };
+    	var data = { Stock : StockData, type: $scope.type };
 
 
     	if ($scope.type === 'Reagent') {
