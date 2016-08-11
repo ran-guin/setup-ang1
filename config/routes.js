@@ -96,6 +96,7 @@ module.exports.routes = {
   'POST /remote_login/validate' : 'Remote_login.validate',
 
   'GET /admin' : 'UserController.admin',
+  'GET /lab_admin' : 'UserController.lab_admin',
   'POST /User/activate' : 'UserController.activate',
   
   'GET /test'  : 'TestController.test',
@@ -117,6 +118,8 @@ module.exports.routes = {
 
   'POST /record/add/:model': 'Record_APIController.save',
   'POST /record/save' : 'Record_APIController.save',
+
+  'GET /barcode/print/:model/:ids' : 'BarcodeController.print_Labels',
 
   'GET /parseMetaFields' : 'Record_APIController.parseMetaFields',
   'POST /parseMetaFields' : 'Record_APIController.parseMetaFields',
