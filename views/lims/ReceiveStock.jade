@@ -48,9 +48,11 @@ block content
                 div.col-md-6
                   my-dropdown#catalog(placeholder="Select from Catalog..." list="MenuList['catalog']" selected="catalog" property="name" ng-init="filter_catalog()")
                 div.col-md-4 &nbsp;
-                  // hide until working ... 
-                  // a(href='/record/add/catalog') 
+                  a(href='/record/add/catalog') 
                     button.btn.btn-primary(type='button') Add Item to Catalog
+
+                  // a(href='#' onclick="return false;" data-toggle='modal' data-target='#NewCatalogItem') 
+                      Add New Item to Catalog
 
               div(ng-show="type === 'Reagent'")
                 hr 
@@ -58,7 +60,7 @@ block content
                   u Reagent specific information:
                 
                 div.form-group.input-lg
-                  label.col-md-2.control-label(for='qty') Quantity: 
+                  label.col-md-2.control-label(for='qty') Unit Size: 
                   // input.col-md-3.input-lg#qty(type='text' ng-model='qty' required placeholder='Volume')
                   // input.col-md-3.input-lg(type='text' ng-model='qty_units' required placeholder='Volume_Units')
                   div.col-md-6
@@ -67,7 +69,7 @@ block content
                         td(width='100%')                
                           input.input-lg.form-control.preaddon#qty(type='text' aria-describedBy='qty' placeholder=' -- Qty --', ng-model='qty' size='16')
                         td     
-                          my-dropdown.mini-dropdown.addon#qty_units(placeholder='units..' list="MenuList['qty_units']" selected="qty_units" property='name' track='name', ng-init="setup_Menu('qty_units','ml,ul,nl')") 
+                          my-dropdown.mini-dropdown.addon#qty_units(placeholder='units..' list="MenuList['qty_units']" selected="qty_units" property='name' track='name', ng-init="setup_Menu('qty_units','l,ml,ul,nl')") 
 
                   div.col-md-4 &nbsp;
 
@@ -120,7 +122,7 @@ block content
                 div.alert.alert-danger
                   b  Receipt of {{ type }} Stock types have not yet been set up
 
-            include NewCatalogItem
+            // include NewCatalogItem
 
             if debug
               hr
