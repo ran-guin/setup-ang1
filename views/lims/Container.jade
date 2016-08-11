@@ -7,7 +7,9 @@ block content
 
   - var config = { plate_ids: plate_ids, Samples: Samples, payload: sails.config.payload};
   - var init = "initialize(" + JSON.stringify(config) + ")";
-  - var sampleList = plate_ids.split(/\s*,\s*/);
+  - var sampleList
+  if plate_ids 
+    - sampleList = plate_ids.split(/\s*,\s*/);
   
   p &nbsp;
   div.container
