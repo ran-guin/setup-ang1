@@ -4,7 +4,10 @@ block content
   - lookups = ['Plate_Format', 'Sample_Type'];
 
   div.container
-    h2  Admin Page
+    h2 System Admin Page
+      div.navbar-right
+            a(href="/lab_admin")
+              button.btn.btn-danger(type='button') Lab Admin
     hr
 
     div(ng-app='myApp')
@@ -64,24 +67,6 @@ block content
 
             p &nbsp;
             hr
-
-            form.form-inline(role='form' name='adminForm' method='post' action="#{sails.config.root}/Rack/newBox" enctype='form-data')
-
-              h3 Create Slotted Box:
-              div.form-group
-                label(for='parent') &nbsp; On Rack: &nbsp;
-                input.input-lg.form-control.mandatory#parent(type='text' name = 'parent' ng-model='parent' ng-blur='set_default_name()' required placeholder ='-- Scan Parent Rack --')
-              div.form-group
-                label(for='name') &nbsp; &nbsp; Name: &nbsp;
-                input.input-lg.form-control#name(type='text' name = 'name' ng-model='name' ng-blur="validate_boxname()" placeholder='-- Name (eg B3) -- ')
-              div.form-group
-                label.col-sm-2(for='size') &nbsp; Size: &nbsp;
-                span#size
-                  my-dropdown.mandatory(placeholder='-- Choose Size --' required ng-init="setup_Menu('size','9x9,8x12')" list="MenuList['size']" property='name' track='name' selected='size')
-              span &nbsp; &nbsp;             
-              button.btn.btn-lg.btn-primary(type='button' ng-click="newSlottedBox(); set_default_name()" ng-disabled="!name || !parent || !size") Create
-     
-
 
     // If link section to the right include line below (and adjust Links.jade file as required) //
       include Links
