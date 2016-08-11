@@ -163,7 +163,7 @@ block content
                             div.col-sm-2
                               button.btn.btn-primary(type='button' ng-click="repeat()" ng-disable="Step.Repeatable") Repeat Previous Step
                           hr
-                          button.btn.btn-danger(type='button' ng-click="exitThisProtocol()") Exit Protocol Now             
+                          button.btn.btn-danger(type='button' ng-click="reset_messages(); exitThisProtocol()") Exit Protocol Now             
 
                           // if Step.transfer_type
                             div.form-group.alert-warning
