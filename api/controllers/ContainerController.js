@@ -138,7 +138,8 @@ module.exports = {
 		.then ( function (results) {
 			console.log("\n**Executed transfer: " + JSON.stringify(results));
 			console.log("\n**Relocate using: " + JSON.stringify(Transfer));
-			// Container.transfer_Location(results.plate_ids, Transfer);
+			
+			Container.transfer_Location(results.plate_ids, Transfer);
 			return res.json(results);
 		})
 		.catch ( function (err) {
