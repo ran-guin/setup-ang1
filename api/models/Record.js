@@ -968,17 +968,19 @@ module.exports = {
 		if (typeof value == 'number') { value = value.toString() }
 
 		var onDuplicate;
-
-		if (value === null) { }			
+		
+		if (value == null) { }			
 		else if (value.constructor === String) {
 			if (value.match(/^<user>$/i)) {
-				if (sails.config.payload) { value = sails.config.payload.alDenteID }
+				if (sails.config.payload) { value = sails.config.payload.alDenteID || 0 }
 				if (debug) console.log("replacing <user> with " + value);
 			}
 			else if (value.match(/^<increment>$/i) ) {
 				if (action === 'insert') {  }  // leave onDuplicate set in createNew function
 				else if (field) { value = field + " + 1 " }
 				else { console.log('should supply field if updating, or insert action') }
+				
+				if (debug) { console.log("V: increment") }
 				// NOTE:  Requires setting out onDuplicate OUTSIDE OF THIS Function !!!! (onDuplicate is left hanging here... )
 				/*	
 				value = 1; 
@@ -1002,6 +1004,7 @@ module.exports = {
 				value = 'CURDATE()'; 
 				if (debug) console.log("replacing <today> with " + value);
 				noQuote = 1;
+				if (debug) { console.log('using current data: ' + value) }
 			}
 			else if (value.match(/^<id>$/i)) { 
 				var idField = 'id';
@@ -1009,6 +1012,7 @@ module.exports = {
 					idField = Mod.alias('id');
 				}
 				value = idField;
+				if (debug) { console.log('using id field: ' + value) }
 			}
 			else if (value.match(/^<.*>$/)) {
 				value = value.replace(/^</,'');
@@ -1018,6 +1022,7 @@ module.exports = {
 			}
 
 			// account for redundant quotes ... 
+
 			if (value.constructor === String && value.match(/^\"/) && value.match(/\"$/)) {
 				noQuote = 1;
 			}
@@ -1193,6 +1198,7 @@ module.exports = {
 	    	for (var i=0; i<data.length; i++) {
 
 	    	}
+    		deferred.resolve();
     	}
     	else { 
     		console.log("nothing saved (ok)");
@@ -1216,6 +1222,8 @@ module.exports = {
 	    	for (var i=0; i<data.length; i++) {
 					    		
 	    	}
+	    	deferred.resolve();
+
     	}
     	else { 
     		console.log("nothing saved (ok)");
