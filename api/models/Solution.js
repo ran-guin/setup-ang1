@@ -16,7 +16,7 @@
 
   	legacy_map : {
   		'number' : 'Solution_Number',
-		'number_in_batch' : 'Number_in_Batch',
+		'number_in_batch' : 'Solution_Number_in_Batch',
 		'expiry' : 'Solution_Expiry',
 		'qty'    : 'Solution_Quantity',
 		'qty_units' : 'Solution_Quantity_Units',
