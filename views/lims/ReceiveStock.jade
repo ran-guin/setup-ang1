@@ -51,9 +51,6 @@ block content
                   a(href='/record/add/catalog') 
                     button.btn.btn-primary(type='button') Add Item to Catalog
 
-                  // a(href='#' onclick="return false;" data-toggle='modal' data-target='#NewCatalogItem') 
-                      Add New Item to Catalog
-
               div(ng-show="type === 'Reagent'")
                 hr 
                 b
@@ -121,9 +118,7 @@ block content
               div(ng-show="type && type !== 'Reagent'")
                 div.alert.alert-danger
                   b  Receipt of {{ type }} Stock types have not yet been set up
-
-            // include NewCatalogItem
-
+                  
             if debug
               hr
               h2.alert.alert-warning Debugging Information:  (hidden in production)
