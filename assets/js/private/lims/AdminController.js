@@ -43,14 +43,41 @@ function adminController ($scope, $rootScope, $http, $q ) {
 		.then ( function (result) {
 			var data = result.data;
 			var msg = data.message;
+			var err = data.error;
+			if (err) { 
+				var errMsg = $scope.parse_standard_error(msg);
+				$scope.error(errMsg);
+			}
+			else if (msg) {
+				$scope.message(msg);
+			}
 			console.log("admin returned:" + JSON.stringify(result));
-			$scope.message(msg);
-			console.log("MESSAGE: " + msg);
-			console.log(JSON.stringify(result));
 		})
 		.catch ( function (err) {
 			$scope.error(err);
 		})
+	}
+
+	$scope.validate_boxname = function () {
+		var name = $scope.name;
+		if ($scope.parent) {
+			var parent = $scope.parent.replace(/^LOC/i,'');
+			var q = "SELECT Rack_ID as id FROM Rack WHERE FKParent_Rack__ID = " + parent + " AND Rack_Name = '" + name + "'";
+			
+			var url = "/remoteQuery";
+			console.log(q);
+			$http.post(url, { query : q })
+			.then ( function (result) {
+				if (result.data && result.data.length) {
+					var exists = result.data[0].id;
+					$scope.name = '';
+					$scope.error(name + ' already exists on this Rack [' + $scope.Prefix('location') + exists + ']');
+				}
+			})
+			.catch (function (err) {
+				$scope.warning("Error checking for conflict: " + err);
+			});
+		}
 	}
 
 	$scope.set_default_name = function () {
