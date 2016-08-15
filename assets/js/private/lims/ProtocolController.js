@@ -25,14 +25,22 @@ function protocolController ($scope, $rootScope, $http, $q) {
                Samples = JSON.parse(config['Samples'])
             }
 
+            $scope.initialize_Progress(Samples);            
+
+            for (var i=0; i<Samples.length; i++) {
+                if (Samples[i].last_step !== $scope.active.last_step.name) {
+                    $scope.warning("Samples at different stages of pipeline..");
+                }
+            }    
+
             $scope.load_active_Samples(Samples);
             console.log("Loaded active samples");
             
             console.log(JSON.stringify($scope.active.Samples));
-
-            $scope.active.last_step = config['last_step'];
+            
+            $scope.active.protocol = config['protocol'];
+            // $scope.active.last_step = config['last_step'];
         }
-
 
         if (config && config['Steps'] && config['protocol']) { 
 
@@ -41,7 +49,6 @@ function protocolController ($scope, $rootScope, $http, $q) {
             console.log("loaded protocol steps");
             $scope.Steps = config['Steps'];
             $scope.protocol.steps = $scope.Steps.length;
-            $scope.active.protocol = config['protocol'];
 
             var plate_set = config['plate_set'];
             console.log("plate set " + plate_set);
@@ -93,8 +100,6 @@ function protocolController ($scope, $rootScope, $http, $q) {
                 $scope.messages.push("Starting new protocol " + $scope.timestamp);
             }
 
-            $scope.warning("Already Completed");
-
             $scope.Options = config['Options'] || {};   
 
             $scope.Attributes = config['Attributes'];
@@ -141,6 +146,27 @@ function protocolController ($scope, $rootScope, $http, $q) {
         console.log("initialization complete...");
     }
 
+    $scope.initialize_Progress = function (Samples) {
+        $scope.active.last_step = {};
+        $scope.active.last_step.name = Samples[0].last_step;
+        $scope.active.last_step.protocol = Samples[0].last_protocol;
+        $scope.active.last_step.protocol_id = Samples[0].last_protocol_id;
+        if ($scope.active.last_step.name === 'Completed Protocol') {
+            $scope.active.last_step.status = 'Completed';
+        }
+        else {
+            $scope.active.last_step.status = 'In Progress';
+        }
+    }
+      
+    $scope.update_progress = function (name, status) {
+        $scope.active.last_step.protocol = $scope.active.protocol.name;
+        $scope.active.last_step.name = name;
+        $scope.active.last_step.status = status || 'In Progress';
+        $scope.active.last_step.protocol_id = $scope.active.protocol.id;
+        console.log("Reset Progress: " + JSON.stringify($scope.active.last_step));
+    }
+
     $scope.exitThisProtocol = function exitThisProtocol () {
         console.log("Exit Protocol");
         $scope.protocol.status = 'Completed';
@@ -155,7 +181,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
         var state = action || 'Completed';
 
         if (action === 'Completed') {
-            $scope.set_active_attribute('last_step', $scope.Step.name);
+            // $scope.set_active_attribute('last_step', $scope.Step.name);
         }
 
         $scope['status' + $scope.step.stepNumber] = state;
@@ -335,6 +361,11 @@ function protocolController ($scope, $rootScope, $http, $q) {
                     $scope.errors.push("Skip step if necessary to continue");
                 }
                 else {
+                    console.log("UPDATE PROGRESS " + $scope.active.protocol.name);
+                    if ($scope.action === 'Completed') {
+                       $scope.update_progress($scope.Step.name);
+                    }
+
                     if (completeResult.warning && completeResult.warning.length) { 
                         console.log("Warnings encountered");
                         $scope.parse_standard_error(completeResult.warning, 'warning');
@@ -355,10 +386,13 @@ function protocolController ($scope, $rootScope, $http, $q) {
 
                     if ($scope.step.stepNumber < $scope.protocol.steps) {
                         console.log('completed... go to next step');
-                        $scope.forward(action)
+                        $scope.forward(action);
+                        $scope.active.last_step.status = 'In Progress';
                     }
                     else {
                         $scope.protocol.status = 'Completed';
+                        $scope.active.last_step.status = 'Completed';
+                        $scope.active.last_step.name = 'Completed Protocol';
                         $scope.messages.push("Completed '" + $scope.active.protocol.name + "'' Protocol...")
                     }
                 }
