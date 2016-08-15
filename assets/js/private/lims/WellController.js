@@ -24,6 +24,8 @@ function wellController ($scope, $rootScope, $http, $q ) {
         console.log("Loaded " + $scope.active.Samples.length + ' Samples ');
         console.log("source 1: " + $scope.active.Samples[0]);
 
+        $scope.initialize_Progress(Samples);            
+
         $scope.targets = [];
         $scope.source_init = $scope.active.Samples;
         $scope.target  = Config['Target'] || {};
@@ -44,14 +46,27 @@ function wellController ($scope, $rootScope, $http, $q ) {
         console.log("INIT Map");
         $scope.form_validated = false;
 
-        $scope.map.transfer_qty_units = 'ml';
+        // $scope.map.transfer_qty_units = 'ml';  // custom default
 
         if (options && options.distribute) {
             $scope.redistribute(1);
         }
     }
 
-    $scope.redistribute = function (reset) {
+    $scope.initialize_Progress = function (Samples) {
+        $scope.active.last_step = {};
+        $scope.active.last_step.name = Samples[0].last_step;
+        $scope.active.last_step.protocol = Samples[0].last_protocol;
+        $scope.active.last_step.protocol_id = Samples[0].last_protocol_id;
+        if ($scope.active.last_step.name === 'Completed Protocol') {
+            $scope.active.last_step.status = 'Completed';
+        }
+        else {
+            $scope.active.last_step.status = 'In Progress';
+        }
+    }
+
+    $scope.redistribute = function (reset, execute) {
 
         var target_boxes = [];
         if ($scope.map.target_rack) {
@@ -86,6 +101,7 @@ function wellController ($scope, $rootScope, $http, $q ) {
         .then ( function (result) {
             console.log("MAP: " + JSON.stringify(result.Map));
             // $scope.Map = result.Map;
+            if (execute) { $scope.execute_transfer() }
         })
         .catch ( function (err) {
             console.log("Error redistributing samples");
@@ -220,29 +236,14 @@ function wellController ($scope, $rootScope, $http, $q ) {
 
             if ( returnData.data && returnData.data.plate_ids) {
                 $scope.message("Transferred " + returnData.data.plate_ids.length + " Samples");
-                console.log("Reload active sample data...");
-                $scope.reload_active_Samples($scope.active.Samples);
-                $scope.set_defaults();
             }
             else {
-                $scope.warning("Error retrieving target Samples (?)");
+                $scope.warning("Could not retrieve target Samples (?)");
             }
-
-            /*
-            if (1) {
-                var incData =  { table: 'Plate', attributes : ['29'], targets : [1] };
-                $http.post("/attributes/increment", incData)
-                .then (function (incResponse) {
-                    $scope.feedback = 'done';
-                    console.log("Incremented Attribute(s): " + JSON.stringify(incResponse));
-                })
-                .catch (function (incErr) {
-                    console.log("Error incrementing attributes: " + JSON.stringify(incErr));
-                    $scope.feedback = 'error detected...';
-                    $scope.errorMsg = "Error incrementing attributes !";
-                });
-            }
-            */
+            console.log("Reload active sample data...");
+            $scope.reload_active_Samples($scope.active.Samples);
+            $scope.set_defaults();
+            $scope.redistribute();
         })
         .catch (function (err) {
             console.log("Error posting transfer: " + err);
