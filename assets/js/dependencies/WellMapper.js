@@ -520,11 +520,17 @@ function wellMapper() {
             }
             else {
                 // single value only 
-                Static[options[i]] = opt;
-                console.log("\n* Static " + options[i] + ' = ' + JSON.stringify(opt));
+               console.log("\n* Static " + options[i] + ' = ' + JSON.stringify(opt));
             
                 if (options[i] === 'qty') {
-                    console.log("No quantity adjustments required");
+                    List['qty'] = [];
+                    for (var i=0; i< sources.length; i++) {
+                        List['qty'].push(opt);
+                    }
+                    console.log("Enable quantity adjustments");
+                }
+                else {
+                   Static[options[i]] = opt;
                 }
             }
         }
@@ -703,6 +709,20 @@ function wellMapper() {
             var msg = this.missing_wells + ' Target samples require target boxes.  Please scan ' + this.missing_boxes + " more Target Box(es)";
             warnings.push(msg);
             console.log(msg);
+        }
+
+        // Generate warnings for insuffienct sample quantities ... 
+        if (this.empty && this.empty.length) {
+            var msg = this.empty.length + " wells are empty (no sample can be transferred)";
+            warnings.push(msg);
+        }
+        if (this.unfilled && this.unfilled.length) {
+            var msg = this.unfilled.length + " wells will be unfilled (< min required sample)";
+            warnings.push(msg);
+        }
+        if (this.partially_filled && this.partially_filled.length) {
+            var msg = this.partially_filled.length + " wells will be partially filled (not sufficient sample to provide volume requested)";
+            warnings.push(msg);
         }
 
         console.log("completed Distribution... ");
@@ -934,6 +954,7 @@ function wellMapper() {
         console.log("Extract : " + extract + extract_units + " [ " + min + ' : ' + max + ' ]');
         if (current_volume <= 0 ) { 
             console.log("No sample available to extract ... ");
+            this.empty.push("batch# " + source.batch + " : " + source.target_slot_position);
             return 0;
         } 
         else if (current_volume < min ) { 
@@ -960,6 +981,7 @@ function wellMapper() {
         this.sample_remaining = {};
         this.partially_filled = [];
         this.unfilled = [];
+        this.empty = [];
     }
 }
 
