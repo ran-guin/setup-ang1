@@ -17,7 +17,6 @@ module.exports = {
    * environment (see config/connections.js and config/models.js )           *
    ***************************************************************************/
 
-  url_root: 'http://bcgplab.bccrc.ca/dev',
   port: 1337,
   models: {
      connection: 'testDB'
