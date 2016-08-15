@@ -296,8 +296,14 @@ function wellMapperController ($scope, $rootScope, $http, $q ) {
                 } 
             }
 
+            if ( Map.errors && Map.errors.length ) { 
+                for (var i=0; i<Map.errors.length; i++ ) {
+                    $scope.error(Map.errors[i]);
+                } 
+            }
+
             $scope.Map = Map;
-            deferred.resolve( { Map : Map, Target: Target, Options: Options} );
+            deferred.resolve( { Map : Map, Target: Target, Options: Options, errors: Map.errors} );
         })
         .catch ( function (err) {
             console.log("Error loading wells: " + err);
