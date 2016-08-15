@@ -101,6 +101,11 @@ function wellController ($scope, $rootScope, $http, $q ) {
         .then ( function (result) {
             console.log("MAP: " + JSON.stringify(result.Map));
             // $scope.Map = result.Map;
+            if (result.errors) {
+                // $scope.form_validated = false;
+                // need to ensure validation is performed when boxes are updated.. 
+                console.log('invalidate form');
+            }
             if (execute) { $scope.execute_transfer() }
         })
         .catch ( function (err) {
@@ -110,10 +115,17 @@ function wellController ($scope, $rootScope, $http, $q ) {
 
         console.log('validate');
         $scope.validate_Form();
-
     }
     $scope.validate_Form = function validated_form() {
         
+        if ($scope.map.transfer_type === 'Move') {
+            if ( $scope.map.splitX > 1) {
+                $scope.map.splitX = 1;
+                $scope.redistribute('reset');
+                console.log("reset split to 1... ");
+            }
+        }
+
         console.log("Validate " + $scope.map.transfer_type);
         if (! $scope.map.transfer_qty && $scope.map.transfer_type==='Aliquot') { 
             $scope.map.transfer_qty_errors = true;
@@ -159,7 +171,6 @@ function wellController ($scope, $rootScope, $http, $q ) {
             console.log("passed validation"); 
             $scope.form_validated = true;
         }
-
     }
 
     $scope.parse_custom_options_OLD = function () {
