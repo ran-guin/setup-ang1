@@ -137,9 +137,9 @@ module.exports = {
 		q.when( Container.execute_transfer(ids, Transfer, Options) )
 		.then ( function (results) {
 			console.log("\n**Executed transfer: " + JSON.stringify(results));
-			console.log("\n**Relocate using: " + JSON.stringify(Transfer));
-			
-			Container.transfer_Location(results.plate_ids, Transfer);
+			// console.log("\n**Relocate using: " + JSON.stringify(Transfer));
+			// already handled within execute_transfer if transfer_type == Move
+			// Container.transfer_Location(results.plate_ids, Transfer);
 			return res.json(results);
 		})
 		.catch ( function (err) {
