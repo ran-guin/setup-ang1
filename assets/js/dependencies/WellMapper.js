@@ -315,6 +315,10 @@ function wellMapper() {
  
         this.target_count = {};
 
+        if (this.transfer_type === 'Move') {
+            // force split to 1 for Move 
+            this.splitX = 1;
+        }
 
         if (! this.target_boxes ) {
             this.target_boxes = ['TBD'];
@@ -393,6 +397,7 @@ function wellMapper() {
 
         var Transfers = [];
         var warnings = [];
+        var errors   = [];
     
         this.reset_qty_adjustments();
 
@@ -703,11 +708,12 @@ function wellMapper() {
         this.Transfer = Transfer;
         this.TransferMap = TransferMap;
 
-        if (this.missing_boxes > 1) {
+        console.log("MISSING: " + this.missing_wells + ' in ' + this.missing_boxes);
+        if (this.missing_boxes > 0) {
             this.missing_wells--; // last call to next_available would generate missing_well ...
             
             var msg = this.missing_wells + ' Target samples require target boxes.  Please scan ' + this.missing_boxes + " more Target Box(es)";
-            warnings.push(msg);
+            errors.push(msg);
             console.log(msg);
         }
 
@@ -734,6 +740,7 @@ function wellMapper() {
             // Xfer : Xfer,
             SourceMap: SourceMap,
             warnings: warnings,
+            errors: errors,
         };
 
         if (callback && callback.constructor === 'function') {
@@ -914,66 +921,68 @@ function wellMapper() {
     }
 
     this.adjust_quantity = function (source, extract, extract_units) {
-        console.log("adjust extraction of " + extract + extract_units);
-        
-        var current_volume = this.sample_remaining[source.id];
-        if (current_volume == null) { current_volume = source.qty }
+        if (extract && extract_units) {
+            console.log("adjust extraction of " + extract + extract_units);
+            
+            var current_volume = this.sample_remaining[source.id];
+            if (current_volume == null) { current_volume = source.qty }
 
-        console.log(".. remaining volume = " + current_volume.toFixed(6) + source.qty_units);
+            console.log(".. remaining volume = " + current_volume.toFixed(6) + source.qty_units);
 
-        var min = extract.match(/min:(\d+)/i);
-        if (! min) { min = extract.match(/>(\d+)/) }
+            var min = extract.match(/min:(\d+)/i);
+            if (! min) { min = extract.match(/>(\d+)/) }
 
-        var max = extract.match(/max:(\d+)/i) || extract.match(/<(\d+)/) 
+            var max = extract.match(/max:(\d+)/i) || extract.match(/<(\d+)/) 
 
-        if (min && min[1]) { 
-            min = min[1];
-        }
-        else { min = 0 }
+            if (min && min[1]) { 
+                min = min[1];
+            }
+            else { min = 0 }
 
-        if ( max && max[1] ) {
-            max = max[1];
-        }
-        else if (min) {            
-            max = min;
-        }
-        else {
-            max = extract;
-        }
-
-        if (source.qty_units !== extract_units) { 
-            if (source.qty_units === 'ml' && extract_units === 'ul') {
-                if (max) { max = max/1000 }
-                if (min) { min = min/1000 }
+            if ( max && max[1] ) {
+                max = max[1];
+            }
+            else if (min) {            
+                max = min;
             }
             else {
-                console.log("Correct for unit variation between " + source.qty_units + ' and ' + extract_units);
+                max = extract;
             }
-        }
 
-        console.log("Extract : " + extract + extract_units + " [ " + min + ' : ' + max + ' ]');
-        if (current_volume <= 0 ) { 
-            console.log("No sample available to extract ... ");
-            this.empty.push("batch# " + source.batch + " : " + source.target_slot_position);
-            return 0;
-        } 
-        else if (current_volume < min ) { 
-            // skipping well (less than min specified)
-            console.log("Not sufficient sample available to extract ... ");
-            this.unfilled.push("batch# " + source.batch + " : " + source.target_slot_position);
-            return 0;
-        }  
-        else if (current_volume >= max) { 
-            // OKAY - no adjustment req'd  
-            this.sample_remaining[source.id] = current_volume - max;  
-            return max;
-        }
-        else { 
-            // More than min, but less than max volume available ... 
-            this.sample_remaining[source.id] = 0;
-            this.partially_filled.push("batch# " + source.batch + " : " + source.target_slot_position);
-            console.log("extract remaining volume only: " + current_volume + " ( > " + min + ')');
-            return current_volume;
+            if (source.qty_units !== extract_units) { 
+                if (source.qty_units === 'ml' && extract_units === 'ul') {
+                    if (max) { max = max/1000 }
+                    if (min) { min = min/1000 }
+                }
+                else {
+                    console.log("Correct for unit variation between " + source.qty_units + ' and ' + extract_units);
+                }
+            }
+
+            console.log("Extract : " + extract + extract_units + " [ " + min + ' : ' + max + ' ]');
+            if (current_volume <= 0 ) { 
+                console.log("No sample available to extract ... ");
+                this.empty.push("batch# " + source.batch + " : " + source.target_slot_position);
+                return 0;
+            } 
+            else if (current_volume < min ) { 
+                // skipping well (less than min specified)
+                console.log("Not sufficient sample available to extract ... ");
+                this.unfilled.push("batch# " + source.batch + " : " + source.target_slot_position);
+                return 0;
+            }  
+            else if (current_volume >= max) { 
+                // OKAY - no adjustment req'd  
+                this.sample_remaining[source.id] = current_volume - max;  
+                return max;
+            }
+            else { 
+                // More than min, but less than max volume available ... 
+                this.sample_remaining[source.id] = 0;
+                this.partially_filled.push("batch# " + source.batch + " : " + source.target_slot_position);
+                console.log("extract remaining volume only: " + current_volume + " ( > " + min + ')');
+                return current_volume;
+            }
         }
     }    
 
