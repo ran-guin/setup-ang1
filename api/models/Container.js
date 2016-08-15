@@ -367,8 +367,8 @@ module.exports = {
 				var target_qty = Transfer[i].qty;
 				if (Options.solution_qty) {
 					var add_qty = Options.solution_qty[i];
-					if (add_qty.constructor === String) {
-						add_qty = add_qty.parseFloat().toFixed(4);
+					if (add_qty && add_qty.constructor === String) {
+						add_qty = add_qty.parseFloat();
 					}
 					target_qty = target_qty + add_qty; // needs to be text to enable comma-delimited list.. 
 				}
