@@ -409,9 +409,14 @@ app.controller('FancyFormController',
             scope.listVisible = false;
             scope.isPlaceholder = true;
            
-            if (scope.default) {
+            if (scope.selected) {
+                // if preset ...
+                scope.label = scope.selected;
+            }
+            else if (scope.default) {
+                // if default explicitly supplied ... (needs to match object if track not set)                
                 scope.selected = scope.default;
-                console.log(" Set default to " + scope.selected)
+                scope.label = scope.default;
             }
             else {
                 console.log("no default for " + scope.placeholder + ' ' + scope.track);
