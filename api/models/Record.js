@@ -531,6 +531,17 @@ module.exports = {
 		console.log("Update " + model + ": " + ids);
 		console.log(JSON.stringify(data));
 
+		// setup History Tracking if applicable
+    	var Mod = sails.models[model];
+    	var track = [];
+    	var History;
+    	if (model && ids && data && Mod && Mod.track_history) {
+    		var data_fields = Object.keys(data);
+    		var track_fields = Mod.track_history || 'FK_Rack__ID'; // always track location ... 
+    		track = _.intersection(track_fields, data_fields);
+    		History = {};  // define...
+    	}
+
 		var deferred = q.defer();
 
 		if (!options) { options = {} }
@@ -617,50 +628,71 @@ module.exports = {
 				}
 			}
 
-			var promises = [];
-
-			promises.push( Record.preChangeHistory(model, ids, data));
-
-			if (Set.length) {
-				query = query + " SET " + Set.join(',');
-				query = query + " WHERE " + condition;
-				console.log("\n** Update: " + query);
-				promises.push( Record.query_promise(query) );
-			}
+			Record.preChangeHistory(model, ids, data, track)
+			.then ( function (History) {
+				console.log("HHH: " + JSON.stringify(History));
+				var promises = [];
+				if (Set.length) {
+					query = query + " SET " + Set.join(',');
+					query = query + " WHERE " + condition;
+					console.log("\n** Update: " + query);
+					promises.push( Record.query_promise(query) );
+				}
+				
+				if (SetEach.length) {
+					console.log("ALSO SET " + JSON.stringify(SetEach));
 		
-			if (SetEach.length) {
-				console.log("ALSO SET " + JSON.stringify(SetEach));
-	
-				for (var j=0; j<SetEach.length; j++) {
-					var subSet = [];
-					var setFields = Object.keys(SetEach[j]); 
-					for (var i=0; i<setFields.length; i++) {
-						var setVal = Record.parseValue(SetEach[j][setFields[i]], { model: model});
-						subSet.push(setFields[i] + ' = ' + setVal);
-					}
-					
-					if (subSet) {
-						var subquery = "UPDATE " + table + " SET " + subSet.join(',') + " WHERE " + idField  + ' = ' + ids[j];
+					for (var j=0; j<SetEach.length; j++) {
+						var subSet = [];
+						var setFields = Object.keys(SetEach[j]); 
+						for (var i=0; i<setFields.length; i++) {
+							var setVal = Record.parseValue(SetEach[j][setFields[i]], { model: model});
+							subSet.push(setFields[i] + ' = ' + setVal);
+						}
 						
-						if (j === 0 || j === SetEach.length-1) { console.log("subquery: " + subquery + '...') }
-						promises.push(Record.query_promise(subquery));
+						if (subSet) {
+							var subquery = "UPDATE " + table + " SET " + subSet.join(',') + " WHERE " + idField  + ' = ' + ids[j];
+							
+							if (j === 0 || j === SetEach.length-1) { console.log("subquery: " + subquery + '...') }
+							promises.push(Record.query_promise(subquery));
+						}
 					}
 				}
-			}			
-			
-			promises.push(Record.postChangeHistory(model, ids, data));
 
-			console.log(promises.length + ' update queries...');
+				q.all( promises )
+				.then (function (results) {
+					var setValues = {};
+					var updateValues = {};
+					if (Set.length) { setValues = results[1] }
+					if (SetEach.length) { updateValues = results[promises.length - 1] }
 
-			q.all( promises )
-			.then (function (result) {
-				console.log("updated: " + JSON.stringify(result));				
-				deferred.resolve(result[0]);								
+					if (History) {
+						Record.preChangeHistory(model, ids, data, track, History)
+						.then (function (finalHistory) {
+							console.log("Saved History after update...");
+							console.log(JSON.stringify(finalHistory));
+							deferred.resolve({ history: finalHistory, set: setValues, updated: updateValues });
+						})
+						.catch ( function (err) {
+							console.log("Error saving final history: " + err);
+							deferred.reject(err);
+						});
+					}
+	//				console.log("updated: " + JSON.stringify(result));				
+					else {
+						deferred.resolve({ set: setValues, updated: updateValues } );
+					}
+				})
+				.catch ( function (err) {
+					console.log("Query Error: " + query);
+					deferred.reject("Error updating last prep id: " + err);
+				});
 			})
-			.catch ( function (err) {
-				console.log("Query Error: " + query);
-				deferred.reject("Error updating last prep id: " + err);
+			.catch ( function (Herr) {
+				console.log("Error saving preHistory");
+				deferred.reject("Error saving pre History");
 			});
+			
 		}
 		else {
 			console.log("no data or table / idField :" + table + ' / ' + idField);
@@ -1100,138 +1132,62 @@ module.exports = {
         return errors;
     },
 
-    preChangeHistory : function (model, ids, data) {
-    	// retrieve values before record is updated  ... run in conjunction with postChangeHistory 
+    preChangeHistory : function (model, ids, data, track, History) {
+    	// retrieve values before record is updated  ... run in conjunction with similar call with History set.. 
     	var deferred = q.defer();
 
     	ids = Record.cast_to(ids, 'array');
-    	var fields = Object.keys(data);
-    	var Mod = sails.models[model];
+    	var Mod = sails.models[model] || {};
+    	var table = Mod.tableName || model;
 
-    	if (model && ids && data && Mod && fields.length) {
-    		var track = _.intersection(Mod.track_history, fields);
+    	var key;
 
-    		var table = Mod.tableName || model;
+    	track = track || ['FK_Rack__ID'];  // always track Rack_ID changes ... 
+
+    	if (model && ids && data && track && track.length && Mod) {
+	    	if (History) { key = 'New_Value' }
+	    	else { 
+	    		History = {};
+	    		key = 'Old_Value';
+	    	}
+
+	    	if (! History[table]) { History[table] = {} }
+
     		var idField = 'id';
-
     		if (Mod && Mod.alias && Mod.alias('id')) { idField = Mod.alias('id') }
+			
+			var query = "SELECT " + idField + ' as id, ' + track.join(',') + " FROM " + table + " WHERE " + idField + " IN (" + ids.join(',') + ')';
+			console.log(query);
+			Record.query_promise(query)
+			.then (function (result) {
+				console.log(JSON.stringify(result));
+				for (var i=0; i<result.length; i++) {
+					for (var j=0; j<track.length; j++) {
+						var f = track[j];
+						var id = result[i].id;
+						
+						if (key === 'New_Value' && History[table][id]['Old_Value'] === result[i][f]) {
+							console.log(f + ' value unchanged...');
+							delete History[table][id][f];
+						}
+						else {
+							if (! History[table][id] ) { History[table][id] = {} }
+							if (! History[table][id][f] ) { History[table][id][f] = {} }
 
-    		if (track && track.length) {
-    			var query = "SELECT " + idField + ' as id, ' + track.join(',') + " FROM " + table + " WHERE " + idField + " IN (" + ids.join(',') + ')';
-    			console.log(query);
-    			Record.query_promise(query)
-    			.then (function (result) {
-    				Record.save_preHistory(table, result)
-    				.then (function (ok) {
-    					deferred.resolve(result);
-    				})
-    				.catch (function (err) {
-    					console.log("Error saving preHistory");
-    					deferred.reject(err);
-    				})
-    			})
-    			.catch ( function (err) {
- 		   			deferred.reject(err);    				
-    			})
-    		}
-    		else { deferred.resolve() }
+							History[table][id][f][key] = result[i][f];
+						}
+					}
+				}
+				deferred.resolve(History);
+			})
+			.catch (function (err) {
+				console.log("Error saving preHistory: " + err);
+				deferred.reject(err);
+			});
     	}
     	else { deferred.resolve() }
 
     	return deferred.promise;
-    },
-
-   postChangeHistory : function (model, ids, data) {
-    	// retrieve values before record is updated  ... run in conjunction with postChangeHistory 
-
-    	var deferred = q.defer();
-
-    	var fields = Object.keys(data);
-    	var Mod = sails.models[model];
-
-    	if (Mod && fields.length && Mod.track_history) {
-    		var track = _.union(Mod.track_history, fields);
-
-    		var table = Mod.tableName || model;
-    		var idField = 'id';
-    		if (Mod.alias && Mod.alias('id')) { idField = Mod.alias('id') }
-
-    		if (track.length ) {
-    			var query = "SELECT " + idField + ', ' + track.join(',') + " FROM " + table + " WHERE " + idField + " IN (" + ids.join(',') + ')';
-    			
-    			console.log(query);
-    			Record.query_promise(query)
-    			.then (function (result) {
-    				Record.save_postHistory(table, result)
-    				.then (function (ok) {
-    					deferred.resolve(result);
-    				})
-    				.catch (function (err) {
-    					console.log("Error saving postHistory");
-    					deferred.reject(err);
-    				})
-    			})
-    			.catch ( function (err) {
- 		   			deferred.reject(err);    				
-    			})
-			}
-    		else {
- 				console.log('no history tracking required');   		 
-    			deferred.resolve();
-    		}
-    	}
-    	else {
-    		console.log('no history tracking required'); 
-    		deferred.resolve();
-    	}
-    	
-    	return deferred.promise;	
-    },
-
-    save_preHistory : function (table, data) {
-    	console.log('save preHistory');
-
-    	var deferred = q.defer();
-
-    	if (data.length) {
-
-	    	for (var i=0; i<data.length; i++) {
-
-	    	}
-    		deferred.resolve();
-    	}
-    	else { 
-    		console.log("nothing saved (ok)");
-    		deferred.resolve();
-    	}
-
-    	return deferred.promise;
-    },
-
-    save_postHistory : function (table, data) {
-    	console.log('save postHistory');
-    	var deferred = q.defer();
-
-
-   		if (data.length) {
-	    	var update = { 
-	    		User : sails.config.payload.userid, 
-	    		changed: '<now>',
-	    	};
-
-	    	for (var i=0; i<data.length; i++) {
-					    		
-	    	}
-	    	deferred.resolve();
-
-    	}
-    	else { 
-    		console.log("nothing saved (ok)");
-    		deferred.resolve();
-    	}
-
-    	return deferred.promise;
-
     },
 
 };
