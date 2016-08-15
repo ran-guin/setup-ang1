@@ -245,7 +245,7 @@ module.exports = {
 		// 
 		// Returns: create data hash for new Plates.... (need to be able to reset samples attribute within Protocol controller (angular)
 
-		console.log("Executing Container Transfer ... ");
+		console.log("Executing Container Transfer ... " + Options.transfer_type);
 		var deferred = q.defer();
 
 		if (ids && Transfer && Options.transfer_type === 'Move') {
@@ -368,12 +368,11 @@ module.exports = {
 				if (Options.solution_qty) {
 					var add_qty = Options.solution_qty[i];
 					if (add_qty.constructor === String) {
-						add_qty = add_qty.parseFloat();
+						add_qty = add_qty.parseFloat().toFixed(4);
 					}
 					target_qty = target_qty + add_qty; // needs to be text to enable comma-delimited list.. 
 				}
 				quantities.push( target_qty );
-
 				adjustments.push("<" + qtyField + " - " + Transfer[i].qty + ">");		
 			}
 			resetTarget[qtyField] = quantities;
