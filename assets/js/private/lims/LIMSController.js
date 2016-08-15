@@ -81,10 +81,7 @@ function limsController ($scope, $rootScope, $http, $q) {
 
             $scope.active.Samples = Samples;
             console.log("loaded...");
-            $scope.active.last_step = Samples[0].last_step;
-            $scope.active.last_protocol = Samples[0].last_protocol;
-            $scope.active.last_protocol_id = Samples[0].last_protocol_id;
-            
+      
             if (! $scope.original_Samples ) { $scope.original_Samples = Samples }
 
             // preset standardized values from first sample ... 
@@ -102,9 +99,6 @@ function limsController ($scope, $rootScope, $http, $q) {
             var Contexts = {};
             for (var i=0; i<Samples.length; i++) {
                 if (Samples[i].id) { ids.push(Samples[i].id) }
-                if (Samples[i].last_step !== $scope.active.last_step) {
-                    $scope.warning("Samples at different stages of pipeline..");
-                }
 
                 var context = Samples[i].sample_type + ' in ' + Samples[i].container_format;
                 console.log(i + " " + context);
@@ -135,8 +129,6 @@ function limsController ($scope, $rootScope, $http, $q) {
         var deferred = $q.defer();
         var ids = _.pluck(Samples,'id');
         
-        console.log("reload active samples... " + ids.join(','));
-
         $http.get('Container/summary?ids=' + ids.join(','))         
         .then (function (result) {
             console.log("done reloading summary for " + result.data.length + ' samples');
