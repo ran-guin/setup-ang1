@@ -60,6 +60,9 @@ function adminController ($scope, $rootScope, $http, $q ) {
 	}
 
 	$scope.validate_boxname = function () {
+
+		$scope.reset_messages();
+
 		var name = $scope.name;
 		if ($scope.parent) {
 			var parent = $scope.parent.replace(/^LOC/i,'');
@@ -72,7 +75,7 @@ function adminController ($scope, $rootScope, $http, $q ) {
 				if (result.data && result.data.length) {
 					var exists = result.data[0].id;
 					$scope.name = '';
-					$scope.error(name + ' already exists on this Rack [' + $scope.Prefix('location') + exists + ']');
+					$scope.error(name + ' already exists on this Rack [' + $scope.Prefix('location') + exists + '] - Box NOT Created...');
 				}
 			})
 			.catch (function (err) {
