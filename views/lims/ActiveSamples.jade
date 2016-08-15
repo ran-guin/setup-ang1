@@ -18,9 +18,9 @@ div.section-block.bg-info
         br
         div(ng-show="active.Samples && active.Samples[0] && active.Samples[0].last_step")
           u Progress: 
-          b {{ active.Samples[0].last_protocol }} [ {{ active.Samples[0].protocol_status}} ] &nbsp; &nbsp;
+          b {{ active.last_step.protocol }} [ {{ active.last_step.status }} ] &nbsp; &nbsp;
           br 
-          span (last step: '{{ active.Samples[0].last_step }}')  
+          span (last step: '{{ active.last_step.name }}')  
 
     p &nbsp;
     div(ng-repeat="(context, cids) in active.Contexts")
