@@ -29,7 +29,8 @@ block content
           div(ng-controller="WellMapperController" ng-init="#{initW}")
             div(ng-controller='ProtocolController' ng-init="#{initP}" ngcloak)
               
-              h3 Sample Set: # {{ active.plate_set }}
+              h3 {{ active.protocol.name }}
+                div.navbar-right Sample Set: # {{ active.plate_set }}
               include ActiveSamples.jade
               
               br 
