@@ -331,7 +331,7 @@ function wellMapper() {
 
             this.available = { 'TBD' : avail };  // test temporary .. 
         }
-
+        console.log("TARGET BOXES: " + JSON.stringify(this.target_boxes));
 
         var boxes_required = 0;
         if (Options.available) {
@@ -527,12 +527,13 @@ function wellMapper() {
                 // single value only 
                console.log("\n* Static " + options[i] + ' = ' + JSON.stringify(opt));
             
-                if (options[i] === 'qty') {
+                if (options[i] === 'qty' && opt) {
                     List['qty'] = [];
                     for (var i=0; i< sources.length; i++) {
                         List['qty'].push(opt);
                     }
-                    console.log("Enable quantity adjustments");
+
+                    console.log("Enable quantity adjustments for " + sources.length + ' samples');
                 }
                 else {
                    Static[options[i]] = opt;
@@ -926,8 +927,10 @@ function wellMapper() {
             
             var current_volume = this.sample_remaining[source.id];
             if (current_volume == null) { current_volume = source.qty }
-
-            console.log(".. remaining volume = " + current_volume.toFixed(6) + source.qty_units);
+            
+            if (current_volume) {
+                console.log(".. remaining volume = " + current_volume.toFixed(6) + source.qty_units);
+            }
 
             var min = extract.match(/min:(\d+)/i);
             if (! min) { min = extract.match(/>(\d+)/) }
