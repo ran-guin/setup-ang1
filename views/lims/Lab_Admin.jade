@@ -15,6 +15,7 @@ block content
     div(ng-app='myApp')
       div(ng-controller="SharedController")
         div(ng-controller="FancyFormController")
+         div(ng-controller="LIMSController")
           div(ng-controller="AdminController")
               
             include ./../core/errorMsg.jade
@@ -63,5 +64,5 @@ block content
                 span#size
                   my-dropdown.mandatory(placeholder='-- Choose Size --' required ng-init="setup_Menu('size','9x9,8x12')" list="MenuList['size']" property='name' track='name' selected='size')
               span &nbsp; &nbsp;             
-              button.btn.btn-lg.btn-primary(type='button' ng-click="newSlottedBox();" ng-disabled="!name || !parent || !size || disabled") Create
+              button.btn.btn-lg.btn-primary(type='button' ng-click="newSlottedBox();" ng-disabled="!name || !parent || !size || disabled") Create it
      
