@@ -127,6 +127,13 @@ module.exports = {
 
 	},
 
+	print_Labels : function (req, res) {
+		var body = req.body;
+
+		console.log("Print Labels for " + JSON.stringify(body));
+		return res.json(body);
+	}
+
 
 };
 
