@@ -440,7 +440,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
                 
                 var value;
                 if ($scope[key + '_split']) { 
-                    var splitV = $scope[key + '_split'].split(',');
+                    var splitV = $scope[key + '_split'].split(/,/);
                     value = splitV[n];
                 }
                 else if ($scope[key]) {
@@ -489,7 +489,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
                 separator = prefix;
             }
             else {
-                separator = ',';
+                separator = ',|\\s';   // allow either comma-delimited or space-delimited 
             }
             console.log("Split " + field + ' ON ' + separator + ' : ' + prefix);
 
@@ -596,6 +596,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
 
     $scope.distribute = function distribute (reset) {
         console.log("Distribute samples...");
+        $scope.reset_messages();
         var deferred = $q.defer(); 
 
         var targetKey = 'transfer_type' + $scope.step.stepNumber;
@@ -606,6 +607,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
         }  
         var qty_units = $scope['units_label'];
 
+        console.log("Transfer " + qty + qty_units);
         var Target = { 
             'Container_format' : $scope.Step.Target_format,
             'Sample_type'   : $scope.Step.Target_sample,
@@ -617,6 +619,12 @@ function protocolController ($scope, $rootScope, $http, $q) {
         var fill =  $scope.map.fill_by || $scope.Step['fill_by'];
         var size = $scope.Step['target_size'] || $scope.active.Samples[0].box_size;
 
+        var target_rack = '';
+        var boxes = [];
+        if ($scope['location' + $scope.step.stepNumber]) {
+            target_rack = $scope['location' + $scope.step.stepNumber];
+        }
+
         var Options = {
             'transfer_type' : $scope.Step.transfer_type,
             'reset_focus'   : $scope.Step.reset_focus,
@@ -625,6 +633,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
             'distribution_mode' : $scope['distribution_mode' + $scope.step.stepNumber],
             'fill_by'  : $scope.map.fill_by || $scope.Step['fill_by'],
             'target_size' : size,
+            'target_rack' : target_rack,
         }
         
         console.log("Distribute: ");
