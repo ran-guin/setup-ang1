@@ -469,10 +469,8 @@ function wellMapper() {
         var Static = {};
 
         var options = Object.keys(Target);
-
         for (var i=0; i<options.length; i++) {
             var opt = Target[options[i]];
-
             if (opt && opt.constructor === String && opt.match(/,/) ){
                 opt = opt.split(/\s*,\s*/);
             }
@@ -525,11 +523,11 @@ function wellMapper() {
             }
             else {
                 // single value only 
-               console.log("\n* Static " + options[i] + ' = ' + JSON.stringify(opt));
+                console.log("\n* Static " + options[i] + ' = ' + JSON.stringify(opt));
             
                 if (options[i] === 'qty' && opt) {
                     List['qty'] = [];
-                    for (var i=0; i< sources.length; i++) {
+                    for (var count=0; count< sources.length; count++) {
                         List['qty'].push(opt);
                     }
 
@@ -929,7 +927,7 @@ function wellMapper() {
             if (current_volume == null) { current_volume = source.qty }
             
             if (current_volume) {
-                console.log(".. remaining volume = " + current_volume.toFixed(6) + source.qty_units);
+                console.log(".. remaining volume = " + current_volume + source.qty_units);
             }
 
             var min = extract.match(/min:(\d+)/i);
