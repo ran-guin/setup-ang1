@@ -254,7 +254,7 @@ function wellController ($scope, $rootScope, $http, $q ) {
             console.log("Reload active sample data...");
             $scope.reload_active_Samples($scope.active.Samples);
             $scope.set_defaults();
-            $scope.redistribute();
+            // $scope.redistribute();
         })
         .catch (function (err) {
             console.log("Error posting transfer: " + err);
