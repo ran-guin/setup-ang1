@@ -87,7 +87,7 @@ function adminController ($scope, $rootScope, $http, $q ) {
 
 	$scope.set_default_name = function () {
 		
-		$scope.reset_messages();
+		// $scope.reset_messages();
 		if ($scope.parent) {
 			var parent = $scope.parent.replace(/^LOC/i,'');
 			var Bnum = "CAST(Mid(Slot.Rack_Name, 2, 2) AS UNSIGNED)";
