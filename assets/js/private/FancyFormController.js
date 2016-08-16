@@ -384,7 +384,7 @@ app.controller('FancyFormController',
         template: " \
             <div class=\"dropdown-container\" ng-class=\"{ show: listVisible }\"> \
                 <div class=\"dropdown-display\" ng-click=\"show();\" ng-class=\"{ clicked: listVisible }\"> \
-                    <input class=\"placeholder input-lg\" ng-if=\"isPlaceholder\" style=\"padding: 5px; width:100%\" ng-model=\"search\" ng-keypress=\"filter($event)\" type=\"text\" placeholder =\"{{placeholder}}\"><\/input> \
+                    <input class=\"placeholder input-lg\" ng-if=\"isPlaceholder\" style=\"padding: 5px; width:100%;\" ng-class=\"{ mandatory : mandatory && isPlaceholder }\" ng-model=\"search\" ng-keypress=\"filter($event)\" type=\"text\" placeholder =\"{{placeholder}}\"><\/input> \
                     <input class=\"placeholder input-lg\" ng-show=\"!isPlaceholder\" style=\"border: 0px; padding: 5px; width:100%\" ng-model=\"search\" ng-keypress=\"filter($event)\" type=\"text\" placeholder =\"{{display}}\"><\/input> \
                     <i class=\"fa fa-angle-down\"><\/i> \
                 <\/div> \
@@ -404,14 +404,16 @@ app.controller('FancyFormController',
             property: "@",
             track: '@',
             default: '@',
+            mandatory: '=',
         },
         link: function(scope) {
             scope.listVisible = false;
             scope.isPlaceholder = true;
-           
+
             if (scope.selected) {
                 // if preset ...
                 scope.label = scope.selected;
+                scope.filled = scope.selected;
             }
             else if (scope.default) {
                 // if default explicitly supplied ... (needs to match object if track not set)                
@@ -484,7 +486,10 @@ app.controller('FancyFormController',
                 else {
                     scope.isPlaceholder = true;
                 }
-                
+
+                if (scope.selected.constructor === Object) { scope.label = scope.selected[scope.property] }
+                else if (scope.selected) { scope.label = scope.selected }
+
                 scope.display = scope.label;
 
                 console.log('reset display to ' + scope.display);
@@ -504,6 +509,7 @@ app.controller('FancyFormController',
 
             scope.$watch("selected", function(value) {
                 scope.choose(value);
+                scope.filled = value;
             });
         }
     }
