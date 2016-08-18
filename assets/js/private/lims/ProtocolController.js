@@ -251,6 +251,11 @@ function protocolController ($scope, $rootScope, $http, $q) {
 
         var PlateData = $scope.splitData(PlateInfo, $scope.active.N, map);
 
+        if ($scope.Step.transfer_type === 'Transfer' && ! $scope['transfer_qty' + $scope.step.stepNumber]) {
+            $scope['transfer_qty_split'] = _.pluck($scope.active.Samples,'qty');
+            $scope['transfer_qty_units_split'] = _.pluck($scope.active.Samples,'qty_units');
+        }
+
         console.log("load " + $scope.active.N + ' plate ids...');
         for (var i=0; i<$scope.active.N; i++) {
             PlateData[i]['FK_Plate__ID'] = $scope.active.Samples[i].id;
@@ -426,6 +431,8 @@ function protocolController ($scope, $rootScope, $http, $q) {
         console.log("Parse INPUT DATA");
         console.log(JSON.stringify(input));
 
+
+
         var recordData = [];
         for (var n=0; n<N; n++) {
             recordData[n] = {};
@@ -438,17 +445,18 @@ function protocolController ($scope, $rootScope, $http, $q) {
                     mapped = map[fld];
                 }
                 
-                var value;
-                if ($scope[key + '_split']) { 
-                    var splitV = $scope[key + '_split'].split(/,/);
+                var value = '';
+                if ($scope[key + '_split']) {
+                    var list = $scope[key + '_split'];
+                    var splitV = list.split(/,/);
                     value = splitV[n];
                 }
                 else if ($scope[key]) {
                     value = $scope[key];
                 }
-                
-                var prefix = $scope.Prefix(fld);
 
+                var prefix = $scope.Prefix(fld);
+                console.log(fld + " V0: " + value);
                 if (value && value.constructor === Object && value.id) {
                     value = value.id;
                     console.log("Converted dropdown object to id " + value);
