@@ -137,7 +137,12 @@ function limsController ($scope, $rootScope, $http, $q) {
             if (result.data && result.data.length) {
                 $scope.load_active_Samples(result.data);
                 $scope.active.valid_plate_sets = [];
-                $scope.load_plate_set({ Samples: result.data, parent : $scope.active.plate_set } );
+                var parent;
+                
+                console.log(JSON.stringify($scope.active.plate_set));
+
+                if ($scope.active.plate_set && $scope.active.plate_set.constructor === 'Number') { parent = $scope.active.plate_set }
+                $scope.load_plate_set({ Samples: result.data, parent : parent } );
 
                 console.log("Reloaded: " + JSON.stringify($scope.active_Samples));
                 deferred.resolve();
@@ -216,7 +221,7 @@ function limsController ($scope, $rootScope, $http, $q) {
     	if (!options) { options = {} }
     	
     	var Samples = options.Samples;
-    	var parent = options.parent;  // specfiy parent (only applicable when saving)
+    	var parent = options.parent;                    // specfiy parent (only applicable when saving)
     	var existing_set    = options.existing_set;     // load existing set 
 
         console.log("load plate set..." + parent + " from " + existing_set);
@@ -235,7 +240,6 @@ function limsController ($scope, $rootScope, $http, $q) {
 	                var maxPS = response.data.results[0].MaxPS || 1
 
 	                console.log("SAVE SET " + JSON.stringify(maxPS));
-
 	                var data = [];
 	                for (var i=0; i< Samples.length; i++) {
 	                    var record = { FK_Plate__ID : Samples[i].id, Plate_Set_Number: maxPS+1 , FKParent_Plate_Set__Number: parent }    
