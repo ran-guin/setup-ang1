@@ -410,11 +410,10 @@ app.controller('FancyFormController',
             scope.listVisible = false;
             scope.isPlaceholder = true;
 
-            if (scope.selected) {
-                // if preset ...
-                scope.label = scope.selected;
-                scope.filled = scope.selected;
+            if (scope.selected && scope.selected.constructor === Object) { 
+                scope.label = scope.selected[scope.property] 
             }
+            else if (scope.selected && scope.selected.constructor === String) { scope.label = scope.selected }
             else if (scope.default) {
                 // if default explicitly supplied ... (needs to match object if track not set)                
                 scope.selected = scope.default;
@@ -428,17 +427,14 @@ app.controller('FancyFormController',
                 scope.isPlaceholder = false;
                 if (scope.track) { scope.selected = item[scope.track] }
                 else { scope.selected = item }  // or just item for full object
-
                 scope.label = item[scope.property];
             };
 
             scope.filter = function(event) {
-                console.log("E: " + event);
                 var key = window.event ? event.keyCode : event.which;
                 if (key) {
                     var keyval = String.fromCharCode(key);
                 
-                    console.log("K: " + keyval);
                     for (var i=0; i<scope.list.length; i++) {
                         if ( scope.list[i].name.charAt(0).toLowerCase() == keyval.toLowerCase() ) {
                             console.log(keyval.toLowerCase() + ' = ' + scope.list[i].name.charAt(0).toLowerCase());
@@ -448,17 +444,16 @@ app.controller('FancyFormController',
                     }
                     scope.search = '';
                     listVisible=true;
-                    console.log('open list');
                 }
                 else {
                     scope.choose();
                     scope.search = '';
                     scope.listVisible = false;
-                    console.log('close list');
                 }
             };
 
             scope.isSelected = function(item) {
+
                 if (scope.track) {
                     return item[scope.track] === scope.selected;
                 }
@@ -470,11 +465,10 @@ app.controller('FancyFormController',
 
             scope.show = function() {
                 scope.listVisible = true;
-                console.log('show list');
-
             };
 
             scope.choose = function (value) {
+
                 if (scope.track) { 
                     scope.isPlaceholder = (scope.selected === undefined || ! scope.selected);
                     // scope.display = scope.label;
@@ -487,13 +481,14 @@ app.controller('FancyFormController',
                     scope.isPlaceholder = true;
                 }
 
-                if (scope.selected.constructor === Object) { scope.label = scope.selected[scope.property] }
-                else if (scope.selected) { scope.label = scope.selected }
+               console.log('scope.choose mid1 ' + scope.display + scope.label);
+
+                if (scope.selected && scope.selected.constructor === Object) { scope.label = scope.selected[scope.property] }
+                else if (scope.selected && scope.selected.constructor === String) { scope.label = scope.selected }
+                // don't change label selected points to id... 
 
                 scope.display = scope.label;
 
-                console.log('reset display to ' + scope.display);
-                console.log("selected: " + JSON.stringify(scope.selected) + ' : ' + scope.property);
                 scope.search = '';
             };
 
@@ -502,8 +497,6 @@ app.controller('FancyFormController',
                 if (!$(target[0]).is(".dropdown-display.clicked") && !$(target[0]).parents(".dropdown-display.clicked").length > 0)
                     scope.$apply(function() {
                         scope.listVisible = false;
-                        console.log('closed on click list');
-
                     });
             });
 
