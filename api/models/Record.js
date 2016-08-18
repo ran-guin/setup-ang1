@@ -628,7 +628,7 @@ module.exports = {
 				}
 			}
 
-			Record.preChangeHistory(model, ids, data, track)
+			Record.update_History(model, ids, data, track)
 			.then ( function (History) {
 				console.log("HHH: " + JSON.stringify(History));
 				var promises = [];
@@ -667,7 +667,7 @@ module.exports = {
 					if (SetEach.length) { updateValues = results[promises.length - 1] }
 
 					if (History) {
-						Record.preChangeHistory(model, ids, data, track, History)
+						Record.update_History(model, ids, data, track, History)
 						.then (function (finalHistory) {
 							console.log("Saved History after update...");
 							console.log(JSON.stringify(finalHistory));
@@ -1132,7 +1132,7 @@ module.exports = {
         return errors;
     },
 
-    preChangeHistory : function (model, ids, data, track, History) {
+    update_History : function (model, ids, data, track, History) {
     	// retrieve values before record is updated  ... run in conjunction with similar call with History set.. 
     	var deferred = q.defer();
 
@@ -1143,6 +1143,8 @@ module.exports = {
     	var key;
 
     	track = track || ['FK_Rack__ID'];  // always track Rack_ID changes ... 
+
+    	console.log("\n*** preChange History with " + JSON.stringify(History));
 
     	if (model && ids && data && track && track.length && Mod) {
 	    	if (History) { key = 'New_Value' }
@@ -1157,28 +1159,67 @@ module.exports = {
     		if (Mod && Mod.alias && Mod.alias('id')) { idField = Mod.alias('id') }
 			
 			var query = "SELECT " + idField + ' as id, ' + track.join(',') + " FROM " + table + " WHERE " + idField + " IN (" + ids.join(',') + ')';
+
+			var Relocate = [];
+
 			console.log(query);
-			Record.query_promise(query)
-			.then (function (result) {
+			var promises = [];
+			promises.push( Record.query_promise(query) )
+			promises.push( Record.load_FK(table, track) );
+
+			q.all(promises)
+			.then (function (results) {
+				var result = results[0];
+				var FK = results[1];
+				console.log("FK: " + JSON.stringify(FK));
+
 				console.log(JSON.stringify(result));
 				for (var i=0; i<result.length; i++) {
 					for (var j=0; j<track.length; j++) {
 						var f = track[j];
 						var id = result[i].id;
-						
-						if (key === 'New_Value' && History[table][id]['Old_Value'] === result[i][f]) {
+
+						if (! History[table][id] ) { History[table][id] = {} }
+						if (! History[table][id][f] ) { History[table][id][f] = {} }
+
+						if (key === 'New_Value' && History[table][id][f]['Old_Value'] === result[i][f]) {
 							console.log(f + ' value unchanged...');
 							delete History[table][id][f];
 						}
 						else {
-							if (! History[table][id] ) { History[table][id] = {} }
-							if (! History[table][id][f] ) { History[table][id][f] = {} }
+							History[table][id][f][key] = result[i][f];	
 
-							History[table][id][f][key] = result[i][f];
+							console.log("Tracked History: " + JSON.stringify(History[table][id][f]) );
+
+							if (key === 'New_Value') {
+								History[table][id][f]['Record_ID'] = id;
+								History[table][id][f]['FK_DBfield__ID'] = FK[table][f];
+
+								if (f === 'FK_Rack__ID') {
+									var relocate = {};
+									relocate['class'] = table;
+									relocate['id'] = id;
+									relocate['field'] = f;
+									relocate['Old_Value'] = History[table][id][f]['Old_Value'];
+									relocate['New_Value'] = result[i][f];
+
+									Relocate.push(relocate);
+								}
+
+							}
 						}
 					}
 				}
-				deferred.resolve(History);
+
+				Record.saveHistory(History, Relocate)
+				.then ( function (response) {
+					console.log("Saved History: " + JSON.stringify(response));
+					deferred.resolve(History);
+				})
+				.catch ( function (err) {
+					console.log("Error saving History");
+					deferred.reject(err);
+				});
 			})
 			.catch (function (err) {
 				console.log("Error saving preHistory: " + err);
@@ -1190,6 +1231,56 @@ module.exports = {
     	return deferred.promise;
     },
 
+    saveHistory : function (History, Relocate) {
+    	var deferred = q.defer();
+
+    	History = History || {};
+    	var Data = [];
+    	
+    	console.log("build data...");
+
+    	var tables = Object.keys(History);
+    	for (var i=0; i<tables.length; i++) {
+    		var ids = Object.keys(History[tables[i]]);
+    		for (var j=0; j<ids.length; j++) {
+    			Data.push( History[tables[i]][ids[j]] )
+    		}
+    	}
+    	console.log("History: " + JSON.stringify(Data));
+
+    	console.log("Relocate: " + JSON.stringify(Relocate));
+    	
+    	deferred.resolve(Relocate);
+    	
+    	return deferred.promise;
+    },
+
+    load_FK : function (table, fields) {
+    	// Legacy 
+    	var deferred = q.defer();
+
+    	var FK = {};
+    	FK[table] = {};
+
+    	var field_list = fields.join("','");
+    	Record.query_promise("SELECT DBField_ID as fk, Field_Name as field, DBTable_Name as dbtable FROM DBField,DBTable WHERE FK_DBTable__ID=DBTable_ID AND Field_Name IN ('" + field_list + "')")
+    	.then (function (result) {
+    		for (var i=0; i<result.length; i++) {
+    			var table = result[i].dbtable;
+    			var field = result[i].field;
+    			var ref = result[i].fk;
+    			
+    			FK[table][field] = ref;
+    		}
+    		deferred.resolve(FK);
+    	})
+    	.catch ( function (err) {
+    		console.log("could not get FK values");
+    		deferred.reject(err);
+    	});
+
+    	return deferred.promise;
+    }
 };
 
 
