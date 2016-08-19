@@ -20,13 +20,13 @@ module.exports = {
 		var conditions = body.conditions || [];
 		var fill_by = body.fill_by || 'row';
 
-		var rows = body.rows;
-		var columns = body.columns;
+		var rows = body.rows || [];
+		var columns = body.columns || [];
 
 		// var deferred = q.defer();
 
 		console.log("Get contents of Rack: " + rack_id + ' ' + rack_name);
-		
+
 		Rack.boxContents( {
 			id: rack_id, 
 			name: rack_name, 
@@ -34,7 +34,7 @@ module.exports = {
 			fill_by: fill_by,
 			rows: rows,
 			columns: columns,
-			})
+		})
 		.then (function (contents) {
 			console.log("Pass along: " + JSON.stringify(contents));
 			return res.json(contents);
