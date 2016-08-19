@@ -29,22 +29,44 @@ if target_size == '8x12'
 div(ng-if="Map.Transfer && Map.TransferMap")
 	div(ng-repeat="batch in Map.TransferMap")
 		b Box {{ Map.Options.target_boxes[$index] }}
-		table.table-bordered(style="border: 1px solid")
+			span &nbsp; &nbsp; &nbsp;
+			button.btn.btn-xs.btn-primary(ng-show="map.select" type='button' ng-model='hide' ng-click="map.select = 0") Hide
+			button.btn.btn-xs.btn-primary(ng-show="!map.select" type='button' ng-model='hide' ng-click="map.select=1") Select Rows/Columns
+			p &nbsp;
+			b B: {{ batch }}
+			br
+			b T: {{ Map.Transfer[batch['#{row}#{col}']['target_index']] }}
+			br
+			b M1: {{ Map.Options.target_boxes[$index] }}
+			b M: {{ Map.Available }}
+		table(style='background-color:#eee')
+			tr(ng-show='map.select')
+				td &nbsp;
+				each col in cols
+					td
+						input(type='checkbox' checklist-model="map.use_cols" checklist-value='#{col}' ng-click="redistribute('reset')")
+	
 			each row in rows
 				tr
+					td(ng-show='map.select')
+						input(type='checkbox' checklist-model="map.use_rows" value='#{row}' ng-click="redistribute('reset')")
 					each col in cols
 						if col > 6 
 							- bg=darkbg;
 						if col <= 6 
 							- bg=lightbg;
+						- var well = row + col;
 
 						td
 							div(ng-if="batch['#{row}#{col}'] && Map.Transfer[batch['#{row}#{col}']['target_index']]")
 								a(href='#' data-toggle='tooltip' title="{{ Map.Transfer[batch['#{row}#{col}']['target_index']]['qty'] }}  {{ Map.Transfer[batch['#{row}#{col}']['target_index']]['qty_units'] }} from #{{ Map.Transfer[batch['#{row}#{col}']['target_index']]['source_id'] }}" style='color:#{bg}') 
 									div.wellmap( style="background-color:{{ batch['#{row}#{col}']['colour_code'] }}")
 										b {{ Map.Transfer[ batch['#{row}#{col}' ]['target_index']]['qty'] }}
-							div(ng-if="! batch['#{row}#{col}'] ")
+							div(ng-if="! Map.Transfer[batch['#{row}#{col}']['target_index']] && Map.Available[Map.Options.target_boxes[$index]].indexOf('#{row}#{col}') >= 0 ")
 								div.wellmap(style='background-color: #666')
+									span &nbsp;
+							div(ng-if="! Map.Transfer[batch['#{row}#{col}']['target_index']] && ! (Map.Available[Map.Options.target_boxes[$index]].indexOf('#{row}#{col}') >= 0)")
+								div.wellmap(style='background-color: #000')
 									span &nbsp;
 		p &nbsp;
 	HR
