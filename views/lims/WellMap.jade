@@ -152,7 +152,7 @@ block content
               table.table()
                 tr
                   td(style='width:50%')
-                    h2 Source Samples: [ size: {{ active.Samples[0].box_size }} ]
+                    // h2 Source Samples: [ size: {{ active.Samples[0].box_size }} ]
                     include SourceMap.jade
                     hr
                     // ul
@@ -168,7 +168,7 @@ block content
                         td(ng-repeat="col in source_cols" style="background-color:#{{ rgbList[ $parent.$index*source_cols.length + $index ] }}" ) 
                           span(data-toggle="tooltip" title="{{active.Samples[$parent.$index*source_cols.length + $index].id}}") &nbsp; &nbsp; &nbsp;
                   td(style='width:50%')
-                    h2 Target Samples: [ size: {{ map.target_size }} ]
+                    // h2 Target Samples: [ size: {{ map.target_size }} ]
                     include TargetMap.jade
                     hr
                     // ul

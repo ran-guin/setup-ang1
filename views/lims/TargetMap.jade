@@ -1,4 +1,5 @@
-h4 Target Map
+h4 
+	u Target Map [{{ map.target_size }}]
 
 	
 - var rows = ['A'];
@@ -32,14 +33,9 @@ div(ng-if="Map.Transfer && Map.TransferMap")
 			span &nbsp; &nbsp; &nbsp;
 			button.btn.btn-xs.btn-primary(ng-show="map.select" type='button' ng-model='hide' ng-click="map.select = 0") Hide
 			button.btn.btn-xs.btn-primary(ng-show="!map.select" type='button' ng-model='hide' ng-click="map.select=1") Select Rows/Columns
-			p &nbsp;
-			b B: {{ batch }}
-			br
-			b T: {{ Map.Transfer[batch['#{row}#{col}']['target_index']] }}
-			br
-			b M1: {{ Map.Options.target_boxes[$index] }}
-			b M: {{ Map.Available }}
-		table(style='background-color:#eee')
+			br 
+			span &nbsp;
+		table(style='background-color:#eee;')
 			tr(ng-show='map.select')
 				td &nbsp;
 				each col in cols
@@ -57,7 +53,7 @@ div(ng-if="Map.Transfer && Map.TransferMap")
 							- bg=lightbg;
 						- var well = row + col;
 
-						td
+						td(style='padding: 1px')
 							div(ng-if="batch['#{row}#{col}'] && Map.Transfer[batch['#{row}#{col}']['target_index']]")
 								a(href='#' data-toggle='tooltip' title="{{ Map.Transfer[batch['#{row}#{col}']['target_index']]['qty'] }}  {{ Map.Transfer[batch['#{row}#{col}']['target_index']]['qty_units'] }} from #{{ Map.Transfer[batch['#{row}#{col}']['target_index']]['source_id'] }}" style='color:#{bg}') 
 									div.wellmap( style="background-color:{{ batch['#{row}#{col}']['colour_code'] }}")

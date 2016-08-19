@@ -1,31 +1,35 @@
-
-h4 source Map
-table
-	tr
-		td(style='height:5px; width: 5px; padding:2px; background-color: #F66')
-	
+span &nbsp;
 - var rows = ['A'];
 - var cols = [1];
-
+- var box_size = '?'
 if Samples && Samples[0] && Samples[0].box_size == '1'
 	- rows = ['A'];
 	- cols = [1];
+	- box_size = 'tube'
 
 if Samples && Samples[0] && Samples[0].box_size  == '9x9'
 	- rows = ['A','B','C','D','E','F','G','H','I'];
 	- cols = [1,2,3,4,5,6,7,8,9];
+	- box_size = '9x9'
 
 if Samples && Samples[0] && Samples[0].box_size  == '8x12'
 	- rows = ['A','B','C','D','E','F','G','H'];
 	- cols = [1,2,3,4,5,6,7,8,9,10,11,12];
+	- box_size = '8x12'
 
 - var lightbg = '#fff';
 - var darkbg  = '#000';
 - var bg = darkbg;
 
+h4 
+	u Source Map [ #{box_size} ]
+
 div(ng-if="Map.Transfer && Map.SourceMap")
-	div(ng-repeat="box in Map.SourceMap")
-		table.table-bordered
+	div(ng-repeat="(id, box) in Map.SourceMap")
+		b Box # {{ id }}
+		br
+		span &nbsp;
+		table
 			each row in rows
 				tr
 					each col in cols
@@ -34,7 +38,7 @@ div(ng-if="Map.Transfer && Map.SourceMap")
 						if col <= 6 
 							- bg=lightbg;
 
-						td
+						td(style='padding: 1px')
 							div(ng-if="box['#{row}#{col}']")
 								div.wellmap( style="background-color:#{{ box['#{row}#{col}'].colour_code }}")
 									a(href='#' data-toggle='tooltip' title="id# {{ box['#{row}#{col}'].source_id }} " style='color:#{bg}') #{row}#{col}
