@@ -282,8 +282,8 @@ function wellMapperController ($scope, $rootScope, $http, $q ) {
             );
             
             var wells = Map.wells || {};
-            $scope.map.use_rows = wells.rows;
-            $scope.map.use_cols = wells.cols;
+            // $scope.map.use_rows = wells.rows;
+            // $scope.map.use_cols = wells.cols;
             console.log("WELLS: " + JSON.stringify(wells));
 
 
@@ -333,7 +333,8 @@ function wellMapperController ($scope, $rootScope, $http, $q ) {
         $scope.map.transfer_qty = Config['transfer_qty'] || '';
         $scope.map.transfer_qty_units = Config['transfer_qty_units'] || 'ml';
     
-        $scope.map.use_rows = ['A','B','C','D','E', 'F', 'G', 'H'];
+        // select max possible rows / columns for applicability ... 
+        $scope.map.use_rows = ['A','B','C','D','E', 'F', 'G', 'H', 'I'];
         $scope.map.use_cols = [1,2,3,4,5,6,7,8,9,10,11,12];
     }
 
