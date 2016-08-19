@@ -306,6 +306,8 @@ module.exports = {
     var rows = options.rows;
     var columns = options.columns;
 
+    console.log("options: " + JSON.stringify(options));
+    console.log("Rows: " + JSON.stringify(rows));
     var content_types = ['Plate','Solution'];
     
     var rack_ids;
@@ -357,11 +359,11 @@ module.exports = {
     }
 
     if (rows) {
-      var row_options = Object.keys(rows);
+      var row_options = rows.join("','");
       conditions.push("Left(Rack.Rack_Name,1) IN ('" + row_options + "')")
     }
     if (columns) {
-      var column_options = Object.keys(columns);
+      var column_options = columns.join("','");
       conditions.push("Mid(Rack.Rack_Name,2,2) IN ('" + column_options + "')")
     }
 
