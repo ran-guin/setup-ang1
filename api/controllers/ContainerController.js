@@ -175,18 +175,20 @@ module.exports = {
 		    })
 		    .catch ( function (err) {
 		    	console.log("Error uploading Matrix File: ");
-		    	console.log(err);
+		    	var msg = Record.parse_standard_error(err);
 
 				return res.render('lims/Container', { 
 					plate_ids: ids, 
-					Samples: Samples
+					Samples: Samples,
+					errors: [ msg ],
 				});
 			});
-		} else {
+		} 
+		else {
 			return res.render('lims/Container', { 
 				plate_ids: ids, 
 				Samples: Samples, 
-				errMsg : "Missing ids or Samples",
+				errors : ["Missing ids or Samples"],
 			}); 
 		}
 

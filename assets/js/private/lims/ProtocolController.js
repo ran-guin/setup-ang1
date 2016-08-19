@@ -251,6 +251,11 @@ function protocolController ($scope, $rootScope, $http, $q) {
 
         var PlateData = $scope.splitData(PlateInfo, $scope.active.N, map);
 
+        if ($scope.Step.transfer_type === 'Transfer' && ! $scope['transfer_qty' + $scope.step.stepNumber]) {
+            $scope['transfer_qty_split'] = _.pluck($scope.active.Samples,'qty');
+            $scope['transfer_qty_units_split'] = _.pluck($scope.active.Samples,'qty_units');
+        }
+
         console.log("load " + $scope.active.N + ' plate ids...');
         for (var i=0; i<$scope.active.N; i++) {
             PlateData[i]['FK_Plate__ID'] = $scope.active.Samples[i].id;
@@ -426,6 +431,8 @@ function protocolController ($scope, $rootScope, $http, $q) {
         console.log("Parse INPUT DATA");
         console.log(JSON.stringify(input));
 
+
+
         var recordData = [];
         for (var n=0; n<N; n++) {
             recordData[n] = {};
@@ -438,17 +445,18 @@ function protocolController ($scope, $rootScope, $http, $q) {
                     mapped = map[fld];
                 }
                 
-                var value;
-                if ($scope[key + '_split']) { 
-                    var splitV = $scope[key + '_split'].split(',');
+                var value = '';
+                if ($scope[key + '_split']) {
+                    var list = $scope[key + '_split'];
+                    var splitV = list.split(/,/);
                     value = splitV[n];
                 }
                 else if ($scope[key]) {
                     value = $scope[key];
                 }
-                
-                var prefix = $scope.Prefix(fld);
 
+                var prefix = $scope.Prefix(fld);
+                console.log(fld + " V0: " + value);
                 if (value && value.constructor === Object && value.id) {
                     value = value.id;
                     console.log("Converted dropdown object to id " + value);
@@ -489,7 +497,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
                 separator = prefix;
             }
             else {
-                separator = ',';
+                separator = ',|\\s';   // allow either comma-delimited or space-delimited 
             }
             console.log("Split " + field + ' ON ' + separator + ' : ' + prefix);
 
@@ -596,6 +604,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
 
     $scope.distribute = function distribute (reset) {
         console.log("Distribute samples...");
+        $scope.reset_messages();
         var deferred = $q.defer(); 
 
         var targetKey = 'transfer_type' + $scope.step.stepNumber;
@@ -606,6 +615,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
         }  
         var qty_units = $scope['units_label'];
 
+        console.log("Transfer " + qty + qty_units);
         var Target = { 
             'Container_format' : $scope.Step.Target_format,
             'Sample_type'   : $scope.Step.Target_sample,
@@ -617,6 +627,12 @@ function protocolController ($scope, $rootScope, $http, $q) {
         var fill =  $scope.map.fill_by || $scope.Step['fill_by'];
         var size = $scope.Step['target_size'] || $scope.active.Samples[0].box_size;
 
+        var target_rack = '';
+        var boxes = [];
+        if ($scope['location' + $scope.step.stepNumber]) {
+            target_rack = $scope['location' + $scope.step.stepNumber];
+        }
+
         var Options = {
             'transfer_type' : $scope.Step.transfer_type,
             'reset_focus'   : $scope.Step.reset_focus,
@@ -625,6 +641,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
             'distribution_mode' : $scope['distribution_mode' + $scope.step.stepNumber],
             'fill_by'  : $scope.map.fill_by || $scope.Step['fill_by'],
             'target_size' : size,
+            'target_rack' : target_rack,
         }
         
         console.log("Distribute: ");

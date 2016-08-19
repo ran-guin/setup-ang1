@@ -121,22 +121,26 @@ module.exports = {
 					var rows = obj[f].data.length;
 					var cols = obj[f].data[f].length;
 
-					columns = ['A','B','C','D','E','F','G','H'];
+					row_labels = ['A','B','C','D','E','F','G','H'];
 
+					console.log("Found " + rows + ' x ' + cols + ' matrix');
 					var map = {};
 					var applied = 0;
-					for (var i=1; i<=rows; i++) {
-						for (var j=0; j<cols; j++) {
+					for (var i=0; i<rows; i++) {
+						for (var j=1; j<=cols; j++) {
 						
-							var posn =  columns[j];
+							console.log(i + j);
+							var posn =  row_labels[i];
 							//if (i<10) { posn = posn + '0' }
-							posn = posn + i.toString();
+							posn = posn + j.toString();
+							console.log(posn);
 
-							map[posn] = obj[f].data[i-1][j];
+							map[posn] = obj[f].data[i][j-1];
 							applied = applied + 1;
 						}
 
 					}
+					console.log(map);
 
 					var data = [];
 					var errors = [];

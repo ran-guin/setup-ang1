@@ -49,10 +49,11 @@ function adminController ($scope, $rootScope, $http, $q ) {
 				$scope.error(errMsg);
 			}
 			else if (msg) {
+				$scope.set_default_name();   // set next one if applicable ... 
 				$scope.message(msg);
-				$scope.set_default_name();  // set next one if applicable ... 
 			}
-			console.log("admin returned:" + JSON.stringify(result));
+
+			console.log("Admin returned:" + JSON.stringify(result));
 		})
 		.catch ( function (err) {
 			$scope.error(err);
@@ -86,7 +87,7 @@ function adminController ($scope, $rootScope, $http, $q ) {
 
 	$scope.set_default_name = function () {
 		
-		$scope.reset_messages();
+		// $scope.reset_messages();
 		if ($scope.parent) {
 			var parent = $scope.parent.replace(/^LOC/i,'');
 			var Bnum = "CAST(Mid(Slot.Rack_Name, 2, 2) AS UNSIGNED)";

@@ -53,11 +53,11 @@ block content
                         td(width='100%')
                           // preaddon & addon custom css only necessary for special type: dropdown 
                           input.input-lg.preaddon#transfer_qty(type='text' aria-describedBy='tqu' placeholder=' -- Transfer Qty --', ng-model='map.transfer_qty' ng-blur="redistribute('reset')" size='24' ng-disabled="map.transfer_type=='Pre-Print'")
-                          // span.lookup(id='Lookup-units' ng-init="loadLookup('units','','units')")
+                          // span.lookup(id='Lookup-units' ng-init="loadLookup('units','','units')" mandatory)
                         
                         // include Units.jade
                         td
-                          my-dropdown.mandatory.mini-dropdown.addon#transfer_qty_units(placeholder='units..' list="MenuList['map.transfer_qty_units']" selected="map.transfer_qty_units" property='name' track='name', ng-init="setup_Menu('map.transfer_qty_units','ml,ul,nl')") 
+                          my-dropdown.mini-dropdown.addon#transfer_qty_units(placeholder='units..' list="MenuList['map.transfer_qty_units']" selected="map.transfer_qty_units" property='name' track='name', ng-init="setup_Menu('map.transfer_qty_units','ml,ul,nl')" mandatory='true') 
                   br
                   span(style='color: red' ng-show='transfer_qty_errors || units_errors') Transfer Qty + Units Required
                   span(style='color: red' ng-show="map.transfer_type === 'Transfer'") Defaults to entire volume in original tube(s)
@@ -65,7 +65,7 @@ block content
                 div.col-sm-4(ng-show="map.transfer_type !== 'Move'")
                   div.form-group(style='padding-top: 0px; padding-left: 40px')
                     label(for='map.target_format' style='padding-top: 0px')
-                    my-dropdown.mandatory#target_format(style='width:100%' placeholder='Target Format...' required list="MenuList['map.target_format']" selected="map.target_format" property='name' track='id' ng-init="setup_Menu('map.target_format','FK(container_format)')")        
+                    my-dropdown#target_format(style='width:100%' placeholder='Target Format...' required list="MenuList['map.target_format']" selected="map.target_format" property='name' track='id' ng-init="setup_Menu('map.target_format','FK(container_format)')" mandatory='true')        
               hr 
 
               div.form-group

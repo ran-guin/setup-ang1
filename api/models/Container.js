@@ -367,13 +367,21 @@ module.exports = {
 				var target_qty = Transfer[i].qty;
 				if (Options.solution_qty) {
 					var add_qty = Options.solution_qty[i];
-					if (add_qty.constructor === String) {
-						add_qty = add_qty.parseFloat().toFixed(4);
+					if (add_qty && add_qty.constructor === String) {
+						target_qty = target_qty + parseFloat(add_qty); // needs to be text to enable comma-delimited list.. 
 					}
-					target_qty = target_qty + add_qty; // needs to be text to enable comma-delimited list.. 
+					else {
+						target_qty = target_qty + add_qty; // needs to be text to enable comma-delimited list.. 
+					}
 				}
 				quantities.push( target_qty );
-				adjustments.push("<" + qtyField + " - " + Transfer[i].qty + ">");		
+
+				if (Options.transfer_type === 'Transfer') {
+					adjustments.push(0);
+				}
+				else {	
+					adjustments.push("<" + qtyField + " - " + Transfer[i].qty + ">");		
+				}
 			}
 			resetTarget[qtyField] = quantities;
 			resetSource[qtyField] = adjustments;
