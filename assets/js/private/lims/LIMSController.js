@@ -118,7 +118,7 @@ function limsController ($scope, $rootScope, $http, $q) {
 
             $scope.active.N = $scope.active.plate_ids.length;
             
-            console.log(Samples.length + ' samples loaded..');
+            console.log(Samples.length + ' samples loaded... from #' + ids[0]);
             console.log("ACTIVE Loaded " + $scope.active.Samples.length + ' active Samples');
             
     }
