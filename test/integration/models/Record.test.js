@@ -68,12 +68,12 @@ describe('Record', function() {
     	});
     });
 
-    describe('* preChangeHistory', function () {
+    describe('* update_History', function () {
 		it('invalid table', function () {
 			var promises = [];
-			promises.push( Record.preChangeHistory('ABCD',1,{}) );
-			promises.push( Record.preChangeHistory('user',1,{name: 'Ran'}) );
-			promises.push( Record.preChangeHistory('container',1,{'FK_Rack__ID': 1}) );
+			promises.push( Record.update_History('ABCD',1,{}) );
+			promises.push( Record.update_History('user',1,{name: 'Ran'}) );
+			promises.push( Record.update_History('container',1,{'FK_Rack__ID': 1}) );
 
 			q.all(promises) 
 			.then ( function (results) {
@@ -86,7 +86,7 @@ describe('Record', function() {
 
 		it('grab original data', function () {
 			var promises = [];
-			promises.push( Record.preChangeHistory('container',1,{'FK_Rack__ID': 1}) );
+			promises.push( Record.update_History('container',1,{'FK_Rack__ID': 1}) );
 
 			q.all(promises) 
 			.then ( function (results) {
