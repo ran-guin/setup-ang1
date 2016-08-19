@@ -124,6 +124,11 @@ function wellController ($scope, $rootScope, $http, $q ) {
                 $scope.redistribute('reset');
                 console.log("reset split to 1... ");
             }
+
+            var quantities = _.pluck($scope.active.Samples,'qty');
+            var units = _.pluck($scope.active.Samples,'qty_units');
+            $scope.map.transfer_qty = quantities.join(',');
+            $scope.map.transfer_qty_units = units[0];
         }
 
         console.log("Validate " + $scope.map.transfer_type);
