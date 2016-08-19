@@ -71,6 +71,9 @@ function wellMapperController ($scope, $rootScope, $http, $q ) {
         var size    = Options.target_size;
         var fill_by = Options.fill_by;
 
+        var rows    = Options.load_rows || $scope.map.use_rows;
+        var cols    = Options.load_columns || $scope.map.use_cols;
+
         if (! rack_id && Options.target_boxes && Options.target_boxes.length) { 
             rack_id = Options.target_boxes[0];
         }
@@ -81,7 +84,7 @@ function wellMapperController ($scope, $rootScope, $http, $q ) {
         }
 
         console.log("Load rack " + rack_id + ' ' + rack_name);
-        var data = { id: rack_id, name: rack_name, fill_by: fill_by};
+        var data = { id: rack_id, name: rack_name, fill_by: fill_by, rows: rows, columns: cols};
 
         console.log("SEND: " + JSON.stringify(data));
 
@@ -191,20 +194,29 @@ function wellMapperController ($scope, $rootScope, $http, $q ) {
             console.log("Redistribute Samples (no reset");            
         }
 
-        console.log("Fill by " + $scope.map.fill_by);
-        
-        if ($scope.map.fill_by.match(/row/i)) { 
-            $scope.source_by_Row(Samples);
-            // $scope.map.split_mode = 'serial';
-        }
-        else if ($scope.map.fill_by.match(/col/i) ) { 
-            $scope.source_by_Col(Samples);
-            // $scope.map.split_mode = 'serial';
-        }
-        else if ($scope.map.fill_by.match(/pos/i)) {
-            $scope.source_by_Slot(Samples);
+        console.log("Load by " + $scope.map.load_by);
+
+        if ($scope.map.fill_by.match(/pos/i)) {
+            $scope.fill_by_Slot(Samples);
             // $scope.map.split_mode = 'parallel';
         }
+        else {
+            // load_by is only relevant if NOT filling by position ..
+            if ($scope.map.load_by.match(/row/i)) { 
+                $scope.source_by_Row(Samples);
+                // $scope.map.split_mode = 'serial';
+            }
+            else if ($scope.map.load_by.match(/col/i) ) { 
+                $scope.source_by_Col(Samples);
+                // $scope.map.split_mode = 'serial';
+            }
+            else if ($scope.map.load_by.match(/scan/i) ) { 
+                $scope.reset_Samples();
+                // $scope.map.split_mode = 'serial';
+            }
+        }
+
+        console.log("Fill by " + $scope.map.fill_by);
 
         $scope.reset_split_mode();
         $scope.reset_pack_mode();
@@ -283,6 +295,12 @@ function wellMapperController ($scope, $rootScope, $http, $q ) {
                 Options
             );
             
+            var wells = Map.wells || {};
+            $scope.map.use_rows = wells.rows;
+            $scope.map.use_cols = wells.cols;
+            console.log("WELLS: " + JSON.stringify(wells));
+
+
             console.log("Samples: " + JSON.stringify(Samples));
             console.log("NEW MAP: " + JSON.stringify(Map));
  
@@ -320,12 +338,17 @@ function wellMapperController ($scope, $rootScope, $http, $q ) {
         if (!Config) { Config = $scope.map.config }
 
         $scope.map.fill_by = Config['fill_by'] || 'row';
+        $scope.map.load_by = Config['load_by'] || 'row';
         $scope.map.splitX   = Config['Split'] || 1;
         $scope.map.pack_wells   = Config['pack'] || 0;            // applicable only for splitting with parallel mode (if N wells pipetted together)
+        $scope.map.pack_size   = Config['pack_size'] || 8;            // applicable only for splitting with parallel mode (if N wells pipetted together)
         $scope.map.split_mode    = Config['mode'] || 'parallel';  // serial or parallel...appliable only for split (eg A1, A1, A2, A2... or A1, A2... A1, A2...)
         $scope.map.transfer_type = Config['transfer_type'] || 'Transfer';
         $scope.map.transfer_qty = Config['transfer_qty'] || '';
         $scope.map.transfer_qty_units = Config['transfer_qty_units'] || 'ml';
+    
+        $scope.map.use_rows = ['A','B','C','D','E', 'F', 'G', 'H'];
+        $scope.map.use_cols = [1,2,3,4,5,6,7,8,9,10,11,12];
     }
 
     $scope.reset_pack_mode = function reset_pack_mode () {
@@ -364,7 +387,8 @@ function wellMapperController ($scope, $rootScope, $http, $q ) {
     	//   - batch
     	//
 
-        $scope.map.fill_by = 'row';
+        $scope.map.load_by = 'row';
+        $scope.map.fill_by = $scope.map.fill_by || $scope.map.load_by;
 
         if (! sortBy) { sortBy = 'position' }
 
@@ -377,22 +401,23 @@ function wellMapperController ($scope, $rootScope, $http, $q ) {
         if (! $scope.ordered) {
             SampleList = _.sortByNat(Samples, function(sample) { 
 
-                if (!sample[sortBy]) { sample[sortBy] = 'A1'}
+                if (!sample['position']) { sample[sortBy] = 'A1'}
 
                 var batch = sample.batch || 0;
                 var string = batch.toString() + '_' + sample[sortBy];
                 return string;
             });
-            console.log("reorder by Row: " + JSON.stringify(_.pluck(Samples, sortBy)) );
+            console.log("reorder by Row: " + JSON.stringify(_.pluck(SampleList, sortBy)) );
         }
+        $scope.load_active_Samples(SampleList);
         return SampleList;
     }
 
     // Fill for Samples only ... may not be necessary ... 
     $scope.source_by_Col = function source_by_Col (Samples) {
 ;
-        $scope.map.fill_by = 'column';
-        var sortBy = 'position';
+        $scope.map.load_by = 'column';
+        $scope.map.fill_by = $scope.map.fill_by || $scope.map.load_by;
 
         //$scope.Samples = _.sortByNat($scope.Samples, 'position');
 
@@ -405,20 +430,20 @@ function wellMapperController ($scope, $rootScope, $http, $q ) {
         if (! $scope.ordered) {
             SampleList = _.sortByNat(Samples, function(sample) {
                 var batch = sample.batch || 0; 
-                var string = batch.toString() + '_' + sample.position.substring(1,3) + '_' + sample.position.substring(0,1);
+                var string = batch.toString() + '_' + sample['position'].substring(1,3) + '_' + sample.position.substring(0,1);
                 return string;
             });
-            console.log("reorder by Col: " + JSON.stringify(_.pluck(Samples, 'position')) );
+            console.log("reorder by Col: " + JSON.stringify(_.pluck(SampleList, 'position')) );
         }
-
+        $scope.load_active_Samples(SampleList);
         return SampleList;
     }
 
 
-    $scope.source_by_Slot = function source_by_Slot (Samples) {
-		var sortBy = 'position';
+    $scope.fill_by_Slot = function fill_by_Slot (Samples) {
+        $scope.map.load_by = 'position';
+        $scope.map.fill_by = $scope.map.fill_by || $scope.map.load_by;
 
-        $scope.map.fill_by = 'position';
         $scope.map.split_mode = 'parallel';
 
         $scope.map.pack = 0;
@@ -443,16 +468,17 @@ function wellMapperController ($scope, $rootScope, $http, $q ) {
 
         if (volumes.length && max > 1.0 ) {
             $scope.map.splitX = 5;
-            $scope.map.transfer_qty = ">200,>200,>500,>500,<100";
+            $scope.map.transfer_qty = ">200,>200,>500,>500,<500";
             $scope.map.transfer_qty_units = 'ul';
         }
         else {
             $scope.map.splitX = 4;
-            $scope.map.transfer_qty = ">200,>200,>500,<100";
+            $scope.map.transfer_qty = ">200,>200,>500,<500";
             $scope.map.transfer_qty_units = 'ul';
         }
 
         $scope.map.pack_wells = 8;
+        $scope.map.load_by = 'row';
         $scope.map.fill_by = 'column';
         $scope.map.split_mode = 'serial';
 
