@@ -38,14 +38,18 @@ module.exports = {
 			}
 			else if ( Scanned['Set'].length ) {
 				var sets = Scanned['Set'];
-				promises.push( Record.query_promise("Select GROUP_CONCAT(FK_Plate__ID) as ids from Plate_Set WHERE Plate_Set_Number IN (" + sets.join(',') + ")") );
+				var query = "Select GROUP_CONCAT(FK_Plate__ID) as ids from Plate_Set WHERE Plate_Set_Number IN (" + sets.join(',') + ")";
+				console.log('query: ' + query);
+				promises.push( Record.query_promise(query) );
 			}
 
 			q.all( promises )
 			.then ( function (result) {
 				
+				console.log("done");
 			    var errors = Scanned['Errors'] || [];
 			    var warnings = [];
+			    var messages = [];
 
 				if (result && result[0] && result[0].length && result[0][0].ids) {
 					var ids = result[0][0].ids;
@@ -62,20 +66,23 @@ module.exports = {
 
 					Container.loadData(plate_ids, condition)
 					.then (function (data) {
-
+						console.log("loaded data " + JSON.stringify(data));
 						var sampleList = [];
 						if (data.length == 0) {
 							if (plate_ids.length) {
-								errors.push("expecting ids: " + plate_ids.join(', '));
-								return res.render('customize/private_home');
+								warnings.push("expecting ids: " + plate_ids.join(', '));
+								// return res.render('customize/private_home', { warnings : warnings} );
 							}
 							else if (Scanned['Rack'].length) {
 								sails.config.messages.push("Scanned Loc#s: " + Scanned['Rack'].join(', '));
 								sails.config.warnings.push("Use alDente for handling Racks other than boxes (eg Inventory, Storage Tracking)");
 								sails.config.warnings.push("LITMUS is for sample processing and only reads Boxes containing samples.");
 							} 
+							else {
+								warnings.push("nothing found (?)");
+							}
 							sails.config.warnings.push("No useable records retrieved");
-							return res.render('customize/private_home');
+							return res.render('customize/private_home', { messages: messages, warnings: warnings });
 						}	
 						else {
 							for (var i=0; i<data.length; i++) {
@@ -105,12 +112,13 @@ module.exports = {
 					})
 					.catch (function (err) {
 						errors.push(err);
-						return res.render('customize/private_home', {errors : errors });
+						return res.render('customize/private_home', {messages: messages, warnings: warnings, errors : errors });
 					});			
 				}
 				else {
-			    	errors.push("Unrecognized barcode: " + barcode); 
-			    	return res.render("customize/private_home", { errors: errors });
+					console.log("nothing found...");
+			    	warnings.push("Unrecognized barcode: " + barcode); 
+			    	return res.render("customize/private_home", { errors: errors, warnings: warnings });
 			    }
 			})
 			.catch ( function (err) {
