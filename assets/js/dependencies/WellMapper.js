@@ -243,28 +243,29 @@ function wellMapper() {
         return { x: x, y: y, batch_index: batch_index, target_index: target_index};
     }
 
-    this.wells = function (size) {
+    this.matrix_wells = function (size) {
+        
         var sizes = {
             '1' : {
-                rows: ['A'],
-                cols: [1],
+                rows : ['A'],
+                cols : [1],
             },
             '8x12' : {
                 rows : ['A','B','C','D','E','F','G','H'],
                 cols : [1,2,3,4,5,6,7,8,9,10,11,12],            
             },
-            '9x0' : {
-                rows = ['A','B','C','D','E','F','G','H','I'],
-                cols = [1,2,3,4,5,6,7,8,9],
+            '9x9' : {
+                rows : ['A','B','C','D','E','F','G','H','I'],
+                cols : [1,2,3,4,5,6,7,8,9],
             }
         };
-
+        // console.log("RETURN Size " + size);
         return sizes[size];
     }
 
     this.available_wells = function (size, fill_by) {
     
-        var wells = this.wells(size) || {};
+        var wells = this.matrix_wells(size) || {};
         var rows = wells.rows || [];
         var cols = wells.cols || [];
 
@@ -284,6 +285,7 @@ function wellMapper() {
             }            
         }
 
+        this.wells = wells;
         return avail;
     }
 
@@ -765,7 +767,7 @@ function wellMapper() {
             // Xfer : Xfer,
             SourceMap: SourceMap,
             Available: Available_wells,
-            wells: this.wells(this.target_size),
+            wells: this.wells,
             warnings: warnings,
             errors: errors,
         };
