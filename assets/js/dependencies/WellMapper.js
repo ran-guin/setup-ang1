@@ -457,8 +457,7 @@ function wellMapper() {
         var repeat_set = 1;
         var repeat_wells = 1;
 
-        var pack_size = 1;
-        if (this.pack_wells) { pack_size = this.pack_size }
+        var pack_size = this.pack_size || this.pack_wells;
 
         var splitX     = this.splitX;
 
@@ -488,6 +487,7 @@ function wellMapper() {
 
         console.log("TARGET OPTIONS: " + JSON.stringify(Target));
         console.log("Options: " + JSON.stringify(options));
+        console.log("Batches: " + JSON.stringify(batches));
 
         for (var i=0; i<options.length; i++) {
             var opt = Target[options[i]];
@@ -949,6 +949,38 @@ function wellMapper() {
         return [ id_list.join(','), position_list.join(','), targets.join(',') ];
     }
 
+    this.convert_units = function (qty, from, to) {
+        var factor = {
+            'l' : 1000,
+            'ml' : 1,
+            'ul' : 1/1000,
+            'nl' : 1/1000000,
+        }
+
+        var from_factor = factor[from];
+        var to_factor   = factor[to];
+
+        if (from_factor && to_factor) {
+            if (from_factor > to_factor ) {
+                var intVal = from_factor / to_factor;
+                console.log(from_factor + ' / ' + to_factor + ' : ' + intVal);
+                return qty * Math.round( intVal );
+            }
+            else if ( to_factor > from_factor ) {
+                var intVal = to_factor / from_factor;
+                console.log('inverse of ' + to_factor + ' / ' + from_factor + ' : ' + intVal);
+                return qty / Math.round(intVal);
+            }
+            else {
+                return qty;
+            }
+        }
+        else {
+            console.log('Error - could not recognize units');
+            return  qty;
+        }
+    }
+
     this.adjust_quantity = function (source, extract, extract_units) {
         if (extract && extract_units) {
             console.log("adjust extraction of " + extract + extract_units);
@@ -981,16 +1013,11 @@ function wellMapper() {
             }
 
             if (source.qty_units !== extract_units) { 
-                if (source.qty_units === 'ml' && extract_units === 'ul') {
-                    if (max) { max = max/1000 }
-                    if (min) { min = min/1000 }
-                }
-                else {
-                    console.log("Correct for unit variation between " + source.qty_units + ' and ' + extract_units);
-                }
+                    if (max) { max = this.convert_units(max,extract_units,source.qty_units) }
+                    if (min) { min = this.convert_units(min,extract_units,source.qty_units) }
             }
 
-            console.log("Extract : " + extract + extract_units + " [ " + min + ' : ' + max + ' ]');
+            console.log("Extract : " + extract + extract_units + " [ " + min + ' : ' + max + ' ] from ' + current_volume + source.qty_units);
             if (current_volume <= 0 ) { 
                 console.log("No sample available to extract ... ");
                 this.empty.push("batch# " + source.batch + " : " + source.target_slot_position);
