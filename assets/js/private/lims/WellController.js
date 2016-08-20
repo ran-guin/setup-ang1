@@ -96,6 +96,7 @@ function wellController ($scope, $rootScope, $http, $q ) {
             'pack_size'    : $scope.map.pack_size,
             'load_rows'    : $scope.map.load_wells,
             'load_cols'    : $scope.map.load_cols,
+            'split_mode'   : $scope.map.split_mode,
         }
 
         console.log("Redistribute ... ");
