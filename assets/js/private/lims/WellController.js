@@ -87,11 +87,15 @@ function wellController ($scope, $rootScope, $http, $q ) {
             'transfer_type' : $scope.map.transfer_type,
             'reset_focus'   : $scope.map.reset_focus,
             'split'         : $scope.map.splitX,   // $scope['Split' + $scope.stepNumber],
-            'pack'          : $scope.map.pack,    // $scope.pack_wells,
+            'pack'          : $scope.map.pack_size,    // $scope.pack_wells,
+            'pack_size'    : $scope.map.pack_size,
             'distribution_mode' : $scope.map.distribution_mode,
             'fill_by'  :    $scope.map.fill_by,
             'target_size' : $scope.map.target_size,
             'target_boxes' : target_boxes,
+            'pack_size'    : $scope.map.pack_size,
+            'load_rows'    : $scope.map.load_wells,
+            'load_cols'    : $scope.map.load_cols,
         }
 
         console.log("Redistribute ... ");

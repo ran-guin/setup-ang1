@@ -1,0 +1,1 @@
+./../../../../lib/angular/checklist-model.js

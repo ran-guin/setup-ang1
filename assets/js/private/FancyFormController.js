@@ -1,4 +1,4 @@
-var app = angular.module('myApp',['ngFileUpload']);
+var app = angular.module('myApp',['ngFileUpload', 'checklist-model']);
 
 app.controller('FancyFormController', 
     ['$scope', '$q', '$rootScope', '$http', '$location', 'FancyFormFactory', 'Upload', 

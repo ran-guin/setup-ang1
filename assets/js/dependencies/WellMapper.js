@@ -241,25 +241,33 @@ function wellMapper() {
 
         x = x.toUpperCase();
         return { x: x, y: y, batch_index: batch_index, target_index: target_index};
-    },
+    }
+
+    this.matrix_wells = function (size) {
+        
+        var sizes = {
+            '1' : {
+                rows : ['A'],
+                cols : [1],
+            },
+            '8x12' : {
+                rows : ['A','B','C','D','E','F','G','H'],
+                cols : [1,2,3,4,5,6,7,8,9,10,11,12],            
+            },
+            '9x9' : {
+                rows : ['A','B','C','D','E','F','G','H','I'],
+                cols : [1,2,3,4,5,6,7,8,9],
+            }
+        };
+        // console.log("RETURN Size " + size);
+        return sizes[size];
+    }
 
     this.available_wells = function (size, fill_by) {
     
-        var rows = [];
-        var cols = [];
-
-        if (size === '1') {
-            rows = ['A'];
-            cols = [1];
-        }
-        else if (size === '8x12') {
-            rows = ['A','B','C','D','E','F','G','H'];
-            cols = [1,2,3,4,5,6,7,8,9,10,11,12];
-        }
-        else if (size === '9x9') {
-            rows = ['A','B','C','D','E','F','G','H','I'];
-            cols = [1,2,3,4,5,6,7,8,9];
-        }
+        var wells = this.matrix_wells(size) || {};
+        var rows = wells.rows || [];
+        var cols = wells.cols || [];
 
         var avail = [];
         if (fill_by === 'row') {
@@ -277,6 +285,7 @@ function wellMapper() {
             }            
         }
 
+        this.wells = wells;
         return avail;
     }
 
@@ -291,13 +300,17 @@ function wellMapper() {
 
         this.fill_by = Options.fill_by || 'Row';
         this.pack_wells    = Options.pack_wells || Options.pack || 0;
-        this.preserve_position = ! this.pack_wells; // unnecessary... 
         this.split_mode = Options.split_mode || 'parallel';
-        this.preserve_batch = this.batch;
         this.target_size = Options.target_size;
         this.sources = sources;
         this.source_count = sources.length;
 
+        this.pack_size = Options.pack_size || 1;
+
+        // not used: ?? 
+        this.preserve_position = ! this.pack_wells; // unnecessary... 
+        this.preserve_batch = Options.preserve;
+ 
         this.x_min = Options.Min_Row || 'A';
         this.y_min = Options.Min_Col || 1;
 
@@ -361,6 +374,7 @@ function wellMapper() {
         this.Options = {
             split : this.splitX,
             pack  : this.pack_wells,
+            pack_size : this.pack_size,
             split_mode : this.split_mode,
             sources : this.source_count,
             targets : this.source_count * this.splitX,
@@ -371,7 +385,7 @@ function wellMapper() {
             transfer_type : this.transfer_type,
         };
 
-        console.log("Initialized:\nsplit = " + this.splitX + "\nfill_by = " + this.fill_by + "\npack_wells = " + this.pack_wells + "\nmode = " + this.split_mode + "\ntarget_size = " + this.target_size + "\ntarget boxes = " + JSON.stringify(this.target_boxes));
+        console.log("Initialized:\nsplit = " + this.splitX + "\nfill_by = " + this.fill_by + "\npack_wells = " + this.pack_wells + "\npack_size = " + this.pack_size + "\nmode = " + this.split_mode + "\ntarget_size = " + this.target_size + "\ntarget boxes = " + JSON.stringify(this.target_boxes));
         console.log("Available: " +JSON.stringify(this.available)); 
 
         this.target_boxes = this.Options.target_boxes;       // target box ids 
@@ -388,7 +402,7 @@ function wellMapper() {
 //                  split : 2, 
 //                    mode: serial, 
 //                    pack: true, 
-//                    pack_wells: 8, 
+//                    pack_size: 8, 
 //                    qty: [array or static value], 
 //                    fill_by: column, 
 //                    target_boxes: [4]
@@ -411,7 +425,7 @@ function wellMapper() {
         if (!Options) { Options = {} }
 
         console.log("run distribute function... ");
-        // console.log(sources.length + " Sources: " + JSON.stringify(sources));
+        console.log(sources.length + " Sources: from " + sources[0].id + " to " + sources[sources.length-1].id);
         console.log("Target: " + JSON.stringify(Target));
         console.log("Options: " + JSON.stringify(Options));
 
@@ -443,21 +457,23 @@ function wellMapper() {
         var repeat_set = 1;
         var repeat_wells = 1;
 
-        var pack_wells = this.pack_wells;
+        var pack_size = 1;
+        if (this.pack_wells) { pack_size = this.pack_size }
+
         var splitX     = this.splitX;
 
         if (this.split_mode === 'serial') { 
             repeat_wells = this.splitX || 1;
         }
         else {
-            pack_wells = sources.length; 
+            pack_size = sources.length; 
             repeat_set = this.splitX || 1;
         }
 
         var batches = [];
         for (var i=0; i<sources.length; ) {
             var batch = [];
-            for (j=0; j<pack_wells && i<sources.length; j++) {
+            for (j=0; j<pack_size && i<sources.length; j++) {
                 batch.push(i);
                 i++;
             }
@@ -469,6 +485,10 @@ function wellMapper() {
         var Static = {};
 
         var options = Object.keys(Target);
+
+        console.log("TARGET OPTIONS: " + JSON.stringify(Target));
+        console.log("Options: " + JSON.stringify(options));
+
         for (var i=0; i<options.length; i++) {
             var opt = Target[options[i]];
             if (opt && opt.constructor === String && opt.match(/,/) ){
@@ -479,10 +499,10 @@ function wellMapper() {
                 List[options[i]] = [];
                 if (this.splitX > 1) {
                     if (this.split_mode === 'serial') {
-                        pack_wells = pack_wells || 1; 
-                        for (k=0; k<sources.length; k=k+pack_wells ) {
+                        pack_size = pack_size || 1; 
+                        for (k=0; k<sources.length; k=k+pack_size ) {
                             for (j=0; j<this.splitX; j++) {
-                                for (var l=0; l<pack_wells; l++) {
+                                for (var l=0; l<pack_size; l++) {
                                     List[options[i]].push(opt[j]);
                                 }
                             }
@@ -543,16 +563,22 @@ function wellMapper() {
         var lists = Object.keys(List);
         var statics = Object.keys(Static);
 
+        console.log(JSON.stringify(List));
+        console.log(JSON.stringify(Static));
+
+
         console.log(this.split_mode + " looping " + batches.length + "x" 
             + splitX + ' x ' +
             + batches[0].length + 'x'
             + repeat_wells);
-        console.log("Pack x " + pack_wells);
+        console.log("Pack x " + pack_size);
 
         var SourceMap = {};        
         var Transfer = [];
         var TransferMap = [];
  
+        var Available_wells = {};
+
         var count = 0;
         for (j=0; j<batches.length; j++) {
             var batch = batches[j];
@@ -701,6 +727,8 @@ function wellMapper() {
                     target++;
                 }
             }
+
+            Available_wells[target_box] = _.pluck(this.available[target_box], 'position')
         } 
 
  
@@ -708,7 +736,7 @@ function wellMapper() {
         this.TransferMap = TransferMap;
 
         console.log("MISSING: " + this.missing_wells + ' in ' + this.missing_boxes);
-        if (this.missing_boxes > 0) {
+        if (this.missing_wells > 1) {
             this.missing_wells--; // last call to next_available would generate missing_well ...
             
             var msg = this.missing_wells + ' Target samples require target boxes.  Please scan ' + this.missing_boxes + " more Target Box(es)";
@@ -738,6 +766,8 @@ function wellMapper() {
             // TargetColours: TargetColours,
             // Xfer : Xfer,
             SourceMap: SourceMap,
+            Available: Available_wells,
+            wells: this.wells,
             warnings: warnings,
             errors: errors,
         };
@@ -1032,7 +1062,7 @@ describe('wellMapper()', function() {
             var map = new wellMapper();
             var test1 = map.testMap(sources, Target, { Max_Row : 'B', Max_Col : 3, pack: 1});
 
-            // target options:  transfer_qty, transfer_qty_units, format: N, sample_type: N, split: N, pack_wells: N, split_mode: serial/parallel,  
+            // target options:  transfer_qty, transfer_qty_units, format: N, sample_type: N, split: N, pack_size: N, split_mode: serial/parallel,  
 
             it('simple 1 to 1 default transfer', function () {
               assert.equal('1,2,3,4,5,6', test1[0]);
@@ -1042,7 +1072,7 @@ describe('wellMapper()', function() {
 
             var test2 = map.testMap(sources, Target, { Max_Row : 'B', Max_Col : 2, pack: 1});
 
-            // target options:  transfer_qty, transfer_qty_units, format: N, sample_type: N, split: N, pack_wells: N, split_mode: serial/parallel,  
+            // target options:  transfer_qty, transfer_qty_units, format: N, sample_type: N, split: N, pack_size: N, split_mode: serial/parallel,  
 
             it('simple 1 to 1 default transfer again', function () {
               assert.equal('1,2,3,4', test2[0]);
@@ -1056,7 +1086,7 @@ describe('wellMapper()', function() {
             var map = new wellMapper();
             var test1 = map.testMap(sources, Target, {Max_Row : 'B', Max_Col : 2 , pack: 1, split: 2});
 
-            // target options:  transfer_qty, transfer_qty_units, format: N, sample_type: N, split: N, pack_wells: N, split_mode: serial/parallel,  
+            // target options:  transfer_qty, transfer_qty_units, format: N, sample_type: N, split: N, pack_size: N, split_mode: serial/parallel,  
 
             it('parallel split: A,B,C.. A,B,C', function () {
               assert.equal('1,2,3,4,5,6,1,2,3,4,5,6', test1[0]);
@@ -1070,7 +1100,7 @@ describe('wellMapper()', function() {
             var map = new wellMapper();
             var test1 = map.testMap(sources, Target, {Max_Row:'B', Max_Col: 2, pack: 1, split: 2, split_mode: 'serial'});
 
-            // target options:  transfer_qty, transfer_qty_units, format: N, sample_type: N, split: N, pack_wells: N, split_mode: serial/parallel,  
+            // target options:  transfer_qty, transfer_qty_units, format: N, sample_type: N, split: N, pack_size: N, split_mode: serial/parallel,  
 
             it('serial split: A,A,B,B,C,C...', function () {
               assert.equal('1,1,2,2,3,3,4,4,5,5,6,6', test1[0]);

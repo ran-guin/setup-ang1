@@ -76,7 +76,18 @@ block content
 
                 div.col-sm-4
                   div
-                    b Pack by: 
+                    b Load by: 
+                      label
+                        input(type='radio' value = 'row' ng-model="map.load_by" ng-click="redistribute('reset');") 
+                        b &nbsp; Row &nbsp;
+                      label
+                        input(type='radio' value = 'column' ng-model="map.load_by" ng-click="redistribute('reset');")
+                        b &nbsp; Column &nbsp;
+                      label
+                        input(type='radio' value = 'scan' ng-model="map.load_by" ng-click="redistribute('reset');")
+                        b &nbsp; Scanned Order &nbsp;
+                      b {{ map.load_by }}
+                    b Fill by: 
                       label
                         input(type='radio' value = 'row' ng-model="map.fill_by" ng-click="redistribute('reset');") 
                         // reset_map.fill_by(); 
@@ -86,7 +97,7 @@ block content
                         b &nbsp; Column &nbsp;
                       label
                         input(type='radio' value = 'position' ng-model="map.fill_by" ng-click="redistribute('reset');")
-                        b &nbsp; Slot &nbsp;
+                        b &nbsp; Slot &nbsp;                      
                 div.col-sm-4
                     div &nbsp; 
                       b {{ fillExample }}
@@ -102,10 +113,10 @@ block content
                       input(type='radio' value = 'parallel' ng-model="map.split_mode" ng-click="reset_split_mode(); redistribute('reset');")
                       b &nbsp; Parallel &nbsp;
                 div.col-sm-4
-                  div(ng-show="split_mode === 'serial' ")
+                  div(ng-show="map.split_mode === 'serial' ")
                     b in groups of: 
                     label
-                      input.input-lg(name='pack_wells' type='text' size='6'  ng-model="map.pack_wells" ng-change="redistribute('reset')")
+                      input.input-lg(name='pack_wells' type='text' size='6'  ng-model="map.pack_size" ng-change="redistribute('reset')")
                 div.col-sm-4
                     div &nbsp; 
                       b(ng-show="!map.packExample") {{ splitExample }}
@@ -141,7 +152,7 @@ block content
               table.table()
                 tr
                   td(style='width:50%')
-                    h2 Source Samples: [ size: {{ active.Samples[0].box_size }} ]
+                    // h2 Source Samples: [ size: {{ active.Samples[0].box_size }} ]
                     include SourceMap.jade
                     hr
                     // ul
@@ -157,7 +168,7 @@ block content
                         td(ng-repeat="col in source_cols" style="background-color:#{{ rgbList[ $parent.$index*source_cols.length + $index ] }}" ) 
                           span(data-toggle="tooltip" title="{{active.Samples[$parent.$index*source_cols.length + $index].id}}") &nbsp; &nbsp; &nbsp;
                   td(style='width:50%')
-                    h2 Target Samples: [ size: {{ map.target_size }} ]
+                    // h2 Target Samples: [ size: {{ map.target_size }} ]
                     include TargetMap.jade
                     hr
                     // ul
