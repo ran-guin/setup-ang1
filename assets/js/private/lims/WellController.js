@@ -13,7 +13,7 @@ function wellController ($scope, $rootScope, $http, $q ) {
         $scope.initialize_mapper(Config, options);
 
         console.log("initialize Well Controller");
-
+        $scope.completed = 0;
         $scope.Config = Config;
 
         var Samples = Config['Samples'] || [];
@@ -257,6 +257,7 @@ function wellController ($scope, $rootScope, $http, $q ) {
 
             if ( returnData.data && returnData.data.plate_ids) {
                 $scope.message("Transferred " + returnData.data.plate_ids.length + " Samples");
+                $scope.completed = 1;
             }
             else {
                 $scope.warning("Could not retrieve target Samples (?)");
