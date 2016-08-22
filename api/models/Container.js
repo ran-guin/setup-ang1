@@ -629,7 +629,7 @@ module.exports = {
 		var deferred = q.defer();
 
 		var query = "SELECT Container, Moved_from, Moved_to, Rack.Rack_Name as position, Rack.FKParent_Rack__ID as parent, user.name as Moved_by, moved from sample_tracking, user, Rack where FK_Rack__ID=Moved_to AND Moved_by=user.id";
-		query = query + " WHERE Container IN (" + ids.join(',') + ')' Order by Container, moved;
+		query = query + " WHERE Container IN (" + ids.join(',') + ') Order by Container, moved';
 
 		console.log(query);
 		Record.query_promise(query)
