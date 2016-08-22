@@ -49,7 +49,7 @@ function stockController ($scope, $rootScope, $http, $q) {
     	$http.post("Stock/receive", data)
     	.then (function (result) {
     		console.log("GOT: " + JSON.stringify(result.data));
-            $scope.message("Added Stock Record(s)")
+            $scope.message("Added Stock Record(s)");
     	})    	
     	.catch (function (err){
             $scope.error("Error adding Stock Record(s)");
