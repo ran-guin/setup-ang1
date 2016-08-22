@@ -74,7 +74,21 @@ module.exports = {
 						Record.createNew('solution', Reagents)
 						.then ( function (result) {
 							if (barcode) {
-								console.log("print reagent barcodes ...");
+								var insertId = result.insertId;
+								var added    = result.affectedRows;
+
+								var ids = [];
+								for (var i=0; i<added; i++) {
+									ids.push(insertId++);
+								}
+
+								Barcode.printLabels('solution', ids)
+								.then ( function (response) {
+									console.log("printed reagent barcodes ...");
+								})
+								.catch ( function (err) {
+									console.log("Error printing solution barcodes " + err);
+								})
 							}
 							else {
 								console.log("suppress barcodes...");
