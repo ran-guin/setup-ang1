@@ -25,6 +25,8 @@ module.exports = {
 		'catalog' : 'FK_Stock_Catalog__ID',
 	},
 
+	barcode : true,
+		
 	receive : function (data) {
 
 		var deferred = q.defer();
