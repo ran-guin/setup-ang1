@@ -1,6 +1,5 @@
 .dropdown-container {
   position: relative;
-  z-index: 2;
 }
 
 input.preaddon {
@@ -87,13 +86,14 @@ my-dropdown > div > div.dropdown-list {
   width: 100%;
   transform: scale(1, 0);
   transition: transform ease 250ms;
+  z-index: 100;
 }
 my-dropdown > div > div.dropdown-list > div {
   position: absolute;
   width: 100%;
-  z-index: 100;
   cursor: pointer;
   background: white;
+  z-index: 100;
 }
 my-dropdown > div > div.dropdown-list > div > div {
   float: left;
@@ -101,8 +101,8 @@ my-dropdown > div > div.dropdown-list > div > div {
   padding: 0 10px;
   font-size: 14px;
   box-sizing: border-box;
-  border: solid 1px #DDD;
-  border-top: none;
+  border: solid 2px #DDD;
+  // border-top: none;
 }
 my-dropdown > div > div.dropdown-list > div > div:hover {
   background: #F0F0F0;
