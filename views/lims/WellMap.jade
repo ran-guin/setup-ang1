@@ -24,7 +24,10 @@ block content
             br 
             include ./../core/angularMessages.jade
 
-            form.form-horizontal(role='form' method='post' action="#{sails.config.root}/transfer")
+            div(ng-show='completed')
+              button.btn.btn-success(type='button' ng-click="completed=0") Transfer / Relocate Again
+
+            form.form-horizontal(role='form' method='post' action="#{sails.config.root}/transfer" ng-show="! completed")
               p &nbsp;
               if target
                 h2 Transfer Samples to #{target.Plate_Format_Type}
@@ -33,13 +36,13 @@ block content
               div.form-group
                 div.col-sm-4
                   label
-                    input.input(type='radio' value = 'Move' ng-model="map.transfer_type" ng-click="validate_Form()")
+                    input.input(type='radio' value = 'Move' ng-model="map.transfer_type" ng-click="validate_Form(); redistribute('reset')")
                     b &nbsp; Move &nbsp;
                   label
-                    input(type='radio' value = 'Aliquot' ng-model="map.transfer_type" ng-click="validate_Form()")
+                    input(type='radio' value = 'Aliquot' ng-model="map.transfer_type" ng-click="validate_Form(); redistribute('reset')")
                     b &nbsp; Aliquot &nbsp;                
                   label
-                    input(type='radio' value = 'Transfer' ng-model="map.transfer_type" ng-click="validate_Form()") 
+                    input(type='radio' value = 'Transfer' ng-model="map.transfer_type" ng-click="validate_Form(); redistribute('reset')") 
                     b &nbsp; Transfer &nbsp; 
                   br
 
