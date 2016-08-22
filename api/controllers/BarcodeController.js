@@ -136,10 +136,29 @@ module.exports = {
 	},
 
 	print_Labels : function (req, res) {
-		var body = req.body;
+		var body = req.body || {};
+		var model = body.model;
+		var ids   = body.ids;
+		var printer = body.printer;
+		var code = body.code;
 
+		var returnVal = body;
 		console.log("Print Labels for " + JSON.stringify(body));
-		return res.json(body);
+		
+		Barcode.printLabels(model, ids, printer)
+		.then ( function (response) {
+			console.log("Printed barcodes");
+
+			returnVal.success = true;
+			return res.json(returnVal);
+		})
+		.catch ( function (err) {
+			console.log("Error printing barcodes: " + err);
+			returnVal.errors = err;
+			return res.json(returnVal);
+
+		});
+
 	}
 
 
