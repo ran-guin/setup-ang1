@@ -39,6 +39,12 @@ module.exports = {
 		'FK_Rack__ID',
 	],
 
+	barcode : function (id, count) {
+
+		console.log(count + " Container Barcodes Printed.  from " + id);
+		return 1;
+	},
+
 	saveLastPrep : function (plates, prep_id) {
 			var deferred = q.defer();
 			
@@ -436,13 +442,24 @@ module.exports = {
 					// also set to Active ...
 					resetTarget['Plate_Status'] = 'Active';
 					
-					Record.update('container', current_ids, resetTarget );
+					var updates = [];
+					
+					updates.push( Record.update('container', current_ids, resetTarget ) );
 
 					if (resetSource && Object.keys(resetSource).length) {
-						Record.update('container', parents, resetSource)
+						updates.push(Record.update('container', parents, resetSource));
 					}
 
-					deferred.resolve(current_ids);
+					console.log("run updates for retrieved samples");
+					q.all(updates)
+					.then ( function (result) {
+						console.log('udated retrieved samples');
+						deferred.resolve(current_ids);
+					})
+					.catch ( function (err) {
+						console.log('error making updates on retrieved samples');
+						deferred.resolve(current_ids);
+					});
 				}
 				else {
 					// clone new plates 
@@ -454,9 +471,11 @@ module.exports = {
 					.then ( function (cloneData) {
 						console.log("Cloned Plates.");
 
+						var updates = [];
+
 						if (resetSource && Object.keys(resetSource).length) {
 							console.log("Update Source: " + JSON.stringify(resetSource));
-							Record.update('container', clone_ids, resetSource)
+							updates.push( Record.update('container', clone_ids, resetSource) );
 						}
 
 						if (cloneData.data) {
@@ -464,12 +483,18 @@ module.exports = {
 						}
 						var newIds = cloneData.insertIds;    //'generated list of ids... eg 1,2,3'; // temp testing
 						
-						Barcode.printLabels('Plate', newIds)
-						.then (function (printed) {
+						console.log("Print labels for " + JSON.stringify(newIds) );
+
+						console.log("run updates for target samples");
+						q.all(updates)
+						.then (function (results) {
+
+							console.log("updated records & printed labels (if applicable)");
 							deferred.resolve(newIds);
 						})
 						.catch (function (err) {
-							sails.warning("non-fatal Error encountered printing labels");
+							console.log("Error updating or printing labels: ");
+							console.log(err);
 							deferred.resolve(newIds);
 						});
 						
@@ -628,8 +653,8 @@ module.exports = {
 
 		var deferred = q.defer();
 
-		var query = "SELECT Container, Moved_from, Moved_to, Rack.Rack_Name as position, Rack.FKParent_Rack__ID as parent, user.name as Moved_by, moved from sample_tracking, user, Rack where FK_Rack__ID=Moved_to AND Moved_by=user.id";
-		query = query + " WHERE Container IN (" + ids.join(',') + ') Order by Container, moved';
+		var query = "SELECT Container, Moved_from, Moved_to, Rack.Rack_Name as position, Rack.FKParent_Rack__ID as parent, user.name as Moved_by, moved from sample_tracking, user, Rack WHERE Rack_ID=Moved_to AND Moved_by=user.id";
+		query = query + " AND Container IN (" + ids.join(',') + ') Order by Container, moved';
 
 		console.log(query);
 		Record.query_promise(query)
