@@ -31,12 +31,12 @@ div(ng-if="Map.Transfer && Map.TransferMap")
 	div(ng-repeat="batch in Map.TransferMap")
 		b Box {{ Map.Options.target_boxes[$index] }}
 			span &nbsp; &nbsp; &nbsp;
-			button.btn.btn-xs.btn-primary(ng-show="map.select" type='button' ng-model='hide' ng-click="map.select = 0") Hide
+			button.btn.btn-xs.btn-primary(ng-show="map.select" type='button' ng-model='hide' ng-click="map.select = 0") Hide Checkboxes
 			button.btn.btn-xs.btn-primary(ng-show="!map.select" type='button' ng-model='hide' ng-click="map.select=1") Select Rows/Columns
 			br 
 			span &nbsp;
 		table(style='background-color:#eee;')
-			tr(ng-show='map.select')
+			tr(ng-show='map.select && $index === 0')
 				td &nbsp;
 				each col in cols
 					td
@@ -44,7 +44,7 @@ div(ng-if="Map.Transfer && Map.TransferMap")
 	
 			each row in rows
 				tr
-					td(ng-show='map.select')
+					td(ng-show='map.select && $index === 0')
 						input(type='checkbox' checklist-model="map.use_rows" value='#{row}' ng-click="redistribute('reset')")
 					each col in cols
 						if col > 6 
