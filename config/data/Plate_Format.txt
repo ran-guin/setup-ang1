@@ -17,4 +17,4 @@ Plate_Format_ID	Plate_Format_Type	Plate_Format_Status	FK_Barcode_Label__ID	Max_R
 23	eppendorf	Active	35	A	1	Tube	1.8	ml	1		NULL
 24	Frozen Blue Top Plasma Tube	Inactive	31	A	1	Tube	3.6	ml	1		2.89
 25	Falcon Tube	Active	35	A	1	Tube	3.6	ml	1	Tube	0
-27	Matrix Tube	Active	35	A	1	Tube	0	ml	1	Tube	NULL
+27	Matrix Tube	Active	38	A	1	Tube	0	ml	1	Tube	NULL
