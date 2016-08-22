@@ -62,7 +62,7 @@ module.exports = {
 	}, 
 
 	summary : function (req, res) { 
-		var ids = req.param('ids');
+		var ids = req.param('ids') || [];
 		var element = req.param('element') || 'injectedData';   // match default in CommonController
 		var render = req.param('render') || 0;
 
@@ -72,6 +72,27 @@ module.exports = {
 		.then (function (result) {
 			if (render) {
 				return res.render('customize/injectedData', { fields : flds, data : result, title: 'Sample Info', element: element});
+			}
+			else {
+				return res.json(result);
+			}		
+		})
+		.catch ( function (err) {
+			return res.json("error injecting Sample Info");
+		});
+	},
+
+	storage_history : function (req, res) { 
+		var ids = req.param('ids') || '';
+		var element = req.param('element') || 'injectedData';   // match default in CommonController
+		var render = req.param('render') || 0;
+
+		var flds = ['Container', 'Moved_from', 'Moved_to', 'position', 'parent', 'Moved_by', 'moved'];
+
+		Container.storage_history(ids.split(','))
+		.then (function (result) {
+			if (render) {
+				return res.render('customize/injectedData', { fields : flds, data : result, title: 'Sample Tracking', element: element});
 			}
 			else {
 				return res.json(result);
