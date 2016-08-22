@@ -34,6 +34,7 @@ module.exports = {
   printLabel : function (barcode, code, printer) {
     
     console.log("print label...");
+    return;
   },
 
 
@@ -41,7 +42,9 @@ module.exports = {
 
     var deferred = q.defer();
 
-    var msg = "Print " + ids.length + ' ' + model + " Labels: " + ids[0] +  '..' ;
+    var msg = "Print ";
+    /* 
+     + ids.length + ' ' + model + " Labels: " + ids[0] +  '..' ;
     console.log(msg);
 
     printer = 'Zebra13';  // get from printer group and type ...
@@ -52,6 +55,7 @@ module.exports = {
     
       Barcode.printLabel(label, code, printer);
     } 
+    */
 
     deferred.resolve( { message: msg });
     
