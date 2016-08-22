@@ -535,8 +535,10 @@ module.exports = {
     	var Mod = sails.models[model];
     	var track = [];
     	var History;
+    	var data_fields = [];
     	if (model && ids && data && Mod && Mod.track_history) {
-    		var data_fields = Object.keys(data);
+    		data_fields = Object.keys(data);
+    		console.log("Data Fields: " + data_fields.join(','));
     		var track_fields = Mod.track_history || 'FK_Rack__ID'; // always track location ... 
     		track = _.intersection(track_fields, data_fields);
     		History = {};  // define...
@@ -653,20 +655,31 @@ module.exports = {
 						if (subSet) {
 							var subquery = "UPDATE " + table + " SET " + subSet.join(',') + " WHERE " + idField  + ' = ' + ids[j];
 							
-							if (j === 0 || j === SetEach.length-1) { console.log("subquery: " + subquery + '...') }
+							if (j === 0 || j === SetEach.length-1) { 
+								console.log("subquery: " + subquery + '...') 
+							}
 							promises.push(Record.query_promise(subquery));
 						}
 					}
 				}
 
+				console.log('run updates...');
 				q.all( promises )
 				.then (function (results) {
 					var setValues = {};
 					var updateValues = {};
-					if (Set.length) { setValues = results[1] }
-					if (SetEach.length) { updateValues = results[promises.length - 1] }
+					console.log("finished updates...");
+					console.log(JSON.stringify(results));
+
+					if (Set.length) { setValues = results[0] }
+					if (SetEach.length) { updateValues = results[results.length - 1] }
 
 					if (History) {
+						console.log("update History for " + model);
+						console.log(JSON.stringify(ids));
+						console.log(JSON.stringify(data));
+						console.log(JSON.stringify(History));
+
 						Record.update_History(model, ids, data, track, History)
 						.then (function (finalHistory) {
 							console.log("Saved History after update...");
@@ -680,6 +693,7 @@ module.exports = {
 					}
 	//				console.log("updated: " + JSON.stringify(result));				
 					else {
+						console.log('no History tracking for ' + data_fields.join(','));
 						deferred.resolve({ set: setValues, updated: updateValues } );
 					}
 				})
@@ -777,6 +791,12 @@ module.exports = {
 			if (Mod.tableType && Mod.tableType.match(/lookup/i) ) { }
 			// else { sails.config.messages.push(msg) }
 			console.log("successfully created new " + table + ' record(s)');
+
+			if (Mod.barcode) {
+				console.log("Call barcode method");
+				Mod.barcode(insertId, added);
+			}
+
 			deferred.resolve(result);
 		})
 		.catch ( function (err) {
@@ -1138,15 +1158,19 @@ module.exports = {
     	var deferred = q.defer();
 
     	ids = Record.cast_to(ids, 'array');
-    	var Mod = sails.models[model] || {};
-    	var table = Mod.tableName || model;
+
+    	console.log('use model ' + model);
+    	var Mod = sails.models[model] || {};    	
+    	var	table = Mod.tableName || model;
 
     	var key;
-
     	track = track || ['FK_Rack__ID'];  // always track Rack_ID changes ... 
 
-    	console.log("\n*** preChange History with " + JSON.stringify(History));
-
+    	console.log("\n*** update History with " + JSON.stringify(History));
+    	console.log(model);
+    	console.log(ids.join(','));
+    	console.log(track.length);
+ 
     	var save = false;
 
     	if (model && ids && data && track && track.length && Mod) {
@@ -1239,7 +1263,9 @@ module.exports = {
 				deferred.reject(err);
 			});
     	}
-    	else { deferred.resolve() }
+    	else { 
+    		deferred.resolve();
+    	}
 
     	return deferred.promise;
     },
@@ -1311,7 +1337,9 @@ module.exports = {
     	FK[table] = {};
 
     	var field_list = fields.join("','");
-    	Record.query_promise("SELECT DBField_ID as fk, Field_Name as field, DBTable_Name as dbtable FROM DBField,DBTable WHERE FK_DBTable__ID=DBTable_ID AND Field_Name IN ('" + field_list + "')")
+    	var query = "SELECT DBField_ID as fk, Field_Name as field, DBTable_Name as dbtable FROM DBField,DBTable WHERE FK_DBTable__ID=DBTable_ID AND Field_Name IN ('" + field_list + "') AND DBTable_Name = '" + table + "'";
+    	console.log(query);
+    	Record.query_promise(query)
     	.then (function (result) {
     		for (var i=0; i<result.length; i++) {
     			var table = result[i].dbtable;
