@@ -39,32 +39,23 @@ module.exports = {
 
   printLabels : function (model, ids, printer ) {
 
-    if (model && ids && ids.length ) {
-        console.log("Test Printer " + model + " : " + ids);
+    var deferred = q.defer();
 
-        var payload = sails.config.payload;
-        
-        var params = "database=" + payload.db + '&';
-        params = params + 'host=' + payload.host + '&';
-        params = params + 'user=' + payload.db_user + '&';
-        params = params + 'id=' + ids + '&';
-        params = params + 'printer=' + printer + '&';
+    var msg = "Print " + ids.length + ' ' + model + " Labels: " + ids[0] +  '..' ;
+    console.log(msg);
 
-        console.log("params: " + params);
-        $http.get("http://bcgpdev5.bccrc.ca/SDB_rg/cgi-bin/barcode_printer.pl?" + params)
-        .then (function (response) {
-            console.log("Response: " + JSON.stringify(response));
-            if (response.data) {
-                var success = response.data.match(/SUCCESS: \[(.*?)\]/);
-                if (success) { 
-                    console.log("Success: " + success[1]);
-                    $scope.message(success[1]);
-                }
-            }
-        })
-        .catch (function (err) {
-            console.log("Error: " + JSON.stringify(err));
-        });
+    printer = 'Zebra13';  // get from printer group and type ...
+
+    for (var i=0; i<ids.length; i++) {
+      var prefix = '';
+      var label = prefix + ids[i];      
+    
+      Barcode.printLabel(label, code, printer);
+    } 
+
+    deferred.resolve( { message: msg });
+    
+    return deferred.promise;
   },
 
   parse : function (barcode) {
