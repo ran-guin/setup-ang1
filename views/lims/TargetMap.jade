@@ -30,11 +30,11 @@ if target_size == '8x12'
 div(ng-if="Map.Transfer && Map.TransferMap")
 	div(ng-repeat="batch in Map.TransferMap")
 		b Box {{ Map.Options.target_boxes[$index] }}
-			span &nbsp; &nbsp; &nbsp;
-			button.btn.btn-xs.btn-primary(ng-show="map.select" type='button' ng-model='hide' ng-click="map.select = 0") Hide Checkboxes
-			button.btn.btn-xs.btn-primary(ng-show="!map.select" type='button' ng-model='hide' ng-click="map.select=1") Select Rows/Columns
-			br 
-			span &nbsp;
+		span &nbsp; &nbsp; &nbsp;
+		button.btn.btn-xs.btn-primary(ng-show="map.select" type='button' ng-model='hide' ng-click="map.select = 0") Hide Checkboxes
+		button.btn.btn-xs.btn-primary(ng-show="!map.select" type='button' ng-model='hide' ng-click="map.select=1") Select Rows/Columns
+		br 
+		span &nbsp;
 		table(style='background-color:#eee;')
 			tr(ng-show='map.select && $index === 0')
 				td &nbsp;
