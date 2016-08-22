@@ -624,6 +624,27 @@ module.exports = {
 		return deferred.promise;
 	},
 
+	storage_history : function (ids) {
+
+		var deferred = q.defer();
+
+		var query = "SELECT Container, Moved_from, Moved_to, Rack.Rack_Name as position, Rack.FKParent_Rack__ID as parent, user.name as Moved_by, moved from sample_tracking, user, Rack where FK_Rack__ID=Moved_to AND Moved_by=user.id";
+		query = query + " WHERE Container IN (" + ids.join(',') + ')' Order by Container, moved;
+
+		console.log(query);
+		Record.query_promise(query)
+		.then ( function (result) {
+			console.log("retrieved sample_tracking history ");
+			deferred.resolve(result);
+		})
+		.catch ( function (err) {
+			console.log("Error retrieving storage history");
+			deferred.reject(err);
+		});
+
+		return deferred.promise;
+	},	
+
 };
 
   
