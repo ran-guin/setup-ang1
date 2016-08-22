@@ -735,7 +735,6 @@ module.exports = {
 
 
 		var fields = [];
-
 		if (data.length) { fields = Object.keys(data[0]) || [] }
 
 		var Values = [];
@@ -758,8 +757,10 @@ module.exports = {
 					Vi.push(value);
 				}
 			}
+			// if (table === model) { Vi.push('NOW()') }
 			Values.push( "(" + Vi.join(", ") + ")");
 		}
+		// if (table === model) { fields.push('createdAt') }
 
 		var createString = action + " INTO " + table + " (" + fields.join(',') + ") VALUES " + Values.join(', ') + onDuplicate;
 		console.log("\n** Insert SQL: \n" + createString); 
@@ -1146,8 +1147,13 @@ module.exports = {
 
     	console.log("\n*** preChange History with " + JSON.stringify(History));
 
+    	var save = false;
+
     	if (model && ids && data && track && track.length && Mod) {
-	    	if (History) { key = 'New_Value' }
+	    	if (History) { 
+	    		key = 'New_Value'
+	    		save = true;
+	    	}
 	    	else { 
 	    		History = {};
 	    		key = 'Old_Value';
@@ -1193,16 +1199,17 @@ module.exports = {
 
 							if (key === 'New_Value') {
 								History[table][id][f]['Record_ID'] = id;
-								History[table][id][f]['FK_DBfield__ID'] = FK[table][f];
-
+								History[table][id][f]['FK_DBField__ID'] = FK[table][f];
+								History[table][id][f]['Modified_Date'] = '<NOW>';
 								if (f === 'FK_Rack__ID') {
 									var relocate = {};
-									relocate['class'] = table;
-									relocate['id'] = id;
-									relocate['field'] = f;
-									relocate['Old_Value'] = History[table][id][f]['Old_Value'];
-									relocate['New_Value'] = result[i][f];
-
+									// relocate['class'] = table;
+									relocate['Container'] = id;
+									// relocate['field'] = f;
+									relocate['Moved_from'] = History[table][id][f]['Old_Value'];
+									relocate['Moved_to'] = result[i][f];
+									relocate['moved'] = '<NOW>';
+									relocate['Moved_by'] = '<user>';
 									Relocate.push(relocate);
 								}
 
@@ -1211,15 +1218,21 @@ module.exports = {
 					}
 				}
 
-				Record.saveHistory(History, Relocate)
-				.then ( function (response) {
-					console.log("Saved History: " + JSON.stringify(response));
+				if (save) {
+					Record.saveHistory(History, Relocate)
+					.then ( function (response) {
+						console.log("Saved History: " + JSON.stringify(response));
+						deferred.resolve(History);
+					})
+					.catch ( function (err) {
+						console.log("Error saving History");
+						deferred.reject(err);
+					});
+				}
+				else { 
 					deferred.resolve(History);
-				})
-				.catch ( function (err) {
-					console.log("Error saving History");
-					deferred.reject(err);
-				});
+				}
+
 			})
 			.catch (function (err) {
 				console.log("Error saving preHistory: " + err);
@@ -1238,19 +1251,54 @@ module.exports = {
     	var Data = [];
     	
     	console.log("build data...");
+    	console.log("History: " + JSON.stringify(History));
 
     	var tables = Object.keys(History);
     	for (var i=0; i<tables.length; i++) {
     		var ids = Object.keys(History[tables[i]]);
     		for (var j=0; j<ids.length; j++) {
-    			Data.push( History[tables[i]][ids[j]] )
+    			var update = History[tables[i]][ids[j]];
+    			var fields = Object.keys(update);
+    			for (var k=0; k<fields.length; k++) {
+    				var data = update[fields[k]];
+	    			// data.FK_Employee__ID = sails.config.payload.alDenteID;
+    				// data.FK_DBTable__ID  = FK[tables[i]][fields[k]];
+    				// data.Modified_Date   = 'NOW()';
+    				Data.push( data );
+    			}
     		}
     	}
-    	console.log("History: " + JSON.stringify(Data));
-
+    	console.log("History Data: " + JSON.stringify(Data));
     	console.log("Relocate: " + JSON.stringify(Relocate));
+    	deferred.resolve(Data);
     	
-    	deferred.resolve(Relocate);
+    	Record.createNew('Change_History', Data)
+    	.then ( function (result) {
+    		console.log("tracked Change History");
+	    	console.log("Relocate: " + JSON.stringify(Relocate));
+	    	Record.createNew('sample_tracking', Relocate)
+	    	.then ( function (relocated) {
+	    		deferred.resolve(relocated);
+	    	})
+	 		.catch ( function (err) {
+	 			console.log("Error tracking sample history: " + err);
+	 			deferred.reject(err);
+	 		});   	    		
+    	})
+    	.catch ( function (err) {
+    		console.log("Error tracking Change History");
+	    	
+	    	// perform sample tracking regardless ... if possible... 
+	    	Record.createNew('sample_tracking', Relocate)
+	    	.then ( function (relocated) {
+	    		console.log("Tracked sample movement (update Change History)");
+	    		deferred.resolve(relocated);
+	    	})
+	 		.catch ( function (err) {
+	 			console.log("Error tracking sample history as well: " + err);
+	 			deferred.reject(err);
+	 		});       		
+    	})
     	
     	return deferred.promise;
     },
