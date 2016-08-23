@@ -156,6 +156,8 @@ module.exports.routes = {
   'POST /Stock/receive' : 'StockController.receive',
   'GET /Stock/receive' : 'StockController.receiveForm',
 
+  'GET /Stock/received' : 'StockController.received',
+
   // Custom Pages 
 
   'GET /demo/protocol': 'DemoController.protocol',
