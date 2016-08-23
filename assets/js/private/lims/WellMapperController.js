@@ -244,6 +244,7 @@ function wellMapperController ($scope, $rootScope, $http, $q ) {
         $scope.loadWells(Target, Options)
         .then (function (Loaded) {
             console.log("loaded wells ok...");
+            Samples = $scope.active.Samples;
 
             if (! newMap) {
                 // initiate mapping //
