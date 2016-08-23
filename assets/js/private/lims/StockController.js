@@ -18,6 +18,15 @@ function stockController ($scope, $rootScope, $http, $q) {
         $scope.setup_Menu('catalog', 'FK(catalog)',condition)
     }
 
+    $scope.clear_form = function () {
+        $scope.number_in_batch = '';
+        $scope.received = null;
+        $scope.lot_number = '';
+        $scope.catalog = null;
+        $scope.notes = '';
+        $scope.type = null;
+    }
+
     $scope.save = function () {
 
     	var StockData = {
@@ -50,6 +59,7 @@ function stockController ($scope, $rootScope, $http, $q) {
     	.then (function (result) {
     		console.log("GOT: " + JSON.stringify(result.data));
             $scope.message("Added Stock Record(s)");
+            $scope.clear_form();
     	})    	
     	.catch (function (err){
             $scope.error("Error adding Stock Record(s)");
