@@ -89,7 +89,6 @@ block content
                       label
                         input(type='radio' value = 'scan' ng-model="map.load_by" ng-click="redistribute('reset');")
                         b &nbsp; Scanned Order &nbsp;
-                      b {{ map.load_by }}
                     b Fill by: 
                       label
                         input(type='radio' value = 'row' ng-model="map.fill_by" ng-click="redistribute('reset');") 
@@ -103,7 +102,7 @@ block content
                         b &nbsp; Slot &nbsp;                      
                 div.col-sm-4
                     div &nbsp; 
-                      b {{ fillExample }}
+                      b {{ map.fillExample }}
 
               div.form-group(ng-show="map.splitX > 1 && map.fill_by != 'position'")
                 br
@@ -122,9 +121,9 @@ block content
                       input.input-lg(name='pack_wells' type='text' size='6'  ng-model="map.pack_size" ng-change="redistribute('reset')")
                 div.col-sm-4
                     div &nbsp; 
-                      b(ng-show="!map.packExample") {{ splitExample }}
+                      b(ng-show="!map.packExample") {{ map.splitExample }}
                       br
-                      b {{ packExample }}
+                      b {{ map.packExample }}
 
               hr
 
