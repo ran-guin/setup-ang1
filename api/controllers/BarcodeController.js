@@ -74,14 +74,14 @@ module.exports = {
 								// return res.render('customize/private_home', { warnings : warnings} );
 							}
 							else if (Scanned['Rack'].length) {
-								sails.config.messages.push("Scanned Loc#s: " + Scanned['Rack'].join(', '));
-								sails.config.warnings.push("Use alDente for handling Racks other than boxes (eg Inventory, Storage Tracking)");
-								sails.config.warnings.push("LITMUS is for sample processing and only reads Boxes containing samples.");
+								messages.push("Scanned Loc#s: " + Scanned['Rack'].join(', '));
+								warnings.push("No Box Contenst Detected");
+								warnings.push("(Note: Rack / Shelf types are ignored... or Boxes may be full)");
 							} 
 							else {
 								warnings.push("nothing found (?)");
 							}
-							sails.config.warnings.push("No useable records retrieved");
+							warnings.push("No useable records retrieved");
 							return res.render('customize/private_home', { messages: messages, warnings: warnings });
 						}	
 						else {
@@ -97,12 +97,14 @@ module.exports = {
 							var last_step = get_last_step.last_step;
 							if (get_last_step.warning) { warnings.push(get_last_step.warning) }
 
+							messages.push('loaded Matrix Tube(s)');
+
 							return res.render('lims/Container', { 
 								plate_ids: plate_ids.join(','), 
 								last_step : last_step, 
 								Samples: data , 
 								//sampleList : sampleList,
-								message : 'loaded Matrix Tube(s)',
+								messages : messages,
 								warnings : warnings,
 								errors : errors,
 								//target_formats : target_formats 
