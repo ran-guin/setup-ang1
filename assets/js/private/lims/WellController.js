@@ -78,7 +78,7 @@ function wellController ($scope, $rootScope, $http, $q ) {
         console.log("QTY: " + $scope.map.transfer_qty);
         var Target = { 
             'Container_format' : $scope.map.target_format,
-            'Sample_type'   : $scope.map.target_sample,
+            'Sample_type'   : $scope.map.sample_type,
             'qty'           : $scope.map.transfer_qty,
             'qty_units'     : $scope.map.transfer_qty_units,
         };

@@ -1,12 +1,20 @@
 span {{ timestamp }}
 br
 div.section-block.bg-info
+    form.form-inline(role='form' method='post' action="/scan-barcode" ng-show='barcode' style='display: inline')
+      span(ng-show='barcode')
+        input(type='hidden' ng-model='barcode' name='barcode' value='{{barcode}}')
+        button.btn.btn-primary(type='submit')
+          a(href='#' data-toggle='tooltip' title='Reload Active Samples')
+            i.fa.fa-home(style='color:#eee; background-color:transparent')
+        span &nbsp; &nbsp;
+
     b Active Samples: &nbsp; 
       button.btn.btn-primary.btn-sm(type='button' ng-show="!injectedAlready()" ng-click="injectData('/Container/summary?render=1','', active.plate_ids)") ?
       button.btn.btn-danger.btn-sm(type='button' ng-show='injectedAlready()' ng-click='uninjectData()') x
       span &nbsp; &nbsp; &nbsp;
       button.btn.btn-primary.btn-xs(type='button' ng-show="!injectedAlready('storageHistory')" ng-click="injectData('/Container/storage_history?render=1','storageHistory', active.plate_ids)") Storage History
-      button.btn.btn-danger.btn-sm(type='button' ng-show="injectedAlready('storage_History')" ng-click="uninjectData('storageHistory')") x 
+      button.btn.btn-danger.btn-sm(type='button' ng-show="injectedAlready('storageHistory')" ng-click="uninjectData('storageHistory')") x 
   
     span.navbar.navbar-right
         button.btn.btn-primary.btn-sm(type='button' ng-show="include_parents && !injectedAlready('injectedHistory')" ng-click="injectData('/Container/history?include_parents=1','injectedHistory', active.plate_ids)") Long History

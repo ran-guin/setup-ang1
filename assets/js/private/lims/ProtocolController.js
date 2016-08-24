@@ -869,10 +869,13 @@ function protocolController ($scope, $rootScope, $http, $q) {
             if (conflict && $scope.SplitFields[field]) {
                 $scope.SplitFields[field] = values;
                 $scope[field + '_split'] = values.join(',');
+                $scope[units_field] = orig_units;
+                console.log("Reset " + $scope[field + '_split'] + ' to ' + values.join(',') + orig_units);
             }
             else {
                 $scope[field] = values[0];
-                console.log("Reset " + field + ' to ' + values[0]);
+                $scope[units_field] = orig_units;
+                console.log("Reset " + field + ' to ' + values[0] + orig_units);
             }
         }
     }    
