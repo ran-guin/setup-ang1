@@ -284,7 +284,8 @@ function wellMapper() {
                 }
             }            
         }
-
+        this.rows = rows;
+        this.columns = cols;
         this.wells = wells;
         return avail;
     }
@@ -768,6 +769,8 @@ function wellMapper() {
             SourceMap: SourceMap,
             Available: Available_wells,
             wells: this.wells,
+            rows: this.rows,
+            columns: this.columns,
             warnings: warnings,
             errors: errors,
         };
