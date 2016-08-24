@@ -547,8 +547,10 @@ function wellMapper() {
             
                 if (options[i] === 'qty' && opt) {
                     List['qty'] = [];
-                    for (var count=0; count< sources.length; count++) {
-                        List['qty'].push(opt);
+                    for (j=0; j<this.splitX; j++) {
+                        for (var count=0; count< sources.length; count++) {
+                            List['qty'].push(opt);
+                        }
                     }
 
                     console.log("Enable quantity adjustments for " + sources.length + ' samples');
@@ -692,7 +694,9 @@ function wellMapper() {
                         var opt = lists[list_index];
 
                         if (opt === 'qty' && Static['qty_units']) { 
-                            TargetData[opt] = this.adjust_quantity(sources[i], List[opt][target], Static['qty_units']);
+                            TargetData['qty'] = this.adjust_quantity(sources[i], List[opt][target], Static['qty_units']);
+                            TargetData['qty_units'] = sources[i]['qty_units'];
+                            console.log('use ' + TargetData['qty'] + TargetData['qty_units']);
                         }
                         else {
                          // XferData[opt] = List[opt][target];
@@ -1031,7 +1035,8 @@ function wellMapper() {
             }  
             else if (current_volume >= max) { 
                 // OKAY - no adjustment req'd  
-                this.sample_remaining[source.id] = current_volume - max;  
+                this.sample_remaining[source.id] = current_volume - max; 
+                console.log(source.id + ":  Remaining volume: " + current_volume + ' - ' + max + ' = ' + this.sample_remaining[source.id]);
                 return max;
             }
             else { 
