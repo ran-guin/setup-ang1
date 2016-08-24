@@ -261,10 +261,10 @@ function wellMapperController ($scope, $rootScope, $http, $q ) {
 
             if (! Target) {
                 Target = {
-                    qty: $scope.transfer_qty,
-                    qty_units : $scope.transfer_qty_units,
-                    Container_format : $scope.target_format,
-                    Sample_type : $scope.sample_type_id,
+                    qty: $scope.map.transfer_qty,
+                    qty_units : $scope.map.transfer_qty_units,
+                    Container_format : $scope.map.target_format,
+                    Sample_type : $scope.map.sample_type,
                 };
             }
 
