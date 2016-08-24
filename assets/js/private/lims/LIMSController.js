@@ -76,6 +76,13 @@ function limsController ($scope, $rootScope, $http, $q) {
         }
     }
 
+    $scope.reset_home_barcode = function (attribute) {
+        var ids = _.pluck($scope.active.Samples, 'id');
+        var barcode = 'BCG' + ids.join('BCG');
+
+        $scope[attribute] = barcode;
+    }
+
     // Methods to set 'active' scope attributes (eg active.Samples, active.plate_set ... )
     $scope.load_active_Samples = function (Samples) {
 
@@ -120,6 +127,7 @@ function limsController ($scope, $rootScope, $http, $q) {
             
             console.log(Samples.length + ' samples loaded... from #' + ids[0]);
             console.log("ACTIVE Loaded " + $scope.active.Samples.length + ' active Samples');
+            $scope.reset_home_barcode('barcode');
             
     }
 
