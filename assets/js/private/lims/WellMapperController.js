@@ -29,12 +29,16 @@ function wellMapperController ($scope, $rootScope, $http, $q ) {
  
         $scope.map.packExample = $scope.map.packExamples[$scope.map.pack_mode + '-' + $scope.map.split_mode + '-' + $scope.map.fill_by] || '';
 
-	    $scope.mapping_keys = ['split', 'pack', 'fill_by', 'Target_format', 'Target_sample', 'transfer_type', 'reset_focus'];
+	    $scope.mapping_keys = ['split', 'pack', 'fill_by', 'Target_format', 'Target_sample', 'transfer_type', 'reset_focus', 'target_size'];
 		for (var i=0; i<$scope.mapping_keys.length; i++) {
 			console.log($scope.mapping_keys[i] + ' = ' + $scope.map[ $scope.mapping_keys[i] ]);
 		}    
     }
 
+    $scope.set_map = function (attr, value) {
+        $scope.map[attr] = value;
+    }
+    
     $scope.static_presets = function () {
         $scope.map.splitExamples = { 
             'serial-row' : "eg A1, A1, A2, A2, B1, B1, B2, B2",
