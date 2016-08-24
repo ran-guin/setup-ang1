@@ -10,7 +10,6 @@ var _ = require('underscore-node');
 
 module.exports = {
 	
-	migrate: 'safe',
 	attributes: {
 
 		name : { type : 'string '},
