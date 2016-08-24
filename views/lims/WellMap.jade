@@ -67,7 +67,7 @@ block content
 
                 div.col-sm-4(ng-show="map.transfer_type !== 'Move'")
                   div.form-group(style='padding-top: 0px; padding-left: 40px')
-                    label(for='map.target_format' style='padding-top: 0px')
+                    label(for='target_format' style='padding-top: 0px')
                     my-dropdown#target_format(style='width:100%' placeholder='Target Format...' required list="MenuList['map.target_format']" selected="map.target_format" property='name' track='id' ng-init="setup_Menu('map.target_format','FK(container_format)')" mandatory='true')        
               hr 
 
@@ -131,8 +131,7 @@ block content
                 div.col-sm-4(ng-show="map.transfer_type !== 'Move'")
                   span IF different Sample Type is being extracted:
                   br
-                  // span.lookup(id='Lookup-sample_type' ng-init="loadLookup('sample_type','', 'Extract ?')")
-                  my-dropdown#sample_type(placeholder='Extract...(if diff)' required list="MenuList['sample_type']" selected="sample_type" property='name', ng-init="setup_Menu('sample_type','FK(sample_type)')") 
+                  my-dropdown#sample_type(placeholder='Extract...(if diff)' list="MenuList['map.sample_type']" selected="map.sample_type" property='name' track='id' ng-init="setup_Menu('map.sample_type','FK(sample_type)')") 
 
                 div.col-sm-4
                   b Target : 
