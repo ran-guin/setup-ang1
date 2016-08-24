@@ -624,9 +624,10 @@ function protocolController ($scope, $rootScope, $http, $q) {
         };
 
         var split = $scope['Split' + $scope.step.stepNumber] || $scope.Step['split'];
-        var fill =  $scope.map.fill_by || $scope.Step['fill_by'];
+        var fill =  $scope.Step['fill_by'] || $scope.map.fill_by;
         var size = $scope.Step['target_size'] || $scope.active.Samples[0].box_size;
 
+        console.log("Custom size: " + size);
         var target_rack = '';
         var boxes = [];
         if ($scope['location' + $scope.step.stepNumber]) {
@@ -639,11 +640,15 @@ function protocolController ($scope, $rootScope, $http, $q) {
             'split'         : $scope['Split' + $scope.step.stepNumber] || $scope.Step['split'],   // $scope['Split' + $scope.step.stepNumber],
             'pack'          : $scope.Step['pack'],    // $scope.pack_wells,
             'distribution_mode' : $scope['distribution_mode' + $scope.step.stepNumber],
-            'fill_by'  : $scope.map.fill_by || $scope.Step['fill_by'],
+            'fill_by'  : $scope.Step['fill_by'] || $scope.map.fill_by,
             'target_size' : size,
             'target_rack' : target_rack,
         }
         
+        // certain fields need to be in map scope...
+        $scope.set_map('target_size', size);
+        $scope.set_map('fill_by', fill);
+
         console.log("Distribute: ");
         console.log("Target: " + JSON.stringify(Target));
         console.log("Options: " + JSON.stringify(Options));
@@ -776,7 +781,11 @@ function protocolController ($scope, $rootScope, $http, $q) {
             Opts = JSON.parse(custom_options)
         }
 
+        console.log("Custom Options: " + JSON.stringify(custom_options));
+        console.log("Custom Options: " + JSON.stringify(Opts));
+
         var keys = $scope.mapping_keys;
+        console.log("Keys: " + keys.join(','));
         for (var i=0; i<keys.length; i++) {
             if ( $scope[ keys[i] + $scope.step.stepNumber ] ) {
                 $scope.Step[keys[i]] = $scope[ keys[i] + $scope.step.stepNumber];
@@ -785,6 +794,9 @@ function protocolController ($scope, $rootScope, $http, $q) {
             else if (Opts[keys[i]]) {
                 $scope.Step[keys[i]] = $scope[ keys[i] + $scope.step.stepNumber] || Opts[keys[i]];
                 console.log("Custom: " + keys[i] + ' = ' + Opts[keys[i]]);
+            }
+            else {
+                console.log(keys[i] + " not defined");
             }
         }
 
