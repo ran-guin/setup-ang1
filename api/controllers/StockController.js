@@ -54,7 +54,7 @@ module.exports = {
 		Record.query_promise(query)
 		.then (function (result) {
 			return res.render('customize/injectedData', { 
-				fields : ['name', 'ids', rcvd', 'qty', 'status','stock_batch'], 
+				fields : ['name', 'ids', 'rcvd', 'qty', 'status','stock_batch'], 
 				data : result, 
 				title: 'Received Stock', 
 				element: element
