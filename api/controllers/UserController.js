@@ -208,7 +208,9 @@ module.exports = {
             console.log("Create user : " + user);
 
             var alDenteID; 
-            Record.query_promise("SELECT Employee_ID as alDenteID FROM Employee WHERE Email_Address = '" + email + "'")
+            var get_ID = "SELECT Employee_ID as alDenteID FROM Employee WHERE Email_Address = '" + email + "'";
+            console.log(get_ID);
+            Record.query_promise(get_ID)
             .then ( function (result) {
               if (result.length === 1) {
                 alDenteID = result[0].alDenteID;
@@ -220,7 +222,7 @@ module.exports = {
                   lastLoggedIn: new Date(),
                   gravatarUrl: gravatarUrl,
                   access: 'public',
-                  alDenteID: alDenteID,
+                  FK_Employee__ID: alDenteID,
                 }, function userCreated(err, newUser) {
                   if (err) {
 
@@ -265,6 +267,10 @@ module.exports = {
                 return res.render('customize/public_home', { error : "this email address has multiple alDente LIMS users - please check with admin to resolve this first." });                
               }
 
+            })
+            .catch (function (err) {
+              console.log("Error retrieving alDenteID");
+              return res.render('customize/public_home', { error : "could not retrieve LIMS ID to create user"} ); 
             });
           }
         });
