@@ -14,12 +14,12 @@ module.exports = {
 	attributes: {
 
 		name : { type : 'string '},
-		Lab_protocol : { model : 'Lab_protocol' },
+		Lab_protocol : { model : 'lab_protocol' },
 		step_number : { type : 'int' },
 		instructions : { type : 'string'},
 		message : { type : 'string' },
 		Target_format : { model : 'container_format' },
-		Target_sample : { model : 'Sample_Type' },
+		Target_sample : { model : 'sample_type' },
 		reset_focus : { 
 			type : 'boolean',
 			defaultsTo : false,
@@ -68,8 +68,8 @@ module.exports = {
 			var statuses = _.uniq( _.pluck(data, 'protocol_status') );
 
 			if (protocol_ids.length > 1) {
-				var protocols = _.uniq( _.pluck(data, 'last_protocol_id') );								
-				warningMsg = "Samples appear to be at different stages of pipeline: " + protocols.join(' AND ');
+				var protocols = _.uniq( _.pluck(data, 'last_protocol') );								
+				warningMsg = "Samples appear to be at different stages of pipeline: ['" + protocols.join("' AND '") + "']";
 			}
 			else if (numbers.length > 1) {
 				warningMsg = "Samples appear to be at different stages of the last protocol: " + steps.join(' AND ');
