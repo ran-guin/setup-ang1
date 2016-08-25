@@ -165,25 +165,34 @@ module.exports = {
 
 		if (data.constructor === Array && data.length) {
 			if (ref) {
-				console.log("restore order of hash");
+				console.log("restore order of hash " + data[0].constructor);
 				sorted_results = _.sortBy(data, function(record) {
 				    return list.indexOf(record[ref]);
 				});
 			}
 			else {
-				console.log("restore order of array");
+				console.log("restore order of array " + data[0].constructor);
 				sorted_results = [];
+
 				for (var i=0; i<list.length; i++) {
 					var refList = data;
-					if (ref) {
-						reflist = _.pluck(data, ref);
+
+					if (list[i].constructor === String && data[0].constructor === Number) {
+						index = refList.indexOf(parseInt(list[i]));
+					} 
+					else if (list[i].constructor === Number && data[0].constructor === String) {
+						index = refList.indexOf(list[i].toString());
 					}
-					
-					var index = refList.indexOf(list[i]);
+					else {
+						index = refList.indexOf(list[i]);
+					}
+
 					if (index >=0) {
+						console.log("push " + index + ': ' + JSON.stringify(data[index]));
 						sorted_results.push(data[index])
 					}
 				}
+				console.log("Sorted: " + sorted_results.join(','));
 			}
 		}
 		else {
