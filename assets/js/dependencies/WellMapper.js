@@ -229,11 +229,14 @@ function wellMapper() {
             target_index = 0;  
             this.target_boxes[batch_index] = batch;
             this.missing_boxes++;
-            this.available[batch] = this.available_wells(this.target_size, this.fill_by);
+            this.available[batch] = this.default.available;
             console.log(this.target_size + " Avail: " + JSON.stringify(this.available[batch]));
+            console.log('box ' + batch_index + " = " + batch + ' -> ' + JSON.stringify(this.target_boxes));
             x = 'A'; 
             y = '1';
         }
+
+        if (batch.constructor === Number) { batch = batch.toString() }
 
         if ( batch.match(/^TBD/) ) { this.missing_wells++ }
         
@@ -277,16 +280,19 @@ function wellMapper() {
                 }
             }
         }
-        else if (fill_by === 'column') {
+        else {
+            // if (fill_by === 'column') {
             for (var i = 0; i< cols.length; i++) {
                 for (var j=0; j< rows.length; j++) {
                     avail.push( { position: rows[j] + cols[i].toString() })                    
                 }
             }            
         }
+        
         this.rows = rows;
         this.columns = cols;
         this.wells = wells;
+        console.log("Available Wells: " + JSON.stringify(avail));
         return avail;
     }
 
@@ -334,15 +340,19 @@ function wellMapper() {
             this.splitX = 1;
         }
 
+        this.default = {};
+
+        var avail = [];
+        if (this.target_size && this.fill_by) {
+            avail = this.available_wells(this.target_size, this.fill_by);
+        }
+        this.default.available = avail;
+
+        console.log("\n* Default Wells Available: " + JSON.stringify(avail));
+
         if (! this.target_boxes ) {
             this.target_boxes = ['TBD'];
             
-            var avail = [];
-            if (this.target_size && this.fill_by) {
-                avail = this.available_wells(this.target_size, this.fill_by);
-            }
-            console.log("\n* Default Wells Available: " + JSON.stringify(avail));
-
             this.available = { 'TBD' : avail };  // test temporary .. 
         }
         console.log("TARGET BOXES: " + JSON.stringify(this.target_boxes));
@@ -732,7 +742,7 @@ function wellMapper() {
                     target++;
                 }
             }
-
+            console.log("Available in " + target_box + ' : x.position in ' + JSON.stringify(this.available))
             Available_wells[target_box] = _.pluck(this.available[target_box], 'position')
         } 
 
