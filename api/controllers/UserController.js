@@ -249,7 +249,7 @@ module.exports = {
                   var payload = { id: newUser.id, access: 'New User', alDenteID: alDenteID, url: sails.config.globals.url };
                   var token = jwToken.issueToken(payload);
                   
-                  sails.config.messages.push("Generated new user... you many now log in");
+                  sails.config.messages.push("Generated new user... ");
 
                   console.log('Generated new user: ' + JSON.stringify(payload));
                   console.log("Token issued: " + token);
