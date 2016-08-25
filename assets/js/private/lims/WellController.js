@@ -106,10 +106,12 @@ function wellController ($scope, $rootScope, $http, $q ) {
         .then ( function (result) {
             console.log("MAP: " + JSON.stringify(result.Map));
             // $scope.Map = result.Map;
-            if (result.errors) {
+            if (result.errors.length) {
                 // $scope.form_validated = false;
                 // need to ensure validation is performed when boxes are updated.. 
+                console.log(result.errors);
                 console.log('invalidate form');
+                $scope.form_validated = false;
             }
             if (execute) { $scope.execute_transfer() }
         })
@@ -134,6 +136,12 @@ function wellController ($scope, $rootScope, $http, $q ) {
             var units = _.pluck($scope.active.Samples,'qty_units');
             $scope.map.transfer_qty = quantities.join(',');
             $scope.map.transfer_qty_units = units[0];
+        }
+        else if ($scope.map.transfer_type === 'Transfer') {
+            var quantities = _.pluck($scope.active.Samples,'qty');
+            var units = _.pluck($scope.active.Samples,'qty_units');
+            $scope.map.transfer_qty = quantities.join(',');
+            $scope.map.transfer_qty_units = units[0];          
         }
 
         console.log("Validate " + $scope.map.transfer_type);
