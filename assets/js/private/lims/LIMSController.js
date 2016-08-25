@@ -89,7 +89,16 @@ function limsController ($scope, $rootScope, $http, $q) {
             $scope.active.Samples = Samples;
             console.log("loaded...");
       
-            if (! $scope.original_Samples ) { $scope.original_Samples = Samples }
+            if (! $scope.original_Samples ) { 
+                $scope.original_Samples = Samples;
+                var boxes = _.unique(_.pluck(Samples,'box_id'));
+                console.log('Boxes : ' + JSON.stringify(boxes));
+                if (boxes) {
+                    for (var i=0; i<Samples.length; i++) {
+                        Samples[i].batch = boxes.indexOf(Samples[i].box_id) + 1;
+                    }
+                }
+            }
 
             // preset standardized values from first sample ... 
             if (Samples[0] && Samples[0]['container_format']) {
