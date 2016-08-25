@@ -89,6 +89,7 @@ block content
                       label
                         input(type='radio' value = 'scan' ng-model="map.load_by" ng-click="redistribute('reset');")
                         b &nbsp; Scanned Order &nbsp;
+                    br
                     b Fill by: 
                       label
                         input(type='radio' value = 'row' ng-model="map.fill_by" ng-click="redistribute('reset');") 
@@ -155,46 +156,10 @@ block content
                   td(style='width:50%')
                     // h2 Source Samples: [ size: {{ active.Samples[0].box_size }} ]
                     include SourceMap.jade
-                    hr
-                    // ul
-                      li(ng-repeat="source in active.Samples")
-                        b id={{source.id}} posn={{source.position}}
-
-                    table
-                      tr
-                        th &nbsp;
-                        th(ng-repeat="col in source_cols") {{ col }}
-                      tr(ng-repeat="row in source_rows")
-                        td {{ row }}
-                        td(ng-repeat="col in source_cols" style="background-color:#{{ rgbList[ $parent.$index*source_cols.length + $index ] }}" ) 
-                          span(data-toggle="tooltip" title="{{active.Samples[$parent.$index*source_cols.length + $index].id}}") &nbsp; &nbsp; &nbsp;
                   td(style='width:50%')
                     // h2 Target Samples: [ size: {{ map.target_size }} ]
                     include TargetMap.jade
-                    hr
-                    // ul
-                      li(ng-repeat="xfer in Map.Xfer")
-                        b {{xfer.source_position}} -> {{xfer.map.target_position}} : id={{xfer.source_id}} [ {{xfer.qty}} {{xfer.qty_units}}]
 
-                    - var i = 0;
-                    each plate in targets
-                      table.table.table-bordered
-                        tr
-                          th &nbsp;
-                          each col in Cols
-                            th(style='background-color:#aaa') 
-                              b #{col}
-                        each row in Rows
-                          tr
-                            td(style='background-color:#aaa') 
-                              b #{row}
-                            each col in Cols
-                              td 
-                                - index = plate + ':' + row + col
-                                  if plateMap[index]
-                                    b #{plateMap[index]} 
-                                  else 
-                                    b 0
               if debug || 1
 
                 div.alert.alert-warning Debugging Information:  (hidden in production)
