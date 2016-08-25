@@ -94,121 +94,162 @@ module.exports = {
 		if (!options) { options = {} }
 		var force = options.force;
 
-		file.upload({
-	    	maxBytes: 100000
-	    }, function (err, uploadedFiles) {
-			if (err) {
-				sails.config.errors.push(err);
-				deferred.reject(err);
+		var ids = _.pluck(Samples, 'id');
+		var query = "SELECT FK_Plate__ID as id, FK_Attribute__ID as att_Id, Attribute_Value as barcode FROM Attribute";
+		query = query + " LEFT JOIN Plate_Attribute ON (FK_Attribute__ID=Attribute_ID AND FK_Plate__ID IN (" + ids.join(',') +'))';
+		query = query + " WHERE Attribute_Name = 'Matrix_Barcode'";
+
+		var data = [];
+		var errors = [];
+		var warnings = [];
+		var messages = [];
+
+
+		console.log(query);
+		Record.query_promise(query)
+		.then ( function (barcoded) {
+			console.log('Barcodes: ' + JSON.stringify(barcoded));
+			var MatrixAttribute_ID = barcoded[0].att_Id;
+
+			var barcoded_ids = [];
+			var barcoded_value = [];
+			if (barcoded.length && barcoded[0].id) {
+				warnings.push(barcoded.length + ' Barcodes already defined');
+				barcoded_ids = _.pluck(barcoded, 'id');
+				barcoded_values  = _.pluck(barcoded, 'barcode');
 			}
-			else if (uploadedFiles.length == 0) {
-				sails.config.errors.push("no files supplied");
-				deferred.reject('no files supplied');
-			}
-			else {
-				// assume only one file for now, but may easily enable multiple files if required... 
-				console.log("Parsing contents...");
-				var f = 0; // file index
 
-				var matrix = uploadedFiles[f].fd
 
-				try {					
-					var obj = xlsx.parse(matrix);
+			file.upload({
+		    	maxBytes: 100000
+		    }, function (err, uploadedFiles) {
+				if (err) {
+					sails.config.errors.push(err);
+					deferred.reject(err);
+				}
+				else if (uploadedFiles.length == 0) {
+					errors.push("no files supplied");
+					deferred.reject('no files supplied');
+				}
+				else {
+					// assume only one file for now, but may easily enable multiple files if required... 
+					console.log("Parsing contents...");
+					var f = 0; // file index
 
-					console.log(JSON.stringify(obj));
+					var matrix = uploadedFiles[f].fd
 
-					var f = 0;
-					var rows = obj[f].data.length;
-					var cols = obj[f].data[f].length;
+					try {					
+						var obj = xlsx.parse(matrix);
 
-					row_labels = ['A','B','C','D','E','F','G','H'];
+						console.log(JSON.stringify(obj));
 
-					console.log("Found " + rows + ' x ' + cols + ' matrix');
-					var map = {};
-					var applied = 0;
-					for (var i=0; i<rows; i++) {
-						for (var j=1; j<=cols; j++) {
-						
-							console.log(i + j);
-							var posn =  row_labels[i];
-							//if (i<10) { posn = posn + '0' }
-							posn = posn + j.toString();
-							console.log(posn);
+						var f = 0;
+						var rows = obj[f].data.length;
+						var cols = obj[f].data[f].length;
 
-							map[posn] = obj[f].data[i][j-1];
-							applied = applied + 1;
+						row_labels = ['A','B','C','D','E','F','G','H'];
+
+						console.log("Found " + rows + ' x ' + cols + ' matrix');
+						var map = {};
+						var applied = 0;
+						for (var i=0; i<rows; i++) {
+							for (var j=1; j<=cols; j++) {
+							
+								var posn =  row_labels[i];
+								//if (i<10) { posn = posn + '0' }
+								posn = posn + j.toString();
+
+								map[posn] = obj[f].data[i][j-1];
+								applied = applied + 1;
+							}
+
 						}
 
-					}
-					console.log(map);
+						if (applied > Samples.length) {
+							warnings.push(applied + " Matrix tubes expected, but only " + Samples.length + " current Samples found");
+						}
+						else if (Samples.length > applied) {
+							warnings.push(Samples.length + " active Samples, but data supplied for " + applied);
+						}
 
-					var data = [];
-					var errors = [];
-					var warnings = [];
+						console.log(Samples.length + ' Sample(s) found');
 
-					if (applied > Samples.length) {
-						warnings.push(applied + " Matrix tubes scanned, but only " + Samples.length + " current Samples found");
-					}
-					else if (Samples.length > applied) {
-						warnings.push(Samples.length + " active Samples, but data supplied for " + applied);
-					}
-
-					console.log(Samples.length + ' Sample(s) found');
-
-					for (var i=0; i<Samples.length; i++) {
-						console.log("Sample #" + i + ": " + JSON.stringify(Samples[i]));
-						var id = Samples[i].id;
-						var position = Samples[i].position;
-						if (position) {
-							var mapped = map[position] || map[position.toUpperCase()];
-							if (mapped) {
-								data.push([id, mapped]);
+						for (var i=0; i<Samples.length; i++) {
+							console.log("Sample #" + i + ": " + JSON.stringify(Samples[i]));
+							var id = Samples[i].id;
+							var position = Samples[i].position;
+							if (position) {
+								var mapped = map[position] || map[position.toUpperCase()];
+								if (mapped) {
+									var barcoded_index = barcoded_ids.indexOf(id);
+									console.log('MB: ' + id + ' : ' + barcoded_index + ' <> ' + mapped);
+									
+									if (barcoded_index >= 0) {
+										if (barcoded_values[barcoded_index] === mapped) {
+											console.log("Already mapped... ignoring");
+											messages.push(barcoded_ids[barcoded_index] + ' already defined as: ' + mapped)
+										}
+										else {
+											warnings.push('BCG#' + barcoded_ids[barcoded_index] + ': ' + barcoded_values[barcoded_index] + ' (in DB) != ' + mapped + ' (in file) ... skipping');
+										}
+									}
+									else {
+										messages.push("Set matrix barcode for BCG# " + id + ": " + mapped);
+										data.push([id, mapped]);
+									}
+								}
+								else {
+									warnings.push("Nothing mapped to " + position);
+								}
 							}
 							else {
-								warnings.push("Nothing mapped to " + position);
-							}
+								errors.push("No position data for sample #" + i + ' : ' + id);
+							}					
+						}
+
+						console.log("upload " + JSON.stringify(data));
+
+						sails.config.warnings = warnings;
+						// sails.config.errors = errors;
+						sails.config.messages = messages;
+
+						if (errors.length || (! force && warnings.length)) {
+							console.log("Errors: " + JSON.stringify(errors));
+							deferred.reject(errors);
 						}
 						else {
-							errors.push("No position data for sample #" + i + ' : ' + id);
-						}					
+							console.log("Map: " + JSON.stringify(map));
+							console.log("Matrix Data: " + JSON.stringify(data));
+
+							var attribute = MatrixAttribute_ID;
+
+							Attribute.uploadAttributes('Plate', attribute, data)
+							.then ( function (result) {
+								console.log("Response: " + JSON.stringify(result));
+								if (result.affectedRows) {
+									console.log(JSON.stringify(sails.config.messages));
+									sails.config.messages.push(result.affectedRows + " Matrix barcodes associated with samples");
+								}
+								deferred.resolve(result);		
+							})	
+							.catch ( function (err) {
+								console.log("Upload Error");
+								console.log(err);
+								deferred.reject(err);
+							});
+						}		
+					}
+					catch (e) {
+						deferred.reject("Error loading excel file: " + e);
 					}
 
-					sails.config.warnings = warnings;
-					sails.config.errors = errors;
-
-					if (errors.length || (! force && warnings.length)) {
-						console.log("Errors: " + JSON.stringify(errors));
-						deferred.reject(errors);
-					}
-					else {
-						console.log("Map: " + JSON.stringify(map));
-						console.log("Matrix Data: " + JSON.stringify(data));
-
-						var MatrixAttribute_ID = 66;  // testing - replace with query to database... 
-						var attribute = MatrixAttribute_ID;
-
-						Attribute.uploadAttributes('Plate', attribute, data)
-						.then ( function (result) {
-							console.log("Response: " + JSON.stringify(result));
-							if (result.affectedRows) {
-								console.log(JSON.stringify(sails.config.messages));
-								sails.config.messages.push(result.affectedRows + " Matrix barcodes associated with samples");
-							}
-							deferred.resolve(result);		
-						})	
-						.catch ( function (err) {
-							console.log("Upload Error");
-							console.log(err);
-							deferred.reject(err);
-						});
-					}		
-				}
-				catch (e) {
-					deferred.reject("Error loading excel file: " + e);
-				}
-
-			}			
+				}			
+			});
+		})
+		.catch ( function (err) {
+			console.log("Error getting current attributes: " + err);
 		});
+
 
 		return deferred.promise;
 
