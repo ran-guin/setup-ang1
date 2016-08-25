@@ -401,7 +401,7 @@ module.exports = {
 
       var contained = {};
       var available = {};
-
+      var boxes = [];
 
       if (data.length) {
         var contentData = {
@@ -410,10 +410,13 @@ module.exports = {
           slot : data[0].slot,
           alias : data[0].box_alias
         };
+        boxes.push( data[0].box_id);
 
         for (var i=0; i<data.length; i++) {
           var boxid = data[i].box_id;
           var id    = data[i].id;
+
+          if (boxes.indexOf(boxid) === -1) { boxes.push(boxid) }
 
           if (!available[boxid]) { available[boxid] = [] }
 
@@ -441,6 +444,11 @@ module.exports = {
         
         contentData['contains'] = contained;
         contentData['available'] = available;
+
+        if (rack_ids && rack_ids.length > 1) {
+          boxes = Record.restore_order(boxes, rack_ids);
+        }
+        contentData['boxes'] = boxes;
 
         deferred.resolve(contentData);
       }
