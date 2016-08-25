@@ -153,8 +153,11 @@ module.exports = {
 		    					result[i].protocol_status = 'Completed Transfer';
 		    			}
 		    		}
+
+		    		var sorted_results = Record.restore_order(result, ids, 'id');
+
 		    		// console.log("Loaded DATA: " + JSON.stringify(result));
-		    		deferred.resolve(result);
+		    		deferred.resolve(sorted_results);
 		    	}
 
 		    });
