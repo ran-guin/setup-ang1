@@ -93,7 +93,7 @@ function wellMapperController ($scope, $rootScope, $http, $q ) {
 
         console.log("Load rack " + rack_id + ' ' + rack_name);
         var data = { id: rack_id, name: rack_name, fill_by: fill_by, rows: rows, columns: cols};
-
+        
         console.log("SEND: " + JSON.stringify(data));
 
         if (rack_id || rack_name) {
@@ -108,12 +108,12 @@ function wellMapperController ($scope, $rootScope, $http, $q ) {
                 console.log("rack data: " + JSON.stringify(returnData));
 
                 available = returnData.data.available || {};
-                console.log("Available: " + JSON.stringify(available));
-                // define target boxes (only handles one for now ... )
-               
-
-                target_boxes = Object.keys(available);
+                target_boxes     = returnData.data.boxes || [];
+                console.log("Available: " + JSON.stringify(available));               
                 console.log("target boxes: " + target_boxes.join(','));
+                if (Options.target_boxes && target_boxes.length < Options.target_boxes.length) {
+                    $scope.error("At least one of the scanned boxes is either full or not a box");
+                }
 
                 var rack_list = [];
                 for (var i=0; i<target_boxes.length; i++) {
@@ -294,7 +294,8 @@ function wellMapperController ($scope, $rootScope, $http, $q ) {
 
             console.log("Samples: " + JSON.stringify(Samples));
             console.log("NEW MAP: " + JSON.stringify(Map));
- 
+            console.log("Rows: " + JSON.stringify(Map.rows));
+            console.log("Columns: " + JSON.stringify(Map.columns));
             console.log("NEW CMAP: " + JSON.stringify(Map.CMap));
             console.log("Source Colour Map: " + JSON.stringify(Map.SourceMap));
             console.log("Target Colour Map: " + JSON.stringify(Map.TransferMap));           
