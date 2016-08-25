@@ -144,6 +144,56 @@ module.exports = {
 		return mapped;
 	},
 
+// Generic methods 
+
+	restore_order : function (data, list, ref) {
+		//
+		// Input:
+		//   data - array of hashes
+		//   list - original list (the order of which you want to preserve)
+		//   ref - [defaults to 'id'] - the reference key in the hashes corresponding to the values supplied in 'list' 
+		//
+		// sorts array of hashes into an order based upon an original list that is included in the hash
+		//
+		// This is particularly useful when trying to sort mySQL results based upon the order of a supplied list.
+		// eg.  select * from Plate where Plate_ID IN (3,1,2), will return 1,2,3, but you may wish the results in the original order (eg 3..1..2)
+		//
+
+		ref = ref;
+		
+		var sorted_results;
+
+		if (data.constructor === Array && data.length) {
+			if (ref) {
+				console.log("restore order of hash");
+				sorted_results = _.sortBy(data, function(record) {
+				    return list.indexOf(record[ref]);
+				});
+			}
+			else {
+				console.log("restore order of array");
+				sorted_results = [];
+				for (var i=0; i<list.length; i++) {
+					var refList = data;
+					if (ref) {
+						reflist = _.pluck(data, ref);
+					}
+					
+					var index = refList.indexOf(list[i]);
+					if (index >=0) {
+						sorted_results.push(data[index])
+					}
+				}
+			}
+		}
+		else {
+			console.log("no array to resort...");
+			sorted_results = data;
+		}
+
+		return sorted_results;
+	},
+
 	wrap_result : function (result) {
 		// append config messages to result returned via api
 
