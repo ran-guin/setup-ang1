@@ -1,5 +1,7 @@
 extends ./../customize/privateLayout
 block content
+  - var config = { payload: sails.config.payload };
+  - var init = "initialize(" + JSON.stringify(config) + ")";
 
   - lookups = ['Plate_Format', 'Sample_Type'];
 
@@ -15,8 +17,8 @@ block content
     div(ng-app='myApp')
       div(ng-controller="SharedController")
         div(ng-controller="FancyFormController")
-         div(ng-controller="LIMSController")
-          div(ng-controller="AdminController")
+         div(ng-controller="LIMSController") 
+          div(ng-controller="AdminController"  ng-init='#{init}')
               
             include ./../core/errorMsg.jade
 
