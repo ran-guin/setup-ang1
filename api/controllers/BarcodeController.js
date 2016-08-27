@@ -147,7 +147,7 @@ module.exports = {
 		var returnVal = body;
 		console.log("Print Labels for " + JSON.stringify(body));
 		
-		Barcode.printLabels(model, ids, printer)
+		Barcode.print_Labels(model, ids, printer)
 		.then ( function (response) {
 			console.log("Printed barcodes");
 
