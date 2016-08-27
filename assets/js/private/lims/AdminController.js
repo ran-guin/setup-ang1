@@ -6,6 +6,10 @@ app.controller('AdminController',
 ['$scope', '$rootScope', '$http', '$q' , 
 function adminController ($scope, $rootScope, $http, $q ) {
 
+	$scope.initialize = function (config) {
+		$scope.initialize_payload(config);
+	}
+
 	$scope.activate_user = function () {
 
 		var access = 'lab';
@@ -44,6 +48,9 @@ function adminController ($scope, $rootScope, $http, $q ) {
 			var data = result.data;
 			var msg = data.message;
 			var err = data.error;
+
+			var boxes = data.boxes;
+
 			if (err) { 
 				var errMsg = $scope.parse_standard_error(msg);
 				$scope.error(errMsg);
@@ -53,11 +60,23 @@ function adminController ($scope, $rootScope, $http, $q ) {
 				$scope.message(msg);
 			}
 
+			/*  print in createNew automatically 
+			if (boxes && boxes.length) {
+				$scope.print_Labels('rack',boxes)
+				.then ( function (response) {
+					console.log("printed : " + JSON.stringify(response));
+				})
+				.catch ( function (err) {
+					console.log("Error printing barcodes");
+				});
+			}
+			*/
+			
 			console.log("Admin returned:" + JSON.stringify(result));
 		})
 		.catch ( function (err) {
 			$scope.error(err);
-		})
+		});
 	}
 
 	$scope.validate_boxname = function () {
@@ -115,7 +134,6 @@ function adminController ($scope, $rootScope, $http, $q ) {
 									console.log(N + " Missing " + i);
 									i = result.data.length + 1;
 								} 
-								console.log(N + ' found : ' + i);
 							}
 							if ( !N ) { N = result.data.length + 1 }
 						}
@@ -139,6 +157,5 @@ function adminController ($scope, $rootScope, $http, $q ) {
 			});
 		}
 		else { console.log("no parent or name ... skipping autoset") }
-		console.log("...");
 	}
 }]);
