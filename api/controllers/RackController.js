@@ -66,7 +66,10 @@ module.exports = {
 		Rack.addSlottedBox(parent, name, size)
 		.then ( function (result) {
 			console.log("Added Slotted Box " + JSON.stringify(result));
-			return res.json({ message : result.message });
+			
+			var boxes = Record.insert_Ids(result.box);
+
+			return res.json({ message : result.message, boxes : boxes });
 /*
 			if (result.box && result.slots) {
 
