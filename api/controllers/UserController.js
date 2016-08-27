@@ -52,10 +52,12 @@ module.exports = {
 
   login: function (req, res) {
 
-    console.log("BODY: " + JSON.stringify(req.body));
-    
-    var tryuser = req.body.user || req.body.email;
-    var pwd = req.body.password || req.param('password');
+    var body = req.body || {};
+    console.log("BODY: " + JSON.stringify(body));
+
+    var tryuser = body.user || body.email;
+    var pwd = body.password || req.param('password');
+    var printer_group = body.printers;
 
     console.log('attempt login by ' + tryuser);
 
@@ -91,7 +93,6 @@ module.exports = {
         passwordAttempt: pwd,
         encryptedPassword: user.encryptedPassword
       }).exec({
-
         error: function (err){
           console.log("error: " + err);
           return res.negotiate(err);
@@ -106,24 +107,30 @@ module.exports = {
 
         success: function (){
           console.log("access granted: ");
-          var payload = User.payload(user);
-          
-          if ( req.param('Debug') ) { payload['Debug'] = true; }
+          User.payload(user, { printer_group : printer_group })
+          .then ( function (payload) {
+            if ( req.param('Debug') ) { payload['Debug'] = true; }
 
-          // session authorization
-          req.session.authenticated = true;
-          req.session.payload = payload;
+            // session authorization
+            req.session.authenticated = true;
+            req.session.payload = payload;
 
-          // token authorization 
-          payload['token'] = jwToken.issueToken(payload); 
-          req.headers.authorization = "Bearer [" + payload['token'] + ']';
+            // token authorization 
+            payload['token'] = jwToken.issueToken(payload); 
+            req.headers.authorization = "Bearer [" + payload['token'] + ']';
 
-          sails.config.payload = payload;
-          sails.config.messages = [];
-          sails.config.warnings = [];
-          sails.config.errors   = [];
+            sails.config.payload = payload;
+            sails.config.messages = [];
+            sails.config.warnings = [];
+            sails.config.errors   = [];
 
-          return res.render('customize/private_home', payload);
+            return res.render('customize/private_home', payload);     
+          })
+          .catch ( function (err) {
+            return res.render('customize/public_home', { error: 'Error generating payload ' + err});
+          });
+
+
         }
       });
     });
