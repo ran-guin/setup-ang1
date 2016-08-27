@@ -38,11 +38,44 @@ module.exports = {
   },
 
 
-  printLabels : function (model, ids, printer ) {
+  printLabels : function (model, ids, type ) {
 
     var deferred = q.defer();
 
-    var msg = "Print ";
+    default_type = {
+      'container' : 1,
+      'rack' : 2,
+      'solution' : 3
+    }
+
+    var deferred = q.defer();
+    
+    if (! type) {
+      type = default_type[model];
+    }
+
+    var group = sails.config.payload.printer_group;
+
+    if (! type) {
+        console.log("missing label type (?)");
+        deferred.reject("missing label type");
+    }
+    else if (!group) {
+      console.log("missing printer group (?)");
+      deferred.reject("missing label type");
+    }
+    else {
+
+      Printer_group.load_printer(group, type)
+      .then ( function (result) {
+          console.log("Got printer" + JSON.stringify(result));
+          deferred.resolve( { message: msg });      
+      })
+      .catch ( function (err) {
+        deferred.reject("error retrieving printer: " + err);
+      });
+    }
+
     /* 
      + ids.length + ' ' + model + " Labels: " + ids[0] +  '..' ;
     console.log(msg);
@@ -56,8 +89,6 @@ module.exports = {
       Barcode.printLabel(label, code, printer);
     } 
     */
-
-    deferred.resolve( { message: msg });
     
     return deferred.promise;
   },
