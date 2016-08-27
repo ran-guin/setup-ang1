@@ -93,7 +93,7 @@ module.exports = {
 
             }
 
-            console.log("Insert slot data: " + JSON.stringify(slotData));
+            // console.log("Insert slot data: " + JSON.stringify(slotData));
             Record.createNew('Rack', slotData)
             .then ( function (slotResult) {
               var box = boxResult.insertId;
@@ -103,10 +103,12 @@ module.exports = {
               deferred.resolve({box: boxResult, slots: slotResult, message: msg});
             })
             .catch (function (err) {
+              console.log("error creating slots " + err);
               deferred.reject(err);
             });
           })
           .catch ( function (err) {
+            console.log("error creating box " + err);
             deferred.reject(err);
           });
         }
