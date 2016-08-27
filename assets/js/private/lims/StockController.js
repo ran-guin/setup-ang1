@@ -59,6 +59,22 @@ function stockController ($scope, $rootScope, $http, $q) {
     	.then (function (result) {
     		console.log("GOT: " + JSON.stringify(result.data));
             $scope.message("Added Stock Record(s)");
+
+            /* add barcodes in createNew automatically ... 
+            var model = result.data.stock_type;
+            var ids   = result.data.ids;
+
+            if (model && ids.length) {
+                $scope.print_Labels(model, ids)
+                .then ( function (response) {
+                    console.log("printed : " + JSON.stringify(response));
+                })
+                .catch ( function (err) {
+                    console.log("Error printing barcodes");
+                });
+            }
+            */
+            
             $scope.clear_form();
     	})    	
     	.catch (function (err){
