@@ -34,24 +34,30 @@ module.exports = {
 			var user = { id: 3, name: 'Ran'};
 			
           console.log("access granted: ");
-          var payload = User.payload(user);
-          
-          if ( req.param('Debug') ) { payload['Debug'] = true; }
+          User.payload(user)
+          .then ( function (payload) {
+	          if ( req.param('Debug') ) { payload['Debug'] = true; }
 
-          // session authorization
-          req.session.authenticated = true;
-          req.session.payload = payload;
+	          // session authorization
+	          req.session.authenticated = true;
+	          req.session.payload = payload;
 
-          // token authorization 
-          payload['token'] = jwToken.issueToken(payload); 
-          req.headers.authorization = "Bearer [" + payload['token'] + ']';
+	          // token authorization 
+	          payload['token'] = jwToken.issueToken(payload); 
+	          req.headers.authorization = "Bearer [" + payload['token'] + ']';
 
-          sails.config.payload = payload;
-          sails.config.messages = [];
-          sails.config.warnings = [];
-          sails.config.errors   = [];
+	          sails.config.payload = payload;
+	          sails.config.messages = [];
+	          sails.config.warnings = [];
+	          sails.config.errors   = [];
 
-          return res.render('customize/private_home', payload);
+	          return res.render('customize/private_home', payload);
+          })
+          .catch (function (err) {
+          	console.log("error generating payload");
+          	return res.render('customize/private_home');
+          })
+	
 	},
 
 	protocol : function ( req, res) {
