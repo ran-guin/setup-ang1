@@ -37,8 +37,11 @@ function limsController ($scope, $rootScope, $http, $q) {
     }
 
     $scope.print_Labels = function (model, ids) {
+
+        var deferred = $q.defer();
+
         // custom method to call api to print barcodes ... 
-        var printer = 'Zebra13';
+        var printer = 'Zebra13';  // pass printer_group instead... 
  
         var payload = $scope.payload;
         if (model && ids.length && payload) {
@@ -49,6 +52,7 @@ function limsController ($scope, $rootScope, $http, $q) {
             params = params + 'user=' + payload.db_user + '&';
             params = params + 'id=' + ids + '&';
             params = params + 'printer=' + printer + '&';
+            params = params + 'printer_group=' + payload.printer_group + '&';
 
             console.log("params: " + params);
             $http.get("http://bcgpdev5.bccrc.ca/SDB_rg/cgi-bin/barcode_printer.pl?" + params)
@@ -61,19 +65,24 @@ function limsController ($scope, $rootScope, $http, $q) {
                         $scope.message(success[1]);
                     }
                 }
+                deferred.resolve(response);
             })
             .catch (function (err) {
+                deferred.reject(err);
                 console.log("Error: " + JSON.stringify(err));
             });
         }
         else {
-            if (!payload) { 
+           if (!payload) { 
                 console.log("No payload supplied to access printer parameters");
             }
             else {
                 console.log("No model or ids to print...");
             }
+            deferred.reject('no payload / model or ids');
+ 
         }
+        return deferred.promise;
     }
 
     $scope.reset_home_barcode = function (attribute) {
