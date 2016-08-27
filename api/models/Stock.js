@@ -46,7 +46,7 @@ module.exports = {
 
 			Record.createNew('stock', StockData)
 			.then ( function (stock) {
-				
+			
 				console.log(JSON.stringify(stock));
 				if (stock.insertId) {
 					var stock_id = stock.insertId;
@@ -76,6 +76,7 @@ module.exports = {
 						Record.createNew('solution', Reagents)
 						.then ( function (result) {
 							if (barcode) {
+								/*
 								var insertId = result.insertId;
 								var added    = result.affectedRows;
 
@@ -83,6 +84,10 @@ module.exports = {
 								for (var i=0; i<added; i++) {
 									ids.push(insertId++);
 								}
+	*/
+
+								/* handle in createNew ... 
+								var ids = Record.insert_Ids(result);
 
 								Barcode.printLabels('solution', ids)
 								.then ( function (response) {
@@ -91,6 +96,7 @@ module.exports = {
 								.catch ( function (err) {
 									console.log("Error printing solution barcodes " + err);
 								})
+*/
 							}
 							else {
 								console.log("suppress barcodes...");
