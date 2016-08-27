@@ -63,7 +63,10 @@ block content
                           my-dropdown.mini-dropdown.addon#transfer_qty_units(placeholder='units..' list="MenuList['map.transfer_qty_units']" selected="map.transfer_qty_units" property='name' track='name', ng-init="setup_Menu('map.transfer_qty_units','ml,ul,nl')" mandatory='true') 
                   br
                   span(style='color: red' ng-show='transfer_qty_errors || units_errors') Transfer Qty + Units Required
-                  span(style='color: red' ng-show="map.transfer_type === 'Transfer'") Defaults to entire volume in original tube(s)
+                  span(ng-show="map.transfer_type === 'Transfer'")
+                    button(type='button' ng-click="load_entire_volume()") Transfer entire volume
+                    span &nbsp;
+                    button(ng-show="map.transfer_qty" ng-click="clear_volume()") Clear volume
 
                 div.col-sm-4(ng-show="map.transfer_type !== 'Move'")
                   div.form-group(style='padding-top: 0px; padding-left: 40px')
