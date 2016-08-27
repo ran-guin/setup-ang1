@@ -95,7 +95,7 @@ module.exports = {
 		var force = options.force;
 
 		var ids = _.pluck(Samples, 'id');
-		var query = "SELECT FK_Plate__ID as id, FK_Attribute__ID as att_Id, Attribute_Value as barcode FROM Attribute";
+		var query = "SELECT FK_Plate__ID as id, Attribute_ID as att_Id, Attribute_Value as barcode FROM Attribute";
 		query = query + " LEFT JOIN Plate_Attribute ON (FK_Attribute__ID=Attribute_ID AND FK_Plate__ID IN (" + ids.join(',') +'))';
 		query = query + " WHERE Attribute_Name = 'Matrix_Barcode'";
 
@@ -110,6 +110,7 @@ module.exports = {
 		.then ( function (barcoded) {
 			console.log('Barcodes: ' + JSON.stringify(barcoded));
 			var MatrixAttribute_ID = barcoded[0].att_Id;
+			console.log('attribute id: ' + MatrixAttribute_ID);
 
 			var barcoded_ids = [];
 			var barcoded_value = [];
@@ -234,7 +235,6 @@ module.exports = {
 							})	
 							.catch ( function (err) {
 								console.log("Upload Error");
-								console.log(err);
 								deferred.reject(err);
 							});
 						}		
@@ -242,7 +242,6 @@ module.exports = {
 					catch (e) {
 						deferred.reject("Error loading excel file: " + e);
 					}
-
 				}			
 			});
 		})
