@@ -38,7 +38,7 @@ module.exports = {
   },
 
 
-  printLabels : function (model, ids, type ) {
+  print_Labels : function (model, ids, type ) {
 
     var deferred = q.defer();
 
@@ -49,7 +49,7 @@ module.exports = {
     }
 
     var deferred = q.defer();
-    
+
     if (! type) {
       type = default_type[model];
     }
@@ -57,8 +57,8 @@ module.exports = {
     var group = sails.config.payload.printer_group;
 
     if (! type) {
-        console.log("missing label type (?)");
-        deferred.reject("missing label type");
+        console.log("nothing printed");
+        deferred.resolve();
     }
     else if (!group) {
       console.log("missing printer group (?)");
@@ -69,6 +69,8 @@ module.exports = {
       Printer_group.load_printer(group, type)
       .then ( function (result) {
           console.log("Got printer" + JSON.stringify(result));
+
+          console.log("PRINT " + model + ': ' + ids.join(',') + " to " + JSON.stringify(result));
           deferred.resolve( { message: msg });      
       })
       .catch ( function (err) {
