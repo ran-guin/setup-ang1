@@ -39,12 +39,6 @@ module.exports = {
 		'FK_Rack__ID',
 	],
 
-	barcode : function (id, count) {
-
-		console.log(count + " Container Barcodes Printed.  from " + id);
-		return 1;
-	},
-
 	saveLastPrep : function (plates, prep_id) {
 			var deferred = q.defer();
 			
