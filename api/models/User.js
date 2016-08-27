@@ -24,7 +24,7 @@ module.exports = {
 
     access: {
       type: 'string',
-      enum: ['public', 'lab', 'research', 'admin'],
+      enum: ['public', 'lab', 'research', 'lab admin', 'admin'],
       defaultsTo: 'lab',
     },
 
@@ -92,6 +92,9 @@ module.exports = {
   ],
 
   payload : function (user, access) {
+
+      var deferred = q.defer();
+
       // generate standard payload 
       var url = sails.config.globals.url;
 
@@ -118,7 +121,17 @@ module.exports = {
         }
       }
 
-      return payload;
+      Printer_group.load_printer()
+      .then ( function (printers) {
+        console.log("printers: " + JSON.stringify(printers));
+        deferred.resolve(payload);      
+      })
+      .catch ( function (err) {
+        console.log("Error loading printers");
+        deferred.resolve(payload);
+      });
+
+      return deferred.promise;
   },
 
   alDente_verification : function (session) {
