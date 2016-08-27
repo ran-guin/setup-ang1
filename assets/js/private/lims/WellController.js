@@ -123,6 +123,20 @@ function wellController ($scope, $rootScope, $http, $q ) {
         console.log('validate');
         $scope.validate_Form();
     }
+
+    $scope.load_entire_volume = function () {
+        var quantities = _.pluck($scope.active.Samples,'qty');
+        var units = _.pluck($scope.active.Samples,'qty_units');
+        $scope.map.transfer_qty = quantities.join(',');
+        $scope.map.transfer_qty_units = units[0];
+        
+        $scope.redistribute('reset');
+    }
+    $scope.clear_volume = function () {
+         $scope.map.transfer_qty = '';
+        $scope.map.transfer_qty_units = '';       
+    }
+
     $scope.validate_Form = function validated_form() {
         
         if ($scope.map.transfer_type === 'Move') {
@@ -131,17 +145,14 @@ function wellController ($scope, $rootScope, $http, $q ) {
                 $scope.redistribute('reset');
                 console.log("reset split to 1... ");
             }
-
-            var quantities = _.pluck($scope.active.Samples,'qty');
-            var units = _.pluck($scope.active.Samples,'qty_units');
-            $scope.map.transfer_qty = quantities.join(',');
-            $scope.map.transfer_qty_units = units[0];
         }
-        else if ($scope.map.transfer_type === 'Transfer') {
-            var quantities = _.pluck($scope.active.Samples,'qty');
-            var units = _.pluck($scope.active.Samples,'qty_units');
-            $scope.map.transfer_qty = quantities.join(',');
-            $scope.map.transfer_qty_units = units[0];          
+
+        var qs = $scope.map.transfer_qty.split(',');
+        if (qs.length > 1 && $scope.map.splitX > 1) {
+            if (qs.length !== $scope.map.splitX) {
+                $scope.form_validated = false;
+                $scope.error("multiple transfer volumes must match split count");
+            }
         }
 
         console.log("Validate " + $scope.map.transfer_type);
