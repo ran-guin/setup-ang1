@@ -25,6 +25,8 @@
 							b #{ session.payload.access }
 						li alDente ID: 
 							b #{ session.payload.alDenteID }
+						li Printers:
+							b #{ session.payload.printer_group}
 					hr
 					a(href="#{sails.config.root}/logout")
 						button.btn.btn-danger(type="submit") Logout
