@@ -91,17 +91,28 @@ module.exports = {
     { name : 'Guest', email : 'guest@domain.com' },
   ],
 
-  payload : function (user, access) {
-
+  payload : function (user, options) {
       var deferred = q.defer();
 
+      if (!options) { options = {} }
       // generate standard payload 
       var url = sails.config.globals.url;
 
       var mode = sails.config.environment;
       var connection = undefined;
 
-      var payload = { user: user.name, userid: user.id, alDenteID: user.alDenteID, access: user.access, url: url};
+      var payload = { 
+        user: user.name, 
+        userid: user.id, 
+        alDenteID: user.alDenteID, 
+        access: user.access, 
+        url: url,
+      };
+
+      custom_options = Object.keys(options);
+      for (var i=0; i<custom_options.length; i++) {
+          payload[custom_options[i]] = options[custom_options[i]]
+      }
       
       if (mode) {
         payload['mode'] = mode;
@@ -120,17 +131,7 @@ module.exports = {
           payload['host'] = host;
         }
       }
-
-      Printer_group.load_printer()
-      .then ( function (printers) {
-        console.log("printers: " + JSON.stringify(printers));
-        deferred.resolve(payload);      
-      })
-      .catch ( function (err) {
-        console.log("Error loading printers");
-        deferred.resolve(payload);
-      });
-
+      deferred.resolve(payload);
       return deferred.promise;
   },
 
@@ -171,14 +172,21 @@ module.exports = {
               }
               else {
                 console.log("remote access granted");
-                var payload = User.payload(user, 'Login Access (TBD)');
-                payload['remote_login'] = remote_login;
-                // session authorization
+                User.payload(user)
+                .then (function (payload) {
 
-                console.log("Create remote login record");
+                  payload['remote_login'] = remote_login;
+                  // session authorization
+
+                  console.log("Create remote login record");
                 
-                console.log("resolve: " + JSON.stringify(payload));
-                deferred.resolve(payload);
+                  console.log("resolve: " + JSON.stringify(payload));
+                  deferred.resolve(payload);
+                })
+                .catch ( function (err) {
+                  console.log("Error generating payload");
+                  deferred.reject(err);
+                });
               }
             });            
           }
