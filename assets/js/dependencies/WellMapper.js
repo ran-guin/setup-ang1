@@ -203,13 +203,11 @@ function wellMapper() {
         if (this.available && this.available[batch] && this.available[batch].length > target_index+1) {
             console.log(this.available[batch].length + ' are avail in ' + batch + " of " + target_index);
             target_index++;
-            console.log('next index ' + target_index);
         }
         else {
             batch_index++;
             target_index = 0;
             batch = this.target_boxes[batch_index];
-            console.log('reset ' + batch_index );
         }
 
         if (this.available && this.available[batch] && this.available[batch][target_index]) {
@@ -262,7 +260,6 @@ function wellMapper() {
                 cols : [1,2,3,4,5,6,7,8,9],
             }
         };
-        // console.log("RETURN Size " + size);
         return sizes[size];
     }
 
@@ -469,6 +466,8 @@ function wellMapper() {
         var repeat_wells = 1;
 
         var pack_size = this.pack_size || this.pack_wells;
+        
+        if (pack_size.constructor === String) { pack_size = parseInt(pack_size) }
 
         var splitX     = this.splitX;
 
@@ -511,10 +510,14 @@ function wellMapper() {
                 if (this.splitX > 1) {
                     if (this.split_mode === 'serial') {
                         pack_size = pack_size || 1; 
+                        var count = 0;
+                        var maxcount = sources.length * this.splitX;
+
                         for (k=0; k<sources.length; k=k+pack_size ) {
                             for (j=0; j<this.splitX; j++) {
-                                for (var l=0; l<pack_size; l++) {
+                                for (var l=0; l<pack_size && count<maxcount; l++) {
                                     List[options[i]].push(opt[j]);
+                                    count++;
                                 }
                             }
                         }
@@ -529,7 +532,6 @@ function wellMapper() {
                 }
                 else if (opt.length > 1) {
                     var repeat = sources.length / opt.length;
-                    console.log("repeat x " + repeat);
                     if (this.split_mode === 'serial') {
                         for (j=0; j<opt.length;j++) {
                             for (k=0; k<repeat; k++) {
@@ -551,6 +553,7 @@ function wellMapper() {
                 }
 
                 console.log("\n* Split " + options[i] + " to: " + List[options[i]] );
+                console.log(List[options[i]].length + " values for " + sources.length + ' samples');
             }
             else {
                 // single value only 
@@ -564,6 +567,7 @@ function wellMapper() {
                         }
                     }
 
+                    console.log("Adjusted qty:" + JSON.stringify(List['qty']));
                     console.log("Enable quantity adjustments for " + sources.length + ' samples');
                 }
                 else {
@@ -858,15 +862,11 @@ function wellMapper() {
 
             if (prefix && (input_array.length > 1) && (input_array[0] == '') ) { input_array.shift() }  // remove first element 
 
-            console.log('test: ' + JSON.stringify(input_array) );
-
             var entered = input_array.length;
 
             var factor = Nx / entered;
             var round = Math.round(factor);
-            
-            console.log("Array: " + JSON.stringify(input_array) + " x " + factor);
-     
+                 
             if (factor == round) {
                  //$scope[field+'_errors'] = '';
                  //$scope.formDisabled  = false;
@@ -1000,7 +1000,7 @@ function wellMapper() {
 
     this.adjust_quantity = function (source, extract, extract_units) {
         if (extract && extract_units) {
-            console.log("adjust extraction of " + extract + extract_units);
+            console.log("adjust extraction of " + extract + extract_units + ' from ' + source.id);
             
             var current_volume = this.sample_remaining[source.id];
             if (current_volume == null) { current_volume = source.qty }
