@@ -146,6 +146,18 @@ module.exports = {
 
 // Generic methods 
 
+	insert_Ids : function (result) {
+		// parse returned value from createNew ...
+		var id = result.insertId;
+		var count = result.affectedRows;
+
+		var ids = [];
+		for (var i=0; i<count; i++) {
+			ids.push(id++);
+		}
+		return ids;
+	},
+
 	restore_order : function (data, list, ref) {
 		//
 		// Input:
@@ -851,9 +863,10 @@ module.exports = {
 			// else { sails.config.messages.push(msg) }
 			console.log("successfully created new " + table + ' record(s)');
 
-			if (Mod.barcode) {
+			var ids = Record.insert_Ids(result);
+			if (ids && ids.length) {
 				console.log("Call barcode method");
-				Mod.barcode(insertId, added);
+				Barcode.print_Labels(model, ids);
 			}
 
 			deferred.resolve(result);
