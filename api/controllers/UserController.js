@@ -166,6 +166,9 @@ module.exports = {
   },
 
   home : function (req, res) {
+    
+    Record.reset_messages();
+
     console.log("Payload = " + JSON.stringify(req.session.payload));
 
     if ( req.session.payload) {
