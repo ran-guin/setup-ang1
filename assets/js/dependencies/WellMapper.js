@@ -621,7 +621,7 @@ function wellMapper() {
                         };
                     }
                     else {
-                        warnings.push("Box information missing for sample " + i);
+                        errors.push("Box information missing for sample " + i);
                     }
 
                     var target_position;
