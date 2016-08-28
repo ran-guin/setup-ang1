@@ -68,10 +68,10 @@ module.exports = {
 
 			if (protocol_ids.length > 1) {
 				var protocols = _.uniq( _.pluck(data, 'last_protocol') );								
-				warningMsg = "Samples appear to be at different stages of pipeline: ['" + protocols.join("' AND '") + "']";
+				sails.config.warnings.push("Samples appear to be at different stages of the pipeline: ['" + protocols.join("' AND '") + "']");
 			}
 			else if (numbers.length > 1) {
-				warningMsg = "Samples appear to be at different stages of the last protocol: " + steps.join(' AND ');
+				sails.config.warnings.push("Samples appear to be at different stages of the last protocol: " + steps.join(' AND ') );
 				last_step = { protocol_id : protocol_ids[0]}
 			}
 			else {
@@ -82,7 +82,7 @@ module.exports = {
 			console.log("Last Step: " + JSON.stringify(last_step));
 		}
 		else { console.log("No last step data") }
-		return { last_step: last_step, warning: warningMsg };
+		return { last_step: last_step };
 	},
 
 	'loadSteps' : function (prot) {
