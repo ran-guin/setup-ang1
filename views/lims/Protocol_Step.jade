@@ -122,7 +122,7 @@ block content
 
                                     - var execute = '';
                                     if fld === 'location'
-                                      - execute = "distribute();";
+                                      - execute = "redistribute();";
                                       
                                     input.input-lg.form-control(type='#{fType}' name="#{fld}#{Snum}" ng-required="#{mandatory}" placeholder = "-- Enter #{alias} --" id='#{fld}#{Snum}' ng-model='#{fld}#{Snum}' default='#{def}' force=1 data-error="You must enter a valid quantity" ng-blur="splitField('#{fld}#{Snum}'); #{execute}")
 
@@ -161,7 +161,7 @@ block content
                             //div.col-sm-2 &nbsp;
                             label.col-sm-1 ..
                             div.col-sm-3
-                              button.btn.btn-success(type='submit' ng-click="updateLookups()" ng-disabled="form#{Snum}.$invalid") Completed Step
+                              button.btn.btn-success(type='submit' ng-click="updateLookups()" ng-disabled="invalidate_form || form#{Snum}.$invalid") Completed Step
                             div.col-sm-2
                               button.btn.btn-warning(type='button' ng-click="complete('Skipped')") Skip Step
                             div.col-sm-2
@@ -199,7 +199,7 @@ block content
                 div(ng-if="Custom_Options && Custom_Options.transfer_type")
                   
                   div(ng-show="!showMap")
-                    button.btn-lg.btn-primary(type='button' ng-click="showMap=1") Show Distribution Map
+                    button.btn-lg.btn-primary(type='button' ng-click="redistribute(); showMap=1;") Show Distribution Map
 
                   div(ng-show="showMap")
                     button.btn-lg.btn-danger(type='button' ng-click="showMap=0") Hide Distribution Map
