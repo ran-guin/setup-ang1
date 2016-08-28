@@ -13,6 +13,8 @@ function protocolController ($scope, $rootScope, $http, $q) {
     $scope.step.stepNumber = 1;
     $scope.SplitFields = {};
 
+    $scope.invalidate_form = false;
+
     $scope.initialize = function (config, options) {
         console.log("initialize protocol");
         $scope.initialize_payload(config);
@@ -323,7 +325,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
             // Define Data ...
             // promises.push( $scope.distribute() ); 
             console.log("queue distribution..."); 
-            promises.push( $scope.distribute() ); // WellMapper call ... 
+            promises.push( $scope.redistribute() ); // WellMapper call ... 
             console.log('distributed');
         } 
 
@@ -476,7 +478,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
         if (field.match(/split/i)) {
             console.log("reset specs");
             $scope.step.fill_by = 'column';
-            $scope.distribute();
+            $scope.redistribute();
         }
 
         var trim = new RegExp($scope.step.stepNumber + '$');
@@ -597,7 +599,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
         console.log($scope.list_mode + ' -> reset list example to ' + $scope.listExample);
     }
 
-    $scope.distribute = function distribute (reset) {
+    $scope.redistribute = function distribute (reset) {
         console.log("Distribute samples...");
         $scope.reset_messages();
         var deferred = $q.defer(); 
@@ -689,6 +691,18 @@ function protocolController ($scope, $rootScope, $http, $q) {
                     $scope.warning(Map.warnings[i]);
                 }
             }
+
+            if (Map.errors.length) {
+                // $scope.form_validated = false;
+                // need to ensure validation is performed when boxes are updated.. 
+                console.log(Map.errors);
+                console.log('invalidate form');
+                $scope.invalidate_form = true;
+            }
+            else {
+                $scope.invalidate_form = false;
+            }
+
             console.log("\n*** Distribution Map: " + JSON.stringify(Map));
 
             deferred.resolve(Map);
@@ -738,7 +752,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
             console.log("\n** Load custom options: " + custom_options);
             $scope.parse_custom_options(custom_options);
 
-            if ($scope.Step['transfer_type']) { $scope.distribute(1) }
+            if ($scope.Step['transfer_type']) { $scope.redistribute(1) }
 
             var name = $scope.Step['name'];
 
