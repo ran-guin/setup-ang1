@@ -251,11 +251,6 @@ function protocolController ($scope, $rootScope, $http, $q) {
 
         var PlateData = $scope.splitData(PlateInfo, $scope.active.N, map);
 
-        if ($scope.Step.transfer_type === 'Transfer' && ! $scope['transfer_qty' + $scope.step.stepNumber]) {
-            $scope['transfer_qty_split'] = _.pluck($scope.active.Samples,'qty');
-            $scope['transfer_qty_units_split'] = _.pluck($scope.active.Samples,'qty_units');
-        }
-
         console.log("load " + $scope.active.N + ' plate ids...');
         for (var i=0; i<$scope.active.N; i++) {
             PlateData[i]['FK_Plate__ID'] = $scope.active.Samples[i].id;
@@ -609,11 +604,32 @@ function protocolController ($scope, $rootScope, $http, $q) {
 
         var targetKey = 'transfer_type' + $scope.step.stepNumber;
 
-        var qty = $scope['transfer_qty' + $scope.step.stepNumber];
+        var qty = $scope['transfer_qty' + $scope.step.stepNumber] || $scope.Step['transfer_qty'];
         if ( $scope['transfer_qty' + $scope.step.stepNumber + '_split']) {
             qty = $scope['transfer_qty' + $scope.step.stepNumber + '_split'].split(',');
         }  
-        var qty_units = $scope['units_label'];
+        var qty_units = $scope['units_label'] || $scope.Step['transfer_qty_units'];;
+
+        if ($scope.Step.transfer_type === 'Transfer') {
+            var entered_qty = $scope['transfer_qty' + $scope.step.stepNumber] || $scope['transfer_qty' + $scope.step.stepNumber + '_split'];
+            var hidden_qty = $scope.Step['transfer_qty'];
+
+            if (entered_qty && entered_qty.constructor === String && entered_qty.match(/d*/) ) {
+                // okay...
+                console.log("enterd qty: " + entered_qty);
+                qty = entered_qty;
+                qty_units = qty_unts || 'ml';
+            }
+            else if (hidden_qty && hidden_qty.constructor === String && hidden_qty.match(/\d+/) ) {
+                console.log("hidden qty: " + hidden_qty);
+                qty = hidden_qty;
+            }
+            else {
+                qty = _.pluck($scope.active.Samples,'qty');
+                qty_units = _.pluck($scope.active.Samples,'qty_units');
+                console.log("transfer active sample qty: " + qty + qty_units );
+            }
+        }
 
         console.log("Transfer " + qty + qty_units);
         var Target = { 
@@ -755,10 +771,10 @@ function protocolController ($scope, $rootScope, $http, $q) {
                         $scope[id] = def;
                     }
                     else {
-                        console.log(key + " default = " + def)
                         $scope.Default[key] = def;         // not qty requiring units
                         $scope[id] = def;
                     }
+                    console.log(key + " default = " + def)
                 }
                 if ($scope.formats.length > i) { $scope.Format[key] = $scope.formats[i] }
             }
@@ -786,17 +802,18 @@ function protocolController ($scope, $rootScope, $http, $q) {
 
         var keys = $scope.mapping_keys;
         console.log("Keys: " + keys.join(','));
+
         for (var i=0; i<keys.length; i++) {
             if ( $scope[ keys[i] + $scope.step.stepNumber ] ) {
                 $scope.Step[keys[i]] = $scope[ keys[i] + $scope.step.stepNumber];
                 console.log("manually set custom key: " + keys[i] + ' = ' + $scope[ keys[i]]);
             }
-            else if (Opts[keys[i]]) {
-                $scope.Step[keys[i]] = $scope[ keys[i] + $scope.step.stepNumber] || Opts[keys[i]];
-                console.log("Custom: " + keys[i] + ' = ' + Opts[keys[i]]);
+            else if (Opts[keys[i]] == null) {
+                console.log(keys[i] + ' = ' + Opts[keys[i]] + " .. custom not defined");
             }
             else {
-                console.log(keys[i] + " not defined");
+                $scope.Step[keys[i]] = $scope[ keys[i] + $scope.step.stepNumber] || Opts[keys[i]];
+                console.log("Custom: " + keys[i] + ' = ' + Opts[keys[i]]);
             }
         }
 
