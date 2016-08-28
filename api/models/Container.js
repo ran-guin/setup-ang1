@@ -359,6 +359,10 @@ module.exports = {
 		var qtyUnits = Container.alias('qty_units');
 
 		if ( ! Options.solution_qty ) { Options.solution_qty = 0 }
+
+		if (Options.solution_qty && Options.solution_qty.constructor === String) {
+			Options.solution_qty = parseFloat(Options.solution_qty);
+		}
 		
 		if (Transfer[0].qty && Options.transfer_type !== 'Pre-Print') {
 			resetTarget[qtyUnits] = Transfer[0].qty_units || Options.transfer_qty_units;
@@ -368,6 +372,10 @@ module.exports = {
 			for (var i=0; i<Transfer.length; i++) {		
 				
 				var target_qty = Transfer[i].qty;
+				if (target_qty && target_qty.constructor === String) {
+					target_qty = parseFloat(target_qty);
+				}
+				
 				if (Options.solution_qty) {
 					var add_qty = Options.solution_qty[i];
 					if (add_qty && add_qty.constructor === String) {
