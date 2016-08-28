@@ -215,6 +215,14 @@ module.exports = {
 		return sorted_results;
 	},
 
+
+	// Generic methods ... 
+	reset_messages : function (type) {
+		if (type === 'messages' || !type ) { sails.config.messages = [] }
+		if (type === 'warnings' || !type ) { sails.config.warnings = [] }
+		if (type === 'errors' || !type ) { sails.config.errors = [] }
+	},
+
 	wrap_result : function (result) {
 		// append config messages to result returned via api
 
