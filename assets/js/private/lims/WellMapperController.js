@@ -29,7 +29,7 @@ function wellMapperController ($scope, $rootScope, $http, $q ) {
  
         $scope.map.packExample = $scope.map.packExamples[$scope.map.pack_mode + '-' + $scope.map.split_mode + '-' + $scope.map.fill_by] || '';
 
-	    $scope.mapping_keys = ['split', 'pack', 'fill_by', 'Target_format', 'Target_sample', 'transfer_type', 'reset_focus', 'target_size'];
+	    $scope.mapping_keys = ['split', 'pack', 'fill_by', 'Target_format', 'Target_sample', 'transfer_type', 'reset_focus', 'target_size', 'transfer_qty', 'transfer_qty_units'];
 		for (var i=0; i<$scope.mapping_keys.length; i++) {
 			console.log($scope.mapping_keys[i] + ' = ' + $scope.map[ $scope.mapping_keys[i] ]);
 		}    
