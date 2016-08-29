@@ -41,10 +41,10 @@ module.exports = {
 		var conditions = ['FK_Stock_Catalog__ID = Stock_Catalog_ID'];
 		var group = [];
 		var left_joins = [];
-		var order = ['Stock_Received DESC', 'Stock_ID DESC'];
+		var order = ['Stock_ID DESC'];
 
 		if ( type.match(/(Solution|Reagent)/) ) {
-			fields.push('GROUP_CONCAT(DISTINCT Solution_ID) as ids');
+			fields.push("GROUP_CONCAT(DISTINCT Solution_ID SEPARATOR ', ') as ids");
 			fields.push('Solution_Status as status');
 			fields.push("count(distinct Solution_ID) as active")
 			left_joins.push('Solution ON Solution.FK_Stock__ID=Stock_ID');
