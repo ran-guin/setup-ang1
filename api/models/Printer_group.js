@@ -18,8 +18,12 @@ module.exports = {
 
   // customize this list, since it is needed prior to connection to the database
   // Note name must exactly match printer_group names in the database...
-  printer_groups : [
-  
+ 
+  printer_groups: [
+        '3rd Floor BCG',
+        '7th Floor CG',
+        '13th Floor BCG',
+        'Printing Disabled'
   ],
 
   load_printer : function (group, type) {
@@ -36,7 +40,7 @@ module.exports = {
   	}
 
   	if (type) {
-  		conditions.push('FK_Label_Type__ID = ' + type);
+  		conditions.push('Printer_Assignment.FK_Label_Format__ID = ' + type);
   	}
 
   	var query = Record.build_query( { 
