@@ -175,7 +175,9 @@ module.exports = {
       return res.render('customize/private_home', req.session.payload);
     }
     else {
-      return res.render('customize/public_home');
+      var printers = sails.config.printer_groups || Printer_group.printer_groups;
+      console.log("Load printer groups " + JSON.stringify(printers));
+      return res.render('customize/public_home', { printers : printers });
     }
   },
 
@@ -216,6 +218,8 @@ module.exports = {
           // Create a User with the params sent from
           // the sign-up form --> signup.jade
             console.log("Create user : " + user);
+            var printers = sails.config.printer_groups || Printer_group.printer_groups;
+            console.log("Load printer groups " + JSON.stringify(printers));
 
             var alDenteID; 
             var get_ID = "SELECT Employee_ID as alDenteID FROM Employee WHERE Email_Address = '" + email + "'";
@@ -243,7 +247,7 @@ module.exports = {
                     if (err.invalidAttributes && err.invalidAttributes.email && err.invalidAttributes.email[0]
                       && err.invalidAttributes.email[0].rule === 'unique') {
                       
-                      return res.render('customize/public_home', { error : "Email address already in use" })
+                      return res.render('customize/public_home', { printers : printers, error : "Email address already in use" });                      
                       // return res.emailAddressInUse();
                     }
 
@@ -266,21 +270,21 @@ module.exports = {
                   
                   req.session.token = token;
               
-                  return res.render('customize/public_home', { message : "Registered.  Access pending approval by administrator" })
+                  return res.render('customize/public_home', {  printers : printers, message : "Registered.  Access pending approval by administrator" })
                   //return res.json(200, { user: user, token: token });
                 });
               }
               else if (result.length === 0) {
-                return res.render('customize/public_home', { error : "this email address not in alDente LIMS - please create alDente user first" })
+                return res.render('customize/public_home', {  printers : printers, error : "this email address not in alDente LIMS - please create alDente user first" })
               }
               else if (result.length > 1) {
-                return res.render('customize/public_home', { error : "this email address has multiple alDente LIMS users - please check with admin to resolve this first." });                
+                return res.render('customize/public_home', {  printers : printers, error : "this email address has multiple alDente LIMS users - please check with admin to resolve this first." });                
               }
 
             })
             .catch (function (err) {
               console.log("Error retrieving alDenteID");
-              return res.render('customize/public_home', { error : "could not retrieve LIMS ID to create user"} ); 
+              return res.render('customize/public_home', {  printers : printers, error : "could not retrieve LIMS ID to create user"} ); 
             });
           }
         });
@@ -352,8 +356,11 @@ module.exports = {
       // Wipe out the session (log out)
       req.session.User = null;
 
+      var printers = sails.config.printer_groups || Printer_group.printer_groups;
+      console.log("Load printer groups " + JSON.stringify(printers));
+
       // Either send a 200 OK or redirect to the home page
-      return res.render('customize/public_home');
+      return res.render('customize/public_home', { printers : printers } );
 
     // });
   }
