@@ -830,6 +830,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
                 console.log("Custom: " + keys[i] + ' = ' + Opts[keys[i]]);
             }
 
+/*
             if ($scope.Step[keys[i]].constructor === String) {
                 if ($scope.Step[keys[i]].match(/^\d+*$/) ) {
                     $scope.Step[keys[i]] = parseInt($scope.Step[keys[i]] );
@@ -837,6 +838,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
                     $scope.Step[keys[i]] = parseFloat($scope.Step[keys[i]]);
                 }
             }
+ */
         }
 
         if ($scope.Step['transfer_type'] && ! $scope.Step['target_size']) {
