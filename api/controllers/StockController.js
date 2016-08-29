@@ -32,35 +32,50 @@ module.exports = {
 
 		var type = 'Solution';
 		var element = req.param('element') || 'injectedData';
+		var limit = req.param('limit');
+
+
 
 		var fields = ['Stock_Catalog_Name as name', 'Stock_Received as rcvd', 'Stock_Number_in_Batch as qty', 'Stock_ID as stock_batch'];
 		var tables = ['Stock','Stock_Catalog'];
-		var conditions = [];
+		var conditions = ['FK_Stock_Catalog__ID = Stock_Catalog_ID'];
 		var group = [];
 		var left_joins = [];
-		var order = ['Stock_Received DESC'];
+		var order = ['Stock_Received DESC', 'Stock_ID DESC'];
 
 		if ( type.match(/(Solution|Reagent)/) ) {
 			fields.push('GROUP_CONCAT(DISTINCT Solution_ID) as ids');
 			fields.push('Solution_Status as status');
 			fields.push("count(distinct Solution_ID) as active")
 			left_joins.push('Solution ON Solution.FK_Stock__ID=Stock_ID');
-			group.push('Stock_ID, Solution_Status');
+			group.push('Stock_Catalog_ID, Stock_ID, Solution_Status');
 		}
 
-		var query = Record.build_query({ tables : tables, fields: fields, left_joins: left_joins, group: group, conditions: conditions, order: order});
+		var suffix = '';
+		if (limit && limit.match(/^\d+$/)) {
+			// leave as is
+			suffix = ' (last ' + limit + ')'
+		}
+		else if (limit === 'today') {
+			limit = '';
+			suffix = ' (today)'
+			conditions.push("Stock_Received = CURDATE()")
+		}
+
+		var query = Record.build_query({ tables : tables, fields: fields, left_joins: left_joins, group: group, conditions: conditions, order: order, limit: limit });
 
 		console.log(query);
 		Record.query_promise(query)
 		.then (function (result) {
 			return res.render('customize/injectedData', { 
-				fields : ['name', 'ids', 'rcvd', 'qty', 'status','stock_batch'], 
+				fields : fields, 
 				data : result, 
-				title: 'Received Stock', 
+				title: 'Received Stock ' + suffix, 
 				element: element
 			});
 		})
 		.catch ( function (err) {
+			console.log("Error checking received stock: " + err);
 			return res.render('customize/injectedData', {
 				data : null,
 				title : 'Received Stock',

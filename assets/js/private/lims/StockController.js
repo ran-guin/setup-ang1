@@ -28,6 +28,9 @@ function stockController ($scope, $rootScope, $http, $q) {
     }
 
     $scope.save = function () {
+        console.log($scope.received);
+   
+        console.log($scope.received);
 
     	var StockData = {
     		'number_in_batch' : $scope.number_in_batch,
@@ -59,6 +62,8 @@ function stockController ($scope, $rootScope, $http, $q) {
     	.then (function (result) {
     		console.log("GOT: " + JSON.stringify(result.data));
             $scope.message("Added Stock Record(s)");
+
+            $scope.injectData('/Stock/received?render=1&limit=1','rcvdStock');
 
             /* add barcodes in createNew automatically ... 
             var model = result.data.stock_type;

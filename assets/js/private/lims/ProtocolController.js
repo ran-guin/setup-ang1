@@ -13,6 +13,8 @@ function protocolController ($scope, $rootScope, $http, $q) {
     $scope.step.stepNumber = 1;
     $scope.SplitFields = {};
 
+    $scope.invalidate_form = false;
+
     $scope.initialize = function (config, options) {
         console.log("initialize protocol");
         $scope.initialize_payload(config);
@@ -251,11 +253,6 @@ function protocolController ($scope, $rootScope, $http, $q) {
 
         var PlateData = $scope.splitData(PlateInfo, $scope.active.N, map);
 
-        if ($scope.Step.transfer_type === 'Transfer' && ! $scope['transfer_qty' + $scope.step.stepNumber]) {
-            $scope['transfer_qty_split'] = _.pluck($scope.active.Samples,'qty');
-            $scope['transfer_qty_units_split'] = _.pluck($scope.active.Samples,'qty_units');
-        }
-
         console.log("load " + $scope.active.N + ' plate ids...');
         for (var i=0; i<$scope.active.N; i++) {
             PlateData[i]['FK_Plate__ID'] = $scope.active.Samples[i].id;
@@ -328,7 +325,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
             // Define Data ...
             // promises.push( $scope.distribute() ); 
             console.log("queue distribution..."); 
-            promises.push( $scope.distribute() ); // WellMapper call ... 
+            promises.push( $scope.redistribute() ); // WellMapper call ... 
             console.log('distributed');
         } 
 
@@ -481,7 +478,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
         if (field.match(/split/i)) {
             console.log("reset specs");
             $scope.step.fill_by = 'column';
-            $scope.distribute();
+            $scope.redistribute();
         }
 
         var trim = new RegExp($scope.step.stepNumber + '$');
@@ -602,18 +599,39 @@ function protocolController ($scope, $rootScope, $http, $q) {
         console.log($scope.list_mode + ' -> reset list example to ' + $scope.listExample);
     }
 
-    $scope.distribute = function distribute (reset) {
+    $scope.redistribute = function distribute (reset) {
         console.log("Distribute samples...");
         $scope.reset_messages();
         var deferred = $q.defer(); 
 
         var targetKey = 'transfer_type' + $scope.step.stepNumber;
 
-        var qty = $scope['transfer_qty' + $scope.step.stepNumber];
+        var qty = $scope['transfer_qty' + $scope.step.stepNumber] || $scope.Step['transfer_qty'];
         if ( $scope['transfer_qty' + $scope.step.stepNumber + '_split']) {
             qty = $scope['transfer_qty' + $scope.step.stepNumber + '_split'].split(',');
         }  
-        var qty_units = $scope['units_label'];
+        var qty_units = $scope['units_label'] || $scope.Step['transfer_qty_units'];;
+
+        if ($scope.Step.transfer_type === 'Transfer') {
+            var entered_qty = $scope['transfer_qty' + $scope.step.stepNumber] || $scope['transfer_qty' + $scope.step.stepNumber + '_split'];
+            var hidden_qty = $scope.Step['transfer_qty'];
+
+            if (entered_qty && entered_qty.constructor === String && entered_qty.match(/d*/) ) {
+                // okay...
+                console.log("enterd qty: " + entered_qty);
+                qty = entered_qty;
+                qty_units = qty_unts || 'ml';
+            }
+            else if (hidden_qty && hidden_qty.constructor === String && hidden_qty.match(/\d+/) ) {
+                console.log("hidden qty: " + hidden_qty);
+                qty = hidden_qty;
+            }
+            else {
+                qty = _.pluck($scope.active.Samples,'qty');
+                qty_units = _.pluck($scope.active.Samples,'qty_units');
+                console.log("transfer active sample qty: " + qty + qty_units );
+            }
+        }
 
         console.log("Transfer " + qty + qty_units);
         var Target = { 
@@ -673,6 +691,18 @@ function protocolController ($scope, $rootScope, $http, $q) {
                     $scope.warning(Map.warnings[i]);
                 }
             }
+
+            if (Map.errors.length) {
+                // $scope.form_validated = false;
+                // need to ensure validation is performed when boxes are updated.. 
+                console.log(Map.errors);
+                console.log('invalidate form');
+                $scope.invalidate_form = true;
+            }
+            else {
+                $scope.invalidate_form = false;
+            }
+
             console.log("\n*** Distribution Map: " + JSON.stringify(Map));
 
             deferred.resolve(Map);
@@ -722,7 +752,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
             console.log("\n** Load custom options: " + custom_options);
             $scope.parse_custom_options(custom_options);
 
-            if ($scope.Step['transfer_type']) { $scope.distribute(1) }
+            if ($scope.Step['transfer_type']) { $scope.redistribute(1) }
 
             var name = $scope.Step['name'];
 
@@ -755,10 +785,10 @@ function protocolController ($scope, $rootScope, $http, $q) {
                         $scope[id] = def;
                     }
                     else {
-                        console.log(key + " default = " + def)
                         $scope.Default[key] = def;         // not qty requiring units
                         $scope[id] = def;
                     }
+                    console.log(key + " default = " + def)
                 }
                 if ($scope.formats.length > i) { $scope.Format[key] = $scope.formats[i] }
             }
@@ -786,17 +816,18 @@ function protocolController ($scope, $rootScope, $http, $q) {
 
         var keys = $scope.mapping_keys;
         console.log("Keys: " + keys.join(','));
+
         for (var i=0; i<keys.length; i++) {
             if ( $scope[ keys[i] + $scope.step.stepNumber ] ) {
                 $scope.Step[keys[i]] = $scope[ keys[i] + $scope.step.stepNumber];
                 console.log("manually set custom key: " + keys[i] + ' = ' + $scope[ keys[i]]);
             }
-            else if (Opts[keys[i]]) {
-                $scope.Step[keys[i]] = $scope[ keys[i] + $scope.step.stepNumber] || Opts[keys[i]];
-                console.log("Custom: " + keys[i] + ' = ' + Opts[keys[i]]);
+            else if (Opts[keys[i]] == null) {
+                console.log(keys[i] + ' = ' + Opts[keys[i]] + " .. custom not defined");
             }
             else {
-                console.log(keys[i] + " not defined");
+                $scope.Step[keys[i]] = $scope[ keys[i] + $scope.step.stepNumber] || Opts[keys[i]];
+                console.log("Custom: " + keys[i] + ' = ' + Opts[keys[i]]);
             }
 
             if ($scope.Step[keys[i]].constructor === String) {
