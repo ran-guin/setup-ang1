@@ -798,6 +798,14 @@ function protocolController ($scope, $rootScope, $http, $q) {
             else {
                 console.log(keys[i] + " not defined");
             }
+
+            if ($scope.Step[keys[i]].constructor === String) {
+                if ($scope.Step[keys[i]].match(/^\d+*$/) ) {
+                    $scope.Step[keys[i]] = parseInt($scope.Step[keys[i]] );
+                } else if ($scope.Step[keys[i]].match(/^\d+\.?\d*$/) ) {
+                    $scope.Step[keys[i]] = parseFloat($scope.Step[keys[i]]);
+                }
+            }
         }
 
         if ($scope.Step['transfer_type'] && ! $scope.Step['target_size']) {
