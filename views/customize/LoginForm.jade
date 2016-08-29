@@ -1,9 +1,6 @@
 p &nbsp; 
 p &nbsp; 
 
-- var printers = sails.config.printer_groups;
-
-
 form(role='form' method='post' action="#{sails.config.root}/login")
   .form-group
     label(for='usrname')
@@ -15,16 +12,17 @@ form(role='form' method='post' action="#{sails.config.root}/login")
       i.fa.fa-eye
       |  Password
     input#password.input-lg.form-control(name='password' type='password' default='' force=1 placeholder='-- Enter password --' required)
-  .form-group
-    label(for='printers')
-      i.fa.fa-print
-      | &nbsp; Printer Group
-    div.radio
-      each pgroup in printers
-        label
-          input(type='radio' name='printers' value='#{pgroup}' required)
-          span #{pgroup} &nbsp;
-        br
+  if printers
+    .form-group
+      label(for='printers')
+        i.fa.fa-print
+        | &nbsp; Printer Group
+      div.radio
+        each pgroup in printers
+          label
+            input(type='radio' name='printers' value='#{pgroup}' required)
+            span #{pgroup} &nbsp;
+          br
   button.btn.btn-default.btn-lg.btn-success.btn-block(type='submit') 
     fa.fa.fa-power-off
     |  Login  
