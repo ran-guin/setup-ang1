@@ -29,6 +29,16 @@ app.controller('FancyFormController',
 
         $scope.custom_disable = false;
 
+        $scope.mysql_date = function (date) {
+            if (date.constructor === Date) {
+                var dd = date.getDate();
+                var mm = date.getMonth() + 1;
+                var yyyy = date.getFullYear();
+
+                return yyyy.toString() + '-' + mm.toString() + '-' + dd.toString(); 
+            }
+        }
+
         $scope.testUnique = function (element, model, field) {
             console.log("CHECK UNIQUENESS");
             
