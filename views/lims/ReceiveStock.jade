@@ -27,7 +27,7 @@ block content
     
                 div.form-group
                   label.input-lg.col-md-2.control-label(for='number_in_batch') Items Received: 
-                  input.input-lg#number_in_batch(type='number' ng-model='number_in_batch' required placeholder='Number in Batch')              
+                  input.input-lg#number_in_batch(type='number' min=1 ng-model='number_in_batch' required placeholder='Number in Batch')              
 
                 div.form-group
                   label.input-lg.col-md-2.control-label(for='lot_number') Lot #: 
@@ -36,6 +36,8 @@ block content
                 div.form-group
                   label.input-lg.col-md-2.control-label(for='received') Received: 
                   div.input-lg.my-datepicker#received(type="text" defaultTo='2016-03-02' ng-model="received")
+
+                  div.input(type='hidden' ng-model='type' value='Reagent')
 
                 div.form-group
                   label.input-lg.col-md-2.control-label(for='type') Type: 
@@ -65,7 +67,7 @@ block content
                           td(width='100%')                
                             input.input-lg.form-control.preaddon#qty(type='text' aria-describedBy='qty' placeholder='Qty', ng-model='qty' size='16')
                           td     
-                            my-dropdown.mini-dropdown.addon#qty_units(placeholder='units..' list="MenuList['qty_units']" selected="qty_units" property='name' track='name', ng-init="setup_Menu('qty_units','l,ml,ul,nl')") 
+                            my-dropdown.mini-dropdown.addon#qty_units(placeholder='units..' list="MenuList['qty_units']" selected="qty_units" property='name' track='name', ng-init="setup_Menu('qty_units','l,ml,g,mg,units')") 
 
                     div.col-md-4 &nbsp;
 
@@ -79,17 +81,17 @@ block content
                     div.col-md-10
                       input.input-lg.form-control#notes(type='text' ng-model='notes' placeholder='Notes')
 
-                div(ng-if="type === 'Equipment'")
+                // div(ng-if="type === 'Equipment'")
                   p &nbsp;
                   div.form-group.input-lg
-                    label.col-md-2.control-label(for='qty') Quantity: 
+                    label.col-md-2.control-label(for='qty') Unit Size: 
                     div.col-md-6
                       table
                         tr
                           td(width='100%')                
                             input.input-lg.form-control.preaddon#qty(type='text' aria-describedBy='qty' placeholder='Qty', ng-model='qty' size='16')
                           td     
-                            my-dropdown.mini-dropdown.addon#qty_units(placeholder='units..' list="MenuList['qty_units']" selected="qty_units" property='name' track='name', ng-init="setup_Menu('qty_units','units')") 
+                            my-dropdown.mini-dropdown.addon#qty_units(placeholder='units..' list="MenuList['qty_units']" selected="qty_units" property='name' track='name', ng-init="setup_Menu('qty_units','l,ml,g,mg,units')") 
 
                     div.col-md-4 &nbsp;
 
