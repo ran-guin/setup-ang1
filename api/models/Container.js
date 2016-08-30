@@ -56,12 +56,17 @@ module.exports = {
 			return deferred.promise;
 	},
 
-	loadData : function (ids, condition) {
+	loadData : function (ids, condition, options) {
+
+		if (! options) { options = {} }
 
 		var include = 'prep, position, attributes';
-
 		var deferred = q.defer();
-			
+		var box_order = options.box_order;
+
+		console.log("ordering options: " + JSON.stringify(options));
+		console.log("box order " + JSON.stringify(box_order));
+		
 		ids = Record.cast_to(ids, 'array');
 
 		//var fields = 'Plate_ID as id, Sample_Type as sample_type, Plate_Format_Type as container_format';
@@ -148,7 +153,15 @@ module.exports = {
 		    			}
 		    		}
 
-		    		var sorted_results = Record.restore_order(result, ids, 'id');
+		    		var sorted_results
+		    		if (box_order) {
+		    			console.log("sorted by box " + box_order.join(','));
+		    			sorted_results = Record.restore_order(result,box_order,'box_id');
+		    		}
+		    		else {
+		    			console.log("restore scanned order");
+		    			sorted_results = Record.restore_order(result, ids, 'id');
+		    		}
 
 		    		// console.log("Loaded DATA: " + JSON.stringify(result));
 		    		deferred.resolve(sorted_results);
