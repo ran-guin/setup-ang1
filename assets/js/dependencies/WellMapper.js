@@ -328,6 +328,9 @@ function wellMapper() {
         this.transfer_type = Options.transfer_type;
         this.target_boxes  = Options.target_boxes;
 
+        this.source_boxes = _.unique(_.pluck(sources, 'box_id'));
+
+
         this.source_count = sources.length;
  
         this.target_count = {};
@@ -590,7 +593,7 @@ function wellMapper() {
             + repeat_wells);
         console.log("Pack x " + pack_size);
 
-        var SourceMap = {};        
+        var SourceMap = [];        
         var Transfer = [];
         var TransferMap = [];
  
@@ -611,12 +614,18 @@ function wellMapper() {
 
                     // SourceColours[sources[i].position.toUpperCase()] = this.rgbList[i];
 
-                    if (sources[i].box_id) {
-                        if (! SourceMap[sources[i].box_id]) { SourceMap[sources[i].box_id] = {} } 
+                    box_index = this.source_boxes.indexOf(sources[i].box_id);
 
-                        SourceMap[sources[i].box_id][sources[i].position.toUpperCase()] = {
+                    console.log("BI: " + box_index);
+
+                    if (sources[i].box_id) {
+                        // if (! SourceMap[sources[i].box_id]) { SourceMap[sources[i].box_id] = {} } 
+                        if (! SourceMap[box_index]) { SourceMap[box_index] = {} } 
+
+                        SourceMap[box_index][sources[i].position.toUpperCase()] = {
                             colour_code : this.rgbList[i],
                             source_id   : sources[i].id,
+                            box_id : sources[i].box_id,
                             box_size    : sources[i].box_size,
                         };
                     }
@@ -784,6 +793,9 @@ function wellMapper() {
             Options : this.Options,
             // TargetColours: TargetColours,
             // Xfer : Xfer,
+
+            source_boxes: this.source_boxes,
+
             SourceMap: SourceMap,
             Available: Available_wells,
             wells: this.wells,
@@ -791,6 +803,7 @@ function wellMapper() {
             columns: this.columns,
             warnings: warnings,
             errors: errors,
+            source_boxes: this.source_boxes,
         };
 
         if (callback && callback.constructor === 'function') {
