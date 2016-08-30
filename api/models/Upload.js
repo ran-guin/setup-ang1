@@ -153,6 +153,8 @@ module.exports = {
 						console.log("Found " + rows + ' x ' + cols + ' matrix');
 						var map = {};
 						var applied = 0;
+
+						new_codes = [];
 						for (var i=0; i<rows; i++) {
 							for (var j=1; j<=cols; j++) {
 							
@@ -162,6 +164,7 @@ module.exports = {
 
 								map[posn] = obj[f].data[i][j-1];
 								applied = applied + 1;
+								new_codes.push( map[posn] );
 							}
 
 						}
@@ -174,70 +177,102 @@ module.exports = {
 						}
 
 						console.log(Samples.length + ' Sample(s) found');
+						
+						// First check for conflicts (matrix barcode already set to another sample )
+						var query = "SELECT FK_Plate__ID as id, Attribute_Value as barcode from Plate_Attribute where FK_Attribute__ID = " + MatrixAttribute_ID;
+						query = query + " AND Attribute_Value IN ('" + new_codes.join("','") + "')";
+						console.log(query);
+						Record.query_promise(query)
+						.then ( function (result) {
+							console.log(JSON.stringify(result));
+							var exists = {};
+							for (var i=0; i<result.length; i++) {
+								exists[result[i].barcode] = result[0].id;
+							}
 
-						for (var i=0; i<Samples.length; i++) {
-							console.log("Sample #" + i + ": " + JSON.stringify(Samples[i]));
-							var id = Samples[i].id;
-							var position = Samples[i].position;
-							if (position) {
-								var mapped = map[position] || map[position.toUpperCase()];
-								if (mapped) {
-									var barcoded_index = barcoded_ids.indexOf(id);
-									console.log('MB: ' + id + ' : ' + barcoded_index + ' <> ' + mapped);
-									
-									if (barcoded_index >= 0) {
-										if (barcoded_values[barcoded_index] === mapped) {
-											console.log("Already mapped... ignoring");
-											messages.push(barcoded_ids[barcoded_index] + ' already defined as: ' + mapped)
+
+							for (var i=0; i<Samples.length; i++) {
+								console.log("Sample #" + i + ": " + JSON.stringify(Samples[i]));
+								var id = Samples[i].id;
+								var position = Samples[i].position;
+								if (position) {
+									var mapped = map[position] || map[position.toUpperCase()];
+									if (mapped) {
+										var barcoded_index = barcoded_ids.indexOf(id);
+										console.log('MB: ' + id + ' : ' + barcoded_index + ' <> ' + mapped);
+										
+										if (barcoded_index >= 0) {
+											if (barcoded_values[barcoded_index] === mapped) {
+												console.log("Already mapped... ignoring");
+												warnings.push('BCG#' + barcoded_ids[barcoded_index] + ' already defined as: ' + mapped + ' (okay ... skipping)');
+											}
+											else {
+												errors.push('BCG#' + barcoded_ids[barcoded_index] + ': ' + barcoded_values[barcoded_index] + ' (in DB) != ' + mapped + ' (in file) ... skipping');
+											}
+										}
+										else if ( exists[mapped] ) {
+											if (exists[mapped] === id) {
+												messages.push("Barcode already defined for " + id + " as: " + mapped);
+											}
+											else {
+												errors.push(mapped + " is already assigned to another sample ! [BCG" + exists[mapped] + "] - please investigate !");
+											}
 										}
 										else {
-											warnings.push('BCG#' + barcoded_ids[barcoded_index] + ': ' + barcoded_values[barcoded_index] + ' (in DB) != ' + mapped + ' (in file) ... skipping');
+											messages.push("Set matrix barcode for BCG# " + id + ": " + mapped);
+											data.push([id, mapped]);
 										}
 									}
 									else {
-										messages.push("Set matrix barcode for BCG# " + id + ": " + mapped);
-										data.push([id, mapped]);
+										warnings.push("Nothing mapped to " + position);
 									}
 								}
 								else {
-									warnings.push("Nothing mapped to " + position);
-								}
+									errors.push("No position data for sample #" + i + ' : ' + id);
+								}					
+							}
+
+							console.log("upload " + JSON.stringify(data));
+
+							sails.config.warnings = warnings;
+							// sails.config.errors = errors;
+							sails.config.messages = messages;
+
+							if (errors.length || (! force && warnings.length)) {
+								console.log("Errors: " + JSON.stringify(errors));
+								errors.push("Aborting due to errors");
+								deferred.reject(errors);
 							}
 							else {
-								errors.push("No position data for sample #" + i + ' : ' + id);
-							}					
-						}
+								console.log("Map: " + JSON.stringify(map));
+								console.log("Matrix Data: " + JSON.stringify(data));
 
-						console.log("upload " + JSON.stringify(data));
+								var attribute = MatrixAttribute_ID;
 
-						sails.config.warnings = warnings;
-						// sails.config.errors = errors;
-						sails.config.messages = messages;
-
-						if (errors.length || (! force && warnings.length)) {
-							console.log("Errors: " + JSON.stringify(errors));
-							deferred.reject(errors);
-						}
-						else {
-							console.log("Map: " + JSON.stringify(map));
-							console.log("Matrix Data: " + JSON.stringify(data));
-
-							var attribute = MatrixAttribute_ID;
-
-							Attribute.uploadAttributes('Plate', attribute, data)
-							.then ( function (result) {
-								console.log("Response: " + JSON.stringify(result));
-								if (result.affectedRows) {
-									console.log(JSON.stringify(sails.config.messages));
-									sails.config.messages.push(result.affectedRows + " Matrix barcodes associated with samples");
+								if (data.length) {
+									Attribute.uploadAttributes('Plate', attribute, data)
+									.then ( function (result) {
+										console.log("Response: " + JSON.stringify(result));
+										if (result.affectedRows) {
+											console.log(JSON.stringify(sails.config.messages));
+											sails.config.messages.push(result.affectedRows + " Matrix barcodes associated with samples");
+										}
+										deferred.resolve(result);		
+									})	
+									.catch ( function (err) {
+										console.log("Upload Error");
+										deferred.reject(err);
+									});
 								}
-								deferred.resolve(result);		
-							})	
-							.catch ( function (err) {
-								console.log("Upload Error");
-								deferred.reject(err);
-							});
-						}		
+								else {
+									warnings.push("nothing to update");
+								}
+							}	
+						})
+						.catch ( function (err) {
+							warnings.push("Could not check for barcode conflicts first ... aborting");
+							
+						});
 					}
 					catch (e) {
 						deferred.reject("Error loading excel file: " + e);

@@ -17,6 +17,8 @@ module.exports = {
 
 		var barcode = body.barcode || req.param('barcode');
 
+		Record.reset_messages();
+		
 		console.log("Scan: " + JSON.stringify(req.body));
 
 		Barcode.interpret(barcode)
@@ -27,6 +29,7 @@ module.exports = {
 			var plate_ids = [];
 			var condition = '';
 			var promises = [];
+			var box_order;
 
 			if ( Scanned['Plate'].length) {
 				plate_ids = Scanned['Plate'];
@@ -35,6 +38,7 @@ module.exports = {
 				var boxes = Scanned['Rack'].join(',');
 				condition = "Box.Rack_ID IN (" + boxes + ')';
 				console.log("condition: " + condition);
+				box_order = Scanned['Rack'];
 			}
 			else if ( Scanned['Set'].length ) {
 				var sets = Scanned['Set'];
@@ -64,7 +68,7 @@ module.exports = {
 				if (plate_ids || condition) {
 					console.log("Load: " + plate_ids.join(',') + ' samples from box(es) ' + boxes);
 
-					Container.loadData(plate_ids, condition)
+					Container.loadData(plate_ids, condition, { box_order: box_order})
 					.then (function (data) {
 						console.log("loaded data " + JSON.stringify(data));
 						var sampleList = [];

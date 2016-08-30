@@ -36,7 +36,9 @@ module.exports = {
 
 
 
-		var fields = ['Stock_Catalog_Name as name', 'Stock_Received as rcvd', 'Stock_Number_in_Batch as qty', 'Stock_ID as stock_batch'];
+		var fields = ['Stock_Catalog_Name as name', 'Stock_Lot_Number as lot', 'Stock_Received as rcvd', 'Stock_Number_in_Batch as qty', 'Stock_ID as stock_batch'];
+		fields.push('Stock_Notes as notes');
+
 		var tables = ['Stock','Stock_Catalog'];
 		var conditions = ['FK_Stock_Catalog__ID = Stock_Catalog_ID'];
 		var group = [];
@@ -44,6 +46,7 @@ module.exports = {
 		var order = ['Stock_ID DESC'];
 
 		if ( type.match(/(Solution|Reagent)/) ) {
+			fields.push("Group_Concat( DISTINCT Concat(Solution_Quantity,Solution_Quantity_Units) SEPARATOR ', ') as size");
 			fields.push("GROUP_CONCAT(DISTINCT Solution_ID SEPARATOR ', ') as ids");
 			fields.push('Solution_Status as status');
 			fields.push("count(distinct Solution_ID) as active")

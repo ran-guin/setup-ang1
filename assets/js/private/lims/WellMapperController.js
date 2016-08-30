@@ -50,7 +50,6 @@ function wellMapperController ($scope, $rootScope, $http, $q ) {
         };
 
         $scope.map.splitExample = $scope.map.splitExamples[$scope.map.split_mode + '-' + $scope.map.fill_by];
- 
         $scope.map.fillExamples = {
             'row'  : "wells filled by row : eg A1, A2, A3 ...", 
             'column' : "wells filled by column : eg A1, B1, C1 ...",
@@ -298,7 +297,8 @@ function wellMapperController ($scope, $rootScope, $http, $q ) {
             console.log("Columns: " + JSON.stringify(Map.columns));
             console.log("NEW CMAP: " + JSON.stringify(Map.CMap));
             console.log("Source Colour Map: " + JSON.stringify(Map.SourceMap));
-            console.log("Target Colour Map: " + JSON.stringify(Map.TransferMap));           
+            console.log("Target Colour Map: " + JSON.stringify(Map.TransferMap)); 
+            console.log("source boxes: " + JSON.stringify(Map.source_boxes));          
 
             if ( Map.warnings && Map.warnings.length ) { 
                 for (var i=0; i<Map.warnings.length; i++ ) {

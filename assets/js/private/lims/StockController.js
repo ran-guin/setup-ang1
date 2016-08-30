@@ -43,6 +43,7 @@ function stockController ($scope, $rootScope, $http, $q) {
 
     	var data = { Stock : StockData, type: $scope.type };
 
+        if ($scope.expiry.constructor === Date ) { $scope.expiry = $scope.mysql_date( $scope.expiry ) }
 
     	if ($scope.type === 'Reagent') {
     		var ReagentData = {
@@ -60,10 +61,18 @@ function stockController ($scope, $rootScope, $http, $q) {
 
     	$http.post("Stock/receive", data)
     	.then (function (result) {
-    		console.log("GOT: " + JSON.stringify(result.data));
-            $scope.message("Added Stock Record(s)");
-
-            $scope.injectData('/Stock/received?render=1&limit=1','rcvdStock');
+    		var response = result.data;
+            console.log("GOT: " + JSON.stringify(result.data));
+            
+            if (response.error  && response.error.length ) {
+                for (var i=0; i<response.error.length; i++) {
+                    $scope.error(response.error[i]);
+                }
+            }
+            else {
+                $scope.message("Added Stock Record(s)");
+                $scope.injectData('/Stock/received?render=1&limit=1','rcvdStock');
+            }
 
             /* add barcodes in createNew automatically ... 
             var model = result.data.stock_type;
