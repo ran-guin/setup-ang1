@@ -69,12 +69,13 @@ module.exports = {
     }
     else {
 
-      Record.query_promise("Select Rack_Alias from Rack where Rack_ID = " + parent)
+      Record.query_promise("Select Rack_Alias,FK_Equipment__ID from Rack where Rack_ID = " + parent)
       .then (function (result) {
         if (result.length == 1) {
           var alias = result[0]['Rack_Alias'];
+          var equip = result[0]['FK_Equipment__ID']
 
-          var boxData = [ { Rack_Name: name, Rack_Alias: alias + ' ' + name, FKParent_Rack__ID : parent, Rack_Type: 'Box', Movable: 'Y', Rack_Full: 'N', Capacity: size }]
+          var boxData = [ { Rack_Name: name, Rack_Alias: alias + ' ' + name, FKParent_Rack__ID : parent, Rack_Type: 'Box', FK_Equipment__ID: equip, Movable: 'Y', Rack_Full: 'N', Capacity: size }]
           
           Record.createNew('Rack', boxData)
           .then ( function (boxResult) {
