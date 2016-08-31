@@ -1,22 +1,25 @@
 extends privateLayout
 block content
+  - var config = { payload: sails.config.payload };
+  - var init = "initialize_payload(" + JSON.stringify(config) + ")";
 
   div.main.container
-    div(ng-app='myApp')
-      div(ng-controller="FancyFormController")   
-
+     div(ng-app='myApp')
+      div(ng-controller="SharedController")       
+       div(ng-controller="LIMSController" ng-init="#{init}")
+        div(ng-controller="FancyFormController") 
             h3 Dashboard
-              div.navbar-right
-                if sails.config.payload && sails.config.payload.access === 'admin'
-                    a(href="/admin")
-                      button.btn.btn-danger(type='button') Admin
-                    span &nbsp; &nbsp;
-                    a(href="/lab_admin")
-                      button.btn.btn-danger(type='button') Lab Admin
+            div.navbar-right
+              if sails.config.payload && sails.config.payload.access === 'admin'
+                  a(href="/admin")
+                    button.btn.btn-danger(type='button') Admin
+                  span &nbsp; &nbsp;
+                  a(href="/lab_admin")
+                    button.btn.btn-danger(type='button') Lab Admin
 
-                if sails.config.payload && sails.config.payload.access === 'lab admin'
-                    a(href="/lab_admin")
-                      button.btn.btn-danger(type='button') Lab Admin
+              if sails.config.payload && sails.config.payload.access === 'lab admin'
+                  a(href="/lab_admin")
+                    button.btn.btn-danger(type='button') Lab Admin
 
             hr 
 
@@ -55,9 +58,12 @@ block content
             p &nbsp;
             p &nbsp;
             p &nbsp;
-      
-    // form.form-inline(role='form' method='post' action='#{sails.config.root}/test')
-      button.btn.btn-primary.btn-lg(type='submit') Test
-      
-    // If link section to the right include line below (and adjust Links.jade file as required) //
-    // include Links
+
+            hr
+            button(type='button' ng-model='print' ng-click="print_Labels('container','55')") Test Barcode Printing for Tube (BCG55) 
+            hr
+            button(type='button' ng-model='print' ng-click="print_Labels('Reagent','1')") Test Barcode Printing for Reagent (SOL1) 
+            hr    
+            button(type='button' ng-model='print' ng-click="print_Labels('Rack','651916')") Test Barcode Printing for Box (Loc651916) 
+            hr    
+  
