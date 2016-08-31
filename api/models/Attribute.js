@@ -13,6 +13,9 @@ module.exports = {
 	migrate: 'safe',
 	
 	tableName: 'Attribute',
+	idField : 'Attribute_ID',
+	nameField: 'Attribute_Name',
+
 	attributes: {
 
 	},
