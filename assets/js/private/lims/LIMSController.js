@@ -44,6 +44,7 @@ function limsController ($scope, $rootScope, $http, $q) {
         var printer = 'Zebra13';  // pass printer_group instead... 
  
         var payload = $scope.payload;
+        console.log(payload);
         if (model && ids.length && payload) {
             console.log("Test Printer " + model + " : " + ids);
 
@@ -53,6 +54,7 @@ function limsController ($scope, $rootScope, $http, $q) {
             params = params + 'id=' + ids + '&';
             params = params + 'printer=' + printer + '&';
             params = params + 'printer_group=' + payload.printer_group + '&';
+            params = params + 'model=' + model + '&';
 
             console.log("params: " + params);
             $http.get("http://bcgpdev5.bccrc.ca/SDB_rg/cgi-bin/barcode_printer.pl?" + params)
