@@ -630,7 +630,7 @@ function wellMapper() {
                         };
                     }
                     else {
-                        errors.push("Box information missing for sample " + i);
+                        warnings.push("Box information missing for sample " + i);
                     }
 
                     var target_position;
