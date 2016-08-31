@@ -8,6 +8,7 @@ function limsController ($scope, $rootScope, $http, $q) {
 
     $scope.active = {};
     $scope.active.Samples = [];
+    $scope.active.N = 0;
  
     $scope.active.valid_plate_sets = [];
 
