@@ -206,15 +206,16 @@ module.exports = {
 		var table = req.param('table');
 		var render = req.param('render') || false;
 
-		var idField = 'id';
-		var nameField = 'name';
-		var identifier = model;
-
 		var select;
 		
 		var Mod = sails.models[model] || {};
 		
 		table = table || Mod.tableName || model;
+
+		var idField = Mod.idField || 'id';
+		var nameField = Mod.nameField || 'name';
+		var identifier = model;
+
 
 		if (Mod.lookupCondition) {
 			condition = condition + ' AND ' + Mod.lookupCondition;
