@@ -79,7 +79,7 @@ module.exports = {
 							}
 							else if (Scanned['Rack'].length) {
 								messages.push("Scanned Loc#s: " + Scanned['Rack'].join(', '));
-								warnings.push("No Box Contenst Detected");
+								warnings.push("No Box Contents Detected");
 								warnings.push("(Note: Rack / Shelf types are ignored... or Boxes may be full)");
 							} 
 							else {
