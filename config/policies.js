@@ -50,7 +50,7 @@ module.exports.policies = {
   'barcode' : {
     'print_Labels' : true,
   },
-  
+
   /*
   session: {
       'create' : true,
@@ -110,6 +110,7 @@ module.exports.policies = {
   'container': {
     'history' : true,
     'summary' : true,
+    'storage_history' : true,
   }
 
   /***************************************************************************
