@@ -120,6 +120,7 @@ module.exports.routes = {
   'POST /record/save' : 'Record_APIController.save',
 
   'GET /barcode/print/:model/:ids' : 'BarcodeController.print_Labels',
+  'POST /barcode/print' : 'BarcodeController.print_Labels',
 
   'GET /parseMetaFields' : 'Record_APIController.parseMetaFields',
   'POST /parseMetaFields' : 'Record_APIController.parseMetaFields',
