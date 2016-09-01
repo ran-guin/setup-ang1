@@ -7,6 +7,7 @@
 
 var q = require('q');
 var bwipjs = require('bwip-js');
+var request = require('request');
 
 module.exports = {
 
@@ -65,34 +66,31 @@ module.exports = {
       deferred.reject("missing label type");
     }
     else {
+      var payload = sails.config.payload;
 
-      Printer_group.load_printer(group, type)
-      .then ( function (result) {
-          console.log("Got printer" + JSON.stringify(result));
+      var params = "database=" + payload.db + '&';
+      params = params + 'host=' + payload.host + '&';
+      params = params + 'user=' + payload.db_user + '&';
+      params = params + 'id=' + ids + '&';
+      // params = params + 'printer=' + printer + '&';
+      params = params + 'printer_group=' + payload.printer_group + '&';
+      params = params + 'model=' + model + '&';
 
-          console.log("PRINT " + model + ': ' + ids.join(',') + " to " + JSON.stringify(result));
-          deferred.resolve( { message: msg });      
-      })
-      .catch ( function (err) {
-        deferred.reject("error retrieving printer: " + err);
-      });
+      console.log("params: " + params);
+        
+      var url = "http://bcgpdev5.bccrc.ca/SDB_rg/cgi-bin/barcode_printer.pl?" + params;
+      console.log("url: " + url);
+
+      request( { url: url, method: "GET"},
+          function (error, response, body) {
+              if (!error && response.statusCode == 200) {
+                  console.log(body)
+              }
+              else { console.log("posted print request"); }
+          }
+      );
+
     }
-
-    /* 
-     + ids.length + ' ' + model + " Labels: " + ids[0] +  '..' ;
-    console.log(msg);
-
-    printer = 'Zebra13';  // get from printer group and type ...
-
-    for (var i=0; i<ids.length; i++) {
-      var prefix = '';
-      var label = prefix + ids[i];      
-    
-      Barcode.printLabel(label, code, printer);
-    } 
-    */
-    
-    return deferred.promise;
   },
 
   parse : function (barcode) {
