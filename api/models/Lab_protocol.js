@@ -17,7 +17,7 @@ module.exports = {
 
 		status : {
 			type : 'string',
-			'enum' : ['Active','Archived','Under Development']
+			'enum' : ['Active','Archived','Under Development', 'External']
 		},
 
 		description : { type : 'string '},
