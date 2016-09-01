@@ -144,7 +144,7 @@ module.exports = {
 	print_Labels : function (req, res) {
 		var body = req.body || {};
 		var model = body.model;
-		var ids   = body.ids;
+		var ids   = body.ids || body.id;
 		var printer = body.printer;
 		var code = body.code;
 
