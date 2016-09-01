@@ -37,6 +37,21 @@ function limsController ($scope, $rootScope, $http, $q) {
         return P[model];
     }
 
+    $scope.api_print = function (model, ids) {
+        var url = '/Barcode/print';
+        //  + model  + '/' + ids;
+
+        console.log("URL: " + url);
+        $http.post(url, { model: model, id: ids })
+        .then (function (response) {
+            console.log("Called print method...");
+            console.log(JSON.stringify(response));
+        })
+        .catch ( function (err) {
+            console.log("Printing error: " + err);
+        });
+    }
+
     $scope.print_Labels = function (model, ids) {
 
         var deferred = $q.defer();
@@ -46,6 +61,7 @@ function limsController ($scope, $rootScope, $http, $q) {
  
         var payload = $scope.payload;
         console.log(payload);
+
         if (model && ids.length && payload) {
             console.log("Test Printer " + model + " : " + ids);
 
@@ -53,7 +69,7 @@ function limsController ($scope, $rootScope, $http, $q) {
             params = params + 'host=' + payload.host + '&';
             params = params + 'user=' + payload.db_user + '&';
             params = params + 'id=' + ids + '&';
-            params = params + 'printer=' + printer + '&';
+            // params = params + 'printer=' + printer + '&';
             params = params + 'printer_group=' + payload.printer_group + '&';
             params = params + 'model=' + model + '&';
 
@@ -66,6 +82,10 @@ function limsController ($scope, $rootScope, $http, $q) {
                     if (success) { 
                         console.log("Success: " + success[1]);
                         $scope.message(success[1]);
+                    }
+                    else {
+                        console.log("no success message detected ?");
+                        $scope.warning("print success not detected...check printer")
                     }
                 }
                 deferred.resolve(response);
