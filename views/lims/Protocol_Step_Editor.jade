@@ -11,10 +11,6 @@ block content
     //    - Steps      (array of hashes)
     //    - attributes (array of hashes)
 
-    - var configParams = { record: record, payload: session.payload };
-
-    - var init = "initialize(" + JSON.stringify(configParams) + ")";
-
     //- flds = fields || []; 
     //- units = { 'solution_qty' : 'solution_qty_units', 'transfer_qty' : 'transfer_qty_units'};
     - aliases = { 'equipment' : 'Equip', 'solution' : 'Sol' }
@@ -39,9 +35,17 @@ block content
 
     - attributes = attributes || {}; // {'Thaw_Time' : 'integer' }
 
+    - var xfer_options = ['transfer_qty', 'Split'];
+    - var input_options = ['transfer_qty','Split','solution','solution_qty','equipment','location', 'comments'];
+
+    - var configParams = { record: record, payload: session.payload, input_options: input_options};
+    - var init = "initialize(" + JSON.stringify(configParams) + ")";
+
+
     div(ng-app='myApp')
-      div(ng-controller="SharedController")
-       div(ng-controller="FancyFormController")
+     div(ng-controller="SharedController")
+      div(ng-controller="FancyFormController")
+       div(ng-controller="LIMSController")
         div(ng-controller="Protocol_StepController" ng-init="#{init}")
           h3 Protocol Editor 
 
@@ -49,17 +53,17 @@ block content
             div.form-group
               label.control-label.col-sm-2(for='name') Name
               div.col-sm-10  
-                input.input-lg.form-control#name(type='text' placeholder='Name' ng-model='Record.name')
+                input.input-lg.form-control#name(type='text' placeholder='Name' ng-model='Record.name' ng-change="reset_input('name')")
               
             div.form-group
               label.control-label.col-sm-2(for='instructions') Instructions
               div.col-sm-10  
-                input.input-lg.form-control#instructions(type='text' placeholder='Instructions' ng-model='Record.instructions')
+                input.input-lg.form-control#instructions(type='text' placeholder='Instructions' ng-model='Record.instructions' ng-change="reset_input('instructions')")
 
             div.form-group
               label.control-label.col-sm-2(for='step_message') Message
               div.col-sm-10  
-                input.input-lg.form-control#step_message(placeholder='Message' ng-model='Record.message')
+                input.input-lg.form-control#step_message(placeholder='Message' ng-model='Record.message' ng-change="reset_input('message')")
 
             hr
 
@@ -68,66 +72,98 @@ block content
                 a(href='#' onclick="return false;" tooltip='instructions' data-toggle="popover" data-placement="left" data-trigger="focus" title="Description" data-content="#{prompt.desc}")
                      i.fa.fa-question-circle
               div.col-sm-10
-                input.input-lg#prompt(type='checkbox' ng-model='Record.prompt')
+                input.input-lg#prompt(type='checkbox' ng-click="reset_input('prompt');" ng-model='Record.prompt')
                   
             div.form-group
               label.control-label.col-sm-2.input-lg(for='repeatable') Repeatable &nbsp;
               div.col-sm-10
                 div.checkbox
                   label
-                    input.input-lg#repeatable(type='checkbox' ng-model='Record.repeatable')                  
+                    input.input-lg#repeatable(type='checkbox' ng-click="reset_input('repeatable');" ng-model='Record.repeatable')                  
             hr   
             b
               u 
                 h3 Input Options
 
-            - var xfer_options = ['solution','solution_qty','equipment','location']
-            each xfer_option in xfer_options
-              div.form-group
+            each input_option,i in input_options
+              - var xfer_only = xfer_options.indexOf(input_option);
+              - var xclass = 'form-group'
+              if (xfer_only >= 0) 
+                - xclass = xclass + ' alert-info';
+
+              div.form-group(class='#{xclass}' style='margin-bottom: 0px' ng-show="#{xfer_only} == -1 || transfer_step")
                 label.input-lg.col-sm-2
-                    b &nbsp; #{xfer_option}
+                    b &nbsp; #{input_option}
+                    input(type='hidden' name='inputname#{i}' ng-model="input[#{i}].name" ng-init="input[#{i}].name='#{input_option}'")
                 div.col-sm-2
-                  input.input-lg(type='checkbox' ng-model='input.#{xfer_option}' ng-change="set_input()")
+                  input.input-lg(type='checkbox' ng-model='input[#{i}].selected' ng-click="reset_input()")
                       
-                div.col-sm-3(ng-show="input.#{xfer_option}")
-                  input.input-lg(type='text' placeholder='- Default -' ng-model='default.#{xfer_option}' ng-change="set_input()")
-                div.col-sm-3(ng-show="input.#{xfer_option}")
-                  input.input-lg(type='text' placeholder='- Format -' ng-model='format.#{xfer_option}' ng-change="set_input()")
-                div.col-sm-2(ng-show="input.#{xfer_option}")
-                    input.col-sm-2(id='#{xfer_option}_mandatory' type='checkbox' ng-model='mandatory.#{xfer_option}' ng-change="set_input()")
-                    label.col-sm-10(for='#{xfer_option}_mandatory')
+                div.col-sm-3(ng-show="input[#{i}].selected" style='padding: 3px' )
+                  input.input-lg(type='text' placeholder='- Default -' ng-model='input[#{i}].default' ng-change="reset_input()")
+                div.col-sm-3(ng-show="input[#{i}].selected"  style='padding: 3px')
+                  input.input-lg(type='text' placeholder='- Format -' ng-model='input[#{i}].format' ng-change="reset_input()")
+                div.col-sm-2(ng-show="input[#{i}].selected"  style='padding: 3px')
+                    input.col-sm-2(id='#{input_option}_mandatory' type='checkbox' ng-model='input[#{i}].required' ng-change="reset_input()")
+                    label.col-sm-10()
                       b &nbsp; Mandatory
 
-
-            hr  
-
-            div.form-group
-              label.control-label.col-sm-2.input-lg(for='transfer') Transfer/Move &nbsp;
-                a(href='#' onclick="return false;" tooltip='instructions' data-toggle="popover" data-placement="left" data-trigger="focus" title="Description" data-content="#{transfer.desc}")
-                     i.fa.fa-question-circle
-              div.col-sm-10
-                input.input-lg#transfer(type='checkbox' ng-model='transfer_step')    
-
-            hr 
-            b 
+            hr   
+            b
               u 
                 h3 Attributes
-            p &nbsp;
 
+            div(ng-show="!(attributes['container'].length || attributes['prep'].length)")
+              div.col-sm-2 &nbsp;
+              div.col-sm-10
+                b (no attributes entered during step)
+
+            div(ng-show="attributes['container'].length || attributes['prep'].length")
+              div.col-sm-2 Name
+              div.col-sm-2 &nbsp;
+              div.col-sm-3 Default
+              div.col-sm-3 Format
+              div.col-sm-2 Mandatory
+
+            hr 
+            div(ng-repeat="(type, att_types) in attributes")
+              div(ng-repeat="(i, att) in att_types")
+                div.form-group(ng-show='att.name')
+                  label.input-lg.col-sm-2
+                      b &nbsp; {{att.name}}
+                  div.col-sm-2
+                    input.input-lg(type='checkbox' ng-model="att[att.id]")
+                  div.col-sm-3
+                    span {{ att.default }}
+                  // div.col-sm-3
+                    span {{ att.format }}
+                  div.col-sm-2
+                    div(ng-show="att.mandatory")
+                      i.fa.fa-check(style='color: green')
+                    div(ng-show="! att.mandatory")
+                      i.fa.fa-close(style='color: red')
+                  div.col-sm-3
+                    button.btn.btn-danger(type='button' ng-click="att = null") Delete            
+            
+            div.form-group
+              div.col-sm-2 &nbsp;
+              div.col-sm-10
+                b 
+                  u 
+                    h3.alert.alert-success Add Attributes: 
             div.form-group
               label.input-lg.col-sm-2
                 b Sample Attribute: &nbsp;
                 a(href='#' onclick="return false;" tooltip='description' data-toggle="popover" data-placement="left" data-trigger="focus" title="Sample Attributes" data-content="Attributes applied to every individual tube" data-html="true")
                   i.fa.fa-question-circle
 
-              div.col-sm-4
-                my-dropdown#satt(placeholder="Attribute" list="MenuList['plate_attribute']" selected="plate_attribute" property="name" ng-init="setup_Menu('plate_attribute', 'FK(attribute)', \"Attribute_Class='Plate'\")")
+              div.col-sm-3
+                my-dropdown#satt(placeholder="Attribute" list="MenuList['container_attribute']" selected="container_attribute" property="name" ng-init="setup_Menu('container_attribute', 'FK(attribute)', \"Attribute_Class='Plate'\")")
               div.col-sm-3()
-                input.input-lg(type='text' placeholder='- Default -' ng-model='default.plate_attribute' ng-change="set_input()")
-              div.col-sm-3()
-                input.col-sm-2(id='[plate_attribute_mandatory' type='checkbox' ng-model='mandatory.plate_attribute' ng-change="set_input()")
-                label.col-sm-10(for='plate_attribute_mandatory')
-                  b &nbsp; Mandatory
+                input.input-lg(type='text' placeholder='- Default -' ng-model='container_att_default' ng-change="set_attribute()")
+              // div.col-sm-3()
+                input.input-lg(type='text' placeholder='- Format -' ng-model='att_format' ng-change="set_attribute()")
+              div.col-sm-1
+                button.btn.btn-success(ng-click="add_attribute('container')") Add
 
             div.form-group
               label.input-lg.col-sm-2
@@ -135,14 +171,28 @@ block content
                 a(href='#' onclick="return false;" tooltip='description' data-toggle="popover" data-placement="left" data-trigger="focus" title="Sample Attributes" data-content="Attributes applied to every individual tube" data-html="true")
                   i.fa.fa-question-circle
 
-              div.col-sm-4
+              div.col-sm-3
                 my-dropdown#satt(placeholder="Attribute" list="MenuList['prep_attribute']" selected="prep_attribute" property="name" ng-init="setup_Menu('prep_attribute', 'FK(attribute)', \"Attribute_Class='Prep'\")")
               div.col-sm-3()
-                input.input-lg(type='text' placeholder='- Default -' ng-model='default.prep_attribute' ng-change="set_input()")
-              div.col-sm-2()
-                input.col-sm-2(id='[prep_attribute_mandatory' type='checkbox' ng-model='mandatory.prep_attribute' ng-change="set_input()")
+                input.input-lg(type='text' placeholder='- Default -' ng-model='prep_att_default' ng-change="reset_input()")
+              // div.col-sm-3()
+                input.input-lg(type='text' placeholder='- Format -' ng-model='prep_att_format' ng-change="reset_input()")
+              div.col-sm-1
+                button.btn.btn-success(ng-click="add_attribute('prep')") Add
+
+              // div.col-sm-2()
+                input.col-sm-2(type='checkbox' ng-model='prep_att_required' ng-change="reset_input()")
                 label.col-sm-10(for='prep_attribute_mandatory')
                   b &nbsp; Mandatory
+            
+            hr  
+
+            div.form-group
+              label.control-label.col-sm-2.input-lg(for='transfer') Transfer/Move &nbsp;
+                a(href='#' onclick="return false;" tooltip='instructions' data-toggle="popover" data-placement="left" data-trigger="focus" title="Description" data-content="#{transfer.desc}")
+                     i.fa.fa-question-circle
+              div.col-sm-10
+                input.input-lg#transfer(type='checkbox' ng-check="reset_custom(); reset_input()" ng-model='transfer_step')    
 
             div.alert.alert-info(ng-show="transfer_step")
               b 
@@ -168,22 +218,17 @@ block content
                     label
                       my-dropdown(placeholder='Sample Type' list="MenuList['target_sample']" selected='target_sample' property='name' ng-init="setup_Menu('target_sample','FK(sample_type)')")
 
-              - var xfer_options = ['transfer_qty', 'split']
-              each xfer_option in xfer_options
-                div.form-group(ng-show="transfer_type != 'Move'")
+              // repeat xfer options for custom_settings 
+              each xfer_option,i in xfer_options
+                div.form-group(ng-show="transfer_type != 'Move'") 
+                  //  && ! input[#{i}].selected
                   label.input-lg.col-sm-2
                       b &nbsp; #{xfer_option}
-                  div.col-sm-2
-                    input.input-lg(type='checkbox' ng-model='input.#{xfer_option}' ng-change="set_input()")
+                  div.col-sm-4
+                    input.input-lg(type='checkbox' ng-model='input.#{xfer_option}' ng-change="reset_input()")
                         
-                  div.col-sm-3(ng-show="input.#{xfer_option}")
-                    input.input-lg(type='text' ng-model='default.#{xfer_option}' ng-change="set_input()")
-                  div.col-sm-3(ng-show="input.#{xfer_option}")
-                    input.input-lg(type='text' ng-model='format.#{xfer_option}' ng-change="set_input()")
-                  div.col-sm-2(ng-show="input.#{xfer_option}")
-                      input.col-sm-2(id='#{xfer_option}_mandatory' type='checkbox' ng-model='mandatory.#{xfer_option}' ng-change="set_input()")
-                      label.col-sm-10(for='#{xfer_option}_mandatory')
-                        b &nbsp; Mandatory
+                  div.col-sm-6(ng-show="input.#{xfer_option}")
+                    input.input-lg(type='text' placeholder='- Default -' ng-model='default.#{xfer_option}' ng-change="reset_input()")
               
               div.form-group
                 label.input-lg.col-sm-2
@@ -191,8 +236,17 @@ block content
                   a(href='#' onclick="return false;" tooltip='description' data-toggle="popover" data-placement="left" data-trigger="focus" title="Reset_Focus" data-content="#{transfer_types}" data-html="true")
                     i.fa.fa-question-circle
                 div.col-sm-2
-                  input.input-lg(type='checkbox' ng-change="set_custom()" ng-model='reset_focus')
-                 
+                  input.input-lg(type='checkbox' ng-change="reset_custom()" ng-model='reset_focus')
+            div.form-group
+              div.col-sm-2
+              div.col-sm-6
+                div(ng-show="action === 'edit'")
+                  button.btn.btn-primary.form-control(type='button' ng-click="save()") Update
+                div(ng-show="action !== 'edit'")
+                  button.btn.btn-primary.form-control(type='button' ng-click="save()") Save
+              div.col-sm-4 &nbsp;
+
+            p &bbsp;
 
             div.container.alert-warning
               p &nbsp;
