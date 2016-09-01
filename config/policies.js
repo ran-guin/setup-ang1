@@ -47,6 +47,10 @@ module.exports.policies = {
     'wells' : true, 
   }, 
 
+  'barcode' : {
+    'print_Labels' : true,
+  },
+  
   /*
   session: {
       'create' : true,
