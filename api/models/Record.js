@@ -402,6 +402,7 @@ module.exports = {
 			Record.createNew(table, data, {}, { reset: { NULL : "\\N" }} )
 			.then ( function (added) {
 				sails.config.messages('added ' + table + ' record(s)');
+
 				deferred.resolve(added);
 			})
 			.catch ( function (err) {
@@ -872,6 +873,11 @@ module.exports = {
 			console.log("successfully created new " + table + ' record(s)');
 
 			var ids = Record.insert_Ids(result);
+
+			result['model'] = model;
+			result['table'] = table;
+			result['ids'] = ids;
+
 			if (ids && ids.length) {
 				console.log("Call barcode method");
 				Barcode.print_Labels(model, ids);
