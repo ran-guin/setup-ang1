@@ -73,8 +73,11 @@ function limsController ($scope, $rootScope, $http, $q) {
             params = params + 'printer_group=' + payload.printer_group + '&';
             params = params + 'model=' + model + '&';
 
+            var url = "http://bcgpdev5.bccrc.ca/SDB_rg/cgi-bin/barcode_printer.pl?";
+            
+            console.log(url);
             console.log("params: " + params);
-            $http.get("http://bcgpdev5.bccrc.ca/SDB_rg/cgi-bin/barcode_printer.pl?" + params)
+            $http.get(url + params)
             .then (function (response) {
                 console.log("Response: " + JSON.stringify(response));
                 if (response.data) {
