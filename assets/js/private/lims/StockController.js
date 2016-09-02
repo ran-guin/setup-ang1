@@ -43,7 +43,7 @@ function stockController ($scope, $rootScope, $http, $q) {
 
     	var data = { Stock : StockData, type: $scope.type };
 
-        if ($scope.expiry.constructor === Date ) { $scope.expiry = $scope.mysql_date( $scope.expiry ) }
+        if ($scope.expiry && $scope.expiry.constructor === Date ) { $scope.expiry = $scope.mysql_date( $scope.expiry ) }
 
     	if ($scope.type === 'Reagent') {
     		var ReagentData = {
@@ -74,20 +74,27 @@ function stockController ($scope, $rootScope, $http, $q) {
                 $scope.injectData('/Stock/received?render=1&limit=1','rcvdStock');
             }
 
-            /* add barcodes in createNew automatically ... 
-            var model = result.data.stock_type;
+            // add barcodes in createNew automatically ... 
+
             var ids   = result.data.ids;
+            var model = result.data.model;
+
+            console.log(model + ": " + ids);
 
             if (model && ids.length) {
                 $scope.print_Labels(model, ids)
                 .then ( function (response) {
+                    // $scope.message('attempted to print label(s)..');
                     console.log("printed : " + JSON.stringify(response));
                 })
                 .catch ( function (err) {
+                    $scope.error('error printing barcodes');
                     console.log("Error printing barcodes");
                 });
             }
-            */
+            else {
+                $scope.error("Error retrieving new model or id(s)");
+            }
             
             $scope.clear_form();
     	})    	
