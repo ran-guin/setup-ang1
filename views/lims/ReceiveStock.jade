@@ -3,8 +3,8 @@ block content
 
   // standard input variables: 
 
-  - var config = { };
-  - var init = "initialize(" + JSON.stringify(config) + ")";
+  - var config = { payload : sails.config.payload };
+  - var init = "initialize_payload(" + JSON.stringify(config) + ")";
   
   
   p &nbsp;
@@ -12,7 +12,8 @@ block content
      div(ng-app='myApp')
       div(ng-controller="SharedController")
         div(ng-controller="FancyFormController")
-          div(ng-controller="StockController" ng-init="#{init}")
+         div(ng-controller="LIMSController" ng-init="#{init}")
+          div(ng-controller="StockController")
           
 
             include ./../core/errorMsg.jade

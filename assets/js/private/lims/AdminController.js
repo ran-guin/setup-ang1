@@ -60,7 +60,7 @@ function adminController ($scope, $rootScope, $http, $q ) {
 				$scope.message(msg);
 			}
 
-			/*  print in createNew automatically 
+			//  print in createNew automatically 
 			if (boxes && boxes.length) {
 				$scope.print_Labels('rack',boxes)
 				.then ( function (response) {
@@ -70,8 +70,7 @@ function adminController ($scope, $rootScope, $http, $q ) {
 					console.log("Error printing barcodes");
 				});
 			}
-			*/
-			
+					
 			console.log("Admin returned:" + JSON.stringify(result));
 		})
 		.catch ( function (err) {
