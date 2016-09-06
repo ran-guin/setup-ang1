@@ -106,7 +106,7 @@ module.exports = {
         },
 
         success: function (){
-          console.log("access granted: ");
+          console.log("access granted");
           User.payload(user, { printer_group : printer_group })
           .then ( function (payload) {
             if ( req.param('Debug') ) { payload['Debug'] = true; }
@@ -115,6 +115,7 @@ module.exports = {
             req.session.authenticated = true;
             req.session.payload = payload;
 
+            var access = payload.access;
             // token authorization 
             payload['token'] = jwToken.issueToken(payload); 
             req.headers.authorization = "Bearer [" + payload['token'] + ']';
@@ -124,7 +125,12 @@ module.exports = {
             sails.config.warnings = [];
             sails.config.errors   = [];
 
-            return res.render('customize/private_home', payload);     
+            if (!access || access === 'public') {
+              return res.render('customize/public_home', { 'message' : 'Access still pending approval by Administrator'});
+            } 
+            else {
+              return res.render('customize/private_home', payload);     
+            }
           })
           .catch ( function (err) {
             return res.render('customize/public_home', { error: 'Error generating payload ' + err});
