@@ -346,12 +346,13 @@ module.exports = {
 		var resetSource = {};
 		var resetTarget = {};
 
+		var creation_date = Options.timestamp || '<now>';
 		var resetClone = {
 			'Plate_ID' : null,
 			'Plate_Status' : 'Active',
 			'FKParent_Plate__ID' : '<id>',
 			'FK_Rack__ID' : '<NULL>',
-			'Plate_Created' : '<now>',
+			'Plate_Created' : creation_date,
 			'FK_Employee__ID' : '<user>' 
 		};
 
