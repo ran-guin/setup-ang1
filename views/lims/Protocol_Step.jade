@@ -11,7 +11,7 @@ block content
     //    - Steps      (array of hashes)
     //    - attributes (array of hashes)
 
-    - var configParams = { protocol: protocol, plate_ids: plate_ids, plate_set: plate_set, Samples: Samples, Steps : Steps, Attributes: attributes, last_step: last_step};
+    - var configParams = { protocol: protocol, plate_ids: plate_ids, plate_set: plate_set, Samples: Samples, Steps : Steps, Attributes: attributes, last_step: last_step, backfill_date: backfill_date};
   
     - var init_options = { distribute : 1 };
     - var initP = "initialize(" + JSON.stringify(configParams) + ")";    
