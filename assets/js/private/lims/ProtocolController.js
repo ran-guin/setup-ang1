@@ -12,16 +12,20 @@ function protocolController ($scope, $rootScope, $http, $q) {
 
     $scope.step.stepNumber = 1;
     $scope.SplitFields = {};
-
+    $scope.backfill_date = null;
     $scope.invalidate_form = false;
 
     $scope.initialize = function (config, options) {
         console.log("initialize protocol");
         $scope.initialize_payload(config);
 
+        if (config && config['backfill_date']) {
+            $scope.backfill_date = config['backfill_date'];
+        }
+ 
         if (config && config['Samples']) {
             // both protocol tracking and standard Container page 
- 
+
             var Samples = config['Samples'] || {};
             if (config['Samples'].constructor === String) {
                Samples = JSON.parse(config['Samples'])
@@ -153,6 +157,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
         $scope.active.last_step.name = Samples[0].last_step;
         $scope.active.last_step.protocol = Samples[0].last_protocol;
         $scope.active.last_step.protocol_id = Samples[0].last_protocol_id;
+
         if ($scope.active.last_step.name === 'Completed Protocol') {
             $scope.active.last_step.status = 'Completed';
         }
@@ -220,6 +225,8 @@ function protocolController ($scope, $rootScope, $http, $q) {
         // complete step (if validated)
         $scope.action = action;
 
+        var timestamp = $scope.backfill_date || $scope.timestamp;
+
         // Legacy fields 
         var PrepData = { 
             'Prep_Name' : $scope.Step.name ,
@@ -227,7 +234,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
             'FK_Employee__ID' : 1, 
             'Prep_Action' : action,
             'Prep_Comments' : $scope['comments' + $scope.step.stepNumber],
-            'Prep_DateTime' : $scope.timestamp,
+            'Prep_DateTime' : timestamp,
             // 'FK_Plate_Set__Number' : $scope.active.plate_set,  // legacy ... in Plate_Prep... 
          };
 
@@ -602,6 +609,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
     $scope.redistribute = function distribute (reset) {
         console.log("Distribute samples...");
         $scope.reset_messages();
+        
         var deferred = $q.defer(); 
 
         var targetKey = 'transfer_type' + $scope.step.stepNumber;
@@ -753,7 +761,11 @@ function protocolController ($scope, $rootScope, $http, $q) {
             $scope.parse_custom_options(custom_options);
 
             if ($scope.Step['transfer_type']) { $scope.redistribute(1) }
-
+           
+            if ($scope.backfill_date) {
+                $scope.warning("Using Backfill Date: " + $scope.backfill_date);
+            }
+            
             var name = $scope.Step['name'];
 
             $scope.Show = {};
