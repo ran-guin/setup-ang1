@@ -319,8 +319,9 @@ app.controller('FancyFormController',
 
       compile: function (element, attrs) {
          var modelAccessor = $parse(attrs.ngModel);
+         var name = attrs.name;
 
-         var html = "<input class='input-lg' type='text' id='" + attrs.id + "' >" +
+         var html = "<input class='input-lg' type='text' id='" + attrs.id + "' name='" + name + "' >" +
             "</input>";
 
          var newElem = $(html);
