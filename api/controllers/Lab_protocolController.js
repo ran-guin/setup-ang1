@@ -113,9 +113,11 @@ module.exports = {
 		var protocol_id = req.body['lab_protocol-id'];
 		var Samples = JSON.parse(req.body.Samples);
 		var plate_set = req.body['plate_set'];
+		var backfill_date = req.body['backfill_date'];
 
 		console.log("Samples: " + JSON.stringify(Samples[0]) + '...');
-		console.log("Set: " + plate_set);
+		console.log("\nSet: " + plate_set);
+		console.log("Backfill date: " + backfill_date);
 
 		var get_last_step = Protocol_step.parse_last_step(Samples);
 		var last_step = get_last_step.last_step;
@@ -128,6 +130,7 @@ module.exports = {
 	    	data['Samples']   = Samples;
 	    	data['last_step'] = last_step;
 	    	data['plate_set'] = plate_set;
+	    	data['backfill_date'] = backfill_date;
 
 			//console.log("SEND Protocol Step Completion Data: " + JSON.stringify(data));
 			return res.render('lims/Protocol_Step', data);
