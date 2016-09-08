@@ -21,7 +21,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
 
         if (config && config['backfill_date']) {
             $scope.backfill_date = config['backfill_date'];
-        }
+            }
  
         if (config && config['Samples']) {
             // both protocol tracking and standard Container page 
@@ -345,6 +345,12 @@ function protocolController ($scope, $rootScope, $http, $q) {
             console.log(JSON.stringify(result));
             if (promises.length) { 
                 data['Transfer_Options'] = $scope.map.Options;
+
+                // use backfill data for Plate creation date 
+                if ($scope.backfill_date) {
+                    data['Transfer_Options'].timestamp = $scope.backfill_date;
+                }
+
                 data['Transfer'] = $scope.Map.Transfer;
                 console.log("transfer detected");
 
