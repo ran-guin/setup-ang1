@@ -10,14 +10,18 @@ form(role='form' method='post' action="/Lab_protocol/run" enctype='form-data')
     tr
       td(style='width:30%')
         h2 Continue Protocol: 
+        span.input-lg
+          input(type='checkbox' ng-model='backfill')
+          b &nbsp; Backfill
       td(style='width:40%; vertical-align:middle')
         //- init = "loadLookup('lab_protocol','','','Select Protocol',\"(Container_format IS NULL OR Container_format = '" + Samples[0].container_format_id + "')\")";
         if Samples[0].last_protocol && Samples[0].protocol_status != 'Completed Protocol'
           - defaultProtocol = Samples[0].last_protocol_id
         - init = "loadLookup('lab_protocol','','Select Protocol',\"(Container_format IS NULL OR Container_format = '" + Samples[0].container_format_id + "') AND ( Sample_type IS NULL OR Sample_type = '" + Samples[0].sample_type_id + "') AND status = 'Active'\")";
-
-  
         span.lookup(id='Lookup-lab_protocol' ng-init="#{init}")
+        div(ng-if="backfill")
+          br
+          input-lg.form-control.my-datepicker#backfill(type="text" name='backfill_date' ng-model="backfill_date")
       td(style='width:30%; vertical-align:middle')
         button.btn.btn-lg.btn-success(type='submit' ng-disabled=0) Run Protocol 
         br
