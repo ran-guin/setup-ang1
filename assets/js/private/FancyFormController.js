@@ -8,6 +8,9 @@ app.controller('FancyFormController',
         // Support Basic Password Validation and Confirmation
         // usage: ng-model='repeat' ng-key-up="compare(repeat)"
         $scope.stdForm = {};
+        $scope.MenuList = {};
+        $scope.ReverseLookup = {};
+
         $scope.stdForm.units = {
             'ul' :  1/1000,
             'ml' : 1,
@@ -161,33 +164,35 @@ app.controller('FancyFormController',
             $scope.get_List(enumType, condition)
             .then ( function (list) {          
                 
-                if ( ! $scope.MenuList ) { $scope.MenuList = {} }
+                //  if ( ! $scope.MenuList ) { $scope.MenuList = {} }
                 $scope.MenuList[element] = [];
+                $scope.ReverseLookup[element] = {};
 
                 if (list && list[0] && list[0].constructor === Object ) {
                     $scope.MenuList[element] = list;
                     console.log(element + " object list = " + JSON.stringify(list));
+
+                    for (var i=0; i<list.length; i++) {
+                        if (list[i].id && list[i].name) {
+                            $scope.ReverseLookup[element][list[i].id] = list[i].name;
+                        }
+                        else {
+                            console.log("requires id + name attributes to generate reverse lookup");
+                        }
+                    }
+                    console.log("Reverse Lookup : " + JSON.stringify($scope.ReverseLookup));
                 }
                 else if (list && list[0] ) {
                     for (var i=0; i<list.length; i++) {
                         var id = i+1;
                         id = id.toString();
                         $scope.MenuList[element].push( { id: id, name: list[i] });
-                        console.log(element + " array list = " + JSON.stringify(list));
-                        
+                        $scope.ReverseLookup[element][id] = list[i];
                     }
+                    console.log(element + " array list = " + JSON.stringify(list));
+                    console.log('Reverse Lookup: ' + JSON.stringify($scope.ReverseLookup[element]));
                 }
 
-                if ( defaultTo && defaultTo === list[i]) {
-                    //defaultVal = $scope.MenuList[element][ $scope.MenuList[element].length-1][ref];
-                    //$scope[element] = { id: id, name: list[i] };
-                }
-
-                //$scope[element] = $scope.MenuList[element][ref];
-                // console.log(JSON.stringify( $scope.MenuList ));
-                // console.log(element + " DEFAULT = " + JSON.stringify($scope[element]));
-
-                // $scope[element] = defaultVal;
                 console.log("DROPDOWN LIST: " + JSON.stringify( $scope.MenuList ));
                 console.log("default to " + JSON.stringify($scope[element]));
 
@@ -196,6 +201,27 @@ app.controller('FancyFormController',
                 console.log("Error generating enum list: " + err);
 
             });
+        }
+
+        $scope.menu_Item = function (element, id) {
+            var list = $scope.MenuList[element];
+            if (list) {
+                var ids = _.pluck(list, 'id');
+                var names = _.pluck(list, 'name');
+
+                var index = indexOf(ids, id);
+                if (index >= 0) {
+                    return names[index];
+                }
+                else { 
+                    console.log("No id: " + id + ' in list ');
+                    return '';
+                }
+            }
+            else { 
+                console.log("no item list: " + element);
+                return '';
+            }
         }
 
         $scope.setElement = function (element, val) {
@@ -420,15 +446,19 @@ app.controller('FancyFormController',
         link: function(scope) {
             scope.listVisible = false;
             scope.isPlaceholder = true;
-
+                
             if (scope.selected && scope.selected.constructor === Object) { 
                 scope.label = scope.selected[scope.property] 
             }
-            else if (scope.selected && scope.selected.constructor === String) { scope.label = scope.selected }
+            else if (scope.selected && scope.selected.constructor === String) { 
+                scope.label = scope.selected
+            }
             else if (scope.default) {
                 // if default explicitly supplied ... (needs to match object if track not set)                
                 scope.selected = scope.default;
-                scope.label = scope.default;
+                // scope.label = scope.default;
+
+                console.log("Find " + scope.default + ' IN ' + scope.list);
             }
             else {
                 console.log("no default for " + scope.placeholder + ' ' + scope.track);
@@ -439,6 +469,9 @@ app.controller('FancyFormController',
                 if (scope.track) { scope.selected = item[scope.track] }
                 else { scope.selected = item }  // or just item for full object
                 scope.label = item[scope.property];
+
+                console.log("Selected from " + scope.list)
+
             };
 
             scope.filter = function(event) {
@@ -509,6 +542,36 @@ app.controller('FancyFormController',
                     scope.$apply(function() {
                         scope.listVisible = false;
                     });
+            });
+
+            scope.$watch("default", function(value) {
+                // loads default once it is evaluated from Reverse Lookup (if necessary)
+                if (scope.list && scope.default) {
+                    // if default explicitly supplied ... (needs to match object if track not set)                
+                    
+                    var ids = _.pluck(scope.list,'id');
+                    var names = _.pluck(scope.list,'name');
+
+                    var index = names.indexOf(scope.default)
+                    if (scope.default.match(/^\d+$/)) {
+                        console.log("using index directly");
+                        index = ids.indexOf(scope.default);
+                    }
+                        
+                    scope.label    = names[index];
+
+                    if (scope.track === 'id') {
+                        scope.selected = ids[index];
+                    }
+                    else if (scope.track === 'name') {
+                        scope.selected = names[index];
+                    }
+                    else if (!scope.track) {
+                        scope.selected = list[index];
+                    }
+
+                    console.log("Found " + scope.selected + " : " + scope.label);
+                }
             });
 
             scope.$watch("selected", function(value) {
