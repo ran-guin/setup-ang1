@@ -120,7 +120,6 @@ module.exports.routes = {
   'POST /record/save' : 'Record_APIController.save',
 
   'GET /barcode/print/:model/:ids' : 'BarcodeController.print_Labels',
-  'POST /barcode/print' : 'BarcodeController.print_Labels',
 
   'GET /parseMetaFields' : 'Record_APIController.parseMetaFields',
   'POST /parseMetaFields' : 'Record_APIController.parseMetaFields',
@@ -163,6 +162,7 @@ module.exports.routes = {
 
   'GET /demo/protocol': 'DemoController.protocol',
   'GET /protocol_step/edit/:id' : 'Lab_protocolController.edit',
+  'POST /protocol_step/update'  : 'Lab_protocolController.update_step',
 
   // Demo Pages 
   'GET /demo/test': 'DemoController.test',
