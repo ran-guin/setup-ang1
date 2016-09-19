@@ -616,12 +616,16 @@ module.exports = {
     	var track = [];
     	var History;
     	var data_fields = [];
+
     	if (model && ids && data && Mod && Mod.track_history) {
     		data_fields = Object.keys(data);
     		console.log("Data Fields: " + data_fields.join(','));
     		var track_fields = Mod.track_history || 'FK_Rack__ID'; // always track location ... 
     		track = _.intersection(track_fields, data_fields);
     		History = {};  // define...
+    	}
+    	else {
+    		console.log("no data history tracking");
     	}
 
 		var deferred = q.defer();
@@ -675,6 +679,7 @@ module.exports = {
 		var condition = conditions.join(' AND ');
 		
 		var SetEach = [];
+		console.log("set values...");
 		if (data && table && idField) {
 			var fields = Object.keys(data);
 			var Set = [];
@@ -709,10 +714,11 @@ module.exports = {
 					Set.push(fields[i] + " = " + setVal );
 				}
 			}
+			console.log('update history .. ');
 
 			Record.update_History(model, ids, data, track)
 			.then ( function (History) {
-				console.log("HHH: " + JSON.stringify(History));
+				console.log("History: " + JSON.stringify(History));
 				var promises = [];
 				if (Set.length) {
 					query = query + " SET " + Set.join(',');
