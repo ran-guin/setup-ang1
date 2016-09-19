@@ -216,6 +216,30 @@ module.exports = {
 			}
 		});
 
+	},
+
+	update_step : function (req, res) {
+		var body = req.body || {};
+
+		var data = body;
+
+		console.log("UPDATE " + JSON.stringify(data));
+		var json_data = data.custom_settings || "{}";
+		var json = JSON.parse(json_data);
+
+		console.log("JSON: " + JSON.stringify(json));
+
+		data.custom_settings = json;
+
+		Record.update('protocol_step', data)
+		.then ( function (result) {
+			console.log('response: ' + JSON.stringify(result));
+			res.send({ result : result} );
+		})
+		.catch ( function (err) {
+			console.log(err);
+			return res.send( { error: err });
+		});
 	}
 
 };
