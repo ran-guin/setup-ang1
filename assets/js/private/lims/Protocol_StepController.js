@@ -57,15 +57,22 @@ function protocol_stepController ($scope, $rootScope, $http, $q) {
         $scope.reset_input();
         $scope.reset_custom();
     }
-
-    $scope.$watch('Target_sample', function () {
+    
+    $scope.$watch('Target_format', function (val) {
+        console.log("detected format change to " + val);
         $scope.reset_input();
         $scope.reset_custom();
     });
 
-    $scope.preload = function () {
+    $scope.$watch('Target_sample', function (val) {
+        console.log("detected sample change to " + val);
+        $scope.reset_input();
+        $scope.reset_custom();
+    });
 
-        if  (! $scope.preloaded) {
+    $scope.preload = function (force) {
+
+        if  (force || ! $scope.preloaded) {
             $scope.Record.original_input = $scope.Record.input_options;
             console.log("Original Input: " + $scope.Record.original_input);
             $scope.preloaded = 1;
@@ -80,6 +87,8 @@ function protocol_stepController ($scope, $rootScope, $http, $q) {
 
             // check custom options 
             if (custom) {
+    
+                $scope.custom = [];
                 custom_settings = JSON.parse(custom);
  
                 // add special transfer fields first (embed in others ?)
@@ -228,7 +237,6 @@ function protocol_stepController ($scope, $rootScope, $http, $q) {
             console.log("CUSTOM: " + JSON.stringify($scope.custom));
             console.log("format: " + $scope.Target_sample)
         }
-
     }
 
     $scope.add_attribute = function (type) {
@@ -295,22 +303,24 @@ function protocol_stepController ($scope, $rootScope, $http, $q) {
         }
         if (json) { json = "{" + json + " }" }
         
+        console.log('json cs ocs:');
+        console.log(json);
+        console.log($scope.Record.custom_settings);
+        console.log($scope.Record.original_custom_settings);
+
         if ( json === $scope.Record.original_custom_settings) {
             delete $scope.changed['custom_settings'];
             $scope.Record.custom_settings = json;
             console.log('json original restored: ' + json);
         }
-        else if ( $scope.Record.custom_settings === json) {
+        else if ( 0 && $scope.Record.custom_settings === json) {
             console.log('json not changed');
+            delete $scope.changed['custom_settings'];
         }
         else {
-            console.log('json cs ocs:');
-            console.log(json);
-            console.log($scope.Record.custom_settings);
-            console.log($scope.Record.original_custom_settings);
             $scope.Record.custom_settings = json;
             $scope.changed['custom_settings'] = json;
-            console.log(JSON.stringify($scope.changed));
+            console.log('Changed: ' + JSON.stringify($scope.changed));
         }
 
         $scope.changes = Object.keys($scope.changed).length;
@@ -416,16 +426,53 @@ function protocol_stepController ($scope, $rootScope, $http, $q) {
         $scope.reset_custom();
 
         console.log("Changed: " + JSON.stringify($scope.changed));
-        var data = {};
+        
+        var data = {'id' : $scope.Record.id };
+
         if ($scope.action === 'edit') {
             var flds = Object.keys($scope.changed);
             console.log("Change " + flds.join(','));
-            for (var i=0; i<flds.length; i++) {
-                var fld = flds[i];
-                data[fld] = $scope.Record[fld];
-            }
 
-            console.log("UPDATE: " + JSON.stringify(data));
+            if (flds.length) {
+                for (var i=0; i<flds.length; i++) {
+                    var fld = flds[i];
+                    data[fld] = $scope.Record[fld];
+                }
+
+                console.log("Record: " + JSON.stringify($scope.Record));
+                console.log("UPDATE: " + JSON.stringify(data));
+
+                $http.post('/protocol_step/update', data)
+                .then ( function (response) {
+                    console.log('RESPONSE:' + JSON.stringify(response));
+                    if (response.data && response.data.error) {
+                        console.log("error: " + response.data.error);
+                        $scope.error(response.data.error);
+                    }
+                    else if (response.data && response.data.result && response.data.result.set) {
+                        var updated = response.data.result.set.affectedRows;
+                        $scope.reset_messages();
+                        $scope.message("Updated " + updated + " Record(s)");
+                        
+                        $scope.Record.original_custom_settings = $scope.Record.custom_settings;
+                        $scope.reset_input();
+                        $scope.reset_custom();
+                        console.log("updated " + updated + ' Records');
+                    }
+                    else {
+                        console.log("cound not parse result: " + JSON.stringify(result));
+                    }
+
+                })
+                .catch ( function (err) {
+                    console.log("Error posting step");
+                    console.log(err);
+                });
+            }
+            else {
+                console.log("nothing changed");
+                $scope.message("No fields altered");
+            }
         }
         else {
             data = {
@@ -445,17 +492,20 @@ function protocol_stepController ($scope, $rootScope, $http, $q) {
                 'createdAt'  : '<now>',
             }
             
+            console.log("Record: " + JSON.stringify($scope.Record));
             console.log("SAVE: " + JSON.stringify(data));
+
+            $http.post('/record/', 'protocol_step', data)
+            .then ( function (result) {
+                console.log('RESPONSE:' + JSON.stringify(result));
+            })
+            .catch ( function (err) {
+                console.log("Error posting step");
+                console.log(err);
+            });
         }
 
-        $http.post('/protocol_step/update', data)
-        .then ( function (result) {
-            console.log('RESPONSE:' + JSON.stringify(result));
-        })
-        .catch ( function (err) {
-            console.log("Error posting step");
-            console.log(err);
-        });
+
     }    
 
 }]);
