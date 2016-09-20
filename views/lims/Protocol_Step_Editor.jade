@@ -2,9 +2,7 @@ extends ./../customize/privateLayout
 
 block content
 
-  div.container
-    include ./../core/errorMsg.jade
-    
+  div.container   
     // input variables: 
     //    - plate_ids  (array); 
     //    - Samples    (array of hashes)
@@ -49,7 +47,11 @@ block content
       div(ng-controller="FancyFormController")
        div(ng-controller="LIMSController")
         div(ng-controller="Protocol_StepController" ng-init="#{init}")
-          h3 Protocol Editor 
+
+          include ./../core/errorMsg.jade
+          h3 Protocol Editor
+          include ./../core/angularMessages.jade
+       
 
           div.alert.alert-warning(ng-show="changes")
             h4 {{ changes }} Field(s) Altered: 
@@ -308,7 +310,9 @@ block content
 
             div.alert.alert-info(ng-show="transfer_step" style="padding:10px; border: 1px solid black")
               b 
-                u Transfer / Relocate Options {{ transfer_type }} : {{ Target_format }} / {{ Target_sample }}}
+                u Fixed Transfer / Relocate Options
+                span(style='color: red') &nbsp; &nbsp; (use input options above if variable input desired &nbsp
+                span(style='color: black') - for applicable fields only: split, transfer_qty, location)
               p &nbsp;
               div.form-group
                 label.input-lg.col-sm-2(for='type')
