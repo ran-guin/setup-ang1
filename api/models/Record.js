@@ -608,7 +608,9 @@ module.exports = {
 		//
 		//   Record.update('user', [1,2,3], { name : [ 'Adam','Boris','Clyde'] });
 		//  
-		console.log("Update " + model + ": " + ids);
+
+		var ids = Record.cast_to(ids,'array')
+		console.log("Update " + model + ": " + ids.join(','));
 		console.log(JSON.stringify(data));
 
 		// setup History Tracking if applicable
@@ -759,6 +761,7 @@ module.exports = {
 
 					if (Set.length) { setValues = results[0] }
 					if (SetEach.length) { updateValues = results[results.length - 1] }
+
 
 					if (History) {
 						console.log("update History for " + model);
