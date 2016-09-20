@@ -224,14 +224,19 @@ module.exports = {
 		var data = body;
 
 		console.log("UPDATE " + JSON.stringify(data));
-		var json_data = data.custom_settings || "{}";
-		var json = JSON.parse(json_data);
 
-		console.log("JSON: " + JSON.stringify(json));
+		var id = data.id;
+
+		delete data.id;
+
+		var json = data.custom_settings;
+		console.log("JSON: " + data.custom_settings);
+		json = json.replace(/"/g, '\\"');
+		console.log("JSON2 : " + json);
 
 		data.custom_settings = json;
 
-		Record.update('protocol_step', data)
+		Record.update('protocol_step', id, data)
 		.then ( function (result) {
 			console.log('response: ' + JSON.stringify(result));
 			res.send({ result : result} );
