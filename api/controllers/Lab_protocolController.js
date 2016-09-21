@@ -40,7 +40,7 @@ module.exports = {
 				return res.send('');
 			}
 
-			return res.render('lims/Lab_protocol', { steps : result } );
+			return res.render('lims/Lab_protocol', { Steps : result } );
 			// return res.send();
 
 		});
