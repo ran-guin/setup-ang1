@@ -112,14 +112,17 @@ module.exports = {
 
 
 	save : function (req, res) {
-		var body = req.body;
+		var body = req.body || {};
 
-		var model = req.param('model') || body.model;
+		var model = body.model || req.param('model');
 		var data  = body.data;
+
+		console.log("Remote create " + model);
+		console.log(JSON.stringify(data));
 
 		Record.createNew(model, data)
 		.then ( function (result ) {
-			return res.json(result);
+			return res.json(result.data);
 		})
 		.catch ( function (err) {
 			return res.json(err);
