@@ -33,11 +33,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
 
             $scope.initialize_Progress(Samples);            
 
-            for (var i=0; i<Samples.length; i++) {
-                if (Samples[i].last_step !== $scope.active.last_step.name) {
-                    $scope.warning("Samples at different stages of pipeline..");
-                }
-            }    
+            $scope.validate_Samples(Samples);
 
             $scope.load_active_Samples(Samples);
             console.log("Loaded active samples");
@@ -152,6 +148,34 @@ function protocolController ($scope, $rootScope, $http, $q) {
         console.log("initialization complete...");
     }
 
+    $scope.validate_Samples = function (Samples) {
+        var empty_samples = 0;
+        var missing_units = 0;
+
+        console.log("Check Sample Status for " + Samples.length + ' Samples');
+        for (var i=0; i<Samples.length; i++) {
+            if (Samples[i].last_step !== $scope.active.last_step.name) {
+                $scope.warning("Samples at different stages of pipeline..");
+            }
+            if (!Samples[i].qty) {
+                empty_samples++;
+            }
+            console.log( i + " S: " + Samples[i].qty + Samples[i].qty_units);
+            if (Samples[i].qty && !Samples[i].qty_units) {
+                missing_units++;
+            }
+        }    
+
+        if (empty_samples) {
+            $scope.warning("samples with no volume included");
+        }
+        if (missing_units) {
+            $scope.error("Samples with missing volume units");
+        }
+
+        console.log(missing_units + " OR (messages) " + empty_samples);
+    }
+
     $scope.initialize_Progress = function (Samples) {
         $scope.active.last_step = {};
         $scope.active.last_step.name = Samples[0].last_step;
@@ -218,6 +242,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
 
     $scope.complete = function complete (action) {
 
+        console.log("reset message before complete execution");
         $scope.reset_messages();
 
         $scope.uninjectData();
@@ -614,8 +639,9 @@ function protocolController ($scope, $rootScope, $http, $q) {
 
     $scope.redistribute = function distribute (reset) {
         console.log("Distribute samples...");
+        console.log('reset messages before redistribution');
         $scope.reset_messages();
-        
+
         var deferred = $q.defer(); 
 
         var targetKey = 'transfer_type' + $scope.step.stepNumber;
@@ -700,6 +726,8 @@ function protocolController ($scope, $rootScope, $http, $q) {
 
         $scope.redistribute_Samples($scope.active.Samples, Target, Options)
         .then ( function (Map) {
+            $scope.validate_Samples($scope.active.Samples);
+
             if (Map.warnings) {
                 for (var i=0; i<Map.warnings.length; i++) {
                     $scope.warning(Map.warnings[i]);
