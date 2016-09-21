@@ -1,33 +1,31 @@
 extends ./../customize/privateLayout
 block content
+  - var config = { payload: sails.config.payload };
+  - var init = "initialize(" + JSON.stringify(config) + ")"; 
 
-  div.container
     div(ng-app='myApp')
       // Static Options //
-      - step_options = ['name', 'message', 'instructions', 'defaults'];
-      - input_options = ['Transfer', 'Solution', 'Equipment', 'Plate_Attributes', 'Prep_Attributes'];
-      - focus_options = ['Target', 'Source'];
-      // TEST Settings ... should be loaded via config ...
-      - units_options = ['ml', 'ul', 'nl', 'pl'];
-      - plate_attributes = [{'Thaw Count' : "count"}, { 'XQty' : 'integer'}, { 'Pick' : "enum('A','B','C')" }];
-      - prep_attributes  = [{'QC Approved' : 'boolean'}];
+      - step_options = ['name', 'message', 'instructions'];
 
-      div(ng-controller="CommonController")
-        div(ng-controller='NewProtocolController' ng-init="" ngcloak)
-          div
+      div(ng-controller="SharedController")
+       div(ng-controller="LIMSController" ng-init="#{init}")
+        div(ng-controller="FancyFormController")        
+         div(ng-controller='NewProtocolController' ngcloak)
+          div(ng-show="completed")
+            div.container
+              h3 Protocol Steps:
+              ul
+                li(ng-repeat = "step in Steps") 
+                  a(href="/protocol_step/edit/{{step.id}}") {{step.step_number}} - {{step.name}} 
+                    i [ {{step.message }} ] 
+  
+          div(ng-show="!completed")
             table.table
               tr
                 td
                   div(style="padding: 15px")   
-                      div.col-sm-3 &nbsp;
-                      div.col-sm-2
-                        button.btn.btn-large.btn-danger(type='button' ng-click="back()" ng-disabled='stepNumber < 2') Back
-                      div.col-sm-3
-                        button.btn.btn-large.btn-success(type='button' ng-click="forward()" ng-disabled="stepNumber >= steps") Define Next Step
-                      div.col-sm-3
-                        button.btn.btn-primary.form-control(type='button' ng-click="save()" ng-disable="! Name") Save Lab Protocol
-
-                      p &nbsp;    
+                    h3 Add New Lab Protocol
+                    hr
                     form.form-horizontal(role="form" method='post' action="#{sails.config.root}/Lab_protocol/save")
 
                       div.form-group
@@ -40,6 +38,9 @@ block content
                         div.col-sm-10
                           input.form-control(id='description' ng-model='description')     
                       hr
+
+                      h4 Add Steps... one at a time
+                      h5 [input customizations added later]
 
                       div.col-sm-3 &nbsp;
                       div.col-sm-9 &nbsp;
@@ -54,98 +55,20 @@ block content
                             div.col-sm-9
                               input.form-control(type='text' id='#{ioption}' ng-model='Step.#{ioption}' placeholder=' -- Enter #{ioption} --' ng-change="update('#{ioption}')")
 
-                        each ioption in input_options              
-                            div.form-group
-                              label-control.col-sm-2(for='#{ioption}') #{ioption}
-
-                              div.col-sm-1
-                                class.checkbox
-                                  label
-                                    input(id='#{ioption}' ng-model='Step.#{ioption}' type='checkbox' value='' ng-click="toggle('#{ioption}')" ng-change="update('#{ioption}')") 
-
-                              // Handle Special Cases First ... //
-                              if (ioption == 'Transfer')
-                                // Transfer includes options for Quantity & Defaults 
-                                div.col-sm-2(ng-show="Step.#{ioption}")
-                                    // b Qty: 
-                                    input.form-control(type='text' id='#{ioption}' ng-model='Step.#{ioption}_Qty' placeholder='-- Default Qty --' ng-change="update('#{ioption}_Qty')")
-                                div.col-sm-2(ng-show="Step.#{ioption}")
-                                  // *** Generate Dropdown for ENUM Values *** //
-                                  div.dropdown
-                                      button.btn.btn-default.dropdown-toggle(ng-model='Step.#{ioption}_Units' type='button' data-toggle='dropdown' id = '#{ioption}_Units' ng-change="update('#{ioption}_Units')") Units &nbsp;
-                                          span.caret
-                                      ul.dropdown-menu
-                                          each opt,j in units_options
-                                              li 
-                                                  a(href='#' onclick='return false;') #{j} : #{opt}
-                                div.col-sm-2(ng-show="Step.#{ioption}")
-                                  // ** Follow Targets or revert to Source Samples **
-                                  div.dropdown
-                                      button.btn.btn-default.dropdown-toggle(ng-model='Step.#{ioption}_XferType' type='button' data-toggle='dropdown' id = '#{ioption}_XferType' ng-change="update('#{ioption}_XferType')") Focus &nbsp;
-                                          span.caret
-                                      ul.dropdown-menu
-                                          each opt,j in focus_options
-                                              li 
-                                                  a(href='#' onclick='return false;') #{j} : #{opt}
-                                div.col-sm-3(ng-show="Step.#{ioption}")
-                                  span.lookup(id='Lookup-Plate_Format' ng-init="loadLookup('Plate_Format', 'Plate_Format_ID', 'Plate_Format_Type')" ng-model="Step.#{ioption}_Format")
-
-                              else if (ioption == 'Solution')
-                                // Solution include options for Quantity & Defaults 
-                                div.col-sm-4(ng-show="Step.#{ioption}")
-                                    //b Qty: 
-                                    input(type='text' id='#{ioption}' ng-model='Step.#{ioption}_Qty' placeholder='-- Default Qty --' ng-change="update('#{ioption}_Qty')")
-                                div.col-sm-4(ng-show="Step.#{ioption}")
-                                  // *** Generate Dropdown for ENUM Values *** //
-                                  div.dropdown
-                                      button.btn.btn-default.dropdown-toggle(ng-model='Step.#{ioption}_Units' type='button' data-toggle='dropdown' id = '#{ioption}_Units' ng-change="update('#{ioption}_Units')") Units &nbsp;
-                                          span.caret
-                                      ul.dropdown-menu
-                                          each opt,j in units_options
-                                              li 
-                                                  a(href='#' onclick='return false;') #{j} : #{opt}
-                              else if (ioption == 'Plate_Attributes' ) 
-                                div.col-sm-4(ng-show="Step.#{ioption}")
-                                  div.dropdown
-                                      button.btn.btn-default.dropdown-toggle(ng-model='Step.#{ioption}1' type='button' data-toggle='dropdown' id = '#{ioption}1' ng-change="update('#{ioption}1')") Plate Attribute &nbsp;
-                                          span.caret
-                                      ul.dropdown-menu
-                                          each opt,j in plate_attributes
-                                              li 
-                                                  a(href='#' onclick='return false;') #{j} : #{opt}
-                                div.col-sm-4(ng-show="Step.#{ioption}")
-                                  b Default: 
-                                    input(type='text' id='#{ioption}1_Default' ng-model='Step.#{ioption}1_Default' placeholder='-- Default --' ng-change="update('#{ioption}1_Default')")
-
-
-                              else if (ioption == 'Prep_Attributes' ) 
-                                div.col-sm-4(ng-show="Step.#{ioption}")
-                                  div.dropdown
-                                      button.btn.btn-default.dropdown-toggle(ng-model='Step.#{ioption}1' type='button' data-toggle='dropdown' id = '#{ioption}1' ng-change="update('#{ioption}1')") Prep Attribute &nbsp;
-                                          span.caret
-                                      ul.dropdown-menu
-                                          each opt,j in prep_attributes
-                                              li 
-                                                  a(href='#' onclick='return false;') #{j} : #{opt}
-                                div.col-sm-4(ng-show="Step.#{ioption}")
-                                  b Default: 
-                                    input(type='text' id='#{ioption}1_Default' ng-model='Step.#{ioption}1_Default' placeholder='-- Default --' ng-change="update('#{ioption}1_Default')")
-
-
-                              else 
-                                // add option for default... 
-                                div.col-sm-9(ng-show="Step.#{ioption}") 
-                                  input.form-control(type = 'text' id='#{ioption}_default' ng-model='Step.#{ioption}_default' placeholder=' -- Default --' ng-change="update('#{ioption}_default')")                  
-                      hr                      
-                      
-                      div.col-sm-3 &nbsp;
-                      div.col-sm-2
-                        button.btn.btn-large.btn-danger(type='button' ng-click="back()" ng-disabled='stepNumber < 2') Back
-                      div.col-sm-3
-                        button.btn.btn-large.btn-success(type='button' ng-click="forward()" ng-disabled="stepNumber >= steps") Define Next Step
-                      div.col-sm-3
-                        button.btn.btn-primary.form-control(type='button' ng-click="save()" ng-disable="! Name") Save Lab Protocol
-                       
+                      div.form-group
+                        div.col-sm-3 &nbsp;
+                        div.col-sm-2
+                          button.btn.btn-large.btn-danger(type='button' ng-click="back()" ng-disabled='stepNumber < 2') Back
+                        div.col-sm-2 &nbsp;
+                        div.col-sm-3
+                          button.btn.btn-large.btn-success(type='button' ng-click="forward()" ng-disabled="stepNumber >= steps") Define Next Step
+                        div.col-sm-2
+                          span &nbsp;
+                      hr
+                      div.form-group
+                        div.col-sm-3 &nbsp;
+                        div.col-sm-7
+                          button.btn.btn-primary.form-control(type='button' ng-click="save()" ng-disable="! Name") Save Lab Protocol  
     
                 td(style="width:300px; background-color:#ccc")
                   div(style="padding:15px;")              
