@@ -612,6 +612,7 @@ module.exports = {
 		var ids = Record.cast_to(ids,'array')
 		console.log("Update " + model + ": " + ids.join(','));
 		console.log(JSON.stringify(data));
+		console.log(JSON.stringify(options));
 
 		// setup History Tracking if applicable
     	var Mod = sails.models[model];
@@ -670,6 +671,7 @@ module.exports = {
 			for (var i=0; i<tables.length; i++) {
 				tables.push( tables[i] );
 				conditions.push(options.include_tables[tables[i]]);
+				console.log('and ' + options.include_tables[tables[i]]);
 			}
 
 			query = query + ", " + tables.join(',');
@@ -933,6 +935,7 @@ module.exports = {
 
 					var id;
 					var condition;
+					var conditions = [];
 					var include_tables;
 					if (ids.index) {
 						id = data[row][id_index+1];
@@ -980,8 +983,11 @@ module.exports = {
 						}
 						
 					}
+					
+					if (condition) { conditions.push(condition) }
+
 					if (Object.keys(fields).length) {
-						promises.push( Record.update(model, id, fieldData, { conditions: [condition], include_tables: include_tables }) );
+						promises.push( Record.update(model, id, fieldData, { conditions: conditions, include_tables: include_tables }) );
 						console.log("\n** Update Fields: " + id + JSON.stringify(fieldData));
 					}
 				}
