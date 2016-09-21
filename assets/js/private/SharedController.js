@@ -15,6 +15,8 @@ app.controller('SharedController',
             $scope.repeat_warnings = {};
             $scope.repeat_errors = {};
             $scope.repeat_messages = {};
+
+            console.log('Reset messages');
         }
 
         $scope.reset_messages();
