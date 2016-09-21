@@ -63,34 +63,63 @@ function newProtocolController ($scope, $rootScope, $http, $q) {
 
     $scope.save = function save () {
 
-        console.log("Name: " + $scope.name + " : " + $scope.message);
-
-        var fields = ['Solution', 'Transfer', 'Equipment'];
-        for (var i=0; i<$scope.Steps.length; i++) {
-            console.log("*** Step " + i + " ***");
-            //for (var j=0; j<=fields.length; j++) {
-            console.log("Set " + JSON.stringify($scope.Steps[i]));
-            //}
-            
-        }   
-
-        console.log("save " + $scope.name + " via API");
-
-        var LPfields = ['name', 'message', 'description'];
-
-        var data = { Steps: $scope.Steps };
-        for (var i=0; i<LPfields; i++) {
-            data[LPfields[i]] = $scope[LPfields[i]];  // eg Name
+        var data = {
+            name : $scope.name,
+            description : $scope.description,
+            createdBy : $scope.payload.userid,
+            status : 'Active',
+            Container_format : $scope.applicable_format,
+            Sample_type : $scope.applicable_sample,
+            repeatable : $scope.repeatable,
+            createdAt : '<now>',
         }
 
-        $http.post("/Lab_protocol/save", data )
-        .then ( function (result) {
-            var id = result.data.id;
-            console.log("response: " + JSON.stringify(result));
-            console.log("added record: " + id);
+        console.log("POST data: " + JSON.stringify(data));
 
+        $http.post('/record/add/lab_protocol', { data: data })
+        .then ( function (resp) {
+            var id = resp.data.insertId;
+
+            console.log("ADDED lab_protocol: " + id);
+            for (var i=0; i<$scope.Steps.length; i++) {
+                console.log('Add step ' + i);
+                $scope.Steps[i].step_number = i;
+                console.log("call");
+                $scope.save_step(id, i);
+            }
+            $scope.completed = 1;
+        })
+        .catch ( function (err) {
+            console.log(err);
+            $scope.error(err);
         });
-    
+    }
+
+    $scope.save_step = function save_step(id, i) {
+        
+        var Step = $scope.Steps[i];
+        console.log("save step " + JSON.stringify(Step));
+
+        var stepData = { 
+            Lab_protocol: id, 
+            step_number: Step.step_number,
+            name : Step.name,
+            message : Step.message,
+            instructions : Step.instructions, 
+        };
+        
+        console.log("Add protocol_step: " + JSON.stringify(stepData));
+        $http.post("/record/add/protocol_step", { data: stepData} )
+        .then ( function (result) {
+            var id = result.data.insertId;
+            $scope.Steps[i].id = id;
+            console.log("response: " + JSON.stringify(result));
+            $scope.message("saved " + Step.name + " step..." + id);
+        })
+        .catch ( function (err) {
+            $scope.error(err);
+            console.log("Error saving step(s) " + err);
+        });
     }
 
     $scope.update = function update (id) {
