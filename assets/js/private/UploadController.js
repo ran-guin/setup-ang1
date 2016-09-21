@@ -306,9 +306,18 @@ function uploadController ($scope, $rootScope, $http, $q) {
 				$scope.error(msg);
 			}
 			else {
-				if (result.data && result.data.length && result.data[0].affectedRows) {
-					var count = result.data[0].affectedRows;
+				if (result.data && result.data.length) {
+					var count = 0;
+					var total_changed = 0;
+					for (var i=0; i<result.data.length; i++) {
+						count = count + result.data[i].set.affectedRows;
+						var change_message = result.data[i].set.message.match(/Changed: (\d+)/);
+						
+						var changed = parseInt(change_message[1]) || 0;
+						total_changed = total_changed + changed;
+					}
 					$scope.message("Updated " + count + " Data Records");
+					$scope.message(total_changed + " Values Changed");
 				}
 				else { 
 					$scope.warning("No rows affected");
