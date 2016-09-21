@@ -104,7 +104,6 @@ module.exports = {
 		var warnings = [];
 		var messages = [];
 
-
 		console.log(query);
 		Record.query_promise(query)
 		.then ( function (barcoded) {
