@@ -346,8 +346,10 @@ app.controller('FancyFormController',
       compile: function (element, attrs) {
          var modelAccessor = $parse(attrs.ngModel);
          var name = attrs.name;
+         var placeholder = attrs.placeholder;
+         var id = attrs.id;
 
-         var html = "<input class='input-lg' type='text' id='" + attrs.id + "' name='" + name + "' >" +
+         var html = "<input class='input-lg' type='text' id='" + id + "' name='" + name + "' placeholder='" + placeholder + "'>" +
             "</input>";
 
          var newElem = $(html);
