@@ -199,6 +199,7 @@ function wellMapperController ($scope, $rootScope, $http, $q ) {
         var deferred = $q.defer();
 
         if (Options && Options.reset) {
+            console.log("reset messages before redistribute_Samples");
             $scope.reset_messages();
             console.log("Redistribute Samples ");
         }
