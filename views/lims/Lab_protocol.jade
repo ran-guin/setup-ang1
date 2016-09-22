@@ -1,10 +1,17 @@
 extends ./../customize/privateLayout
 block content
 
+
   div.container
+    p &nbsp;
+    a(href="/lab_protocol/edit/#{Steps[0].Lab_protocol}" ) 
+        h4 Edit Protocol
+  
+    hr 
+
     h3 Protocol Steps:
     ul
-      each step,i in steps
+      each step,i in Steps
         - name = step.name;
         - id   = step.id;
         - num = step.step_number
@@ -12,6 +19,7 @@ block content
         
         li 
           a(href="/protocol_step/edit/#{id}") #{num} - #{name} 
-            i [ #{message} ] 
+            i [ #{message} ]
+
 
       
