@@ -112,7 +112,10 @@ app.controller('FancyFormController',
                 console.log('get list from reference: ' + reference);
                 
                 var url = '/lookup/' + reference + '?';
-                if (condition) { url = url + 'condition=' + condition }
+                if (condition) { 
+                    condition = encodeURIComponent(condition);
+                    url = url + 'condition=' + condition;
+                }
 
                 console.log("get lookup for " + reference);
                 console.log(url);
@@ -572,7 +575,7 @@ app.controller('FancyFormController',
                         scope.selected = list[index];
                     }
 
-                    console.log("Found " + scope.selected + " : " + scope.label);
+                    console.log(watch + " Found " + scope.selected + " : " + scope.label);
                 }
             });
 
