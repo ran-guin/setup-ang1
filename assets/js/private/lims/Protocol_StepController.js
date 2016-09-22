@@ -77,9 +77,19 @@ function protocol_stepController ($scope, $rootScope, $http, $q) {
             console.log("Original Input: " + $scope.Record.original_input);
             $scope.preloaded = 1;
 
-            var defaults = $scope.Record.input_defaults.split(':');
-            var formats = $scope.Record.input_format.split(':');
-            var input = $scope.Record.input_options.split(':');
+            var defaults = [];
+            var formats = [];
+            var input = [];
+
+            if ($scope.Record.input_defaults) {
+                defaults = $scope.Record.input_defaults.split(':');
+            }
+            if ($scope.Record.input_format) {
+                formats = $scope.Record.input_format.split(':');
+            }
+            if ($scope.Record.input_options) {
+                input = $scope.Record.input_options.split(':');
+            }
 
             var xfer = {};
             var custom_settings = '';
