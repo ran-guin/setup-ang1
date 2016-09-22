@@ -15,11 +15,36 @@ function newProtocolController ($scope, $rootScope, $http, $q) {
     $scope.Step = { Number : $scope.stepNumber };
     $scope.Steps.push($scope.Step);
 
-    $scope.initialize = function initialize () {
-        console.log('initialized NPC');
+    $scope.initialize = function (config, options) {
+        console.log("initialize protocol controller");
+        $scope.initialize_payload(config);
+
+        console.log("Config: " + JSON.stringify(config));
+        
+        if (config && config['Steps']) {
+            console.log("Steps: " + JSON.stringify(config['Steps']));
+            $scope.Steps = config['Steps'];
+            $scope.name = $scope.Steps[0].name;
+            $scope.description = $scope.Steps[0].description;
+            $scope.Container_format = $scope.Steps[0].Container_format;
+            $scope.Sample_type = $scope.Steps[0].Sample_type;
+            $scope.action = 'edit';
+            $scope.Step = $scope.Steps[0];
+            console.log('detected init to ' + $scope.Sample_type);
+        }
+        else {
+            $scope.action = 'create';
+        }
     }
 
-    $scope.initialize();
+    $scope.$watch('Steps', function (val) {
+        console.log("detected update to steps..." + $scope.Steps[0].Sample_type);
+        // $scope.Container_format = val[0].Container_format;
+        // $scope.Sample_type = 5; // $scope.Steps[0].Sample_type;
+        // $scope.Steps[0].Sample_type = 6; // $scope.Steps[0].Sample_type;
+        $scope.Sample_type = 6;
+        $scope.Container_format = 5;
+    });
 
     $scope.forward = function forward() {
         $scope.stepNumber++;
@@ -59,6 +84,38 @@ function newProtocolController ($scope, $rootScope, $http, $q) {
             console.log('turn off ' + id + ':' + $scope.Step[id])
             // $scope.Show[id] = false;
         } 
+    }
+
+    $scope.update_protocol = function update () {
+        console.log("updating protocol...");
+       
+        var id = $scope.Steps[0].Lab_protocol;
+
+        var data = {
+            id : id,
+            name : $scope.name,
+            description : $scope.description,
+            createdBy : $scope.payload.userid,
+            status : 'Active',
+            Container_format : $scope.applicable_format,
+            Sample_type : $scope.applicable_sample,
+            repeatable : $scope.repeatable,
+            createdAt : '<now>',
+        };
+
+        console.log(JSON.stringify($scope.Steps));
+ 
+        console.log("Update protocol " + id);
+        $http.post('/lab_protocol/update', data)
+        .then ( function (resp) {
+            console.log("Updated: " + JSON.stringify(resp));
+            $scope.message("Updated protocol");
+        })
+        .catch ( function (err) {
+            console.log("Error updating protocol");
+            console.log(err);
+            $scope.error(err);
+        });
     }
 
     $scope.save = function save () {
