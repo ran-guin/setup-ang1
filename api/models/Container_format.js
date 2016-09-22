@@ -26,7 +26,7 @@ module.exports = {
 		'name' : 'Plate_Format_Type'
 	},
 
-	lookupCondition : "Plate_Format_Status = 'Active' AND Transferrable LIKE 'Y%'",
+	lookupCondition : "Plate_Format_Status = 'Active'",
 
 
 };
