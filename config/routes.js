@@ -83,6 +83,7 @@ module.exports.routes = {
   
   'GET /record/edit/:model/:id': 'RecordController.form',
   'POST /record/edit/:model/:id': 'RecordController.update',
+  'POST /record/update/:model/:id': 'RecordController.update',
 
 
   'GET /attribute/:model/:attribute' : 'AttributeController.prompt',
@@ -161,8 +162,10 @@ module.exports.routes = {
   // Custom Pages 
 
   'GET /demo/protocol': 'DemoController.protocol',
-  'GET /protocol_step/edit/:id' : 'Lab_protocolController.edit',
+  'GET /protocol_step/edit/:id' : 'Lab_protocolController.edit_step',
+  'GET /lab_protocol/edit/:id' : 'Lab_protocolController.edit',
   'POST /protocol_step/update'  : 'Lab_protocolController.update_step',
+  'POST /lab_protocol/update'  : 'Lab_protocolController.update',
 
   // Demo Pages 
   'GET /demo/test': 'DemoController.test',
