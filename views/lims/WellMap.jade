@@ -70,8 +70,10 @@ block content
 
                 div.col-sm-4(ng-show="map.transfer_type !== 'Move'")
                   div.form-group(style='padding-top: 0px; padding-left: 40px')
+                    - var condition = "Transferrable LIKE 'Y%'"
+
                     label(for='target_format' style='padding-top: 0px')
-                    my-dropdown#target_format(style='width:100%' placeholder='Target Format...' required list="MenuList['map.target_format']" selected="map.target_format" property='name' track='id' ng-init="setup_Menu('map.target_format','FK(container_format)')" mandatory='true')        
+                    my-dropdown#target_format(style='width:100%' placeholder='Target Format...' required list="MenuList['map.target_format']" selected="map.target_format" property='name' track='id' ng-init="setup_Menu('map.target_format','FK(container_format)',\"#{condition}\")" mandatory='true')        
               hr 
 
               div.form-group
