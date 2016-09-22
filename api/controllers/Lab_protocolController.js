@@ -46,7 +46,7 @@ module.exports = {
 		});
 	},	
 
-	'edit' : function (req, res) {
+	'edit_step' : function (req, res) {
 		var id = req.param('id');
 
 		var q = "SELECT * FROM protocol_step where id = " + id;
@@ -67,6 +67,8 @@ module.exports = {
 		var demo = req.param('demo') || 1;
 
 		var q = "SELECT * FROM lab_protocol";
+		q = q + " LEFT JOIN Sample_Type ON lab_protocol.Sample_type = Sample_Type_ID";
+		q = q + " LEFT JOIN Plate_Format ON Container_format = Plate_Format_ID";
 
 	    Record.query(q, function (err, result) {
 	    	if (err) {
@@ -78,24 +80,20 @@ module.exports = {
 				return res.negotiate(err);
      		}
 
-			if (!result) {
+			if (!result || result.length == 0) {
 					console.log('no results');
 					return res.send('');
 			}
+			else {
+				console.log("Found " + result.length + " active Protocols");
 
-			var List = [];
+				for (var i=0; i<result.length; i++) {
+						result[i].sample_type = result[i]['Sample_Type'];
+						result[i].format = result[i]['Plate_Format_Type'];
+				}
 
-			console.log("Found " + result.length + " active Protocols");
-
-			for (var i=0; i<result.length; i++) {
-					var name = result[i]['name'];
-					var id   = result[i]['id'];
-					
-					List.push({id : id, name: name});
+				return res.render('lims/Lab_protocols', { protocols : result, demo: demo } );
 			}
-
-			return res.render('lims/Lab_protocols', { protocols : List, demo: demo } );
-			// return res.send();
 		});
 
 	},
@@ -165,6 +163,28 @@ module.exports = {
 		});
 	},
 
+	'edit' : function (req, res) { 
+		console.log('edit protocol');
+		var body = req.body || {};	
+		var id = body.id || req.param('id');
+
+		var Steps = [];
+		if (id) {
+			var q = "select * from lab_protocol, protocol_step where Lab_protocol=lab_protocol.id AND lab_protocol.id = '" + id + "' ORDER BY step_number";
+			Record.query_promise(q)
+			.then (function (protocol) {
+				console.log("loaded protocol: " + JSON.stringify(protocol))
+				res.render('lims/New_Lab_Protocol', { Steps : protocol });
+			})
+			.catch (function (err) {
+				console.log(err);
+				res.send(err);
+			})
+		}
+		else {
+				res.render('lims/New_Lab_Protocol');			
+		}
+	},
 	'define' : function (req, res) { 
 		console.log('new protocol generator');
 
@@ -218,6 +238,29 @@ module.exports = {
 
 	},
 
+	update : function (req, res) {
+
+		var body = req.body || {};
+		var id = body.id || req.param('id');
+
+		var data = body;
+
+		console.log("UPDATE " + JSON.stringify(data));
+
+		var id = data.id;
+		delete data.id;
+
+		Record.update('lab_protocol', id, data)
+		.then ( function (result) {
+			console.log('response: ' + JSON.stringify(result));
+			res.send({ result : result} );
+		})
+		.catch ( function (err) {
+			console.log(err);
+			return res.send( { error: err });
+		});
+	},
+
 	update_step : function (req, res) {
 		var body = req.body || {};
 
@@ -245,7 +288,7 @@ module.exports = {
 			console.log(err);
 			return res.send( { error: err });
 		});
-	}
+	},
 
 };
 
