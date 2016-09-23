@@ -1,5 +1,4 @@
-/**
- * Lab_protocolController
+ /* Lab_protocolController
  *
  * @description :: Server-side logic for managing lab_protocols
  * @help        :: See http://sailsjs.org/#!/documentation/concepts/Controllers
@@ -273,9 +272,8 @@ module.exports = {
 		delete data.id;
 
 		var json = data.custom_settings;
-		console.log("JSON: " + data.custom_settings);
-		json = json.replace(/"/g, '\\"');
-		console.log("JSON2 : " + json);
+		if (json) { json = json.replace(/"/g, '\\"') }
+		console.log("JSON : " + json);
 
 		data.custom_settings = json;
 
