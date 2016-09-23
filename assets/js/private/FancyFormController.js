@@ -575,7 +575,7 @@ app.controller('FancyFormController',
                         scope.selected = list[index];
                     }
 
-                    console.log(watch + " Found " + scope.selected + " : " + scope.label);
+                    console.log(" Found " + scope.selected + " : " + scope.label);
                 }
             });
 
