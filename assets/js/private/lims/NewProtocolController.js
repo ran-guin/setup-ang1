@@ -135,14 +135,18 @@ function newProtocolController ($scope, $rootScope, $http, $q) {
 
         $http.post('/record/add/lab_protocol', { data: data })
         .then ( function (resp) {
+            console.log(JSON.stringify(resp.data));
             var id = resp.data.insertId;
+            $scope.id = id;
 
             console.log("ADDED lab_protocol: " + id);
             for (var i=0; i<$scope.Steps.length; i++) {
-                console.log('Add step ' + i);
-                $scope.Steps[i].step_number = i;
-                console.log("call");
-                $scope.save_step(id, i);
+                if ($scope.Steps[i].name) {
+                    console.log('Add step ' + i);
+                    $scope.Steps[i].step_number = i;
+                    console.log("call");
+                    $scope.save_step(id, i);
+                }
             }
             $scope.completed = 1;
         })
