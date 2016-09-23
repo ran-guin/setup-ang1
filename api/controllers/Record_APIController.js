@@ -122,7 +122,7 @@ module.exports = {
 
 		Record.createNew(model, data)
 		.then ( function (result ) {
-			return res.json(result.data);
+			return res.json(result);
 		})
 		.catch ( function (err) {
 			return res.json(err);
