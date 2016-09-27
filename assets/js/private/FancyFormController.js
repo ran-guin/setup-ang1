@@ -11,6 +11,11 @@ app.controller('FancyFormController',
         $scope.MenuList = {};
         $scope.ReverseLookup = {};
 
+        $scope.form = {};
+        $scope.split = {};
+        $scope.paste = {};
+        $scope.cut = {};
+
         $scope.stdForm.units = {
             'ul' :  1/1000,
             'ml' : 1,
@@ -82,6 +87,29 @@ app.controller('FancyFormController',
     		return view;
     		//return "\n<div class='container' style='padding:20px'>\n" + view + "</div>\n";
     	}
+
+        $scope.pasteData = function (element, separator) {
+
+            if (! separator) { separator = ', '}
+            var value = $scope.paste[element] || '';
+            var array = value.split(/\n/);
+
+            var concat = [];
+            for (var i=0; i<array.length; i++) {
+                if (array[i] === "''" || array[i] === '"') {
+                    if (i==0) { v = '' }
+                    else { v = array[i-1] }
+                    concat.push(v);
+                }
+                else {
+                    concat.push(array[i]);
+                }
+            }           
+
+            var formatted = concat.join(separator);
+            $scope.form[element] = formatted;
+            $scope.cut[element] = 0;
+        }
 
         $scope.set_dropdown_default = function (name, label, target_name) {
             for (var i=0; i<$scope[name].length; i++) {
