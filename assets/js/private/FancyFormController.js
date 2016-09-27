@@ -90,7 +90,8 @@ app.controller('FancyFormController',
 
         $scope.pasteData = function (element, separator) {
 
-            if (! separator) { separator = ', '}
+            if (! separator) { separator = ','}
+
             var value = $scope.paste[element] || '';
             var array = value.split(/\n/);
 
@@ -109,6 +110,8 @@ app.controller('FancyFormController',
             var formatted = concat.join(separator);
             $scope.form[element] = formatted;
             $scope.cut[element] = 0;
+            
+            console.log("formatted " + element + " to " + formatted);
         }
 
         $scope.set_dropdown_default = function (name, label, target_name) {
