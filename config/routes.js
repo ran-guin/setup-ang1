@@ -151,6 +151,8 @@ module.exports.routes = {
   'GET /Container/history' : 'ContainerController.history',
   'GET /Container/summary' : 'ContainerController.summary',
 
+  'POST /plate_set/save' : 'Plate_setController.save_next_set',
+
   'POST /Rack/newBox'  : 'RackController.createBox',
   'POST /Rack/boxData' : 'RackController.boxData',
 
