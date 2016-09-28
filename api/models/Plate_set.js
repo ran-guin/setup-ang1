@@ -7,7 +7,7 @@
 
 module.exports = {
 
-  tableName : 'Plate_Set',
+  tableName : 'Defined_Plate_Set',
   migrate: 'safe',
   attributes: {
 
