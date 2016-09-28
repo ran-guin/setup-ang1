@@ -215,15 +215,15 @@ function wellMapperController ($scope, $rootScope, $http, $q ) {
         }
         else {
             // load_by is only relevant if NOT filling by position ..
-            if ($scope.map.load_by.match(/row/i)) { 
+            if ($scope.map.fill_by.match(/row/i)) { 
                 $scope.source_by_Row(Samples);
                 // $scope.map.split_mode = 'serial';
             }
-            else if ($scope.map.load_by.match(/col/i) ) { 
+            else if ($scope.map.fill_by.match(/col/i) ) { 
                 $scope.source_by_Col(Samples);
                 // $scope.map.split_mode = 'serial';
             }
-            else if ($scope.map.load_by.match(/scan/i) ) { 
+            else if ($scope.map.fill_by.match(/scan/i) ) { 
                 $scope.reset_Samples();
                 // $scope.map.split_mode = 'serial';
             }
