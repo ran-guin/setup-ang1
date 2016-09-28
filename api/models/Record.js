@@ -829,7 +829,7 @@ module.exports = {
 
 		var Mod = sails.models[model] || {};
 
-		var table = Mod.tableName || model; // default to model name ... 
+		var table = Mod.tableName || options.table || model; // default to model name ... 
 
 		if (Tdata === undefined) { deferred.reject('no data'); return deferred.promise }
 
