@@ -50,7 +50,8 @@ module.exports = {
 					deferred.resolve(result);
 			})
 			.catch ( function (err) {
-				deferred.reject("Error updating last prep id: " + err)
+				err.context = "updating last prep id";
+				deferred.reject(err);
 			});
 
 			return deferred.promise;
@@ -101,8 +102,11 @@ module.exports = {
 
 		console.log("Conditions: " + conditions.join(' AND '));
 		if (! conditions.length) {
-			console.log('no conditions');
-			deferred.reject("no conditions ...");
+			var e = new Error('no conditions');
+			console.log('e');
+			e.context = 'container.loadData';
+			console.log('rejecting ' + e.context);
+			deferred.reject(e);
 		}
 		else {	
 			console.log("continue..");
@@ -136,8 +140,7 @@ module.exports = {
 
 		    Record.query(query, function (err, result) {
 		    	if (err) {
-		    		console.log("error: " + err);
-		    		deferred.reject("Error: " + err);
+		    		deferred.reject(err);
 		    	}
 		    	else {
 
@@ -308,14 +311,13 @@ module.exports = {
 					});
 				})
 				.catch ( function (err) {
-					var msg = "problem with post transfer updates ? " + JSON.stringify(err);
-					console.log(msg);
+					err.context = 'post transfer update';
 					deferred.reject(msg); 
 				});
 			})
 			.catch ( function (err) {
-				console.log("problem getting target ids ? " + err);
-				deferred.reject("problem getting target ids: " + err);
+				err.context = "get_target_ids";
+				deferred.reject(err);
 			});
 		}
 		else {
@@ -519,7 +521,7 @@ module.exports = {
 						
 					})
 					.catch ( function (err) {
-						console.log("Cloning Error: " + JSON.stringify(cloneError));
+						err.context='Cloning container';
 						deferred.reject( err );						
 					});
 				}
@@ -530,8 +532,8 @@ module.exports = {
 			});
 		})
 		.catch ( function (err) {
-			deferred.reject("Error generating reset data: " + err); 
-			//return res.render('lims/WellMap', { sources: Sources, errorMsg: "cloning Error"});
+			err.context='resetting data';
+			deferred.reject(err); 
 		});
 
 		return deferred.promise;
@@ -582,9 +584,8 @@ module.exports = {
 			deferred.resolve(returnVal);
 		})
 		.catch ( function (err) {
-			console.log("encountered non-fatal error executing Container Promises: " + JSON.stringify(err));
-			returnVal['Error'] = 'Promise errors: ' + JSON.stringify(err);
-			deferred.reject(returnVal); 
+			err.context = "executing Container Promises";
+			deferred.reject(err); 
 		});
 
 		return deferred.promise;
