@@ -5,7 +5,6 @@ app.controller('SharedController',
     function ($scope, $q, $rootScope, $http, $location) {
 
         console.log('loaded Shared Controller');
-
         
         $scope.reset_messages = function () {
             $scope.messages = [];
@@ -20,6 +19,34 @@ app.controller('SharedController',
         }
 
         $scope.reset_messages();
+
+        $scope.remoteLog = function log(level, msg, context) {
+            console.log("Posting " + level + " message: " + msg);
+
+            // requires services/logger.js and route to logger.js 
+            $http.post('/log/' + level, { message: msg, context: context })
+            .then ( function (resp) {
+                console.log('message ? : ' + msg);
+                if (msg) { 
+                    if (level === 'error' || level === 'critical') {
+                        $scope.errors.push(msg);
+                    }
+                    else if (level === 'warning') {
+                        $scope.warnings.push(msg);
+                    }
+                    else if (level === 'debug') {
+                        $scope.debug_messages.push(msg);
+                    }
+                    else {
+                        $scope.messages.push(msg);
+                    }
+                }
+            })
+            .catch ( function (err) {
+                console.log("Error logging message");
+            });
+        }
+
 
         $scope.hide = {};
         $scope.show = {};
