@@ -62,6 +62,8 @@ module.exports.routes = {
 
   'GET /logout': 'UserController.logout',
 
+  'POST /log/:level' : 'LoggerController.log',
+
   'GET /demo' : 'MainController.showDemoPage',
 
   // Home page 
