@@ -24,6 +24,7 @@ module.exports.bootstrap = function(cb) {
 	sails.config.messages = [];
 	sails.config.warnings = [];
 	sails.config.errors = [];
+	sails.config.debug_messages = [];
 
 	var models = Object.keys(sails.models);
 
