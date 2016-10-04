@@ -14,6 +14,7 @@ module.exports = {
 			data.host   = payload.host;
 			data.db     = payload.db;
 			data.alDenteID = payload.alDenteID;
+			data.mode      = payload.mode;
 		
 			if (msg && sails.config.messages ) { sails.config.messages.push(msg) }
 		}
@@ -50,6 +51,7 @@ module.exports = {
 			data.host   = payload.host;
 			data.db     = payload.db;
 			data.alDenteID = payload.alDenteID;
+			data.mode      = payload.mode;
 
 			if (msg && sails.config) {
 				if (level == 'error' || level == 'critical') { sails.config.errors.push(msg) }
