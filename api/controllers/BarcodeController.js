@@ -9,6 +9,8 @@ var bodyParser = require('body-parser');
 var _ = require('underscore-node');
 var q = require('q');
 
+var Logger = require('../services/logger');
+
 module.exports = {
 	
 	scan: function (req, res) {
@@ -62,10 +64,8 @@ module.exports = {
 				else if (result && result[0] && result[0].length ) {
 					errors.push("Nothing found in Set(s) " + sets);
 				}
-
-				console.log(plate_ids + ' OR ' + condition);
 		
-				if (plate_ids || condition) {
+				if (plate_ids.length || condition) {
 					console.log("Load: " + plate_ids.join(',') + ' samples from box(es) ' + boxes);
 
 					Container.loadData(plate_ids, condition, { box_order: box_order})
@@ -97,7 +97,8 @@ module.exports = {
 								warnings.push("Scanned " + plate_ids.length + " records but only found " + sampleList.length);
 							}
 
-							var get_last_step = Protocol_step.parse_last_step(data);
+							var get_last_step = Protocol_step.parse_last_step(data);	
+
 							var last_step = get_last_step.last_step;
 							if (get_last_step.warning) { warnings.push(get_last_step.warning) }
 
@@ -117,25 +118,26 @@ module.exports = {
 
 					})
 					.catch (function (err) {
-						errors.push(err);
+						Logger.error(err, 'Error loading container data');
 						return res.render('customize/private_home', {messages: messages, warnings: warnings, errors : errors });
 					});			
 				}
 				else {
-					console.log("nothing found...");
-			    	warnings.push("Unrecognized barcode: " + barcode); 
+					Logger.info('Unrecognized barcode: ' + barcode);
 			    	return res.render("customize/private_home", { errors: errors, warnings: warnings });
 			    }
 			})
 			.catch ( function (err) {
 				errors.push("Error retrieving set");
+				Logger.error(err, 'Error retrieving set');
 				return res.render('customize/private_home', { errors : errors } );
 			})
 		})
 		.catch ( function (err) {
-			console.log(err);
 			errors.push('Error interpretting barcode: ' + barcode);
 			errors.push(err);
+
+			Logger.error(err, 'Error interpretting barcode');
 			res.render('customize/private_home', { errors: errors } );
 		});
 
@@ -159,8 +161,7 @@ module.exports = {
 			return res.json(returnVal);
 		})
 		.catch ( function (err) {
-			console.log("Error printing barcodes: " + err);
-			returnVal.errors = err;
+			Logger.error(err, 'Error printing barcodes');			
 			return res.json(returnVal);
 
 		});

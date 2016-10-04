@@ -20,7 +20,7 @@ module.exports = {
 			console.log(JSON.stringify(result));
 		})
 		.catch (function (error) {
-			console.log(':-(');
+			Logger.error('increment problem detected');
 		});
 		return res.send('increment completed');
 	},
