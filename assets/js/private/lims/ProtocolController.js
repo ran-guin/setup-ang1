@@ -221,7 +221,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
         console.log('forward');
         $scope.reload();
     }
- 
+
     $scope.back = function back() {
         $scope.step.stepNumber--;
         console.log('back');
@@ -765,14 +765,6 @@ function protocolController ($scope, $rootScope, $http, $q) {
 
     $scope.skip = function skip () {
         // skip step (if allowed)
-    }
-
-    $scope.test = function test (data) {
-        console.log('test');
-        $scope.comments = 'tested';
-        if (data > 0) { $scope.forward() }
-        else { $scope.back() }
-        console.log('reset to: ' + $scope.comments);
     }
 
     $scope.repeat = function repeat () {
