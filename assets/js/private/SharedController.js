@@ -20,12 +20,21 @@ app.controller('SharedController',
 
         $scope.reset_messages();
 
-        $scope.remoteLog = function log(level, msg, context) {
-            console.log("Posting " + level + " message: " + msg);
+        $scope.remoteLog = function log(err, level) {
+            var msg;
+            if (err.constructor === String) {
+                msg = err;
+                err = null;
+            }
+
+            console.log("Posting " + level + " error/message: " + msg);
+
+            err_string = JSON.stringify(err, ['message', 'context', 'arguments', 'name', 'stack']);
 
             // requires services/logger.js and route to logger.js 
-            $http.post('/log/' + level, { message: msg, context: context })
+            $http.post('/log/' + level, { err: err_string, message: msg })
             .then ( function (resp) {
+                console.log("err: " + err_string);
                 console.log('message ? : ' + msg);
                 if (msg) { 
                     if (level === 'error' || level === 'critical') {
@@ -42,7 +51,7 @@ app.controller('SharedController',
                     }
                 }
             })
-            .catch ( function (err) {
+            .catch ( function (Lerr) {
                 console.log("Error logging message");
             });
         }
@@ -238,6 +247,8 @@ app.controller('SharedController',
                     $scope[element]  = true;
                 })
                 .catch ( function (err) {
+                    err.context('injectData');
+                    $scope.remoteLog(err, 'warning')
                     console.log("Error getting injection data: " + JSON.stringify(err));
                 });
             }

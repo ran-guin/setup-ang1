@@ -176,9 +176,9 @@ function wellMapperController ($scope, $rootScope, $http, $q ) {
                         console.log("GOT : " + JSON.stringify(boxData)); 
                         deferred.resolve( boxData );
                     })
-                    .catch ( function (wells) {
+                    .catch ( function (err) {
                         console.log("Error retrieving available wells");
-                        deferred.reject();
+                        deferred.reject(err);
                     });
                 }
                 else {

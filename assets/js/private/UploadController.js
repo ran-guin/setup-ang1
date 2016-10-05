@@ -220,63 +220,73 @@ function uploadController ($scope, $rootScope, $http, $q) {
 				}
 			}
 
-			if (found.ids && found.ids.index != null )  {
-				var id_index = found.ids.index;
-				$scope.message("Using column: '" + $scope.headers[id_index] + "' as an ID reference ");
-			}
-			else { 
-				$scope.message("No ID field supplied - using 1st column: " + $scope.headers[0] + ' as a reference (okay)');
-			}
-
-			if (found.ids && found.ids.index != null ) {
-				$scope.message("confirming id list");
-				$scope.validated = okay;
+			if (!okay) {
+				var e = new Error('Data validation errors');
+				$scope.remoteLog(e, 'warning', 'Validation Errors');
 			}
 			else {
-				$scope.message("Validating reference attributes");
-
-				console.log("BLOCK " + JSON.stringify($scope.dataBlock));
-				var list = [];
-				for (var i=0; i<$scope.dataBlock.length; i++) {
-					var v = $scope.dataBlock[i][1];
-					list.push(v);
+				if (found.ids && found.ids.index != null )  {
+					var id_index = found.ids.index;
+					$scope.message("Using column: '" + $scope.headers[id_index] + "' as an ID reference ");
+				}
+				else { 
+					$scope.message("No ID field supplied - using 1st column: " + $scope.headers[0] + ' as a reference (okay)');
 				}
 
-				var alias = $scope.headers[0].replace(/ /g,'_');
+				if (found.ids && found.ids.index != null ) {
+					$scope.message("confirming id list");
+					$scope.validated = okay;
+				}
+				else {
+					$scope.message("Validating reference attributes");
 
-				var query = "SELECT DISTINCT FK_Plate__ID as id, Attribute_Value as ref FROM Plate_Attribute,Attribute WHERE FK_Attribute__ID=Attribute_ID ";
-				query = query + " AND Attribute_Name like '" + alias + "' AND Attribute_Value IN ('" + list.join("','") + "')";
+					console.log("BLOCK " + JSON.stringify($scope.dataBlock));
+					var list = [];
+					for (var i=0; i<$scope.dataBlock.length; i++) {
+						var v = $scope.dataBlock[i][1];
+						list.push(v);
+					}
 
-				console.log("Q: " + query);
+					var alias = $scope.headers[0].replace(/ /g,'_');
 
-				$scope.reference = {};  // clear previous references... 
+					var query = "SELECT DISTINCT FK_Plate__ID as id, Attribute_Value as ref FROM Plate_Attribute,Attribute WHERE FK_Attribute__ID=Attribute_ID ";
+					query = query + " AND Attribute_Name like '" + alias + "' AND Attribute_Value IN ('" + list.join("','") + "')";
 
-				$http.post('/remoteQuery', { query : query })
-				.then ( function (result) {
-					var list = result.data;
-					if (list.length == $scope.rows) {
-						$scope.validated = okay;
-						for (var i=0; i<list.length; i++) {
-							var id = list[i].id;
-							var ref = list[i].ref;
-							$scope.reference[ref] = id;
+					console.log("Q: " + query);
+
+					$scope.reference = {};  // clear previous references... 
+
+					$http.post('/remoteQuery', { query : query })
+					.then ( function (result) {
+						var list = result.data;
+						if (list.length == $scope.rows) {
+							$scope.validated = okay;
+							for (var i=0; i<list.length; i++) {
+								var id = list[i].id;
+								var ref = list[i].ref;
+								$scope.reference[ref] = id;
+							}
+							$scope.message("Found reference IDs for all " + list.length + " " + $scope.headers[0] + " values " + okay);
+							$scope.validated = okay;
 						}
-						$scope.message("Found reference IDs for all " + list.length + " " + $scope.headers[0] + " values " + okay);
-						$scope.validated = okay;
-					}
-					else {
-						$scope.error("Could not find all records associated with reference column.  Found " + list.length + ' OF ' + $scope.rows)
+						else {
+							$scope.error("Could not find all records associated with reference column.  Found " + list.length + ' OF ' + $scope.rows)
+							$scope.validated = false;
+						}
+					})
+					.catch( function (err) {
+						$scope.error("Error confirming attribute data from query " + query);
+						err.context = 'confirming attribute data';
+
+						$scope.remoteLog(err,'warning');
 						$scope.validated = false;
-					}
-				})
-				.catch( function (err) {
-					$scope.error("Error confirming attribute data from query " + query);
-					$scope.validated = false;
-				});
+					});
+				}
 			}
 
 		})
 		.catch ( function (err) {
+			$scope.remoteLog(err,'warning');
 			$scope.validated = false;
 			$scope.error(err);
 		});		
@@ -326,6 +336,7 @@ function uploadController ($scope, $rootScope, $http, $q) {
 		})
 		.catch ( function (err) {
 			var msg = $scope.parse_standard_error(err);
+			$scope.remoteLog(err,'warning');
 			$scope.error(msg);
 		});
 	}

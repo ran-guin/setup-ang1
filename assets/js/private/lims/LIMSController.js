@@ -105,7 +105,9 @@ function limsController ($scope, $rootScope, $http, $q) {
             else {
                 console.log("No model or ids to print...");
             }
-            deferred.reject('no payload / model or ids');
+
+            var e = new Error('no payload / model or ids');
+            deferred.reject(e);
  
         }
         return deferred.promise;
@@ -201,7 +203,8 @@ function limsController ($scope, $rootScope, $http, $q) {
             }
             else {
                 console.log("No Samples found");
-                deferred.reject("no samples loaded");
+                var e = new Error('no samples loaded');
+                deferred.reject(e);
             }
         })
         .catch ( function (err) {
