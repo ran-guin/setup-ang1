@@ -8,6 +8,8 @@
 
 var bodyParser = require('body-parser');
 var q = require('q');
+
+var Logger = require('../services/logger');
 	
 module.exports = {
 
@@ -37,14 +39,14 @@ module.exports = {
 				return res.json( { plate_set: ps, count: ids.length, added : affected });
 			})
 			.catch ( function (err) {
+				Logger.error(err, 'problem creating plate set member', 'save_next_step');
 				return res.json({ plate_set: null, error: err});
 			});
 		})
 		.catch ( function (err) {
 			console.log("Error generating defined plate set");
+			Logger.error(err, 'could not generate set', 'save_next_step');
 			return res.json( { plate_set: null, error: err});
 		});
 	}	
-};
-
-  
+};  

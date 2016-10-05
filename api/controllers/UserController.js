@@ -18,6 +18,7 @@ app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
 */
 
 var bodyParser = require('body-parser');
+var Logger = require('../services/logger');
 
 module.exports = {
   /**
@@ -126,6 +127,7 @@ module.exports = {
             sails.config.errors   = [];
 
             if (!access || access === 'public') {
+              Logger.info('access denied', 'login');
               return res.render('customize/public_home', { 'message' : 'Access still pending approval by Administrator'});
             } 
             else {
@@ -133,6 +135,7 @@ module.exports = {
             }
           })
           .catch ( function (err) {
+            Logger.error(err, 'access problem', 'login');
             return res.render('customize/public_home', { error: 'Error generating payload ' + err});
           });
 
@@ -166,6 +169,7 @@ module.exports = {
       return res.json({ id: userid, status : status, access : access});
     })
     .catch (function (err) {
+      Logger.error(err, 'could not activate user', 'activate');
       return res.json(err);
     });
     
@@ -290,6 +294,7 @@ module.exports = {
             })
             .catch (function (err) {
               console.log("Error retrieving alDenteID");
+              Logger.error(err, 'could not retrieve alDente ID', 'signup')
               return res.render('customize/public_home', {  printers : printers, error : "could not retrieve LIMS ID to create user"} ); 
             });
           }
@@ -328,6 +333,7 @@ module.exports = {
 
           })
           .catch ( function (err) {
+            Logger.warning(err, 'could not reset password', 'resetPassword');
             return res.negotiate("Error updating new password");
           });
         }

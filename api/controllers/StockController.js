@@ -5,6 +5,8 @@
  * @help        :: See http://sailsjs.org/#!/documentation/concepts/Controllers
  */
 
+var Logger = require('../services/logger');
+
 module.exports = {
 	
 
@@ -24,6 +26,7 @@ module.exports = {
 			return res.send(result);
 		})
 		.catch (function (err) {
+			Logger.error(err, "problem receiving stock", 'receive');
 			return res.send({error : err});
 		});
 	},
@@ -79,6 +82,7 @@ module.exports = {
 		})
 		.catch ( function (err) {
 			console.log("Error checking received stock: " + err);
+			Logger.warning(err, 'could not find recent stock', 'received');
 			return res.render('customize/injectedData', {
 				data : null,
 				title : 'Received Stock',

@@ -8,6 +8,8 @@
 var q = require('q');
 var bodyParser = require('body-parser');
 
+var Logger = require('../services/logger');
+
 module.exports = {
 	increment : function (req, res ) {
 		var table = req.body.table;
@@ -20,7 +22,7 @@ module.exports = {
 			console.log(JSON.stringify(result));
 		})
 		.catch (function (error) {
-			Logger.error('increment problem detected');
+			Logger.error(error,'increment problem detected');
 		});
 		return res.send('increment completed');
 	},
@@ -69,6 +71,7 @@ module.exports = {
 		})
 		.catch ( function (err) {
 			var msg = "Error uploading file: " + err;
+			Logger.error(err, 'Could not upload file');
 			return res.render('customize/private_home', { errorMsg: msg });
 		});
 

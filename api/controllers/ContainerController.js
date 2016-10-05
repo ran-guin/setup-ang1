@@ -15,6 +15,8 @@ var q = require('q');
 
 var xlsx = require('node-xlsx');
 
+var Logger = require('../services/logger');
+
 module.exports = {
 	
 	history : function (req, res) {
@@ -56,6 +58,7 @@ module.exports = {
 			return res.render('customize/injectedData', { fields : fields, data : result, title: 'Sample History', element: element, href: {Sets : "scan-barcode?barcode=Set<Sets>"} });
 		})
 		.catch ( function (err) {
+			Logger.warning(err, "could not inject data", 'history')
 			return res.json("error injecting data");
 		})
 
@@ -78,6 +81,7 @@ module.exports = {
 			}		
 		})
 		.catch ( function (err) {
+			Logger.warning(err, 'could not inject info', 'summary');
 			return res.json("error injecting Sample Info");
 		});
 	},
@@ -99,7 +103,8 @@ module.exports = {
 			}		
 		})
 		.catch ( function (err) {
-			return res.json("error injecting Sample Info");
+			Logger.warning(err, 'could not inject storage history', 'storage_history');
+			return res.json("error injecting Storage History");
 		});
 	},
 
@@ -164,6 +169,7 @@ module.exports = {
 			return res.json(results);
 		})
 		.catch ( function (err) {
+			Logger.error(err, "Problem executing transfer", 'completeTransfer')
 			return res.json(err);
 		})
 
@@ -197,6 +203,8 @@ module.exports = {
 		    .catch ( function (err) {
 		    	console.log("Error uploading Matrix File: ");
 		    	var msg = Record.parse_standard_error(err);
+
+		    	Logger.error(err, "problem uploading matrix file");
 
 				return res.render('lims/Container', { 
 					plate_ids: ids, 

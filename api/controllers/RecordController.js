@@ -8,6 +8,8 @@
 var bodyParser = require('body-parser');
 var q = require('q');
 
+var Logger = require('../services/logger');
+
 module.exports = {
 
 	// get custom attributes from models to ensure specifications remain centralized
@@ -159,6 +161,7 @@ module.exports = {
 					return res.render('record/form', input);
 				})
 				.catch (function (err) {
+					Logger.error('could not load data in promises', 'form');
 					console.log("Error loading data: " + err);
 					return res.negotiate(err);
 				});

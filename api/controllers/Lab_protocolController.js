@@ -14,6 +14,8 @@ app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
 var bodyParser = require('body-parser');
 var q = require('q');
 
+var Logger = require('../services/logger');
+
 module.exports = {
 
 	'view' : function (req, res) {
@@ -57,6 +59,7 @@ module.exports = {
 			return res.render('lims/Protocol_Step_Editor', { record: data[0] });
 	    })
 	    .catch ( function (err) {
+	    	Logger.error(err, 'could not load step', 'edit_step');
 	    	console.log("Error loading protocol step");
 	    });
 	},
@@ -134,6 +137,7 @@ module.exports = {
 		})
 	    .catch ( function (err) {
 	    	console.log("ERROR: " + err);
+	    	Logger.error(err, 'problem loading steps', 'run');
 	    	return res.json({ error : 'Error encountered: ' + err});
 	    });							
 
@@ -158,6 +162,7 @@ module.exports = {
 		})
 		.catch ( function (err) {
 			console.log("error completing LP : " + JSON.stringify(err));
+			Logger.error(err, 'could not complete protocol', 'complete');
 			return res.send({ error : "Error completing protocol: " + err });
 		});
 	},
@@ -176,6 +181,7 @@ module.exports = {
 				res.render('lims/New_Lab_Protocol', { Steps : protocol });
 			})
 			.catch (function (err) {
+				Logger.warning(err, 'problem retrieving protocol steps', 'edit');
 				console.log(err);
 				res.send(err);
 			})
@@ -256,6 +262,7 @@ module.exports = {
 		})
 		.catch ( function (err) {
 			console.log(err);
+			Logger.error(err, 'could not update protocol', 'update');
 			return res.send( { error: err });
 		});
 	},
@@ -284,6 +291,7 @@ module.exports = {
 		})
 		.catch ( function (err) {
 			console.log(err);
+			Logger.error(err, 'problem updating step', 'update_step');
 			return res.send( { error: err });
 		});
 	},

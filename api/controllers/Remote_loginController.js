@@ -9,6 +9,8 @@ var bodyParser = require('body-parser');
 var q = require('q');
 var request = require('request');
 
+var Logger = require('../services/logger');
+
 module.exports = {
 
 	validate: function (req, res) {
@@ -25,6 +27,7 @@ module.exports = {
 			})
 			.catch (function (err) {
 				console.log(err);
+				Logger.warning(err, 'validation failure', 'validate')
 				return res.json(err);
 			});	
 	},
@@ -54,6 +57,8 @@ module.exports = {
 	          return res.render('customize/private_home', payload);
           })
           .catch (function (err) {
+          	Logger.error(err, 'payload generation error', 'test');
+
           	console.log("error generating payload");
           	return res.render('customize/private_home');
           })
@@ -115,11 +120,13 @@ module.exports = {
 					})
 				    .catch ( function (err) {
 				    	console.log("ERROR: " + err);
+				    	Logger.error(err, 'error loading steps', 'protocol');
 				    	return res.json({ error : 'Error encountered: ' + err});
 				    });							
 				})
 				.catch ( function (err) {
 					var msg = "Error loading ids: " + ids;
+					Logger.error(err, msg);
 					return res.json({ error : msg })
 				});
 			}
@@ -146,6 +153,7 @@ module.exports = {
 		})
 		.catch ( function (err) {
 			console.log('verification error: ' + err);
+			Logger.warning(err, 'verification error', 'protocol' )
 			return res.json({body: body, error: err});
 		});
 
@@ -162,7 +170,9 @@ module.exports = {
 			deferred.resolve({url : url });
 		})
 		.catch ( function (err) {
-			deferred.reject({ message : 'failed to find remote login record for user: ' + userid });
+			err.context = 'connect';
+			err.message = 'failed to find remote login record for user: ' + userid;
+			deferred.reject(err);
 		})
 
 		return deferred.promise;

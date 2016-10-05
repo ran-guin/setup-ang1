@@ -7,6 +7,8 @@
 
 var q = require('q');
 
+var Logger = require('../services/logger');
+
 module.exports = {
 
 
@@ -22,6 +24,7 @@ module.exports = {
 			return res.json(result);
 		})
 		.catch ( function (err) {
+			Logger.error(err, 'query error', 'remoteQuery');
 			console.log("Error: " + err);
 			return res.json(err);
 		});
@@ -84,6 +87,7 @@ module.exports = {
 			return res.json(returnval);
 		})
 		.catch ( function (err) {
+			Logger.error(err, 'search error', 'remote search');
 			console.log("Error searching tables: " + err);
 			return res.json(err);
 		});
@@ -106,6 +110,7 @@ module.exports = {
 		})
 		.catch ( function (err) {
 			console.log("ERROR PARSING: " + err);
+			Logger.error(err, 'parsing error', 'remote parse')
 			return res.json(err);
 		});
 	},
@@ -125,6 +130,7 @@ module.exports = {
 			return res.json(result);
 		})
 		.catch ( function (err) {
+			Logger.error(err, 'error creating ' + model, 'remote save')
 			return res.json(err);
 		});
 	},
@@ -150,6 +156,7 @@ module.exports = {
 		})
 		.catch (function (err) {
 			console.log("Error uploading: " + err);
+			Logger.error(err, 'upload error', 'remote uploadData');
 			return res.json({error: err});
 			// sails.config.errors.push(err);
 			// return res.render('customize/private_home');

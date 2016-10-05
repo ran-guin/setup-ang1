@@ -52,7 +52,6 @@ module.exports = {
 			q.all( promises )
 			.then ( function (result) {
 				
-				console.log("done");
 			    var errors = Scanned['Errors'] || [];
 			    var warnings = [];
 			    var messages = [];

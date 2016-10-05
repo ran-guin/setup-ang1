@@ -8,6 +8,8 @@
 var bodyParser = require('body-parser');
 var q = require('q');
 
+var Logger = require('../services/logger');
+
 module.exports = {
 	
 	boxData: function (req, res) {
@@ -41,6 +43,8 @@ module.exports = {
 			// deferred.resolve(contents);
 		})
 		.catch (function (err) {
+			Logger.error(err, 'problem getting rack contents', 'boxData')
+			return res.json(err);
 			//deferred.reject("Error retrieving box contents: " + JSON.stringify(err));
 		})
 
@@ -87,8 +91,9 @@ module.exports = {
 		})
 		.catch ( function (err) {
 			console.log("Could not add slotted box: " + err);
-
 			var error = Record.parse_standard_error(err);
+			Logger.error(err, error);
+			
 			return res.json({error: error});
 			//return  res.render('customize/private_home'); 
 		})
