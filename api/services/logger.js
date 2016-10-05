@@ -24,7 +24,6 @@ module.exports = {
 
 	error : function (e, msg, options) {
 		this.log(e, 'error', msg, options);
-
 	},
 
 	warning : function (e, msg, options) {
@@ -53,12 +52,31 @@ module.exports = {
 			data.alDenteID = payload.alDenteID;
 			data.mode      = payload.mode;
 
-			if (msg && sails.config) {
-				if (level == 'error' || level == 'critical') { sails.config.errors.push(msg) }
-				else if (level == 'warning') { sails.config.warnings.push(msg) }
-				else if (level == 'info') { sails.config.messages.push(msg) }
-				else if (level === 'debug') { sails.config.debug_messages.push(msg) }
+			var messages = [];
+			if (e && level.match(/(error|warning|critical)/) ) {
+				var parsed_error = Record.parse_standard_error(e);	
+				messages = parsed_error;
 			}
+			if (msg) { messages.push(msg) }
+				if (e && messages.length) { 
+					// override raw message with simpler message ... 
+					e.raw_message = e.message;
+					e.message = messages[messages.length-1];
+				}	
+			}
+
+			if (messages.length && sails.config) {
+				for (var i=0; i<messages.length; i++) {
+					if (level == 'error' || level == 'critical') { sails.config.errors.push(msg) }
+					else if (level == 'warning') { sails.config.warnings.push(msg) }
+					else if (level == 'info') { sails.config.messages.push(msg) }
+					else if (level === 'debug') { sails.config.debug_messages.push(msg) }
+				}
+			}	
+			console.log("Standard error logging for " + level);
+		}
+		else {
+			console.log("Logging error without payload data");
 		}
 
 		if (e.context) {
