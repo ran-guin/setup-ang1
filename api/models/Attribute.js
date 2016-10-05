@@ -110,7 +110,10 @@ module.exports = {
 
 			Record.query(query, function (err, attributeData){
 				
-				if (err) { deferred.reject("Error retrieving attributes: " + err) }
+				if (err) { 
+					err.context = 'clone';
+					deferred.reject(err);
+				}
 				else {
 					if (attributeData.length) {
 						console.log("Attribute Data: " + JSON.stringify(attributeData[0]) + '...');
@@ -129,7 +132,7 @@ module.exports = {
 						Record.query(sqlInsert, function (insertError, attUpdate){
 							if (insertError) { 
 								var parsed_error = Record.parse_standard_error(insertError);
-								deferred.reject("error updating attributes: " + parsed_error) 
+								deferred.reject(insertError); 
 							}
 							else {
 								deferred.resolve({attributes: attUpdate});
@@ -154,25 +157,7 @@ module.exports = {
 	increment : function (table, ids, attributes) {
 		
 		var deferred = q.defer();
-		/*
-		var increments = [];
-		if (att.type == 'Count') {
-			// after copying existing increment attributes, update them if applicable //
-			increments.push(insertion);
-		}
-		if (increments.length) {
-			console.log("Update increment attributes " + increments.join('; '));
 
-			var addInc = insertPrefix + increments.join(',')
-				+ ' ON DUPLICATE KEY UPDATE Attribute_Value=Attribute_Value+1'; 
-
-			console.log("Increments: " + addInc)
-			Record.query(addInc, function (incrementError, incUpdate){
-				if (incrementError) { deferred.reject("Error with increment attribute(s): " + incrementError) }
-				else { deferred.resolve({attributes: attUpdate, increments: incUpdate}) }
-			})
-		}
-		*/
 		deferred.resolve( 'okay' ); //{ table: table, ids: ids, attributes: attributes});
 		return deferred.promise;
 

@@ -213,7 +213,8 @@ module.exports = {
 			deferred.resolve({ 'input' : orderedList, 'attributes' : Atts});
 		})
 		.catch (function (err) {
-			deferred.reject("error looking for Attributes"); 
+			err.context = 'looking for Attributes';
+			deferred.reject(err); 
 		})
 
 		console.log("Union: " + JSON.stringify(list));

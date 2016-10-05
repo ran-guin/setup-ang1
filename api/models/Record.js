@@ -22,7 +22,8 @@ module.exports = {
 		Record.query_promise("desc " + table)
 		.then (function (result) {
 			if (result.length == 0 ) {
-				deferred.reject("no table found");
+				var e = new Error("no table found");
+				deferred.reject(e);
 			}
 			else {
 				/*
@@ -284,7 +285,7 @@ module.exports = {
 				var parsed_error = Record.parse_standard_error(err);
 				console.log("Parsed: " + parsed_error);
 
-				deferred.reject(parsed_error);
+				deferred.reject(err);
 			}
 			else { deferred.resolve(result) }
 		});
@@ -411,7 +412,7 @@ module.exports = {
 			});
 		} 
 		catch (e) {
-			deferred.reject();
+			deferred.reject(e);
 		}
 
 		return deferred.promise;
@@ -480,7 +481,8 @@ module.exports = {
 			if (err) { console.log("cloning error: " + err); deferred.reject(err);  }
 			else if (result.length == 0) {
 				console.log("cloned record not found");
-				deferred.reject("reference record not found");
+				var e = new Error('reference not found');
+				deferred.reject(e);
 			}
 			else {
 				var data = result;
@@ -581,11 +583,13 @@ module.exports = {
 					}
 					else if (target_count == 0) {
 						console.log("no target records");
-						deferred.reject("No target records created");
+						var e = new Error('no target records');
+						deferred.reject(e);
 					}
 					else {
 						console.log("targets != sources");
-						deferred.reject("Target count != Source count");
+						var e = new Error('target count != source count');
+						deferred.reject(e);
 					}
 				})
 				.catch ( function (err3) {
@@ -790,12 +794,14 @@ module.exports = {
 				})
 				.catch ( function (err) {
 					console.log("Query Error: " + query);
-					deferred.reject("Error updating last prep id: " + err);
+					err.context = 'updating last prep_id'
+					deferred.reject(err);
 				});
 			})
 			.catch ( function (Herr) {
 				console.log("Error saving preHistory");
-				deferred.reject("Error saving pre History");
+				Herr.context = 'preHistory';
+				deferred.reject(Herr);
 			});
 			
 		}
@@ -831,12 +837,20 @@ module.exports = {
 
 		var table = Mod.tableName || options.table || model; // default to model name ... 
 
-		if (Tdata === undefined) { deferred.reject('no data'); return deferred.promise }
+		if (Tdata === undefined) { 
+			var e = new Error('no data');
+			deferred.reject(e); 
+			return deferred.promise;
+		}
 
 		var data = [];
 		if (Tdata.constructor === Object) { data = [Tdata] }
 		else if (Tdata.constructor === Array ) { data = Tdata }
-		else {  deferred.reject('no data');  return deferred.promise }
+		else {  
+			var e = new Error('no data');
+			deferred.reject(e);  
+			return deferred.promise;
+		}
 
 
 		var fields = [];
@@ -1002,13 +1016,15 @@ module.exports = {
 					deferred.resolve(result);
 				})
 				.catch ( function (err) {
-					deferred.reject("Error in uploadData: " + err);
+					err.context = 'upload Data';
+					deferred.reject(err);
 				})
 			}
 			else {
 				var msg = "Data: " + data[0].length + '; headers: ' + headers.length + '; F: ' + Object.keys(fields).length + '; A: ' + Object.keys(attributes).length;
 				console.log(msg);
-				deferred.reject(msg);
+				var e = new Error('missing data or headers');
+				deferred.reject(e);
 			}
 		})
 		.catch ( function (err) {
@@ -1200,9 +1216,10 @@ module.exports = {
 			return "\"" + value + "\"";
 		}
 	},
+	message;
 
-	parse_standard_error : function (message) {
-        // Convert warning / error messages into more readable format
+	parse_standard_error : function (err) {
+        // Convert warning / error errs into more readable format
         // (if <match> is included in value, then the regexp of the key will be evaluated and the match replaced in the value string)
         //   eg 'Error creating \\w+' : "<match> - no record created" -> yields "Error creating Employee - no record created" 
         //
@@ -1212,23 +1229,23 @@ module.exports = {
             "Error saving \\w+" : "<match>",
         };
 
-        console.log("Parse " + message.constructor + ' message ' + message);
+        console.log("Parse " + err.constructor + ' err ' + err);
 
-        if (message.constructor === Object) {
-        	message = JSON.stringify(message);
+        if (err.constructor === Object) {
+        	err = JSON.stringify(err);
         }
-        else if (message.constructor === Array ) {
-        	message = message.join('; ');
+        else if (err.constructor === Array ) {
+        	err = err.join('; ');
         }
-        else if (message.constructor === String) {
+        else if (err.constructor === String) {
 
         }
         else { 
-        	var string = message.toString();
-        	message = string;
+        	var string = err.toString();
+        	err = string;
         }
 
-		console.log(message);        
+		console.log("\nStringified error: \n" + err);        
 
         var strings = Object.keys(Map);
 
@@ -1238,10 +1255,10 @@ module.exports = {
             var test = strings[i];
             if (Map[strings[i]].match(/<match>/)) {
                 test = new RegExp(test);
-                console.log("Testing regexp :" + test);
+                console.log("Checking errors for regexp :" + test);
             }
 
-            var found = message.match(test);
+            var found = err.match(test);
             if (found) {
                 console.log("match found for " + test);
                 var err = Map[strings[i]].replace('<match>', found);
@@ -1249,8 +1266,9 @@ module.exports = {
             }
         }
 
-        console.log("Parsed Error: " + message);
-        if (! errors.length) { errors.push(message) }
+        console.log("Parsed Error: " + err);
+        console.log(JSON.stringify(errors));
+        if (! errors.length) { errors.push(err) }
         return errors;
     },
 

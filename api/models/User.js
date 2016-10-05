@@ -168,7 +168,8 @@ module.exports = {
 
               else if (!user || (user == 'undefined') ) { 
                 console.log("Unrecognized User: " + username + '/' + userid);
-                deferred.reject("unrecognized user: " + username);
+                var err = new Error('unrecognized user: ' + username + '/' + userid);
+                deferred.reject(err);
               }
               else {
                 console.log("remote access granted");
@@ -191,16 +192,19 @@ module.exports = {
             });            
           }
           else {
-            deferred.reject('Not validated');
+            var err = new Error('not validated');
+            deferred.reject(err);
           }
         }
         else { 
-          deferred.reject("no validation body found");
+            var err = new Error("no validation body found");
+          deferred.reject(err);
         }
       });
     }
     else {
-      deferred.reject('no session provided');
+      var err = new Error('no session provide');
+      deferred.reject(err);
     }
 
     return deferred.promise;

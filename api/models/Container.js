@@ -312,7 +312,7 @@ module.exports = {
 				})
 				.catch ( function (err) {
 					err.context = 'post transfer update';
-					deferred.reject(msg); 
+					deferred.reject(err); 
 				});
 			})
 			.catch ( function (err) {
@@ -479,7 +479,8 @@ module.exports = {
 					})
 					.catch ( function (err) {
 						console.log('error making updates on retrieved samples');
-						deferred.resolve(current_ids);
+						console.log(current_ids);
+						deferred.resolve(err, 'error updating samples');
 					});
 				}
 				else {
@@ -516,19 +517,19 @@ module.exports = {
 						.catch (function (err) {
 							console.log("Error updating or printing labels: ");
 							console.log(err);
-							deferred.resolve(newIds);
+							deferred.resolve(err);
 						});
 						
 					})
 					.catch ( function (err) {
 						err.context='Cloning container';
-						deferred.reject( err );						
+						deferred.reject(err);						
 					});
 				}
 			})
 			.catch ( function (err) {
 				console.log("Error checking for pre-printed plates: " + err);
-				deferred.reject( err );
+				deferred.reject(err);
 			});
 		})
 		.catch ( function (err) {
@@ -658,11 +659,15 @@ module.exports = {
 		}
 		else {
 			if (ids.length) {
-				var msg = "List of Target locations doesn't match length of ids " + JSON.stringify(target);
-				deferred.reject(msg);
+
+				var e = new Error("List of Target locations doesn't match length of ids ");
+				e.context = 'relocate';
+				deferred.reject(e);
 			}
 			else {
-				deferred.reject("No ids to move... ");
+				var e = new Error('no ids to move');
+				e.context = 'relocate';
+				deferred.reject(e);
 			}
 		}
 		

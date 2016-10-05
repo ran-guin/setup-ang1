@@ -108,11 +108,16 @@ module.exports = {
 						});
 					}
 					else {
-						deferred.reject("Problem parsing " + type + ' data ...');
+						var e = new Error(type + ' Parsing problem');
+						e.context = 'receive Stock';
+						deferred.reject(e);
 					}
 				}
 				else {
-					deferred.reject("No Stock ID generated ?");
+					var e = new Error('No stock id generated');
+					e.context = 'receive Stock';
+
+					deferred.reject(e);
 				}
 			})
 			.catch ( function (err) {
@@ -121,7 +126,9 @@ module.exports = {
 			});
 		}
 		else {
-			deferred.reject("No Stock Data Type supplied");
+			var e = new Error("No Stock data type");
+			e.context = 'receive stock';
+			deferred.reject(e);
 		}
 
 		return deferred.promise;

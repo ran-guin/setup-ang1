@@ -63,7 +63,8 @@ module.exports = {
     }
     else if (!group) {
       console.log("missing printer group (?)");
-      deferred.reject("missing label type");
+      var e = new Error('missing label type');
+      deferred.reject(e);
     }
     else {
       var payload = sails.config.payload;

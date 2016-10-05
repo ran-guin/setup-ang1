@@ -65,7 +65,8 @@ module.exports = {
 
     var wells = Rack.wells[size];
     if (! wells || !name || !size) {
-      deferred.reject("not standard size ? " + size);
+      var e = new Error("non standard size ? " + size);
+      deferred.reject(e);
     }
     else {
 
@@ -104,21 +105,25 @@ module.exports = {
               deferred.resolve({box: boxResult, slots: slotResult, message: msg});
             })
             .catch (function (err) {
-              console.log("error creating slots " + err);
+              err.context = 'creating slots';
               deferred.reject(err);
             });
           })
           .catch ( function (err) {
-            console.log("error creating box " + err);
+            err.context = 'creating box';
             deferred.reject(err);
           });
         }
         else {
-          deferred.reject('no rack alias found');
+          var err = new Error;
+          err.message = 'no rack alias found';
+          err.context = 'addSlottedBox';
+          deferred.reject(err);
         }
       })
       .catch ( function (err) {
-        deferred.reject("problem getting parent info");
+        err.context('addSlottedBox');
+        deferred.reject(err);
       });
     }
 
@@ -157,7 +162,7 @@ module.exports = {
       deferred.resolve(result);
     })
     .catch (function (err) {
-      console.log("Error cloning rack: " + JSON.stringify(err));
+      err.context = 'cloning rack';
       deferred.reject(err);
     });
 
@@ -214,16 +219,19 @@ module.exports = {
           }
         }
         else {
-          deferred.reject("not enough wells available.  Found " + result.available[target_rack].length + ' - need ' + ids.length);
+          var e = new Error("not enough wells available");
+          console.log("Found " + result.available[target_rack].length + ' - need ' + ids.length);
+          deferred.reject(e);
         }
       })
       .catch ( function (err) {
-        console.log("Error retrieving box Contents for Rack: " + target_rack + " : " + err);
+        err.context = 'retrieving box Contents for Rack: ' + target_rack;
         deferred.reject(err);
       });
     }
     else {
-      deferred.reject('non pack not yet set up');
+      var e = new Error('non pack not yet set up');
+      deferred.reject(e);
     }
 
  
@@ -264,13 +272,14 @@ module.exports = {
         deferred.resolve({ success: true});        
       }
       else {
-        deferred.reject("different length noticed between well list and id list");
+        var e = new Error("different length noticed between well list and id list");
+        deferred.reject(e);
       }
     }
     else if (mirror) {
       console.log("please supply wells if preserving rack location");
-
-      deferred.reject({success: false});
+      var e = new Error("must supply wells if preserving rack location");
+      deferred.reject(e);
     }
     else if (unsorted) {
       // move all ids into the same location
@@ -281,12 +290,14 @@ module.exports = {
         deferred.resolve({ success: true, result: result});
       })
       .catch ( function (err) {
-        deferred.reject("Error moving samples: " + err)
+        err.context = 'moving samples';
+        deferred.reject(err)
       });
     }
     else {
       console.log("unspecific distribution strategy");
-      deferred.reject("unspecified distribution strategy");
+      var e = new Error('unspecified distribution strategy');
+      deferred.reject(e);
     }
 
     return deferred.promise;
@@ -328,7 +339,6 @@ module.exports = {
     }
     else if (!rack_id) {
       console.log("No Rack ID supplied");
-      // deferred.reject('no rack id');
     }
     else {
       rack_ids = [rack_id];

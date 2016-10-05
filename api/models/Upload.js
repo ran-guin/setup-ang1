@@ -28,9 +28,10 @@ module.exports = {
 	    .upload({
 	    	maxBytes: 500000
 	    }, function (err, uploadedFiles) {                                   
-			if (err) return res.serverError(err);
-			else if (uploadedFiles.length == 0) {                                   
-				deferred.reject("Error: No File Uploaded");
+			if (err) deferred.reject(err); // res.serverError(err);
+			else if (uploadedFiles.length == 0) { 
+				var e = new Error('No file uploaded');                                 
+				deferred.reject(e);
 			}
 			else {
 				// assume only one file for now, but may easily enable multiple files if required... 
@@ -129,7 +130,8 @@ module.exports = {
 				}
 				else if (uploadedFiles.length == 0) {
 					errors.push("no files supplied");
-					deferred.reject('no files supplied');
+					var e = new Error('no files supplied');
+					deferred.reject(e);
 				}
 				else {
 					// assume only one file for now, but may easily enable multiple files if required... 
@@ -240,7 +242,10 @@ module.exports = {
 							if (errors.length || (! force && warnings.length)) {
 								console.log("Errors: " + JSON.stringify(errors));
 								errors.push("Aborting due to errors");
-								deferred.reject(errors);
+								
+								var e = new Errors('Errors detected');
+								e.context = 'uploadMatrix';
+								deferred.reject(e);
 							}
 							else {
 								console.log("Map: " + JSON.stringify(map));
@@ -274,7 +279,8 @@ module.exports = {
 						});
 					}
 					catch (e) {
-						deferred.reject("Error loading excel file: " + e);
+						e.context = 'uploadMatrix';
+						deferred.reject(e);
 					}
 				}			
 			});

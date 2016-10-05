@@ -117,17 +117,20 @@ module.exports = {
 							console.log(JSON.stringify(Qerr[0]));
 						} 
 					}
-					deferred.reject("Error completing all actions: " + Qerr) ;
+					Qerr.message = "Error completing all actions: ";
+					deferred.reject(Qerr) ;
 				});
 			})
 			.catch (function (err) {
 				console.log("Error saving completed Prep Record: " + err);
-				deferred.reject({ error : "Error saving Prep Record: " + err} );
+				err.context('Prep Record');
+				deferred.reject(err);
 			});
 
 		}
 		else {
-			deferred.reject(" No Plate IDs or Data ");
+			var e = new Error("no container ids or data");
+			deferred.reject(e);
 		}
 
 		return deferred.promise;
@@ -149,7 +152,8 @@ module.exports = {
 			console.log("Form Data:");
 			console.log(data);
 			//return res.send('Debug only - nothing saved');
-			deferred.reject("Debug only - nothing saved");
+			var e = new Error('Debug only - nothing saved');
+			deferred.reject(e);
 		}
 		
 		else if (data && data['Prep']) {
@@ -202,19 +206,22 @@ module.exports = {
 				})
 				.catch (function (err) {
 					// sails.config.errors.push('Error creating Plate record ' + err);
-					deferred.reject("Error creating Plate record: " + err);
+					err.context = 'creating container record';
+					deferred.reject(err);
 					//return res.send("ERROR creating Plate record: " + err)
 				});
 
 			})
 			.catch ( function (err) {
-				deferred.reject("Error creating Prep record: " + err);
+				err.context = 'creating prep record';
+				deferred.reject(err);
 				//return res.send("ERROR creating Prep record: " + err);				
 			});
 		}
 		else {
 			console.log("Prep Data");
-			deferred.reject("No data");
+			var e = new Error('no data');
+			deferred.reject(e);
 			//return res.send('no data');
 		}
 

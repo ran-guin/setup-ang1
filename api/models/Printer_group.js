@@ -56,7 +56,7 @@ module.exports = {
   		deferred.resolve(result);
   	})
   	.catch ( function (err) {
-  		console.log("Error retrieving printers: " + err);
+  		err.context = 'loading printers';
   		deferred.reject(err);
   	});
 
