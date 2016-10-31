@@ -1,0 +1,444 @@
+extends ./../customize/privateLayout
+
+block content
+
+  div.container   
+    // input variables: 
+    //    - plate_ids  (array); 
+    //    - Samples    (array of hashes)
+    //    - Steps      (array of hashes)
+    //    - attributes (array of hashes)
+
+    //- flds = fields || []; 
+    //- units = { 'solution_qty' : 'solution_qty_units', 'transfer_qty' : 'transfer_qty_units'};
+    - aliases = { 'equipment' : 'Equip', 'solution' : 'Sol' }
+    - var input_options2 = ['transfer_qty', 'split', 'solution_qty', 'solution', 'equipment'];
+
+    - var Options = {};
+    - Options['transfer_qty'] = 'Indicate amount of sample to be aliquoted / transferred per well';
+    - Options['split']        = 'Number of target wells per source well during transfer';
+    - Options['solution_qty'] = 'Track quantity of reagent applied during this step (affects final sample volume if baseline units are the same)';
+    - Options['solution']     = 'Track id of reagent applied during this step';
+    - Options['equipment']    = 'Track id of equipment used during this step';
+  
+    - var prompt = { desc : "Select to prompt user to complete this step while using user interface (required to track step)" };
+    - var transfer = { desc : "Is sample being relocated within this step to a new target container or box location" };
+    - var move = { desc : 'Relocate samples to a new box (without changing their tube container)' }
+    - var aliquot = { desc : 'Transfer portion of sample to a target well (leaving some sample remaining)' }
+    - var transfer = { desc : 'Transfer all (or specified volume) of original sample to the target well(s), and throw out original sample container(s)' }
+    - var preprint = { desc : 'Generate empty target container ids in preparation for future transfer/aliquot.  <B>This should always be followed at some point in the same protocol by an Aliquot or Transfer step</B>' }
+
+    - var transfer_types = '<UL><LI><U>Transfer:</U> ' + transfer.desc + '</LI><LI><U>Aliquot:</U> ' + aliquot.desc + '</LI><LI><U>Pre-Print:</U> ' + preprint.desc + '</LI><LI><U>Move:</U> ' + move.desc + "</LI></UL>";
+    - var reset_focus = "This determines which samples become the active samples after the transfer.  By default the focus will move to the progeny, but if reset focus is selected, then the active sample focus reverts to the parent plates again.  (presumably the progeny are no longer handled, but simply put away)";
+
+    - attributes = attributes || {}; // {'Thaw_Time' : 'integer' }
+
+    - var input_options = ['transfer_qty','Split','solution','solution_qty','equipment','location', 'comments'];
+
+    - var xfer_options = ['transfer_qty', 'Split', 'reset_focus', 'location', 'fill_by', 'load_by'];
+    - var xfer_input_options = ['transfer_qty', 'Split', 'location'];
+
+    - var configParams = { record: record, payload: session.payload, input_options: input_options, custom_options: xfer_options};
+    - var init = "initialize(" + JSON.stringify(configParams) + ")";
+
+
+    div(ng-app='myApp')
+     div(ng-controller="SharedController")
+      div(ng-controller="FancyFormController")
+       div(ng-controller="LIMSController")
+        div(ng-controller="Protocol_StepController" ng-init="#{init}")
+
+          include ./../core/errorMsg.jade
+          h3 Protocol Editor
+          include ./../core/angularMessages.jade
+       
+
+          div.alert.alert-warning(ng-show="changes")
+            h4 {{ changes }} Field(s) Altered: 
+            ul
+              li(ng-repeat="(key,value) in changed")
+                b {{ key }} &nbsp; 
+                  i.fa.fa-arrow-right
+                  span &nbsp; {{ value }}
+
+          form.form-horizontal(role='form' width='100%')
+            b Basics &nbsp;
+            span(ng-show="!edit_basics")
+              button.btn.btn-success(type='button' ng-click="edit_basics=1") Edit
+            span(ng-show="edit_basics")
+              button.btn.btn-danger(type='button' ng-click="edit_basics=0") Done
+            
+            hr
+            div.form-group.input-lg
+              label.control-label.col-sm-2(for='name') Name
+              div.col-sm-10(ng-show="edit_basics")  
+                input.form-control#name(type='text' placeholder='Name' ng-model='Record.name' ng-change="reset_input('name')")
+              div.col-sm-10#name(ng-show="!edit_basics")  
+                label.control-label {{ Record.name }}
+
+            div.form-group.input-lg
+              label.control-label.col-sm-2(for='instructions') Instructions
+              div.col-sm-10(ng-show="edit_basics")  
+                input.form-control#instructions(type='text' placeholder='Instructions' ng-model='Record.instructions' ng-change="reset_input('instructions')")
+              div.col-sm-10(ng-show="!edit_basics")  
+                label.control-label {{ Record.instructions }}
+
+            div.form-group
+              label.control-label.col-sm-2.input-lg(for='step_message') Message
+              div.col-sm-10(ng-show="edit_basics") 
+                input.input-lg.form-control#step_message(placeholder='Message' ng-model='Record.message' ng-change="reset_input('message')")
+              div.col-sm-10(ng-show="!edit_basics")  
+                label.control-label {{ Record.message }}
+
+            div.form-group
+              label.control-label.col-sm-2.input-lg(for='prompt') Prompt &nbsp;
+                a(href='#' onclick="return false;" tooltip='instructions' data-toggle="popover" data-placement="left" data-trigger="focus" title="Description" data-content="#{prompt.desc}")
+                     i.fa.fa-question-circle
+              div.col-sm-10(ng-show="edit_basics")
+                input.input-lg#prompt(type='checkbox' ng-click="reset_input('prompt');" ng-model='Record.prompt')
+              div.col-sm-10(ng-show="!edit_basics")  
+                span(ng-show="Record.prompt")
+                  i.fa.fa-check.fa-2x(style='color:green')
+                span(ng-show="!Record.prompt")
+                  i.fa.fa-close.fa-2x(style='color:red')
+
+            div.form-group
+              label.control-label.col-sm-2.input-lg(for='repeatable') Repeatable &nbsp;
+              div.col-sm-10(ng-show="edit_basics")
+                div.checkbox
+                  label
+                    input.input-lg#repeatable(type='checkbox' ng-click="reset_input('repeatable');" ng-model='Record.repeatable')                  
+              div.col-sm-10(ng-show="!edit_basics")  
+                span(ng-show="Record.repeatable")
+                  i.fa.fa-check.fa-2x(style='color:green')
+                span(ng-show="!Record.repeatable")
+                  i.fa.fa-close.fa-2x(style='color:red')
+
+            hr
+            b Input Options &nbsp;
+            span(ng-show="!edit_input")
+              button.btn.btn-success(type='button' ng-click="edit_input=1") Edit
+            span(ng-show="edit_input")
+              button.btn.btn-danger(type='button' ng-click="edit_input=0") Done
+            p &nbsp;
+            
+            div.container(ng-show="edit_input" style="padding-top: 4px")
+              div.col-sm-2 
+                u
+                  b.input-lg Attribute
+              div.col-sm-2 
+                u
+                  b.input-lg Prompt ?
+              div.col-sm-3 
+                u 
+                  b.input-lg Default
+              div.col-sm-3 
+                u 
+                  b.input-lg Format
+              div.col-sm-2
+                u 
+                  b.input-lg Mandatory
+
+            each input_option,i in input_options
+              - var xfer_only = xfer_options.indexOf(input_option);
+              - var xclass = 'form-group'
+              - var xstyle = "margin-bottom: 0px; border-left: 1px solid black; border-right: 1px solid black; "
+              if (xfer_only >= 0) 
+                - xclass = xclass + ' alert-info';
+              if (i===0) 
+                - xstyle = xstyle + "border-top: 1px solid black; "
+
+              div(ng-show="input[#{i}].selected || edit_input")
+                div.form-group(class='#{xclass}' style='#{xstyle}' ng-show="#{xfer_only} == -1 || transfer_step")
+                  label.input-lg.col-sm-2
+                      b &nbsp; #{input_option}
+                      input(type='hidden' name='inputname#{i}' ng-model="input[#{i}].name" ng-init="input[#{i}].name='#{input_option}'")
+                  div.col-sm-2(ng-show="edit_input" style="text-align: center")
+                    input.input-lg(type='checkbox' ng-model='input[#{i}].selected' ng-click="reset_input()")
+                  div.col-sm-2(ng-show="!edit_input")  
+                    span(ng-show="input[#{i}].selected")
+                      i.fa.fa-check.fa-2x(style='color:green')
+                    span(ng-show="!input[#{i}].selected")
+                      i.fa.fa-close.fa-2x(style='color:red')
+
+                  div.col-sm-3(ng-show="input[#{i}].selected && edit_input" style='padding: 3px' )
+                    input.input-lg(type='text' placeholder='- Default -' ng-model='input[#{i}].default' ng-change="reset_input()")
+                  div.col-sm-3(ng-show="input[#{i}].selected && !edit_input" style='padding: 3px' )
+                    span(ng-show="input[#{i}].default")
+                      b Default = {{ input[#{i}].default }}; &nbsp;                  
+
+                  div.col-sm-3(ng-show="input[#{i}].selected && edit_input"  style='padding: 3px')
+                    input.input-lg(type='text' placeholder='- Format -' ng-model='input[#{i}].format' ng-change="reset_input()")
+                  div.col-sm-3(ng-show="input[#{i}].selected && !edit_input" style='padding: 3px' )
+                    span(ng-show="input[#{i}].format") 
+                      b Format = {{ input[#{i}].format }}; &nbsp;                  
+
+                  div.col-sm-2(ng-show="input[#{i}].selected && edit_input"  style='padding: 3px; text-align: center')
+                      input(id='#{input_option}_mandatory' type='checkbox' ng-model='input[#{i}].required' ng-change="reset_input()")
+                      // label.col-sm-10()
+                        b &nbsp; Mandatory
+                  div.col-sm-2(ng-show="input[#{i}].selected && !edit_input" style='padding: 3px; text-align: center' )
+                    span(ng-show="input[#{i}].required")
+                      b(style='color: red') Required 
+                    span(ng-show="!input[#{i}].required")
+                      b Optional 
+            div(ng-show="1")
+              div.form-group
+                div.col-sm-12(style="margin-bottom: 0px; border-top: 1px solid black") &nbsp;
+
+            hr
+            b Attributes &nbsp;
+            span(ng-show="!edit_attributes")
+              button.btn.btn-success(type='button' ng-click="edit_attributes=1") Edit
+            span(ng-show="edit_attributes")
+              button.btn.btn-danger(type='button' ng-click="edit_attributes=0") Done
+            p &nbsp;
+            div
+              div(ng-show="!(attributes['container'].length || attributes['prep'].length)")
+                div.col-sm-2 &nbsp;
+                div.col-sm-10
+                  b (no attributes entered during step)
+
+              div(ng-show="attributes['container'].length || attributes['prep'].length")
+                  div.col-sm-2 
+                    u
+                      b Name
+                  div.col-sm-2 &nbsp;
+                  div.col-sm-3 
+                    u
+                      b Default
+                  // div.col-sm-3 Format
+                  div.col-sm-2 
+                    u
+                      b Mandatory
+
+              p &nbsp;
+              hr 
+              div(ng-repeat="(type, att_types) in attributes")
+                div(ng-repeat="(i, att) in att_types")
+                  div.form-group(ng-show='att.name')
+                    label.input-lg.col-sm-2
+                        b &nbsp; {{att.name}}
+                    div.col-sm-2(ng-show="edit_attributes")
+                      input.input-lg(type='checkbox' ng-model="att.selected" ng-click="reset_input()")
+                    div.col-sm-2(ng-show="!edit_attributes")
+                    div.col-sm-2(ng-show="!edit_attributes")  
+                      span(ng-show="att.selected")
+                        i.fa.fa-check.fa-2x(style='color:green')
+                      span(ng-show="!att.selected")
+                        i.fa.fa-close.fa-2x(style='color:red')
+
+                    div.col-sm-3(ng-show="edit_attributes")
+                      input.input-lg(type='text' placeholder='Default' ng-model="att.default")
+                    div.col-sm-3(ng-show="!edit_attributes")
+                      span(ng-show="att.default")
+                        b Default = {{ att.default }}; &nbsp;                  
+
+                    div.col-sm-2(ng-show="edit_attributes")
+                      div(ng-show="att.mandatory")
+                        i.fa.fa-check(style='color: green')
+                      div(ng-show="! att.mandatory")                    
+                        i.fa.fa-close(style='color: red')
+
+                    div.col-sm-2(ng-show="!edit_attributes")
+                      div(ng-show="att.mandatory")
+                        i.fa.fa-check(style='color: green')
+                      div(ng-show="! att.mandatory")                    
+                        i.fa.fa-close(style='color: red')                          
+                    div.col-sm-3
+                      button.btn.btn-danger(type='button' ng-click="att = null") Delete            
+              
+              div.form-group(ng-show="edit_attributes")
+                div.col-sm-2 &nbsp;
+                div.col-sm-10
+                  b 
+                    u 
+                      h3.alert.alert-success Add Attributes:  
+              div.form-group(ng-show="edit_attributes")
+                label.input-lg.col-sm-2
+                  b of Sample: &nbsp;
+                  a(href='#' onclick="return false;" tooltip='description' data-toggle="popover" data-placement="left" data-trigger="focus" title="Sample Attributes" data-content="Attributes applied to every individual tube" data-html="true")
+                    i.fa.fa-question-circle
+
+                div.col-sm-3
+                  my-dropdown#satt(placeholder="Attribute" list="MenuList['container_attribute']" selected="container_attribute" property="name" ng-init="setup_Menu('container_attribute', 'FK(attribute)', \"Attribute_Class='Plate'\")")
+                div.col-sm-3()
+                  input.input-lg(type='text' placeholder='- Default -' ng-model='container_att_default' ng-change="set_attribute()")
+                // div.col-sm-3()
+                  input.input-lg(type='text' placeholder='- Format -' ng-model='att_format' ng-change="set_attribute()")
+                div.col-sm-1
+                  button.btn.btn-success(ng-click="add_attribute('container')") Add
+
+              div.form-group(ng-show="edit_attributes")
+                label.input-lg.col-sm-2
+                  b of Prep: &nbsp;
+                  a(href='#' onclick="return false;" tooltip='description' data-toggle="popover" data-placement="left" data-trigger="focus" title="Sample Attributes" data-content="Attributes applied to every individual tube" data-html="true")
+                    i.fa.fa-question-circle
+
+                div.col-sm-3
+                  my-dropdown#satt(placeholder="Attribute" list="MenuList['prep_attribute']" selected="prep_attribute" property="name" ng-init="setup_Menu('prep_attribute', 'FK(attribute)', \"Attribute_Class='Prep'\")")
+                div.col-sm-3()
+                  input.input-lg(type='text' placeholder='- Default -' ng-model='prep_att_default' ng-change="reset_input()")
+                // div.col-sm-3()
+                  input.input-lg(type='text' placeholder='- Format -' ng-model='prep_att_format' ng-change="reset_input()")
+                div.col-sm-1
+                  button.btn.btn-success(ng-click="add_attribute('prep')") Add
+
+                // div.col-sm-2()
+                  input.col-sm-2(type='checkbox' ng-model='prep_att_required' ng-change="reset_input()")
+                  label.col-sm-10(for='prep_attribute_mandatory')
+                    b &nbsp; Mandatory
+
+            hr
+
+            div.form-group
+              label.control-label.col-sm-2.input-lg(for='transfer') Transfer Step &nbsp;
+                a(href='#' onclick="return false;" tooltip='instructions' data-toggle="popover" data-placement="left" data-trigger="focus" title="Description" data-content="#{transfer.desc}")
+                     i.fa.fa-question-circle
+              div.col-sm-2(ng-show="edit_transfer")
+                input.input-lg#transfer(type='checkbox' ng-check="reset_custom(); reset_input()" ng-model='transfer_step')    
+              div.col-sm-2(ng-show="!edit_transfer")
+                div(ng-show="transfer_step")
+                  i.fa.fa-check.fa-2x(style='color: green')
+                div(ng-show="! transfer_step")                    
+                  i.fa.fa-close.fa-2x(style='color: red')
+              div.col-sm-8(ng-show="!edit_transfer")
+                button.btn.btn-success(type='button' ng-click="edit_transfer=1") Edit
+              div.col-sm-8(ng-show="edit_transfer")
+                button.btn.btn-danger(type='button' ng-click="edit_transfer=0") Done
+              p &nbsp;              
+
+            div.alert.alert-info(ng-show="transfer_step" style="padding:10px; border: 1px solid black")
+              b 
+                u Fixed Transfer / Relocate Options
+                span(style='color: red') &nbsp; &nbsp; (use input options above if variable input desired &nbsp
+                span(style='color: black') - for applicable fields only: split, transfer_qty, location)
+              p &nbsp;
+              div.form-group
+                label.input-lg.col-sm-2(for='type')
+                  b Type:
+                div.col-sm-10.input-lg(ng-show="edit_transfer")
+                  my-dropdown#move(placeholder="Type" list="MenuList['transfer_type']" selected="transfer_type" property="name" track='name' ng-init="setup_Menu('transfer_type', 'Move,Transfer,Aliquot,Pre-Print'); filter_catalog();")
+
+                  span &nbsp; &nbsp;
+                  a(href='#' onclick="return false;" tooltip='description' data-toggle="popover" data-placement="left" data-trigger="focus" title="Transfer Options" data-content="#{transfer_types}" data-html="true")
+                    i.fa.fa-question-circle
+                div.col-sm-10.input-lg(ng-show="!edit_transfer")
+                  span#type 
+                    b {{transfer_type}}
+
+              div.form-group(ng-show="transfer_type != 'Move'")
+                label.input-lg.col-sm-2
+                  b Target:
+                div.col-sm-6.input-lg(ng-show="edit_transfer")
+                  label
+                    my-dropdown.mandatory(placeholder='Container Type' list="MenuList['Target_format']" selected='Target_format' property='name' ng-init="setup_Menu('Target_format','FK(container_format)')" default="{{ReverseLookup['Target_format'][custom[1].default] }}" track='id')
+                div.col-sm-4(ng-show="edit_transfer")
+                  label
+                    my-dropdown(placeholder='Sample Type' list="MenuList['Target_sample']" selected='Target_sample' property='name' ng-init="setup_Menu('Target_sample','FK(sample_type)')" track='id' default = "{{ReverseLookup['Target_sample'][custom[2].default] }}")
+                div.col-sm-10(ng-show="!edit_transfer")
+                  span.input-lg(ng-show="custom[2].default")
+                    b Extract {{ ReverseLookup['Target_sample'][custom[2].default] }} &nbsp;
+                  i.fa.fa-arrow-right.fa-2x
+                  span.input-lg 
+                    b &nbsp; {{ ReverseLookup['Target_format'][custom[1].default] }}
+
+                div.col-sm-4(ng-show="!edit_transfer")
+
+              // repeat xfer options for custom_settings 
+              each xfer_option,j in xfer_options
+                - var i = j + 3;
+                div.form-group(ng-show="transfer_type != 'Move' && (custom[#{i}].selected || edit_transfer)")
+
+                  label.input-lg.col-sm-2
+                      b &nbsp; #{xfer_option}
+                      input(type='hidden' name='inputname#{i}' ng-model="custom[#{i}].name" ng-init="custom[#{i}].name='#{xfer_option}'")                  
+                  div.col-sm-10.input-lg(ng-show = "selectList.indexOf('#{xfer_option}') === -1 && selectList.indexOf('#{xfer_option}*') === -1")
+                      div.col-sm-3(ng-show="edit_transfer")
+                        input(type='checkbox' ng-model="custom[#{i}].selected" ng-click="reset_custom()")
+                      // if xfer_input_options.indexOf(xfer_option) >= 0
+                      div.col-sm-3(ng-show="!edit_transfer")
+                        div(ng-show="custom[#{i}].selected")
+                          i.fa.fa-check(style='color: green')
+                        div(ng-show="! custom[#{i}].selected")                    
+                          i.fa.fa-close(style='color: red')
+
+                      div.col-sm-9(ng-show="custom[#{i}].selected")
+                        div(ng-show="edit_transfer")
+                          input.mandatory(type='text' placeholder='- Default -' ng-model='custom[#{i}].default' ng-change="reset_custom()" ng-required="custom[#{i}].selected")
+                        div(ng-show="!edit_transfer")
+                          span(ng-show="custom[#{i}].default")
+                            b {{ custom[#{i}].default }} &nbsp;
+                          span(ng-show="! custom[#{i}].default")
+                            b &nbsp;
+
+                  div.col-sm-10.input-lg(ng-show = "selectList.indexOf('#{xfer_option}') > -1 || selectList.indexOf('#{xfer_option}*') > -1")
+                      b(style='color: red') Already selected as input above
+
+            div.form-group
+              div.col-sm-2
+              div.col-sm-6
+                button.btn.btn-success(type='button' ng-click="reset_input(); reset_custom()") Rebuild formatted fields
+                span &nbsp; &nbsp;
+                // span(ng-show="!show_custom")
+                  button.btn.btn-info(type='button' ng-click="show_custom=1") 
+                    b Show Custom Formatted Fields
+                // span(ng-show="show_custom")
+                  button.btn.btn-danger(type='button' ng-click="show_custom=0") Hide Custom Formatted Fields   
+                
+                p &nbsp;
+
+                div(ng-show="action === 'edit'")
+                  button.btn.btn-primary.form-control(type='button' ng-click="save()") Update
+                div(ng-show="action !== 'edit'")
+                  button.btn.btn-primary.form-control(type='button' ng-click="save()") Save
+              div.col-sm-4 &nbsp;
+
+            p &nbsp;
+
+            div
+              // ng-show='show_custom')
+              label.col-sm-2 &nbsp;
+              div.col-sm-10
+              p &nbsp; 
+              div.container.alert-warning
+                p &nbsp;
+                b
+                  u 
+                    h4 Custom Formatted Fields (not editable)
+                p &nbsp;
+                button(type='button' ng-click="reset_originals()") Reset
+
+                div.form-group.input-lg
+                  label.control-label.col-sm-2(for='input_options') Input
+                  div.col-sm-10
+                    input.form-control#input_options(placeholder='Input' ng-model='Record.input_options' disabled)
+
+                div.form-group.input-lg
+                  label.control-label.col-sm-2.input-lg(for='input_format') Format              
+                  div.col-sm-10  
+                    input.form-control#input_format(placeholder='Format' ng-model='Record.input_format' disabled)
+
+                div.form-group.input-lg         
+                  label.control-label.col-sm-2(for='input_defaults') Defaults
+                  div.col-sm-10  
+                    input.form-control#input_defaults(placeholder='Defaults' ng-model='Record.input_defaults' disabled)
+
+                div.form-group.input-lg
+                  label.control-label.col-sm-2(for='custom_settings') Custom_Settings
+                  div.col-sm-10  
+                    input.form-control#custom_settings(placeholder="Custom" ng-model='Record.custom_settings' disabled)
+
+            hr
+
+          if debug
+            p &nbsp;
+            div.alert-danger
+              hr
+              h3 Direct
+              b #{ JSON.stringify(record) }
+
+              h3 Angular
+              b Record: {{ JSON.stringify(record) }}
+              b sails.config.payload: #{ JSON.stringify(sails.config.payload) }
+              b session.payload #{ JSON.stringify(session.payload) }

@@ -1,0 +1,54 @@
+span {{ timestamp }}
+br
+div.section-block.bg-info
+    form.form-inline(role='form' method='post' action="/scan-barcode" ng-show='barcode' style='display: inline')
+      span(ng-show='barcode')
+        input(type='hidden' ng-model='barcode' name='barcode' value='{{barcode}}')
+        button.btn.btn-primary(type='submit')
+          a(href='#' data-toggle='tooltip' title='Reload Active Samples')
+            i.fa.fa-home(style='color:#eee; background-color:transparent')
+        span &nbsp; &nbsp;
+
+    b Active Samples: &nbsp; 
+      button.btn.btn-primary.btn-sm(type='button' ng-show="!injectedAlready()" ng-click="injectData('/Container/summary?render=1','', active.plate_ids)") 
+        a(href='#' data-toggle='tooltip' onclick='return false;' title='View Current Sample Information') 
+          i.fa.fa-question(style='color: #fff')
+      button.btn.btn-danger.btn-sm(type='button' ng-show='injectedAlready()' ng-click='uninjectData()') x
+      span &nbsp; &nbsp; &nbsp;
+      button.btn.btn-primary.btn-xs(type='button' ng-show="!injectedAlready('storageHistory')" ng-click="injectData('/Container/storage_history?render=1','storageHistory', active.plate_ids)") 
+        a(href='#' data-toggle='tooltip'  onclick='return false;' title='Retrieve Movement History for current Tube(s)')
+          span(style='color:#fff') Storage History
+      button.btn.btn-danger.btn-sm(type='button' ng-show="injectedAlready('storageHistory')" ng-click="uninjectData('storageHistory')") x 
+      span &nbsp; &nbsp; &nbsp;
+      button.btn.btn-primary.btn-xs(type='button' ng-show="active.Samples[0].Container_format != 'Matrix Tube'" ng-click="print_Labels('container', active.plate_ids)")
+        a(href='#' data-toggle='tooltip'  onclick='return false;' title='Print barcodes')
+          i.fa.fa-print(style='color:#fff') 
+
+    span.navbar.navbar-right
+        button.btn.btn-primary.btn-sm(type='button' ng-show="include_parents && !injectedAlready('injectedHistory')" ng-click="injectData('/Container/history?include_parents=1','injectedHistory', active.plate_ids)") Long History
+        button.btn.btn-primary.btn-sm(type='button' ng-show="!include_parents && !injectedAlready('injectedHistory')" ng-click="injectData('/Container/history','injectedHistory', active.plate_ids)") Short History
+        span &nbsp;
+        input(type='checkbox' label='include Parent' ng-model='include_parents') 
+        span &nbsp; include parents &nbsp; &nbsp; 
+        button.btn.btn-danger.btn-sm(type='button' ng-show="injectedAlready('injectedHistory')" ng-click="uninjectData('injectedHistory')") x    
+        span &nbsp; &nbsp; &nbsp; &nbsp;
+
+        br
+        br
+        div(ng-show="active.Samples && active.Samples[0] && active.Samples[0].last_step")
+          u Progress: 
+          b {{ active.last_step.protocol }} [ {{ active.last_step.status }} ] &nbsp; &nbsp;
+          br 
+          span (last step: '{{ active.last_step.name }}')  
+
+    p &nbsp;
+    div(ng-repeat="(context, cids) in active.Contexts")
+      b {{ cids.length }} x &nbsp;
+      b(style='color:red') {{ context }} &nbsp;
+      br
+
+div#injectedData
+
+div#storageHistory
+
+div#injectedHistory

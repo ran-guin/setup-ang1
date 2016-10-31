@@ -1,0 +1,16 @@
+div
+	- var show = ['id', 'container_format', 'sample_type'] 
+	h3 Sample Info
+	table.table
+		tr
+			thead
+				each fld in show
+					th.bg-primary(style="padding:4px")
+						b #{fld}
+
+		tr(ng-repeat = "Sample in Samples")
+			each fld in show
+				td(ng-if="Sample['#{fld}']") 
+					b {{ Sample['#{fld}'] }}
+				td(ng-if="! Sample['#{fld}']") 
+					b &nbsp;

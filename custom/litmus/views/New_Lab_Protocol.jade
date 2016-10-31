@@ -1,0 +1,119 @@
+extends ./../customize/privateLayout
+block content
+  - var config = { Steps: Steps, payload: sails.config.payload };
+  - var init = "initialize(" + JSON.stringify(config) + ")"; 
+
+    div(ng-app='myApp')
+      // Static Options //
+      - step_options = ['name', 'message', 'instructions'];
+
+      div(ng-controller="SharedController")
+       div(ng-controller="LIMSController")
+        div(ng-controller="FancyFormController")        
+         div(ng-controller='NewProtocolController' ng-init="#{init}")
+
+          include ./../core/angularMessages.jade
+
+          div(ng-show="completed")
+            div.container(ng-if="id")
+              p &nbsp;
+              a(href="/lab_protocol/edit/{{id}}" ) 
+                  button.btn.btn-primary(type='button') Edit Protocol
+
+
+            div.container(ng-if="Steps")
+              h3 Customize Input for Protocol Steps:
+              ul
+                li(ng-repeat = "step in Steps") 
+                  div(ng-if="step.name")
+                    a(href="/protocol_step/edit/{{step.id}}") {{step.step_number}} - {{step.name}} 
+                      i [ {{step.message }} ] 
+
+          div(ng-show="!completed")
+            - var container = 0;
+            - var sample_type = 0;
+            if Steps
+              - container = Steps[0].Container_format
+              - sample_type = Steps[0].Sample_type
+            table.table
+              tr
+                td
+                  div(style="padding: 15px")   
+                    h3 Add New Lab Protocol
+                    hr
+                    form.form-horizontal(role="form" method='post' action="#{sails.config.root}/Lab_protocol/save")
+
+                      div.form-group
+                        label-control.col-sm-2(for='name') Name
+                        div.col-sm-10
+                          input.form-control(id='name' ng-model='name')  
+
+                      div.form-group
+                        label-control.col-sm-2(for='description') Description
+                        div.col-sm-10
+                          input.form-control(id='description' ng-model='description') 
+
+                      h4 Visible only to: (optional)
+                      div.form-group
+                        label-control.col-sm-2(for='format') Format
+                        div.col-sm-10
+                          my-dropdown.mandatory(placeholder='Container Type' list="MenuList['Container_format']" selected='Container_format' property='name' ng-init="setup_Menu('Container_format','FK(container_format)')" default="{{ ReverseLookup['Container_format'][#{container}] }}" track='id')
+                      div.form-group
+                        label-control.col-sm-2(for='format') Extraction
+                        div.col-sm-10
+                          my-dropdown(placeholder='Sample Type' list="MenuList['Sample_type']" selected='Sample_type' property='name' ng-init="setup_Menu('Sample_type','FK(sample_type)')" track='id' default = "{{ ReverseLookup['Sample_type'][#{sample_type}] }}")
+                      hr
+
+                      div(ng-show="action === 'create'")
+                        h4 Add Steps... one at a time
+                        h5 [input customizations added later]
+                      div(ng-show="action != 'create'")
+                        h4 Steps:
+                        span [ use individual step editor to modify if required ]
+                        p &nbsp;
+
+                      div.col-sm-3 &nbsp;
+                      div.col-sm-9 &nbsp;
+                        b Step {{ stepNumber}} / {{ Steps.length }}
+ 
+                      div
+                        each ioption in step_options
+                          div.form-group
+                            label-control.col-sm-3(for='#{ioption}') #{ioption}
+              
+                            // single textfield input 
+                            div.col-sm-9
+                              input.form-control(type='text' id='#{ioption}' ng-model='Step.#{ioption}' placeholder=' -- Enter #{ioption} --' ng-change="update('#{ioption}')" ng-disabled="action === 'edit'")
+
+                      div.form-group
+                        div.col-sm-3 &nbsp;
+                        div.col-sm-2
+                          button.btn.btn-large.btn-danger(type='button' ng-click="back()" ng-disabled='stepNumber < 2') Back
+                        div.col-sm-2 &nbsp;
+                        div.col-sm-3(ng-show="action === 'create'")
+                          button.btn.btn-large.btn-success(type='button' ng-click="forward()" ng-disabled="!Steps[Steps.length-1].name") Define Next Step
+                        div.col-sm-3(ng-show="action != 'create'")
+                          button.btn.btn-large.btn-success(type='button' ng-click="forward()" ng-disabled="stepNumber >= Steps.length") Next Step
+                        div.col-sm-2
+                          span &nbsp; N = {{ Steps[Steps.length-1].name }}
+                      hr
+                      div.form-group
+                        div.col-sm-3 &nbsp;
+                        div.col-sm-7(ng-show="action === 'create'")
+                          button.btn.btn-primary.form-controlmem(type='button' ng-click="save()" ng-disabled="! name  || ! Steps[0].name") Save Lab Protocol  
+                        div.col-sm-7(ng-show="action !== 'create'")
+                          button.btn.btn-primary.form-control(type='button' ng-click="update_protocol()" ng-disabled="! name") Update Lab Protocol  
+    
+                td(style="width:300px; background-color:#ccc")
+                  div(style="padding:15px;")              
+                    h2 Summary
+                    h3 {{ name }}
+                    b {{ description }}
+                    hr
+                    // b {{ stepNumber }} / {{ Steps.length }}
+                    u
+                      li(ng-repeat="Step in Steps")
+                        span.input-lg(ng-if="Step.step_number == stepNumber")
+                          b(style='color:blue') {{Step.step_number}} : {{ Step.name }}
+                        span(ng-if="Step.step_number != stepNumber")
+                          span {{Step.step_number}} : {{ Step.name }}
