@@ -1,0 +1,17 @@
+extends publicLayout
+block content        
+  .main.container
+    //h2  Welcome to the BC Generations LIMS
+               
+    p &nbsp;  
+    if error
+      div.alert.alert-danger 
+        i.fa.fa-warning
+        b &nbsp; #{error}
+
+    if email
+      a(href='#' onclick="return false;" data-toggle='modal' data-target='#SignUp')
+        button.btn.btn-danger(type='button') Register 
+      hr
+
+    include LoginForm.jade
