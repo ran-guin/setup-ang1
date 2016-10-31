@@ -1216,7 +1216,6 @@ module.exports = {
 			return "\"" + value + "\"";
 		}
 	},
-	message;
 
 	parse_standard_error : function (err) {
         // Convert warning / error errs into more readable format
