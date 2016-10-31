@@ -58,12 +58,12 @@ module.exports = {
 				messages = parsed_error;
 			}
 			if (msg) { messages.push(msg) }
-				if (e && messages.length) { 
-					// override raw message with simpler message ... 
-					e.raw_message = e.message;
-					e.message = messages[messages.length-1];
-				}	
-			}
+			
+			if (e && messages.length) { 
+				// override raw message with simpler message ... 
+				e.raw_message = e.message;
+				e.message = messages[messages.length-1];
+			}	
 
 			if (messages.length && sails.config) {
 				for (var i=0; i<messages.length; i++) {
