@@ -32,24 +32,26 @@ if [[ "$files" =~ [a-z] ]]
 		exit 1;
 fi
 
-`cp -R ./views/$PLUGIN ./../../views/$PLUGIN`;
-`cp -R ./images ./../../assets/images/$PLUGIN`;
-`cp -R ./js/dependencies ./../../assets/js/dependencies/$PLUGIN`;
-`cp -R ./js/private ./../../assets/js/private/$PLUGIN`;
-`cp -R ./styles ./../../assets/styles/$PLUGIN`;
+
+cp -R ./views/$PLUGIN ./../../views/$PLUGIN;
+cp -R ./images ./../../assets/images/$PLUGIN;
+cp -R ./js/dependencies ./../../assets/js/dependencies/$PLUGIN;
+cp -R ./js/private ./../../assets/js/private/$PLUGIN;
+cp -R ./styles ./../../assets/styles/$PLUGIN;
 
 if [[ $2 =~ \-f ]]
 	then 
-	    `cp -R ./config/*.js ./../../config/`;
-	    `cp -R ./models/*.js ./../../api/models/`;
-	    `cp -R ./controllers/*.js ./../../api/controllers/`;
-	    `cp -R ./views/customize/*.jade ./../../views/customize/`;
+	    cp -R ./config/*.js ./../../config/;
+	    cp -R ./models/*.js ./../../api/models/;
+	    cp -R ./controllers/*.js ./../../api/controllers/;
+	    cp -R ./views/customize/*.jade ./../../views/customize/;
+	    cp -R ./views/$PLUGIN/*.jade ./../../views/$PLUGIN/;
 	else 
-	    `cp -Ri ./config/*.js ./../../config/`;
-	    `cp -Ri ./models/*.js ./../../api/models/`;
-	    `cp -Ri ./controllers/*.js ./../../api/controllers/`;
-	    `cp -Ri ./views/customize/*.jade ./../../views/customize/`;
-	    `cp -Ri ./views/customize/$PLUGIN/*.jade ./../../views/customize/$PLUGIN/`;
+	    cp -Ri ./config/*.js ./../../config/;
+	    cp -Ri ./models/*.js ./../../api/models/;
+	    cp -Ri ./controllers/*.js ./../../api/controllers/;
+	    cp -Ri ./views/customize/*.jade ./../../views/customize/;
+	    cp -Ri ./views/$PLUGIN/*.jade ./../../views/$PLUGIN/;
 fi
 
 cd -;
