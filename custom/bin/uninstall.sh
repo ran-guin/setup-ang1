@@ -12,15 +12,28 @@ if [[ ! "$PLUGIN" =~ [a-z] ]]
 		exit 0;
 fi
 
+installed=`cat ./custom/installed`;
+
+if [[ "$installed" =~ ^"$PLUGIN"$ ]]
+        then
+                echo -e "\nuninstalling $PLUGIN ...\n";
+        else
+                echo -e "\n$PLUGIN is not installed ($installed is installed)\n";
+		exit 1;
+fi
+
+
 files=`ls -al custom/$PLUGIN/*`;
+
+echo -e "uninstalling $PLUGIN\n" > ./custom/installed
+
+INIT=init;
 
 cd ./custom/$PLUGIN;
 if [[ "$files" =~ [a-z] ]] 
 	then 
 		echo -e "\nFound:\n************\n$files\n\n";
 
-		rm -fR ./../../views/$PLUGIN/*;
-		rmdir ./../../views/$PLUGIN;
 
 		rm -fR ./../../assets/images/$PLUGIN/*;
 		rmdir ./../../assets/images/$PLUGIN;
@@ -28,8 +41,23 @@ if [[ "$files" =~ [a-z] ]]
 		rm -fR ./../../assets/js/$PLUGIN/*;
 		rmdir ./../../assets/js/$PLUGIN;
 
+		rm -fR ./../../views/$PLUGIN/*;
+		rmdir ./../../views/$PLUGIN;
+	
+		rm -fR ./../../config/*.js;
+		rm -fR ./../../api/models/*.js;
+		rm -fR ./../../api/controllers/*.js;
+		rm -fR ./../../views/customize/*.jade;
 
+                cp -Ri ./../$INIT/config/*.js ./../../config/;
+                cp -Ri ./../$INIT/models/*.js ./../../api/models/;
+                cp -Ri ./../$INIT/controllers/*.js ./../../api/controllers/;
+                cp -Ri ./../$INIT/views/customize/*.jade ./../../views/customize/;
+
+		echo -e `pwd`;
 	else
 		echo -e "\n*** Error: *** Could not find custom package: $PLUGIN *** \n$!\n"
 fi
 
+cd -;
+echo -e "$INIT\n" > ./custom/installed
