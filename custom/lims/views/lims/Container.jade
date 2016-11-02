@@ -1,0 +1,49 @@
+extends ./../customize/privateLayout
+block content
+
+  // standard input variables: 
+  //    - plate_ids (array); 
+  //    - Samples   (array of hashes)
+
+  - var config = { plate_ids: plate_ids, Samples: Samples, payload: sails.config.payload};
+  - var init = "initialize(" + JSON.stringify(config) + ")";
+  - var sampleList
+  if plate_ids 
+    - sampleList = plate_ids.split(/\s*,\s*/);
+  
+  p &nbsp;
+  div.container
+     div(ng-app='myApp')
+      div(ng-controller="SharedController")       
+       div(ng-controller="LIMSController")
+        div(ng-controller="FancyFormController")
+          div(ng-controller="ProtocolController" ng-init="#{init}")
+          
+            include ./../core/errorMsg.jade
+
+            if Samples.length
+              
+              include ActiveSamples.jade
+
+              include ./../core/angularMessages.jade
+
+              include ContainerOptions.jade 
+
+              include uploadMatrix.jade
+
+            if ! debug
+              p &nbsp;
+              p &nbsp;
+              p &nbsp;
+              
+            if debug
+              hr
+              h2.alert.alert-warning Debugging Information:  (hidden in production)
+              b session: #{JSON.stringify(session)} 
+              BR
+              b Samples: #{JSON.stringify(Samples)}
+              BR
+              b IDs: #{JSON.stringify(sampleList)}
+              BR
+              b plate_ids: #{plate_ids}
+              hr
