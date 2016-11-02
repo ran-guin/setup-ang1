@@ -1,11 +1,9 @@
-B
-B
-B
-B
-B
-B
-B
-B
+Ensure that your .bashrc file has the following lines added to the bottom:
+
+alias nodeinstall='./custom/bin/install.sh'
+alias nodeuninstall='./custom/bin/uninstall.sh'
+alias package='cat ./custom/installed'
+
 To toggle between customized packages, simply type (from the project root directory): 
 >nodeinstall <package> [-f]
 
