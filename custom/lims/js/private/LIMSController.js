@@ -105,7 +105,9 @@ function limsController ($scope, $rootScope, $http, $q) {
             else {
                 console.log("No model or ids to print...");
             }
-            deferred.reject('no payload / model or ids');
+
+            var e = new Error('no payload / model or ids');
+            deferred.reject(e);
  
         }
         return deferred.promise;
@@ -201,7 +203,8 @@ function limsController ($scope, $rootScope, $http, $q) {
             }
             else {
                 console.log("No Samples found");
-                deferred.reject("no samples loaded");
+                var e = new Error('no samples loaded');
+                deferred.reject(e);
             }
         })
         .catch ( function (err) {
@@ -254,14 +257,13 @@ function limsController ($scope, $rootScope, $http, $q) {
 
         $http.post('/Record/search', searchData)
         .then ( function (result) {
-            console.log("RESULT: " + JSON.stringify(result));
             $scope.active.valid_plate_sets = [];
-            if (result.data && result.data[0] && result.data[0][0]) {
-                for (var i=0; i<result.data[0].length; i++) {
-                    $scope.active.valid_plate_sets.push(result.data[0][i].PS);
+            if (result.data && result.data.results && result.data.results[0]) {
+                for (var i=0; i<result.data.results.length; i++) {
+                    $scope.active.valid_plate_sets.push(result.data.results[i].PS);
                 }
             }
-            console.log("Retrieved SET: " + JSON.stringify($scope.active.valid_plate_sets));
+            console.log("Retrieved valid sets: " + JSON.stringify($scope.active.valid_plate_sets));
         })
         .catch ( function (err) { 
             console.log("Error getting sets: " + err);
@@ -283,41 +285,21 @@ function limsController ($scope, $rootScope, $http, $q) {
 	    	console.log("Retrieved existing plate set: " + $scope.active.plate_set);    		
     	}
     	else {
-            console.log("get PS");
-	        $http.post('/Record/search', { scope : { 'Plate_Set' : [ 'Max(Plate_Set_Number) as MaxPS'] }})
-
-	        .then ( function (response) {
-                console.log("found: " + JSON.stringify(response));
-	            if (response.data && response.data.results && response.data.results[0]) {
-	                var maxPS = response.data.results[0].MaxPS || 1
-
-	                console.log("SAVE SET " + JSON.stringify(maxPS));
-	                var data = [];
-	                for (var i=0; i< Samples.length; i++) {
-	                    var record = { FK_Plate__ID : Samples[i].id, Plate_Set_Number: maxPS+1 , FKParent_Plate_Set__Number: parent }    
-	                    data.push(record);
-	                }
-
-	                $http.post("record/save", { model: 'plate_set', data: data} )
-	                .then (function (result) {
-	                    $scope.active.plate_set = maxPS + 1;
-	                    console.log("SAVED Plate Set: " + $scope.active.plate_set);
-                        console.log("Active list: " + $scope.active.valid_plate_sets.join(','));
-	                    // $scope.active.valid_plate_sets.push($scope.active.plate_set);
-	                })
-	                .catch ( function (err) {
-	                    $scope.errors.push("Error saving plate set");
-	                    console.log("Error saving plate set");
-	                })
-	            }
-	            else { 
-                    console.log('max ps result in incorrect format');
-                    console.log(JSON.stringify(result.data));
-                }
-	        })
-	        .catch ( function (err) {
-	            console.log("Error retrieving max plate set");
-	        });
+            console.log("save current samples as new plate set...");
+	        var data = [];
+            var id_list = _.pluck(Samples, 'id');
+                
+            $http.post("plate_set/save", { ids: id_list, parent: parent})                    
+            .then (function (result) {
+                $scope.active.plate_set = result.data.plate_set;
+                console.log("SAVED Plate Set: " + $scope.active.plate_set);
+                console.log("Active list: " + $scope.active.valid_plate_sets.join(','));
+                $scope.active.valid_plate_sets.push($scope.active.plate_set);
+            })
+            .catch ( function (err) {
+                $scope.errors.push("Error saving plate set");
+                console.log("Error saving plate set");
+            });
 	    }
         console.log('finished loading plate set...');
     }
