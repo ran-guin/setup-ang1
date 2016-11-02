@@ -34,7 +34,8 @@ fi
 
 `cp -R ./views/$PLUGIN ./../../views/$PLUGIN`;
 `cp -R ./images ./../../assets/images/$PLUGIN`;
-`cp -R ./js ./../../assets/js/$PLUGIN`;
+`cp -R ./js/dependencies ./../../assets/js/dependencies/$PLUGIN`;
+`cp -R ./js/private ./../../assets/js/private/$PLUGIN`;
 `cp -R ./styles ./../../assets/styles/$PLUGIN`;
 
 if [[ $2 =~ \-f ]]

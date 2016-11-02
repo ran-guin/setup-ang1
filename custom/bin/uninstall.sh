@@ -32,14 +32,16 @@ INIT=init;
 cd ./custom/$PLUGIN;
 if [[ "$files" =~ [a-z] ]] 
 	then 
-		echo -e "\nFound:\n************\n$files\n\n";
-
-
 		rm -fR ./../../assets/images/$PLUGIN/*;
 		rmdir ./../../assets/images/$PLUGIN;
 
-		rm -fR ./../../assets/js/$PLUGIN/*;
-		rmdir ./../../assets/js/$PLUGIN;
+		rm -fR ./../../assets/js/dependencies/$PLUGIN/*;
+		rm -fR ./../../assets/js/private/$PLUGIN/*;
+		rm -fR ./../../assets/js/templates/$PLUGIN/*;
+	
+		rmdir ./../../assets/js/dependencies/$PLUGIN;
+		rmdir ./../../assets/js/private/$PLUGIN;
+		rmdir ./../../assets/js/templates/$PLUGIN;
 
 		rm -fR ./../../views/$PLUGIN/*;
 		rmdir ./../../views/$PLUGIN;
