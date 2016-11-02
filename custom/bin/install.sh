@@ -32,7 +32,7 @@ if [[ "$files" =~ [a-z] ]]
 		exit 1;
 fi
 
-`cp -R ./views ./../../views/$PLUGIN`;
+`cp -R ./views/$PLUGIN ./../../views/$PLUGIN`;
 `cp -R ./images ./../../assets/images/$PLUGIN`;
 `cp -R ./js ./../../assets/js/$PLUGIN`;
 `cp -R ./styles ./../../assets/styles/$PLUGIN`;
