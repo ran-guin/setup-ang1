@@ -67,7 +67,7 @@ module.exports = {
     // Try to look up user using the provided email address
     // User.findOne({
 
-      var query = "SELECT user.id, user.name, encryptedPassword, email, user.access, user.FK_Employee__ID as alDenteID FROM user"
+      var query = "SELECT user.id, user.name, encryptedPassword, email, user.access FROM user"
       + " WHERE email ='" + tryuser + "' OR user.name = '" + tryuser + "'" 
       + " GROUP BY user.id";
 
@@ -127,8 +127,13 @@ module.exports = {
             sails.config.errors   = [];
 
             if (!access || access === 'public') {
-              Logger.info('access denied', 'login');
-              return res.render('customize/public_home', { 'message' : 'Access still pending approval by Administrator'});
+              if (payload.userid) {
+                return res.render('customize/private_home', { 'message' : 'Registration pending.  Some features may not be available....' });
+              }
+              else {
+                Logger.info('access denied', 'login');
+                return res.render('customize/public_login', { 'message' : 'Private access still pending approval by Administrator'});
+              }
             } 
             else {
               return res.render('customize/private_home', payload);     
@@ -136,7 +141,7 @@ module.exports = {
           })
           .catch ( function (err) {
             Logger.error(err, 'access problem', 'login');
-            return res.render('customize/public_home', { error: 'Error generating payload ' + err});
+            return res.render('customize/public_login', { error: 'Error generating payload ' + err});
           });
 
 
@@ -231,71 +236,48 @@ module.exports = {
             var printers = sails.config.printer_groups || Printer_group.printer_groups;
             console.log("Load Printer groups " + JSON.stringify(printers));
 
-            var alDenteID; 
-            var get_ID = "SELECT Employee_ID as alDenteID FROM Employee WHERE Email_Address = '" + email + "'";
-            console.log(get_ID);
-            Record.query_promise(get_ID)
-            .then ( function (result) {
-              if (result.length === 1) {
-                alDenteID = result[0].alDenteID;
+            User.create({
+              name: user,
+              email: email,
+              encryptedPassword: encryptedPassword,
+              lastLoggedIn: new Date(),
+              gravatarUrl: gravatarUrl,
+              access: 'public',
+            }, function userCreated(err, newUser) {
+              if (err) {
 
-                User.create({
-                  name: user,
-                  email: email,
-                  encryptedPassword: encryptedPassword,
-                  lastLoggedIn: new Date(),
-                  gravatarUrl: gravatarUrl,
-                  access: 'public',
-                  FK_Employee__ID: alDenteID,
-                }, function userCreated(err, newUser) {
-                  if (err) {
+                console.log("err.invalidAttributes: ", err.invalidAttributes)
 
-                    console.log("err.invalidAttributes: ", err.invalidAttributes)
-
-                    // If this is a uniqueness error about the email attribute,
-                    // send back an easily parseable status code.
-                    if (err.invalidAttributes && err.invalidAttributes.email && err.invalidAttributes.email[0]
-                      && err.invalidAttributes.email[0].rule === 'unique') {
-                      
-                      return res.render('customize/public_home', { printers : printers, error : "Email address already in use" });                      
-                      // return res.emailAddressInUse();
-                    }
-
-                    // Otherwise, send back something reasonable as our error response.
-                    return res.negotiate(err);
-                  }
-
-                  // Log user in
-                  req.session.User = newUser.id;
+                // If this is a uniqueness error about the email attribute,
+                // send back an easily parseable status code.
+                if (err.invalidAttributes && err.invalidAttributes.email && err.invalidAttributes.email[0]
+                  && err.invalidAttributes.email[0].rule === 'unique') {
                   
-                  console.log("URL: " + sails.config.globals.url);
+                  return res.render('customize/public_home', { printers : printers, error : "Email address already in use" });                      
+                  // return res.emailAddressInUse();
+                }
 
-                  var payload = { id: newUser.id, access: 'New User', alDenteID: alDenteID, url: sails.config.globals.url };
-                  var token = jwToken.issueToken(payload);
-                  
-                  sails.config.messages.push("Generated new user... ");
+                // Otherwise, send back something reasonable as our error response.
+                return res.negotiate(err);
+              }
 
-                  console.log('Generated new user: ' + JSON.stringify(payload));
-                  console.log("Token issued: " + token);
-                  
-                  req.session.token = token;
+              // Log user in
+              req.session.User = newUser.id;
               
-                  return res.render('customize/public_home', {  printers : printers, message : "Registered.  Access pending approval by administrator" })
-                  //return res.json(200, { user: user, token: token });
-                });
-              }
-              else if (result.length === 0) {
-                return res.render('customize/public_home', {  printers : printers, error : "this email address not in alDente LIMS - please create alDente user first" })
-              }
-              else if (result.length > 1) {
-                return res.render('customize/public_home', {  printers : printers, error : "this email address has multiple alDente LIMS users - please check with admin to resolve this first." });                
-              }
+              console.log("URL: " + sails.config.globals.url);
 
-            })
-            .catch (function (err) {
-              console.log("Error retrieving alDenteID");
-              Logger.error(err, 'could not retrieve alDente ID', 'signup')
-              return res.render('customize/public_home', {  printers : printers, error : "could not retrieve LIMS ID to create user"} ); 
+              var payload = { id: newUser.id, access: 'New User', url: sails.config.globals.url };
+              var token = jwToken.issueToken(payload);
+              
+              sails.config.messages.push("Generated new user... ");
+
+              console.log('Generated new user: ' + JSON.stringify(payload));
+              console.log("Token issued: " + token);
+              
+              req.session.token = token;
+          
+              return res.render('customize/public_home', {  printers : printers, message : "Registered.  Access pending approval by administrator" })
+              //return res.json(200, { user: user, token: token });
             });
           }
         });

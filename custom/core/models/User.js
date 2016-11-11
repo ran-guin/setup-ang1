@@ -20,8 +20,6 @@ module.exports = {
       required: true
     },
 
-    FK_Employee__ID : { type : 'int' }, // legacy reference to alDente ID .. 
-
     access: {
       type: 'string',
       enum: ['public', 'lab', 'research', 'lab admin', 'admin'],
@@ -63,6 +61,21 @@ module.exports = {
     groups : {
       collection: 'grp',
       via: 'members'
+    },
+
+    interests : {
+      collection: 'interest',
+      via: 'members'
+    },
+
+    activities : {
+      collection: 'activity',
+      via: 'members'
+    },
+
+    skills: {
+      collection: 'skill',
+      via: 'candidates'
     },
 
     beforeCreate: function(values, next) {
@@ -134,81 +147,6 @@ module.exports = {
       deferred.resolve(payload);
       return deferred.promise;
   },
-
-  alDente_verification : function (session) {
-    console.log("Validate: " + session);
-
-    var deferred = q.defer();
-
-    var url = "http://bcgpdev5.bccrc.ca/SDB/cgi-bin/barcode.pl?Validate=1&Session=" + session;
- 
-    if (session) {
-      console.log('get request...' + url);
-      request.get( url , function (err, result) {
-        if (err) { deferred.reject(err) }
-        else if (result && result.body) {     
-          
-          var found = result.body.match(/Validated Session: {.+?}/);
-
-          if (found && found.length) {
-
-            var sessionInfo = found[0].replace('Validated Session: ','');
-            console.log("session Info: " + sessionInfo);
-
-            var username = '';
-            var userid   = '';
-            var remote_login = sessionInfo;
-
-            // Validate User on LITMUS //
-            
-            // Try to look up user using the provided email address
-            User.findOne({ name: username }, function foundUser(err, user) {
-
-              if (err) { deferred.reject(err) }
-
-              else if (!user || (user == 'undefined') ) { 
-                console.log("Unrecognized User: " + username + '/' + userid);
-                var err = new Error('unrecognized user: ' + username + '/' + userid);
-                deferred.reject(err);
-              }
-              else {
-                console.log("remote access granted");
-                User.payload(user)
-                .then (function (payload) {
-
-                  payload['remote_login'] = remote_login;
-                  // session authorization
-
-                  console.log("Create remote login record");
-                
-                  console.log("resolve: " + JSON.stringify(payload));
-                  deferred.resolve(payload);
-                })
-                .catch ( function (err) {
-                  console.log("Error generating payload");
-                  deferred.reject(err);
-                });
-              }
-            });            
-          }
-          else {
-            var err = new Error('not validated');
-            deferred.reject(err);
-          }
-        }
-        else { 
-            var err = new Error("no validation body found");
-          deferred.reject(err);
-        }
-      });
-    }
-    else {
-      var err = new Error('no session provide');
-      deferred.reject(err);
-    }
-
-    return deferred.promise;
-  }
 
 };
 
