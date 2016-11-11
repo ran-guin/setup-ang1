@@ -47,11 +47,13 @@ if [[ "$files" =~ [a-z] ]]
 		rmdir ./../../views/$PLUGIN;
 	
 		rm -fR ./../../config/*.js;
+		rm -fR ./../../config/data/*.txt;
 		rm -fR ./../../api/models/*.js;
 		rm -fR ./../../api/controllers/*.js;
 		rm -fR ./../../views/customize/*.jade;
 
                 cp -Ri ./../$INIT/config/*.js ./../../config/;
+                cp -Ri ./../$INIT/config/data/*.txt ./../../config/data/;
                 cp -Ri ./../$INIT/models/*.js ./../../api/models/;
                 cp -Ri ./../$INIT/controllers/*.js ./../../api/controllers/;
                 cp -Ri ./../$INIT/views/customize/*.jade ./../../views/customize/;
