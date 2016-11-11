@@ -6,14 +6,19 @@ if [ $1 ]
 		read PLUGIN;
 fi
 
+echo -e "installing $PLUGIN...\n";
+
 files=`ls -alr custom/$PLUGIN/*`;
-installed = `cat custom/installed`;
+
+installed=`cat ./custom/installed`;
+
+echo -e "($installed currently installed)\n";
 
 if [[ ! "$installed" =~ [a-z] ]] 
 	then echo -e "\nNo installed file found ???\n";
 fi
 
-if [[ "$installed"=="$PLUGIN" ]]
+if [[ "$installed" =~ ^"$PLUGIN"$ ]]
 	then 
 		echo -e "\n$PLUGIN already installed\n";
 	else
