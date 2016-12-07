@@ -1,16 +1,14 @@
-.links
-  ul.link-list
-    h4
-      a(target='_blank', href='/')  Home 
-    |                                
-    h4                
-      a(target='_blank', href='/contact') Contact Us
-    |                     
-    h4 Section
-    |                     
-    a(target='_blank', href='/page1')
-      li Section 1
-    |                 
-    a(target='_blank', href='/page2')
-      li Section 2
+// Usage res.render('page', { links_title: 'Options', links: [{label: 'a', href: '/a'}]});
+
+if links
+  .links
+    ul.link-list
+      if links_title
+        h3
+          u
+            a(target='_blank', href='/')  #{links_title} 
+      
+      each link,i in links
+        h4                
+          a(target='_blank', href='#{link.href}') #{link.label}
 
