@@ -1,0 +1,20 @@
+.container
+  div.modal.fade#SignUp
+    .modal-dialog
+      // Modal content
+      .modal-content
+        .modal-header
+          button.close(type='button', data-dismiss='modal') ×
+          h2
+            i.fa.fa-lock.fa
+            |  &nbsp; Register
+        .modal-body
+          include SignUpForm.jade
+        .modal-footer
+          button.btn.btn-default.btn-danger.pull-left(type='submit', data-dismiss='modal')
+            i.fa.fa-remove
+            |  Cancel
+          p
+            | Questions ? 
+            a(href='#') Contact Us
+
