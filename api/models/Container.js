@@ -11,8 +11,22 @@ var _ = require('underscore-node');
 module.exports = {
 
 	tableName: 'Plate',
+	primaryField: 'Plate_ID',
 	migrate: 'safe',
+
+	// Record.createNew triggers creation of meta records containing data as follows:	
+	metaRecord: {
+		'Tube' : { 
+			'FK_Plate__ID' : '<ID>' 
+		}
+	},
+
 	attributes: {
+		FK_Plate_Format__ID: { model: 'container_format'},
+		FK_Sample_Type__ID: { model: 'sample_type' },
+		FK_Rack__ID: { model: 'rack'},
+		// FK_Pipeline__ID: { model: 'pipeline'},
+		FK_Employee__ID: { model: 'employee'},
 
 	},
 
