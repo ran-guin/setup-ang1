@@ -15,6 +15,154 @@ module.exports = {
 
 	},
 
+	isReference : function (model, field) {
+
+		var Mod = sails.models[model];
+		var table = model;
+		var fk = {};
+
+		if (Mod) {
+			fk = Mod.attributes[field];
+			table = Mod.tableName || model;
+		}
+
+		if (fk && fk.model) { return fk.model}
+		else {
+			var match = field.match(/^FK[a-zA-Z]*\_(\w+)\_\_ID/);
+			if (match && match.length > 1) { return match[1] }
+			else { return false } 
+		}
+	},
+
+	dump : function (model, options) {
+		if (!options) { options = {} }
+
+		var deferred = q.defer();
+
+		var table = model;
+		var primary = 'id';
+		
+		var N = options.N;
+		var id = options.id;
+		var ids = options.ids;
+		var iterate = options.iterate;
+
+		if (iterate >10) { 
+			iterate = 0;
+			console.log("Killing iteration after 10 generations... possible circular logic");
+		}
+
+		var Mod;
+
+		if (sails && sails.models && sails.models[model]) {
+			Mod = sails.models[model]; 
+			table = Mod.tableName || model;
+			primary = Mod.primaryField || 'id';
+			console.log('reset to ' + table + '.' + primary);
+		}
+		else {
+			console.log(model + ' not official model... ignoring ' + table);
+			deferred.resolve({});
+		}
+
+		var query = "SELECT * FROM " + table;
+
+		if (id) { query = query + " WHERE " + primary + " >= " + id }
+		else if (ids) { query = query + " WHERE " + primary + ' IN (' + ids.join(',') + ')' }
+		
+		if (N) { query = query + " LIMIT " + N }
+
+		console.log("dump query: " + query);
+		console.log("iterating through reference records ?: " + iterate);
+
+		Record.query_promise(query)
+		.then ( function (result) {
+			console.log("R: " + JSON.stringify(result));
+			
+			var fields = [];
+			var Referenced = {};
+			var isReference = {};
+			if (result.length) {
+				fields = Object.keys(result[0]);
+				for (var j=0; j<fields.length; j++) {
+					// console.log('check for reference from ' + table + '.' + fields[j]);
+					var refTable = Record.isReference(model, fields[j]);
+					if (refTable) { 
+						Referenced[refTable] = [];
+						isReference[fields[j]] = refTable;
+					}
+				}
+			}
+
+			for (var i=0; i<result.length; i++) {
+				for (var j=0; j<fields.length; j++) {
+					if ( isReference[fields[j]] ) {
+						var refid = result[i][fields[j]];
+						if (refid) {
+							Referenced[isReference[fields[j]]].push(refid);
+						}
+					}	
+				}
+			}
+
+			console.log('ref tables: ' + JSON.stringify(isReference));
+			console.log("Referenced: " + JSON.stringify(Referenced));
+
+			var refs = Object.keys(Referenced);
+
+			var primaryResult = {};
+			primaryResult[model] = result;
+
+			var list = primaryResult;
+
+			console.log("retrieved results for " + model);
+			console.log(JSON.stringify(list));
+
+			var promises = [];
+			for (var i=0; i< refs.length; i++) {
+				if (Referenced[refs[i]].length) {
+					console.log("append " + refs[i] + ': ' + Referenced[refs[i]]);
+					promises.push(Record.dump(refs[i].toLowerCase(), {ids: Referenced[refs[i]], iterate: iterate+1}));
+				}
+			}
+
+			console.log('executing ' + promises.length + ' Promises...');
+
+			q.all(promises)
+			.then ( function (results) {
+				if (results.length) {
+					console.log('*** subresults: ' + JSON.stringify(results));
+					for (var i=0; i<results.length; i++) {
+						var models = Object.keys(results[i]);
+						console.log("add models : " + models.join(','));
+						for (var j=0; j<models.length; j++) {
+							if ( ! list[models[j]] ) { list[models[j]] = [] }
+							console.log("Add each of : " + JSON.stringify(results[i][models[j]]));
+							for (var k=0; k<results[i][models[j]].length; k++) {
+								list[models[j]].push(results[i][models[j]][k]);
+							}
+						}
+					}
+				}
+				else { console.log('no secondary results for ' + model) }
+
+				deferred.resolve(list);
+			})
+			.catch (function (err) {
+				console.log("Error generating results for " + model);
+				deferred.reject(err);
+			});
+
+		})
+		.catch ( function (err) {
+			console.log("Error with primary query for " + model);
+			console.log(err);
+			deferred.reject(err);
+		});
+
+		return deferred.promise;
+	},
+
 	get_fields : function (table) {		
 		var deferred = q.defer();
 		var model = table;
@@ -908,7 +1056,15 @@ module.exports = {
 				Barcode.print_Labels(model, ids);
 			}
 
-			deferred.resolve(result);
+			Record.add_meta_records(model, ids)
+			.then ( function (meta) {
+				console.log("checked for meta records");
+				deferred.resolve(result);
+			})
+			.catch ( function (err) {
+				console.log("Error generating meta records");
+				deferred.reject(err);
+			})
 		})
 		.catch ( function (err) {
 			console.log("Error creating Record in " + table);
@@ -917,6 +1073,66 @@ module.exports = {
 		});
 
 		return deferred.promise;
+	},
+
+	add_meta_records : function (model, ids) {
+	// add meta records if appliable (records with 1-1 relationship with <model> records)  
+	// Usage (model should have attribute: 'metaRecord' of format:
+	//          metaRecord: { 'relatedTableName' : { refField: '<ID>'} }
+	//
+	//   where <ID> is a reference o the original record id in the <model> table.
+	//	
+		var Mod = sails.models[model] || {};
+
+		var deferred = q.defer();
+
+		if (Mod && Mod.metaRecord) {
+			var meta = Mod.metaRecord;
+			var metaTables = Object.keys(meta);
+
+			var promises = [];
+
+			for (var t=0; t<metaTables.length; t++) {
+				var metaTable = metaTables[t];
+				var metaFields = Object.keys(meta[metaTable]);
+
+				var data = [];
+				for (var n=0; n<ids.length; n++) {
+					data.push(meta[metaTable]);
+				}
+
+				for (var i=0; i<metaFields.length; i++) {
+					var f = metaFields[i];
+					var v = meta[metaTable][f];
+					if ( v.match(/\<ID\>/i) ) {
+						for (var n=0; n<ids.length; n++) {
+							data[n][f] = ids[n];
+						}
+					}
+					else { console.log(v + ' does not match ID') }
+				}
+				console.log("metadata table appended: " + metaTable);
+				console.log(JSON.stringify(data));
+				promises.push( Record.createNew(metaTable, data) );
+			}
+
+			q.all(promises)
+			.then ( function (metadata) {
+				console.log("Added metadata");
+				deferred.resolve();
+			})
+			.catch ( function (err) {
+				console.log("Error adding meta records");
+				deferred.reject(err);
+			});
+		}
+		else {
+			// no meta data ... 
+			deferred.resolve();
+		}
+
+		return deferred.promise;
+
 	},
 
 	uploadData : function (model, headers, data, reference) {
