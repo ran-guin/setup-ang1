@@ -10,6 +10,8 @@ var q = require('q');
 module.exports = {
 
 	tableName: 'Rack',
+  primaryField: 'Rack_ID',
+  
 	// ** LEGACY **/
 	migrate: 'safe',
 	attributes: {
