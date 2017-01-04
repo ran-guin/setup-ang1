@@ -8,6 +8,8 @@
 module.exports = {
 
 	tableName: 'Sample_Type',
+	primaryField: 'Sample_Type_ID',
+	
 	migrate: 'safe',
 	/* LEGACY */
 
