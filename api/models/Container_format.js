@@ -9,6 +9,7 @@ module.exports = {
 
 	migrate: 'safe',
 	tableName: 'Plate_Format',
+	primaryField: 'Plate_Format_ID',
 	tableAlias: 'Container Format',
 	
 	/** LEGACY **/
