@@ -1,0 +1,23 @@
+.container
+  div.modal.fade#UploadFileModal
+    .modal-dialog
+      // Modal content
+      .modal-content
+        .modal-header
+          button.close(type='button', data-dismiss='modal') ×
+          h2
+            i.fa.fa-2x.fa-upload
+            |  &nbsp; Upload Data from Excel
+        .modal-body
+          h5 Use to upload data from spreadsheets to associate with existing data samples
+          br
+          h6 Required Column:  Plate_ID (BCG Barcode ID) or Matrix_Barcode_ID
+          include UploadFile.jade
+        .modal-footer
+          button.btn.btn-default.btn-danger.pull-left(type='submit', data-dismiss='modal')
+            i.fa.fa-remove
+            |  Cancel
+          p
+            | Questions ? 
+            a(href='mailto:cosinesystems.org?Subject=Litmus Help: uploadFileModal') Contact Us
+
