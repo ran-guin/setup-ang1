@@ -108,6 +108,10 @@ div.grow-header {
     margin: 0px 5px;
 }
 
+.no-margin {
+    margin: 0px;
+}
+
 .wellmap
 {
 width:25px;
