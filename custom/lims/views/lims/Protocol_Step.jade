@@ -3,7 +3,6 @@ extends ./../customize/privateLayout
 block content
 
   div.container
-    include ./../core/errorMsg.jade
     
     // input variables: 
     //    - plate_ids  (array); 
@@ -34,7 +33,8 @@ block content
               include ActiveSamples.jade
               
               br 
-              include ./../core/angularMessages.jade
+              include ./../core/errorMsg.jade
+              br
 
               div(ng-show="protocol.status != 'Completed'")      
                 h2 {{ protocol.name }}

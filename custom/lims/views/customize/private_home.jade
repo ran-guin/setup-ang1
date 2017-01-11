@@ -24,6 +24,7 @@ block content
             hr 
 
             include ./../core/errorMsg.jade
+            p &nbsp;
 
             form.form-inline(role='form' method='post' action="#{sails.config.root}/scan-barcode")       
               div.form-group.has-success.has-feedback
@@ -50,11 +51,14 @@ block content
             p &nbsp;
             p &nbsp; 
 
-            include uploadFile.jade
-
+            p
+              a(href='#' onclick="return false;" data-toggle='modal' data-target='#UploadFileModal')
+                button.btn.btn-danger(type='button') 
+                  i.fa.fa-4x.fa-upload
+                  span &nbsp; Upload Data
             hr
             p &nbsp;
             p &nbsp;
             p &nbsp;
-            p &nbsp;
-            p &nbsp;
+
+    include uploadFileModal.jade

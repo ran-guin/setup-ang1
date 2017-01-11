@@ -50,8 +50,9 @@ block content
 
           include ./../core/errorMsg.jade
           h3 Protocol Editor
-          include ./../core/angularMessages.jade
-       
+
+          include ./../core/errorMsg.jade      
+          br
 
           div.alert.alert-warning(ng-show="changes")
             h4 {{ changes }} Field(s) Altered: 

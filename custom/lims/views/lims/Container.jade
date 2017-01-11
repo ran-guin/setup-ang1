@@ -18,15 +18,15 @@ block content
        div(ng-controller="LIMSController")
         div(ng-controller="FancyFormController")
           div(ng-controller="ProtocolController" ng-init="#{init}")
-          
-            include ./../core/errorMsg.jade
 
             if Samples.length
               
               include ActiveSamples.jade
 
-              include ./../core/angularMessages.jade
+              include ./../core/errorMsg.jade
 
+              br 
+              
               include ContainerOptions.jade 
 
               include uploadMatrix.jade
