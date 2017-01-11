@@ -767,7 +767,7 @@ function wellMapper() {
         if (this.missing_wells > 1) {
             this.missing_wells--; // last call to next_available would generate missing_well ...
             
-            var msg = this.missing_wells + ' Target samples require target boxes.  Please scan ' + this.missing_boxes + " more Target Box(es)";
+            var msg = this.missing_wells + ' Target sample(s) require target boxes...  Please scan ' + this.missing_boxes + " more Target Box(es)";
             errors.push(msg);
             console.log(msg);
         }
