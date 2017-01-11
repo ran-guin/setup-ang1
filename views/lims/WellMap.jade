@@ -10,7 +10,6 @@ block content
   - var init2 = "initialize(" + JSON.stringify(config2) + ")";
   
   div.container
-    include ./../core/errorMsg.jade
 
     div(ng-app='myApp')
      div(ng-controller="SharedController")
@@ -22,7 +21,7 @@ block content
             include ActiveSamples
 
             br 
-            include ./../core/angularMessages.jade
+            include ./../core/errorMsg.jade
 
             div(ng-show='completed')
               button.btn.btn-success(type='button' ng-click="completed=0") Transfer / Relocate Again
