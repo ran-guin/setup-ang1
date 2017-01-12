@@ -838,7 +838,7 @@ module.exports = {
 		console.log("set values...");
 		if (data && table && idField) {
 			var fields = Object.keys(data);
-			var Set = [];
+			var Set1 = [];
 			for (var i=0; i<fields.length; i++) {
 				var setval = data[fields[i]];
 
@@ -856,7 +856,7 @@ module.exports = {
 					}
 					else if (setval.length == 1) {
 						var setVal = Record.parseValue(setval[0], { model : model });
-						Set.push(fields[i] + " = " + setVal );						
+						Set1.push(fields[i] + " = " + setVal );						
 					}
 					else {
 						var msg = "Ignored update to " + fields[i] + " (Length of supplied values != length of id list) " + setval.length + ' != ' + ids.length;
@@ -867,7 +867,7 @@ module.exports = {
 					console.log("parse " + setval);
 					var setVal = Record.parseValue(setval, { model : model });
 					console.log("parsed " + setVal);
-					Set.push(fields[i] + " = " + setVal );
+					Set1.push(fields[i] + " = " + setVal );
 				}
 			}
 			console.log('update history .. ');
@@ -876,8 +876,9 @@ module.exports = {
 			.then ( function (History) {
 				console.log("History: " + JSON.stringify(History));
 				var promises = [];
-				if (Set.length) {
-					query = query + " SET " + Set.join(',');
+
+				if (Set1.length) {
+					query = query + " SET " + Set1.join(',');
 					query = query + " WHERE " + condition;
 					console.log("\n** Update: " + query);
 					promises.push( Record.query_promise(query) );
@@ -913,7 +914,7 @@ module.exports = {
 					console.log("finished updates...");
 					console.log(JSON.stringify(results));
 
-					if (Set.length) { setValues = results[0] }
+					if (Set1.length) { setValues = results[0] }
 					if (SetEach.length) { updateValues = results[results.length - 1] }
 
 
@@ -1058,7 +1059,7 @@ module.exports = {
 
 			Record.add_meta_records(model, ids)
 			.then ( function (meta) {
-				console.log("checked for meta records");
+				console.log("checked for meta records for " + model);
 				deferred.resolve(result);
 			})
 			.catch ( function (err) {
@@ -1098,18 +1099,21 @@ module.exports = {
 
 				var data = [];
 				for (var n=0; n<ids.length; n++) {
-					data.push(meta[metaTable]);
+					data.push(_.clone(meta[metaTable]));
 				}
 
+				console.log("Add meta data for records: " + ids.join(','));
 				for (var i=0; i<metaFields.length; i++) {
 					var f = metaFields[i];
 					var v = meta[metaTable][f];
-					if ( v.match(/\<ID\>/i) ) {
+					if ( v && v.match(/\<ID\>/i) ) {
 						for (var n=0; n<ids.length; n++) {
 							data[n][f] = ids[n];
 						}
 					}
-					else { console.log(v + ' does not match ID') }
+					else { 
+						console.log(v + ' does not match ID');
+					}
 				}
 				console.log("metadata table appended: " + metaTable);
 				console.log(JSON.stringify(data));
@@ -1127,7 +1131,7 @@ module.exports = {
 			});
 		}
 		else {
-			// no meta data ... 
+			// console.log('no meta records for ' + model); 
 			deferred.resolve();
 		}
 
@@ -1535,6 +1539,8 @@ module.exports = {
 			.then (function (results) {
 				var result = results[0];
 				var FK = results[1];
+				var FKT = FK[table];
+
 				console.log("FK: " + JSON.stringify(FK));
 
 				console.log(JSON.stringify(result));
@@ -1542,6 +1548,7 @@ module.exports = {
 					for (var j=0; j<track.length; j++) {
 						var f = track[j];
 						var id = result[i].id;
+						var fk = FKT[f];
 
 						if (! History[table][id] ) { History[table][id] = {} }
 						if (! History[table][id][f] ) { History[table][id][f] = {} }
@@ -1557,8 +1564,13 @@ module.exports = {
 
 							if (key === 'New_Value') {
 								History[table][id][f]['Record_ID'] = id;
-								History[table][id][f]['FK_DBField__ID'] = FK[table][f];
+								History[table][id][f]['FK_DBField__ID'] = fk;
 								History[table][id][f]['Modified_Date'] = '<NOW>';
+								
+								if (sails && sails.config && sails.config.payload) {
+									History[table][id][f]['FK_Employee__ID'] = sails.config.payload.alDenteID;
+								}
+
 								if (f === 'FK_Rack__ID') {
 									var relocate = {};
 									// relocate['class'] = table;
@@ -1622,9 +1634,14 @@ module.exports = {
     			for (var k=0; k<fields.length; k++) {
     				var data = update[fields[k]];
 	    			// data.FK_Employee__ID = sails.config.payload.alDenteID;
-    				// data.FK_DBTable__ID  = FK[tables[i]][fields[k]];
+    				// data.FK_DBField__ID  = FK[tables[i]][fields[k]];
     				// data.Modified_Date   = 'NOW()';
-    				Data.push( data );
+    				if (data.FK_DBField__ID) {
+    					Data.push( data );
+    				}
+    				else {
+    					console.log("Skipping " + tables[i] + '.' + fields[k] + ' (no DBField record found)');
+    				}
     			}
     		}
     	}
