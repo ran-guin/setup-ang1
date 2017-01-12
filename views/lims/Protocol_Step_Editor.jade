@@ -48,10 +48,9 @@ block content
        div(ng-controller="LIMSController")
         div(ng-controller="Protocol_StepController" ng-init="#{init}")
 
-          include ./../core/errorMsg.jade
           h3 Protocol Editor
 
-          include ./../core/errorMsg.jade      
+          include ./../core/errorAngularMsg.jade      
           br
 
           div.alert.alert-warning(ng-show="changes")
