@@ -7,7 +7,7 @@ form(role='form' method = 'post' action="/uploadFile" enctype="multipart/form-da
   table.table
     tr  
       td
-        input.btn.btn-lg.btn-default(type = 'file' ng-model='file' name='uploadFile' style='display:inline-block')
+        input.btn.btn-lg.btn-default.form-control.input-lg(type = 'file' ng-model='file' name='uploadFile' style='display:inline-block')
     tr
       td(style='width:22%; vertical-align:middle')   
         button.btn.btn-lg.btn-success.form-control.input-lg(type='submit', ng-click='get_headers()') Upload
