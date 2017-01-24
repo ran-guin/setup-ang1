@@ -289,7 +289,7 @@ function wellMapper() {
         this.rows = rows;
         this.columns = cols;
         this.wells = wells;
-        console.log("Available Wells: " + JSON.stringify(avail));
+        // console.log("Available Wells: " + JSON.stringify(avail));
         return avail;
     }
 
@@ -348,7 +348,7 @@ function wellMapper() {
         }
         this.default.available = avail;
 
-        console.log("\n* Default Wells Available: " + JSON.stringify(avail));
+        // console.log("\n* Default Wells Available: " + JSON.stringify(avail));
 
         if (! this.target_boxes ) {
             this.target_boxes = ['TBD'];
@@ -397,7 +397,7 @@ function wellMapper() {
         };
 
         console.log("Initialized:\nsplit = " + this.splitX + "\nfill_by = " + this.fill_by + "\npack_wells = " + this.pack_wells + "\npack_size = " + this.pack_size + "\nmode = " + this.split_mode + "\ntarget_size = " + this.target_size + "\ntarget boxes = " + JSON.stringify(this.target_boxes));
-        console.log("Available: " +JSON.stringify(this.available)); 
+        // console.log("Available: " +JSON.stringify(this.available)); 
 
         this.target_boxes = this.Options.target_boxes;       // target box ids 
         //this.available = Options.available || {};   // hash of available wells keyed on target box ids
@@ -438,7 +438,7 @@ function wellMapper() {
         console.log("run distribute function... ");
         console.log(sources.length + " Sources: from " + sources[0].id + " to " + sources[sources.length-1].id);
         console.log("Target: " + JSON.stringify(Target));
-        console.log("Options: " + JSON.stringify(Options));
+        // console.log("Options: " + JSON.stringify(Options));
 
         this.initialize(sources, Target, Options);
 
@@ -755,7 +755,11 @@ function wellMapper() {
                     target++;
                 }
             }
-            console.log("Available in " + target_box + ' : x.position in ' + JSON.stringify(this.available))
+
+            var avail_array = this.available[target_box] || [];
+            var avail_count = avail_array.length;
+
+            console.log(avail_count " wells available in Box" + target_box );
             Available_wells[target_box] = _.pluck(this.available[target_box], 'position')
         } 
 
