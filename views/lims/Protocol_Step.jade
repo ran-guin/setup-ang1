@@ -119,8 +119,8 @@ block content
                                 div.form-group.input-lg
                                   label.col-sm-2.control-label(for="#{fld}#{Snum}") #{alias}
                                   div.col-sm-6
-                                    my-dropdown(placeholder="#{alias}" list="MenuList['form.#{fld}#{Snum}']" selected="#{fld}#{Snum}" property="name" track='name' default="#{def}" ng-init="setup_Menu('form.#{fld}#{Snum}', \"#{fType}\",'','#{def}')")
-                                  div.col-sm-4 &nbsp;
+                                    my-dropdown(placeholder="#{alias}" list="MenuList['form.#{fld}#{Snum}']" selected="form.#{fld}#{Snum}" property="name" track='name' default="#{def}" ng-init="setup_Menu('form.#{fld}#{Snum}', \"#{fType}\",'','#{def}')")
+                                  div.col-sm-4 &nbsp; 
                               else 
                                 div.form-group.input-lg
                                   label.col-sm-2.control-label(for='#{fld}#{Snum}') #{alias}
@@ -147,7 +147,8 @@ block content
                                   if fld.match(/_qty/)
                                     div.col-sm-4
                                       - units = [ { name: 'ml'}, { name: 'ul'}]      
-                                      my-dropdown(placeholder='units..' list="MenuList['#{fld}_units#{Snum}']" selected="#{fld}_units#{Snum}" property='name' track='name', ng-init="setup_Menu('#{fld}_units#{Snum}','ml,ul,nl')") 
+                                      my-dropdown(id='#{fld}_units#{Snum}' placeholder='units..' list="MenuList['form.#{fld}_units#{Snum}']" selected="form.#{fld}_units#{Snum}" property='name' track='name', ng-init="setup_Menu('form.#{fld}_units#{Snum}','ml,ul,nl')") 
+                                      
                                   if ! fld.match(/_qty/)
                                     div.col-sm-4 &nbsp;
 
