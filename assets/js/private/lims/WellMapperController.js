@@ -104,11 +104,11 @@ function wellMapperController ($scope, $rootScope, $http, $q ) {
             console.log("retrieve rack data : " + JSON.stringify(data));
             $http.post("/Rack/boxData", data)
             .then (function (returnData) {
-                console.log("rack data: " + JSON.stringify(returnData));
+                // console.log("rack data: " + JSON.stringify(returnData));
 
                 available = returnData.data.available || {};
                 target_boxes     = returnData.data.boxes || [];
-                console.log("Available: " + JSON.stringify(available));               
+                // console.log("Available: " + JSON.stringify(available));               
                 console.log("target boxes: " + target_boxes.join(','));
                 if (Options.target_boxes && target_boxes.length < Options.target_boxes.length) {
                     $scope.error("At least one of the scanned boxes is either full or not a box");
@@ -277,7 +277,7 @@ function wellMapperController ($scope, $rootScope, $http, $q ) {
             
             console.log('call distribute using:');
             console.log('Target: ' + JSON.stringify(Target) );
-            console.log('Options: ' + JSON.stringify(Options) );
+            // console.log('Options: ' + JSON.stringify(Options) );
 
             // recalculate mapping //
             Map = newMap.distribute(
