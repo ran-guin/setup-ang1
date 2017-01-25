@@ -759,7 +759,7 @@ function wellMapper() {
             var avail_array = this.available[target_box] || [];
             var avail_count = avail_array.length;
 
-            console.log(avail_count " wells available in Box" + target_box );
+            console.log(avail_count + " wells available in Box" + target_box );
             Available_wells[target_box] = _.pluck(this.available[target_box], 'position')
         } 
 
