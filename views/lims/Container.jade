@@ -29,7 +29,10 @@ block content
 
               include ContainerOptions.jade 
 
-              include uploadMatrix.jade
+              div(ng-if="!errors || !errors.length")
+                include uploadMatrix.jade
+              div.alert.alert-danger(ng-if="errors && errors.length")
+                b Matrix File cannot be linked to samples with pending errors
 
             if ! debug
               p &nbsp;
