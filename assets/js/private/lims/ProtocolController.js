@@ -151,26 +151,36 @@ function protocolController ($scope, $rootScope, $http, $q) {
     $scope.validate_Samples = function (Samples) {
         var empty_samples = 0;
         var missing_units = 0;
+        var unslotted = false;
 
         console.log("Check Sample Status for " + Samples.length + ' Samples');
         for (var i=0; i<Samples.length; i++) {
             if (Samples[i].last_step !== $scope.active.last_step.name) {
                 $scope.warning("Samples at different stages of pipeline..");
             }
+
             if (!Samples[i].qty) {
                 empty_samples++;
             }
+            
             console.log( i + " S: " + Samples[i].qty + Samples[i].qty_units);
             if (Samples[i].qty && !Samples[i].qty_units) {
                 missing_units++;
             }
+
+            if ( ! Samples[i].position ) {
+                unslotted = true;
+            }
         }    
 
         if (empty_samples) {
-            $scope.warning("samples with no volume included");
+            $scope.warning("Sample(s) with no volume included");
         }
         if (missing_units) {
-            $scope.error("Samples with missing volume units");
+            $scope.error("Sample(s) with missing volume units");
+        }
+        if (unslotted) {
+            $scope.error("Found Sample(s) without specified slot position(s)");
         }
 
         console.log(missing_units + " OR (messages) " + empty_samples);
