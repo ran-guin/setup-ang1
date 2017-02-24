@@ -29,7 +29,7 @@ function wellMapperController ($scope, $rootScope, $http, $q ) {
  
         $scope.map.packExample = $scope.map.packExamples[$scope.map.pack_mode + '-' + $scope.map.split_mode + '-' + $scope.map.fill_by] || '';
 
-	    $scope.mapping_keys = ['split', 'pack', 'fill_by', 'Target_format', 'Target_sample', 'transfer_type', 'reset_focus', 'target_size', 'transfer_qty', 'transfer_qty_units'];
+	    $scope.mapping_keys = ['split', 'pack', 'load_by', 'fill_by', 'Target_format', 'Target_sample', 'transfer_type', 'reset_focus', 'target_size', 'transfer_qty', 'transfer_qty_units'];
 		for (var i=0; i<$scope.mapping_keys.length; i++) {
 			console.log($scope.mapping_keys[i] + ' = ' + $scope.map[ $scope.mapping_keys[i] ]);
 		}    
@@ -50,6 +50,14 @@ function wellMapperController ($scope, $rootScope, $http, $q ) {
         };
 
         $scope.map.splitExample = $scope.map.splitExamples[$scope.map.split_mode + '-' + $scope.map.fill_by];
+
+        $scope.map.loadExamples = {
+            'row'  : "wells loaded by row : eg A1, A2, A3 ...", 
+            'column' : "wells loaded by column : eg A1, B1, C1 ...",
+            'slot' : "samples copied into same slot they came from (order unimportant)",
+        };                     
+        $scope.map.loadExample = $scope.map.loadExamples[$scope.map.load_by];
+        
         $scope.map.fillExamples = {
             'row'  : "wells filled by row : eg A1, A2, A3 ...", 
             'column' : "wells filled by column : eg A1, B1, C1 ...",
@@ -77,6 +85,7 @@ function wellMapperController ($scope, $rootScope, $http, $q ) {
         var rack_id = Options.target_rack;
         var size    = Options.target_size;
         var fill_by = Options.fill_by;
+        var load_by = Options.load_by;
 
         var rows    = Options.load_rows || $scope.map.use_rows;
         var cols    = Options.load_columns || $scope.map.use_cols;
@@ -91,7 +100,7 @@ function wellMapperController ($scope, $rootScope, $http, $q ) {
         }
 
         console.log("Load rack " + rack_id + ' ' + rack_name);
-        var data = { id: rack_id, name: rack_name, fill_by: fill_by, rows: rows, columns: cols};
+        var data = { id: rack_id, name: rack_name, load_by: load_by, fill_by: fill_by, rows: rows, columns: cols};
         
         console.log("SEND: " + JSON.stringify(data));
 
@@ -166,9 +175,9 @@ function wellMapperController ($scope, $rootScope, $http, $q ) {
                 else if (size) {
                     // prompt user for target box 
                     console.log("choose size: " + size);
-                    $http.get('/Rack/wells?size=' + size + '&fill_by=' + fill_by)
+                    $http.get('/Rack/wells?size=' + size + '&fill_by=' + fill_by + '&load_by=' + load_by)
                     .then ( function (wells) {
-                        console.log("loaded wells: " + JSON.stringify(wells));
+                        // console.log("loaded wells: " + JSON.stringify(wells));
                         
                         boxData.available = wells.data;
 
@@ -198,6 +207,9 @@ function wellMapperController ($scope, $rootScope, $http, $q ) {
     $scope.redistribute_Samples = function  (Samples, Target, Options) {
         var deferred = $q.defer();
 
+        $scope.targetMapStatus = 'Pending';
+        $scope.sourceMapStatus = 'Pending';
+
         if (Options && Options.reset) {
             console.log("reset messages before redistribute_Samples");
             $scope.reset_messages();
@@ -215,15 +227,15 @@ function wellMapperController ($scope, $rootScope, $http, $q ) {
         }
         else {
             // load_by is only relevant if NOT filling by position ..
-            if ($scope.map.fill_by.match(/row/i)) { 
+            if ($scope.map.load_by.match(/row/i)) { 
                 $scope.source_by_Row(Samples);
                 // $scope.map.split_mode = 'serial';
             }
-            else if ($scope.map.fill_by.match(/col/i) ) { 
+            else if ($scope.map.load_by.match(/col/i) ) { 
                 $scope.source_by_Col(Samples);
                 // $scope.map.split_mode = 'serial';
             }
-            else if ($scope.map.fill_by.match(/scan/i) ) { 
+            else if ($scope.map.load_by.match(/scan/i) ) { 
                 $scope.reset_Samples();
                 // $scope.map.split_mode = 'serial';
             }
@@ -293,12 +305,12 @@ function wellMapperController ($scope, $rootScope, $http, $q ) {
 
 
             console.log("Samples: " + JSON.stringify(Samples));
-            console.log("NEW MAP: " + JSON.stringify(Map));
+            // console.log("NEW MAP: " + JSON.stringify(Map));
             console.log("Rows: " + JSON.stringify(Map.rows));
             console.log("Columns: " + JSON.stringify(Map.columns));
             console.log("NEW CMAP: " + JSON.stringify(Map.CMap));
-            console.log("Source Colour Map: " + JSON.stringify(Map.SourceMap));
-            console.log("Target Colour Map: " + JSON.stringify(Map.TransferMap)); 
+            // console.log("Source Colour Map: " + JSON.stringify(Map.SourceMap));
+            // console.log("Target Colour Map: " + JSON.stringify(Map.TransferMap)); 
             console.log("source boxes: " + JSON.stringify(Map.source_boxes));          
 
             if ( Map.warnings && Map.warnings.length ) { 
@@ -314,6 +326,10 @@ function wellMapperController ($scope, $rootScope, $http, $q ) {
             }
 
             $scope.Map = Map;
+
+            $scope.targetMapStatus = 'Complete';
+            $scope.sourceMapStatus = 'Complete';
+
             deferred.resolve( { Map : Map, Target: Target, Options: Options, errors: Map.errors} );
         })
         .catch ( function (err) {
@@ -380,6 +396,7 @@ function wellMapperController ($scope, $rootScope, $http, $q ) {
     	//   - position
     	//   - batch
     	//
+        console.log("Row -> Load / Fill = " + $scope.map.load_by + ' / ' + $scope.map.fill_by);
 
         $scope.map.load_by = 'row';
         $scope.map.fill_by = $scope.map.fill_by || $scope.map.load_by;
@@ -409,7 +426,9 @@ function wellMapperController ($scope, $rootScope, $http, $q ) {
 
     // Fill for Samples only ... may not be necessary ... 
     $scope.source_by_Col = function source_by_Col (Samples) {
-;
+ 
+        console.log("Col -> Load / Fill = " + $scope.map.load_by + ' / ' + $scope.map.fill_by);
+
         $scope.map.load_by = 'column';
         $scope.map.fill_by = $scope.map.fill_by || $scope.map.load_by;
 
