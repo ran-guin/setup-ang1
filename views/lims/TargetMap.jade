@@ -10,7 +10,9 @@ h4
 // if ! cols
 - cols = [1,2,3,4,5,6,7,8,9,10,11,12];
 
-div(ng-if="Map.Transfer && Map.TransferMap")
+div(ng-if="targetMapStatus=='Pending'")
+	b Pending Target info...
+div(ng-if="Map.Transfer && Map.TransferMap && targetMapStatus!='Pending'")
 	div(ng-repeat="batch in Map.TransferMap")
 		b Box {{ Map.Options.target_boxes[$index] }}
 		span &nbsp; &nbsp; &nbsp;
@@ -42,6 +44,7 @@ div(ng-if="Map.Transfer && Map.TransferMap")
 								a(href='#' onclick='return false' data-toggle='tooltip' title="{{ Map.Transfer[batch['#{row}#{col}']['target_index']]['qty'] }}  {{ Map.Transfer[batch['#{row}#{col}']['target_index']]['qty_units'] }} from #{{ Map.Transfer[batch['#{row}#{col}']['target_index']]['source_id'] }}" style='color:#{bg}') 
 									div.wellmap( style="background-color:{{ batch['#{row}#{col}']['colour_code'] }}")
 										b {{ Map.Transfer[ batch['#{row}#{col}' ]['target_index']]['qty'] }}
+
 							div(ng-if="! Map.Transfer[batch['#{row}#{col}']['target_index']] && Map.Available[Map.Options.target_boxes[$index]].indexOf('#{row}#{col}') >= 0 ")
 								div.wellmap(style='background-color: #666')
 									span &nbsp;
