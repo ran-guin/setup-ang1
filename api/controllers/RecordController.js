@@ -277,8 +277,21 @@ module.exports = {
 			return res.json(err);
 		});
 
-	}
+	},
 
+	build_FK : function (req, res) {
+
+		Record.build_FK('Plate')
+		.then ( function (result) {
+			console.log("build FK");
+			console.log(JSON.stringify(result));	
+			res.json(result);
+		})
+		.catch ( function (err) {
+			console.log("Error building FK");
+			res.json(err);
+		});
+	}
 
 };
 
