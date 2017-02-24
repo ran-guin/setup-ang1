@@ -23,7 +23,9 @@ if Samples && Samples[0] && Samples[0].box_size  == '8x12'
 h4 
 	u Source Map [ #{box_size} ]
 
-div(ng-if="Map.Transfer && Map.SourceMap")
+div(ng-if="sourceMapStatus=='Pending'")
+	b Pending Source Order info...
+div(ng-if="Map.Transfer && Map.SourceMap && sourceMapStatus!='Pending'")
 	div(ng-repeat="box in Map.SourceMap")
 
 		b Box # {{ Map.source_boxes[$index] }}
