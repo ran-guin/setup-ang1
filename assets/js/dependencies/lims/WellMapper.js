@@ -516,9 +516,9 @@ function wellMapper() {
                         var count = 0;
                         var maxcount = sources.length * this.splitX;
 
-                        for (k=0; k<sources.length; k=k+pack_size ) {
+                        for (k=0; k<sources.length && count<maxcount; k=k+pack_size ) {
                             for (j=0; j<this.splitX; j++) {
-                                for (var l=0; l<pack_size && count<maxcount; l++) {
+                                for (var l=0; l<pack_size; l++) {
                                     List[options[i]].push(opt[j]);
                                     count++;
                                 }
@@ -603,7 +603,11 @@ function wellMapper() {
         for (j=0; j<batches.length; j++) {
             var batch = batches[j];
             for (var h=0; h<splitX; h++) { 
-                   
+                                        
+                // account for partially empty batches at back end... 
+                var skip = batches[0].length - batch.length;
+                var position_in_batch = 1;
+                
                 for (l=0; l<batch.length; l++, count++) {
                     var i = batch[l];
                     
@@ -741,7 +745,24 @@ function wellMapper() {
 
                     // next...
                     if (this.fill_by === 'row' || this.fill_by === 'column') {
-                        var next = this.next_available(batch_index,target_index);
+                        var next = this.next_available(batch_index, target_index);
+
+                        // skip partially used portion of batches
+                        // (list of available wells would use empty batch targets before splits)
+                        if (skip && ( position_in_batch >= batch.length )) {
+                            // if this is the first empty target well in the batch
+                            while ( position_in_batch < batches[0].length ) {
+                                position_in_batch++;     // empty target index within batch
+                                target_index++;   // target index within box
+                                target++;         // absolute target count
+
+                                next = this.next_available(batch_index, target_index, skip, l);
+                            }
+                        }
+                        else {
+                            position_in_batch++;
+                        }
+
                         x = next.x;
                         y = next.y;
                         target_index = next.target_index;
