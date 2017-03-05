@@ -12,54 +12,65 @@ h4
 
 div(ng-if="targetMapStatus=='Pending'")
 	b Pending Target info...
-div(ng-if="Map.Transfer && Map.TransferMap && targetMapStatus!='Pending'")
-	div(ng-repeat="batch in Map.TransferMap")
-		b Box {{ Map.Options.target_boxes[$index] }}
-		span &nbsp; &nbsp; &nbsp;
-		button.btn.btn-xs.btn-primary(ng-show="map.select" type='button' ng-model='hide' ng-click="map.select = 0 && $index === 0") Hide Checkboxes
-		button.btn.btn-xs.btn-primary(ng-show="!map.select" type='button' ng-model='hide' ng-click="map.select=1 && $index === 0") Select Rows/Columns
-		br 
-		span &nbsp;
+	p &nbsp;
+	include ./../core/Pending.jade
+	p &nbsp;
 
-		table(style='background-color:#eee;')
-			tr(ng-show='map.select && $index === 0')
-				td &nbsp;
-				each col in cols
-					td(ng-show="Map.columns.indexOf(#{col}) >= 0")
-						input(type='checkbox' checklist-model="map.use_cols" checklist-value='#{col}' ng-click="redistribute('reset')")
-	
-			each row in rows
-				tr(ng-show="Map.rows.indexOf('#{row}') >= 0")
-					td(ng-show="map.select && $index === 0 && (Map.rows.indexOf('#{row}') >= 0)")
-						input(type='checkbox' checklist-model="map.use_rows" value='#{row}' ng-click="redistribute('reset')")
+div(ng-if="targetMapStatus!='Pending'")
+	div(ng-if="!Map.Transfer || !Map.SourceMap")
+		b Mapping incomplete...
+		p &nbsp;
+		include ./../core/Pending.jade
+		p &nbsp;
+
+	div(ng-if="Map.Transfer && Map.TransferMap")
+		div(ng-repeat="batch in Map.TransferMap")
+			b Box {{ Map.Options.target_boxes[$index] }}
+			span &nbsp; &nbsp; &nbsp;
+			button.btn.btn-xs.btn-primary(ng-show="map.select" type='button' ng-model='hide' ng-click="map.select = 0 && $index === 0") Hide Checkboxes
+			button.btn.btn-xs.btn-primary(ng-show="!map.select" type='button' ng-model='hide' ng-click="map.select=1 && $index === 0") Select Rows/Columns
+			br 
+			span &nbsp;
+
+			table(style='background-color:#eee;')
+				tr(ng-show='map.select && $index === 0')
+					td &nbsp;
 					each col in cols
-						if col > 6 
-							- bg=darkbg;
-						if col <= 6 
-							- bg=lightbg;
-						- var well = row + col;
+						td(ng-show="Map.columns.indexOf(#{col}) >= 0")
+							input(type='checkbox' checklist-model="map.use_cols" checklist-value='#{col}' ng-click="redistribute('reset')")
+		
+				each row in rows
+					tr(ng-show="Map.rows.indexOf('#{row}') >= 0")
+						td(ng-show="map.select && $index === 0 && (Map.rows.indexOf('#{row}') >= 0)")
+							input(type='checkbox' checklist-model="map.use_rows" value='#{row}' ng-click="redistribute('reset')")
+						each col in cols
+							if col > 6 
+								- bg=darkbg;
+							if col <= 6 
+								- bg=lightbg;
+							- var well = row + col;
 
-						td(style='padding: 1px' ng-show="Map.columns.indexOf(#{col}) >= 0")
-							div(ng-if="batch['#{row}#{col}'] && Map.Transfer[batch['#{row}#{col}']['target_index']]")
-								a(href='#' onclick='return false' data-toggle='tooltip' title="{{ Map.Transfer[batch['#{row}#{col}']['target_index']]['qty'] }}  {{ Map.Transfer[batch['#{row}#{col}']['target_index']]['qty_units'] }} from #{{ Map.Transfer[batch['#{row}#{col}']['target_index']]['source_id'] }}" style='color:#{bg}') 
-									div.wellmap( style="background-color:{{ batch['#{row}#{col}']['colour_code'] }}")
-										b {{ Map.Transfer[ batch['#{row}#{col}' ]['target_index']]['qty'] }}
+							td(style='padding: 1px' ng-show="Map.columns.indexOf(#{col}) >= 0")
+								div(ng-if="batch['#{row}#{col}'] && Map.Transfer[batch['#{row}#{col}']['target_index']]")
+									a(href='#' onclick='return false' data-toggle='tooltip' title="{{ Map.Transfer[batch['#{row}#{col}']['target_index']]['qty'] }}  {{ Map.Transfer[batch['#{row}#{col}']['target_index']]['qty_units'] }} from #{{ Map.Transfer[batch['#{row}#{col}']['target_index']]['source_id'] }}" style='color:#{bg}') 
+										div.wellmap( style="background-color:{{ batch['#{row}#{col}']['colour_code'] }}")
+											b {{ Map.Transfer[ batch['#{row}#{col}' ]['target_index']]['qty'] }}
 
-							div(ng-if="! Map.Transfer[batch['#{row}#{col}']['target_index']] && Map.Available[Map.Options.target_boxes[$index]].indexOf('#{row}#{col}') >= 0 ")
-								div.wellmap(style='background-color: #666')
-									span &nbsp;
-							div(ng-if="! Map.Transfer[batch['#{row}#{col}']['target_index']] && ! (Map.Available[Map.Options.target_boxes[$index]].indexOf('#{row}#{col}') >= 0)")
-								div.wellmap(style='background-color: #000')
-									span &nbsp;
-		br
-	HR
-	b Transfer Options:	
-	ul
-		li fill_by: {{ map.Options.fill_by }}
-		li target_size: {{ map.Options.target_size }}
-		li transfer_type: {{ map.Options.transfer_type }}
-		li split: {{ map.Options.split }}
-		li pack: {{ map.Options.pack }}
+								div(ng-if="! Map.Transfer[batch['#{row}#{col}']['target_index']] && Map.Available[Map.Options.target_boxes[$index]].indexOf('#{row}#{col}') >= 0 ")
+									div.wellmap(style='background-color: #666')
+										span &nbsp;
+								div(ng-if="! Map.Transfer[batch['#{row}#{col}']['target_index']] && ! (Map.Available[Map.Options.target_boxes[$index]].indexOf('#{row}#{col}') >= 0)")
+									div.wellmap(style='background-color: #000')
+										span &nbsp;
+			br
+		HR
+		b Transfer Options:	
+		ul
+			li fill_by: {{ map.Options.fill_by }}
+			li target_size: {{ map.Options.target_size }}
+			li transfer_type: {{ map.Options.transfer_type }}
+			li split: {{ map.Options.split }}
+			li pack: {{ map.Options.pack }}
 
 
 div(ng-show='debug')

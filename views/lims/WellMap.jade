@@ -27,6 +27,15 @@ block content
             div(ng-show='completed')
               button.btn.btn-success(type='button' ng-click="completed=0") Transfer / Relocate Again
 
+            div(ng-show="distributionStatus=='Failed'")
+              alert.alert-danger Re-distribution Failed ...
+            
+            div(ng-show="distributionStatus=='Warning'")
+              alert.alert-danger Warning detected during redistribution... please check records before continuing.
+
+            div(ng-show="distributionStatus=='Pending'")
+              include ./../core/Pending.jade
+
             form.form-horizontal(role='form' method='post' action="#{sails.config.root}/transfer" ng-show="! completed")
               p &nbsp;
               if target

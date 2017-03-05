@@ -24,8 +24,20 @@ h4
 	u Source Map [ #{box_size} ]
 
 div(ng-if="sourceMapStatus=='Pending'")
+	p &nbsp;
 	b Pending Source Order info...
+	p &nbsp;
+	include ./../core/Pending.jade
+	p &nbsp;
+
+div(ng-if="!Map.Transfer || !Map.SourceMap")
+	b Mapping incomplete...
+	p &nbsp;
+	include ./../core/Pending.jade
+	p &nbsp;
+
 div(ng-if="Map.Transfer && Map.SourceMap && sourceMapStatus!='Pending'")
+
 	div(ng-repeat="box in Map.SourceMap")
 
 		b Box # {{ Map.source_boxes[$index] }}
