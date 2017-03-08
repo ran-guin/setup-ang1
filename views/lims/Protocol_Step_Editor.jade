@@ -42,7 +42,7 @@ block content
     - var init = "initialize(" + JSON.stringify(configParams) + ")";
 
 
-    div(ng-app='myApp')
+    div(ng-app='myApp' ng-cloak=1)
      div(ng-controller="SharedController")
       div(ng-controller="FancyFormController")
        div(ng-controller="LIMSController")

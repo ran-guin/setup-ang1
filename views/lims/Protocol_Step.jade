@@ -21,7 +21,7 @@ block content
     - aliases = { 'equipment' : 'Equip', 'solution' : 'Sol' }
     - attributes = attributes || {}; // {'Thaw_Time' : 'integer' }
 
-    div(ng-app='myApp')
+    div(ng-app='myApp' ng-cloak=1)
       div(ng-controller="SharedController")
        div(ng-controller="FancyFormController")
         div(ng-controller="LIMSController")
