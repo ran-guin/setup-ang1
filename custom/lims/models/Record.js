@@ -15,6 +15,154 @@ module.exports = {
 
 	},
 
+	isReference : function (model, field) {
+
+		var Mod = sails.models[model];
+		var table = model;
+		var fk = {};
+
+		if (Mod) {
+			fk = Mod.attributes[field];
+			table = Mod.tableName || model;
+		}
+
+		if (fk && fk.model) { return fk.model}
+		else {
+			var match = field.match(/^FK[a-zA-Z]*\_(\w+)\_\_ID/);
+			if (match && match.length > 1) { return match[1] }
+			else { return false } 
+		}
+	},
+
+	dump : function (model, options) {
+		if (!options) { options = {} }
+
+		var deferred = q.defer();
+
+		var table = model;
+		var primary = 'id';
+		
+		var N = options.N;
+		var id = options.id;
+		var ids = options.ids;
+		var iterate = options.iterate;
+
+		if (iterate >10) { 
+			iterate = 0;
+			console.log("Killing iteration after 10 generations... possible circular logic");
+		}
+
+		var Mod;
+
+		if (sails && sails.models && sails.models[model]) {
+			Mod = sails.models[model]; 
+			table = Mod.tableName || model;
+			primary = Mod.primaryField || 'id';
+			console.log('reset to ' + table + '.' + primary);
+		}
+		else {
+			console.log(model + ' not official model... ignoring ' + table);
+			deferred.resolve({});
+		}
+
+		var query = "SELECT * FROM " + table;
+
+		if (id) { query = query + " WHERE " + primary + " >= " + id }
+		else if (ids) { query = query + " WHERE " + primary + ' IN (' + ids.join(',') + ')' }
+		
+		if (N) { query = query + " LIMIT " + N }
+
+		console.log("dump query: " + query);
+		console.log("iterating through reference records ?: " + iterate);
+
+		Record.query_promise(query)
+		.then ( function (result) {
+			console.log("R: " + JSON.stringify(result));
+			
+			var fields = [];
+			var Referenced = {};
+			var isReference = {};
+			if (result.length) {
+				fields = Object.keys(result[0]);
+				for (var j=0; j<fields.length; j++) {
+					// console.log('check for reference from ' + table + '.' + fields[j]);
+					var refTable = Record.isReference(model, fields[j]);
+					if (refTable) { 
+						Referenced[refTable] = [];
+						isReference[fields[j]] = refTable;
+					}
+				}
+			}
+
+			for (var i=0; i<result.length; i++) {
+				for (var j=0; j<fields.length; j++) {
+					if ( isReference[fields[j]] ) {
+						var refid = result[i][fields[j]];
+						if (refid) {
+							Referenced[isReference[fields[j]]].push(refid);
+						}
+					}	
+				}
+			}
+
+			console.log('ref tables: ' + JSON.stringify(isReference));
+			console.log("Referenced: " + JSON.stringify(Referenced));
+
+			var refs = Object.keys(Referenced);
+
+			var primaryResult = {};
+			primaryResult[model] = result;
+
+			var list = primaryResult;
+
+			console.log("retrieved results for " + model);
+			console.log(JSON.stringify(list));
+
+			var promises = [];
+			for (var i=0; i< refs.length; i++) {
+				if (Referenced[refs[i]].length) {
+					console.log("append " + refs[i] + ': ' + Referenced[refs[i]]);
+					promises.push(Record.dump(refs[i].toLowerCase(), {ids: Referenced[refs[i]], iterate: iterate+1}));
+				}
+			}
+
+			console.log('executing ' + promises.length + ' Promises...');
+
+			q.all(promises)
+			.then ( function (results) {
+				if (results.length) {
+					console.log('*** subresults: ' + JSON.stringify(results));
+					for (var i=0; i<results.length; i++) {
+						var models = Object.keys(results[i]);
+						console.log("add models : " + models.join(','));
+						for (var j=0; j<models.length; j++) {
+							if ( ! list[models[j]] ) { list[models[j]] = [] }
+							console.log("Add each of : " + JSON.stringify(results[i][models[j]]));
+							for (var k=0; k<results[i][models[j]].length; k++) {
+								list[models[j]].push(results[i][models[j]][k]);
+							}
+						}
+					}
+				}
+				else { console.log('no secondary results for ' + model) }
+
+				deferred.resolve(list);
+			})
+			.catch (function (err) {
+				console.log("Error generating results for " + model);
+				deferred.reject(err);
+			});
+
+		})
+		.catch ( function (err) {
+			console.log("Error with primary query for " + model);
+			console.log(err);
+			deferred.reject(err);
+		});
+
+		return deferred.promise;
+	},
+
 	get_fields : function (table) {		
 		var deferred = q.defer();
 		var model = table;
@@ -690,7 +838,7 @@ module.exports = {
 		console.log("set values...");
 		if (data && table && idField) {
 			var fields = Object.keys(data);
-			var Set = [];
+			var Set1 = [];
 			for (var i=0; i<fields.length; i++) {
 				var setval = data[fields[i]];
 
@@ -708,7 +856,7 @@ module.exports = {
 					}
 					else if (setval.length == 1) {
 						var setVal = Record.parseValue(setval[0], { model : model });
-						Set.push(fields[i] + " = " + setVal );						
+						Set1.push(fields[i] + " = " + setVal );						
 					}
 					else {
 						var msg = "Ignored update to " + fields[i] + " (Length of supplied values != length of id list) " + setval.length + ' != ' + ids.length;
@@ -719,7 +867,7 @@ module.exports = {
 					console.log("parse " + setval);
 					var setVal = Record.parseValue(setval, { model : model });
 					console.log("parsed " + setVal);
-					Set.push(fields[i] + " = " + setVal );
+					Set1.push(fields[i] + " = " + setVal );
 				}
 			}
 			console.log('update history .. ');
@@ -728,8 +876,9 @@ module.exports = {
 			.then ( function (History) {
 				console.log("History: " + JSON.stringify(History));
 				var promises = [];
-				if (Set.length) {
-					query = query + " SET " + Set.join(',');
+
+				if (Set1.length) {
+					query = query + " SET " + Set1.join(',');
 					query = query + " WHERE " + condition;
 					console.log("\n** Update: " + query);
 					promises.push( Record.query_promise(query) );
@@ -765,7 +914,7 @@ module.exports = {
 					console.log("finished updates...");
 					console.log(JSON.stringify(results));
 
-					if (Set.length) { setValues = results[0] }
+					if (Set1.length) { setValues = results[0] }
 					if (SetEach.length) { updateValues = results[results.length - 1] }
 
 
@@ -908,7 +1057,15 @@ module.exports = {
 				Barcode.print_Labels(model, ids);
 			}
 
-			deferred.resolve(result);
+			Record.add_meta_records(model, ids)
+			.then ( function (meta) {
+				console.log("checked for meta records for " + model);
+				deferred.resolve(result);
+			})
+			.catch ( function (err) {
+				console.log("Error generating meta records");
+				deferred.reject(err);
+			})
 		})
 		.catch ( function (err) {
 			console.log("Error creating Record in " + table);
@@ -917,6 +1074,69 @@ module.exports = {
 		});
 
 		return deferred.promise;
+	},
+
+	add_meta_records : function (model, ids) {
+	// add meta records if appliable (records with 1-1 relationship with <model> records)  
+	// Usage (model should have attribute: 'metaRecord' of format:
+	//          metaRecord: { 'relatedTableName' : { refField: '<ID>'} }
+	//
+	//   where <ID> is a reference o the original record id in the <model> table.
+	//	
+		var Mod = sails.models[model] || {};
+
+		var deferred = q.defer();
+
+		if (Mod && Mod.metaRecord) {
+			var meta = Mod.metaRecord;
+			var metaTables = Object.keys(meta);
+
+			var promises = [];
+
+			for (var t=0; t<metaTables.length; t++) {
+				var metaTable = metaTables[t];
+				var metaFields = Object.keys(meta[metaTable]);
+
+				var data = [];
+				for (var n=0; n<ids.length; n++) {
+					data.push(_.clone(meta[metaTable]));
+				}
+
+				console.log("Add meta data for records: " + ids.join(','));
+				for (var i=0; i<metaFields.length; i++) {
+					var f = metaFields[i];
+					var v = meta[metaTable][f];
+					if ( v && v.match(/\<ID\>/i) ) {
+						for (var n=0; n<ids.length; n++) {
+							data[n][f] = ids[n];
+						}
+					}
+					else { 
+						console.log(v + ' does not match ID');
+					}
+				}
+				console.log("metadata table appended: " + metaTable);
+				console.log(JSON.stringify(data));
+				promises.push( Record.createNew(metaTable, data) );
+			}
+
+			q.all(promises)
+			.then ( function (metadata) {
+				console.log("Added metadata");
+				deferred.resolve();
+			})
+			.catch ( function (err) {
+				console.log("Error adding meta records");
+				deferred.reject(err);
+			});
+		}
+		else {
+			// console.log('no meta records for ' + model); 
+			deferred.resolve();
+		}
+
+		return deferred.promise;
+
 	},
 
 	uploadData : function (model, headers, data, reference) {
@@ -1319,6 +1539,8 @@ module.exports = {
 			.then (function (results) {
 				var result = results[0];
 				var FK = results[1];
+				var FKT = FK[table];
+
 				console.log("FK: " + JSON.stringify(FK));
 
 				console.log(JSON.stringify(result));
@@ -1326,6 +1548,7 @@ module.exports = {
 					for (var j=0; j<track.length; j++) {
 						var f = track[j];
 						var id = result[i].id;
+						var fk = FKT[f];
 
 						if (! History[table][id] ) { History[table][id] = {} }
 						if (! History[table][id][f] ) { History[table][id][f] = {} }
@@ -1341,8 +1564,13 @@ module.exports = {
 
 							if (key === 'New_Value') {
 								History[table][id][f]['Record_ID'] = id;
-								History[table][id][f]['FK_DBField__ID'] = FK[table][f];
+								History[table][id][f]['FK_DBField__ID'] = fk;
 								History[table][id][f]['Modified_Date'] = '<NOW>';
+								
+								if (sails && sails.config && sails.config.payload) {
+									History[table][id][f]['FK_Employee__ID'] = sails.config.payload.alDenteID;
+								}
+
 								if (f === 'FK_Rack__ID') {
 									var relocate = {};
 									// relocate['class'] = table;
@@ -1406,9 +1634,14 @@ module.exports = {
     			for (var k=0; k<fields.length; k++) {
     				var data = update[fields[k]];
 	    			// data.FK_Employee__ID = sails.config.payload.alDenteID;
-    				// data.FK_DBTable__ID  = FK[tables[i]][fields[k]];
+    				// data.FK_DBField__ID  = FK[tables[i]][fields[k]];
     				// data.Modified_Date   = 'NOW()';
-    				Data.push( data );
+    				if (data.FK_DBField__ID) {
+    					Data.push( data );
+    				}
+    				else {
+    					console.log("Skipping " + tables[i] + '.' + fields[k] + ' (no DBField record found)');
+    				}
     			}
     		}
     	}

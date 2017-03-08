@@ -12,10 +12,10 @@ module.exports = {
 	
 	attributes: {
 
-		name : { type : 'string '},
+		name : { type : 'string'},
 		Lab_protocol : { model : 'lab_protocol' },
 		step_number : { type : 'int' },
-		instructions : { type : 'string'},
+		instructions : { type : 'text'},
 		message : { type : 'string' },
 		Target_format : { model : 'container_format' },
 		Target_sample : { model : 'sample_type' },

@@ -8,6 +8,7 @@
 module.exports = {
 
 	tableName: 'Employee',
+	primaryField: 'Employee_ID',
 	migrate: 'safe',
 /*	
   attributes: {

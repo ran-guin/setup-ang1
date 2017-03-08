@@ -86,7 +86,9 @@ module.exports.routes = {
   'GET /record/edit/:model/:id': 'RecordController.form',
   'POST /record/edit/:model/:id': 'RecordController.update',
   'POST /record/update/:model/:id': 'RecordController.update',
-
+  // limited access ...
+  'GET /record/dump/:model': 'RecordController.record_dump',
+  'POST /record/dump': 'RecordController.record_dump',
 
   'GET /attribute/:model/:attribute' : 'AttributeController.prompt',
 

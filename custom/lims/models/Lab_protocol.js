@@ -20,7 +20,7 @@ module.exports = {
 			'enum' : ['Active','Archived','Under Development', 'External']
 		},
 
-		description : { type : 'string '},
+		description : { type : 'text'},
 
 		Container_format : { model : 'container_format' },
 		Sample_type : { model : 'sample_type'} ,

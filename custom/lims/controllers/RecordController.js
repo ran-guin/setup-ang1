@@ -255,5 +255,43 @@ module.exports = {
 
 	},
 
+	record_dump : function (req, res) {
+		// generate a dump of N existing data records from a seed table, 
+		// automatically including any referenced records from other tables
+		var body = req.body || {};
+		var model = body.model || req.param('model');
+		var N = body.N;
+		var id = body.id || 1;
+		var iterate = body.iterate || 1;
+
+		var t = req.param('model');
+		console.log("model: " + t);
+		
+		console.log('body: ' + JSON.stringify(body));
+
+		Record.dump(model, { id: id, iterate: iterate, N: N })
+		.then ( function (result) {
+			return res.json(result);
+		})
+		.catch (function (err) {
+			return res.json(err);
+		});
+
+	},
+
+	build_FK : function (req, res) {
+
+		Record.build_FK('Plate')
+		.then ( function (result) {
+			console.log("build FK");
+			console.log(JSON.stringify(result));	
+			res.json(result);
+		})
+		.catch ( function (err) {
+			console.log("Error building FK");
+			res.json(err);
+		});
+	}
+
 };
 
