@@ -1142,6 +1142,17 @@ module.exports = {
 	uploadData : function (model, headers, data, reference) {
 
 		var deferred = q.defer();
+		
+		var user;
+		var timestamp = 'CURDATE()';
+
+		if (sails.config && sails.config.payload) {
+			var payload = sails.config.payload;
+			user = payload.userid;
+		}
+		else {
+			deferred.reject('payload with user credentials unavailable');
+		}
 
 		Record.parseMetaFields(model, headers)
 		.then ( function (metaFields) {
@@ -1171,7 +1182,7 @@ module.exports = {
 					var condition;
 					var conditions = [];
 					var include_tables;
-					if (ids.index) {
+					if ('index' in ids) {
 						id = data[row][id_index+1];
 					}
 					else if (reference) {
@@ -1210,7 +1221,7 @@ module.exports = {
 						else if (attributes[header]) {
 							var att_id = attributes[header].id;
 							console.log("set attribute for " + header);
-							update_attributes.push( Attribute.insertHash(model, id, att_id, value) );
+							update_attributes.push( Attribute.insertHash(model, id, att_id, value, user, timestamp) );
 						}
 						else {
 							console.log(header + ' not identified ??');
