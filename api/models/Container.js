@@ -34,6 +34,7 @@ module.exports = {
 		// enable customization of field names if non-standard //
 		var alias = { 
 			'id' : 'Plate_ID',
+			'BCG_id' : 'Plate_ID',
 			'Parent' : 'FKParent_Plate__ID',
 			'qty' : 'Current_Volume',
 			'qty_units' : 'Current_Volume_Units',
