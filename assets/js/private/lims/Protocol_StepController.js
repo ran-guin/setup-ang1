@@ -218,21 +218,22 @@ function protocol_stepController ($scope, $rootScope, $http, $q) {
                 
                 console.log("Index of " + opt + " + " + index + ' or ' + i2);
                 if (index === -1 && i2 === -1) {
-                    $scope.input[i] = $scope.input[i] || {};
+                    // $scope.input[i] = $scope.input[i] || {};
 
                     var name = opt;
-                    if (required) { $scope.input[i].required = true }
+                    // if (required) { $scope.input[i].required = true }
 
-                    $scope.input[i].name = name;
-                    $scope.input[i].selected = true;
-                    $scope.input[i].default = defaults[index];
-                    $scope.input[i].format = formats[index]; 
+                    // $scope.input[i].name = name;
+                    // $scope.input[i].selected = true;
+                    // $scope.input[i].default = defaults[index];
+                    // $scope.input[i].format = formats[index]; 
 
                     var att = { 
                         name : name,
                         default : defaults[index],
                         format : formats[index],
                         selected : true,
+                        required: required,
                     };
 
                     $scope.attributes['container'].push(att);                   
@@ -244,6 +245,7 @@ function protocol_stepController ($scope, $rootScope, $http, $q) {
             }
 
             console.log("INPUT: " + JSON.stringify($scope.input));
+            console.log("Attributes: " + JSON.stringify($scope.attributes));
             console.log("CUSTOM: " + JSON.stringify($scope.custom));
             console.log("format: " + $scope.Target_sample)
         }
@@ -347,6 +349,8 @@ function protocol_stepController ($scope, $rootScope, $http, $q) {
 
         console.log('reset input ...');
         console.log(JSON.stringify($scope.input));
+        console.log(JSON.stringify($scope.attributes));
+
         if (field) {
             if ( $scope.changed[field] !== $scope.Record[field] ) {
                 $scope.changed[field] = $scope.Record[field];
