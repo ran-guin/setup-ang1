@@ -14,6 +14,7 @@ function wellController ($scope, $rootScope, $http, $q ) {
 
         console.log("initialize Well Controller");
         $scope.completed = 0;
+        $scope.distributionStatus = 'Initialized';
         $scope.Config = Config;
 
         var Samples = Config['Samples'] || [];
@@ -68,6 +69,10 @@ function wellController ($scope, $rootScope, $http, $q ) {
 
     $scope.redistribute = function (reset, execute) {
 
+        if (execute) {
+            $scope.distributionStatus = 'Pending';
+        }
+
         var target_boxes = [];
         if ($scope.map.target_rack) {
             var regex = RegExp($scope.Prefix('location'),'i');
@@ -113,11 +118,12 @@ function wellController ($scope, $rootScope, $http, $q ) {
                 console.log('invalidate form');
                 $scope.form_validated = false;
             }
+
             if (execute) { $scope.execute_transfer() }
         })
         .catch ( function (err) {
+            if (execute) { $scope.distributionStatus = 'Failed' }
             console.log("Error redistributing samples");
-
         });
 
         console.log('validate');
@@ -151,7 +157,7 @@ function wellController ($scope, $rootScope, $http, $q ) {
         if (qs.length > 1 && $scope.map.splitX > 1) {
             if (qs.length !== $scope.map.splitX) {
                 $scope.form_validated = false;
-                $scope.error("multiple transfer volumes must match split count");
+                $scope.error("multiple transfer volumes (" + qs.length + ") must match split count: " + $scope.map.splitX);
             }
         }
 
@@ -276,17 +282,23 @@ function wellController ($scope, $rootScope, $http, $q ) {
 
             if ( returnData.data && returnData.data.plate_ids) {
                 $scope.message("Transferred " + returnData.data.plate_ids.length + " Samples");
+                
                 $scope.completed = 1;
+                $scope.distributionStatus = 'Complete';
             }
             else {
+                $scope.distributionStatus = 'Warning';
                 $scope.warning("Could not retrieve target Samples (?)");
             }
+
             console.log("Reload active sample data...");
             $scope.reload_active_Samples($scope.active.Samples);
             $scope.set_defaults();
             // $scope.redistribute();
         })
         .catch (function (err) {
+            $scope.distributionStatus = 'Failed';
+
             console.log("Error posting transfer: " + err);
             $scope.feedback = 'error detected...';
             $scope.errorMsg = "Error detected during Transfer !";

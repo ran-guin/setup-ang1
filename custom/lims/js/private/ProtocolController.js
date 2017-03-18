@@ -151,26 +151,36 @@ function protocolController ($scope, $rootScope, $http, $q) {
     $scope.validate_Samples = function (Samples) {
         var empty_samples = 0;
         var missing_units = 0;
+        var unslotted = false;
 
         console.log("Check Sample Status for " + Samples.length + ' Samples');
         for (var i=0; i<Samples.length; i++) {
             if (Samples[i].last_step !== $scope.active.last_step.name) {
                 $scope.warning("Samples at different stages of pipeline..");
             }
+
             if (!Samples[i].qty) {
                 empty_samples++;
             }
+            
             console.log( i + " S: " + Samples[i].qty + Samples[i].qty_units);
             if (Samples[i].qty && !Samples[i].qty_units) {
                 missing_units++;
             }
+
+            if ( ! Samples[i].position ) {
+                unslotted = true;
+            }
         }    
 
         if (empty_samples) {
-            $scope.warning("samples with no volume included");
+            $scope.warning("Sample(s) with no volume included");
         }
         if (missing_units) {
-            $scope.error("Samples with missing volume units");
+            $scope.error("Sample(s) with missing volume units");
+        }
+        if (unslotted) {
+            $scope.error("Found Sample(s) without specified slot position(s)");
         }
 
         console.log(missing_units + " OR (messages) " + empty_samples);
@@ -366,7 +376,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
             var url = "/Lab_protocol/complete-step";
             console.log("Call url: " + url);
 
-            console.log(JSON.stringify(result));
+            // console.log(JSON.stringify(result));
             if (promises.length) { 
                 data['Transfer_Options'] = $scope.map.Options;
 
@@ -387,7 +397,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
             console.log("\n** POST: " + JSON.stringify(data));
             $http.post(url, data)
             .then ( function (returnVal) {
-                console.log("Returned: " + JSON.stringify(returnVal));
+                // console.log("Returned: " + JSON.stringify(returnVal));
 
                 var completeResult = $scope.parse_messages(returnVal.data);
 
@@ -465,8 +475,6 @@ function protocolController ($scope, $rootScope, $http, $q) {
         console.log("Parse INPUT DATA");
         console.log(JSON.stringify(input));
 
-
-
         var recordData = [];
         for (var n=0; n<N; n++) {
             recordData[n] = {};
@@ -490,7 +498,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
                 }
 
                 var prefix = $scope.Prefix(fld);
-                console.log(fld + " V0: " + value);
+                console.log(fld + " V= " + value);
                 if (value && value.constructor === Object && value.id) {
                     value = value.id;
                     console.log("Converted dropdown object to id " + value);
@@ -746,7 +754,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
                 $scope.invalidate_form = false;
             }
 
-            console.log("\n*** Distribution Map: " + JSON.stringify(Map));
+            // console.log("\n*** Distribution Map: " + JSON.stringify(Map));
 
             deferred.resolve(Map);
         })
