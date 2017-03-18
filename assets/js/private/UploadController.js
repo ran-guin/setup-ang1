@@ -304,30 +304,66 @@ function uploadController ($scope, $rootScope, $http, $q) {
 
 		var model = $scope.model || 'container'; // default for now testing.. 
 
-		console.log("\n** Upload Headers" + JSON.stringify($scope.headers));
-		console.log("\n** Upload References" + JSON.stringify($scope.reference));
+		console.log("\n** Upload Headers: " + JSON.stringify($scope.headers));
+		console.log("\n** Upload References: " + JSON.stringify($scope.reference));
 
 		$scope.reset_messages();
 		$http.post('/uploadData', { model: model, headers: $scope.headers, data: data, reference: $scope.reference })
 		.then ( function (result) {
 			console.log("Upload Result " + JSON.stringify(result));
 			if (result.data && result.data.error) {
-				var msg = $scope.parse_standard_error(result.data.error);
-				$scope.error(msg);
+				$scope.parse_standard_error(result.data.error);
+				// $scope.error(msg[0]);
 			}
 			else {
 				if (result.data && result.data.length) {
 					var count = 0;
 					var total_changed = 0;
 					for (var i=0; i<result.data.length; i++) {
-						count = count + result.data[i].set.affectedRows;
-						var change_message = result.data[i].set.message.match(/Changed: (\d+)/);
+						var messages = [];
+						var more = result.data[i].affectedRows || 0;
 						
-						var changed = parseInt(change_message[1]) || 0;
-						total_changed = total_changed + changed;
+						if (result.data[i].message) {
+							messages.push(result.data[i].message);
+						}
+
+						if (result.data[i].set) { 
+							if (result.data[i].set.affectedRows) {
+								more += result.data[i].set.affectedRows;
+							}
+							if (result.data[i].set.message) {
+								messages.push(result.data[i].set.message);
+							}
+						}
+						if (result.data[i].updated) { 
+							if (result.data[i].updated.affectedRows) {							
+								more += result.data[i].updated.affectedRows;
+							}
+							if (result.data[i].updated.message) {
+								messages.push(result.data[i].updated.message);
+							}
+						}							
+
+						var msg = '' + messages.join('; ');
+						count = count + more;
+
+						var change_message = msg.match(/Changed: (\d+)/);
+						if (change_message && change_message[1]) {
+							// may need to adjust for multiple changed messages (?)
+							var changed = parseInt(change_message[1]) || 0;
+							total_changed = total_changed + changed;
+						}
 					}
-					$scope.message("Updated " + count + " Data Records");
-					$scope.message(total_changed + " Values Changed");
+
+					if (count) {
+						$scope.message("Added/Updated " + count + " Data Record(s)");
+					}
+					if (total_changed) {
+						$scope.message(total_changed + " Values Edited");
+					}
+					if (!count && !total_changed) {
+						$scope.message('No changes detected')
+					}
 				}
 				else { 
 					$scope.warning("No rows affected");

@@ -129,15 +129,34 @@ app.controller('SharedController',
             console.log("Angular Error: " + msg);
         }
 
-        $scope.parse_standard_error = function (message, type) {
+        $scope.parse_standard_error = function (msg, type) {
             // Convert warning / error messages into more readable format
             // (if <match> is included in value, then the regexp of the key will be evaluated and the match replaced in the value string)
             //   eg 'Error creating \\w+' : "<match> - no record created" -> yields "Error creating Employee - no record created" 
             //
+
+            var message = '';
+            if (Object.prototype.toString.call(msg) == '[object String]') {
+                message = msg;
+            }
+            else if  (Object.prototype.toString.call(msg) == '[object Array]') {
+                message = msg.join('; ');
+            }
+            else if (Object.prototype.toString.call(msg) == '[object Object]') {
+                message = msg.Error || msg.error;
+            }
+            else if (!message) {
+            }
+            else {
+                message = 'cannot parse error message';
+                console.log("Warning: not sure how to parse error type:");
+                console.log(Object.prototype.toString.call(msg));
+            }
+
             var errors = [];
             if (message) {
                 var Map = {
-                    "Duplicate entry '[\\w\-]+'" : "<match>",
+                    "Duplicate entry '[\\w\-]+'.*" : "<match>",
                     'Unknown column'  : "Unrecognized column in database (?) - please inform LIMS administrator",
                     "Error saving \\w+" : "<match>",
                 };
@@ -154,12 +173,12 @@ app.controller('SharedController',
 
                     var found = message.match(test);
                     if (found) {
-                        console.log("match found for " + test);
+                        console.log("Match found for " + test);
                         var err = Map[strings[i]].replace('<match>', found);
                         errors.push( err );
                     }
                 }
-                console.log("parssed " + type + " : " + message);
+                console.log("parsed " + type + " : " + message);
             }
             else {
                 console.log("no message");
