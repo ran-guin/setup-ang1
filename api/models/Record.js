@@ -433,7 +433,7 @@ module.exports = {
 				var parsed_error = Record.parse_standard_error(err);
 				console.log("Parsed: " + parsed_error);
 
-				deferred.reject(err);
+				deferred.reject(parsed_error);
 			}
 			else { deferred.resolve(result) }
 		});
@@ -1069,7 +1069,7 @@ module.exports = {
 		})
 		.catch ( function (err) {
 			console.log("Error creating Record in " + table);
-			console.log(JSON.stringify(err));
+			// console.log(JSON.stringify(err));
 			deferred.reject(err); 
 		});
 
@@ -1247,8 +1247,11 @@ module.exports = {
 					deferred.resolve(result);
 				})
 				.catch ( function (err) {
+					var msg = Record.parse_standard_error(err);
+					console.log("Error uploading data: " + msg);
+					console.log(JSON.stringify(err));  // parse_error
 					err.context = 'upload Data';
-					deferred.reject(err);
+					deferred.reject(msg);
 				})
 			}
 			else {
