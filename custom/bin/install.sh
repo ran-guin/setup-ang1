@@ -37,11 +37,19 @@ if [[ "$files" =~ [a-z] ]]
 		exit 1;
 fi
 
+rm -fR ./../views/$PLUGIN;
+cp -R ./views ./../../views/$PLUGIN;
 
-cp -R ./views/$PLUGIN ./../../views/$PLUGIN;
+rm -fR ./../../assets/images/$PLUGIN;
 cp -R ./images ./../../assets/images/$PLUGIN;
+
+rm -fR ./../assets/js/dependencies/$PLUGIN;
 cp -R ./js/dependencies ./../../assets/js/dependencies/$PLUGIN;
+
+rm -fR ./../../assets/js/private/$PLUGIN;
 cp -R ./js/private ./../../assets/js/private/$PLUGIN;
+
+rm -fR ./../../assets/styles/$PLUGIN;
 cp -R ./styles ./../../assets/styles/$PLUGIN;
 
 if [[ $2 =~ \-f ]]
