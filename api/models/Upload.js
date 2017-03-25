@@ -40,43 +40,54 @@ module.exports = {
 
 				if (uploadedFiles[f]) { console.log("ok")}
 				var matrix = uploadedFiles[f].fd
-				console.log("matrix set");
+				console.log("matrix uploaded");
 
 				try {
+					console.log('parse');
 					var obj = xlsx.parse(matrix);
-					var i = page;  // only upload one page at a time for now... 
+					console.log('parsed');
+					var i = page - 1;  // only upload one page at a time for now... 
 
-					console.log("OBJ: " + JSON.stringify(obj));
-					var rows = obj[i].data.length;
-					var cols = obj[i].data[0].length;
+					console.log(i + " OBJ: " + JSON.stringify(obj));
+					if (obj[i] && obj[i].data) {
+						console.log("Data: " + JSON.stringify(obj[i].data) );
 
-					var fields = obj[i].data[0];
-					console.log("Field: " + fields.join(', '));
+						
+						var rows = obj[i].data.length;
+						var cols = obj[i].data[0].length;
 
-					var nullrecords = 0;
-					var empty_limit = 5; // number of empty rows before aborting... 	
-					var records = [];
-					for (j=skip; j<rows; j++) {
-						var record = [];
-						var nullrecord = true;
-						for (k=0; k<cols; k++) {
-							var cell = obj[i].data[j][k];
-							
-							if (cell != null) { 
-								nullrecord = false;
-								console.log(i + ': [' + j + ',' + k + '] = ' + cell );
+						var fields = obj[i].data[0];
+						console.log("Field: " + fields.join(', '));
+
+						var nullrecords = 0;
+						var empty_limit = 5; // number of empty rows before aborting... 	
+						var records = [];
+						for (j=skip; j<rows; j++) {
+							var record = [];
+							var nullrecord = true;
+							for (k=0; k<cols; k++) {
+								var cell = obj[i].data[j][k];
+								
+								if (cell != null) { 
+									nullrecord = false;
+									console.log(i + ': [' + j + ',' + k + '] = ' + cell );
+								}
+								record.push(cell);
 							}
-							record.push(cell);
+
+							if (nullrecord) { nullrecords++ }
+							if (nullrecords > empty_limit) { j= rows.length }
+
+							if (record[0]) { records.push(record) }  // only read records with populated first column ... 
 						}
 
-						if (nullrecord) { nullrecords++ }
-						if (nullrecords > empty_limit) { j= rows.length }
-
-						if (record[0]) { records.push(record) }  // only read records with populated first column ... 
+						console.log("Upload Data: " + JSON.stringify(obj));
+						deferred.resolve(obj);
 					}
-
-					console.log("Upload Data: " + JSON.stringify(obj));
-					deferred.resolve(obj);
+					else {
+						console.log(" No data from page " + i  );
+						deferred.reject("could not find matrix data");
+					}
 				}
 				catch (e) {
 					console.log("ERROR: " + e);
