@@ -105,6 +105,33 @@ function adminController ($scope, $rootScope, $http, $q ) {
 
 	$scope.set_default_name = function () {
 		
+		$scope.reset_messages();
+
+		if ($scope.parent) {
+			var parent = $scope.parent.replace(/^LOC/i,'');
+			var Bnum = "CAST(Mid(Slot.Rack_Name, 2, 2) AS UNSIGNED)";
+			var query  = "SELECT Rack.Rack_Type as type," + Bnum + " AS Bnum FROM Rack LEFT JOIN Rack as Slot ON Slot.FKParent_Rack__ID=Rack.Rack_ID WHERE Rack.Rack_ID = " + parent + " ORDER BY " + Bnum;
+
+			$scope.next_in_line({ query: query, prefix: 'B', name: 'Box', require: { 'type' : 'Rack'}})
+			.then ( function (result) {
+				console.log("Next in line: " + JSON.stringify(result));
+				var N = result;
+				if (N) { 
+					$scope.message = 'Next available box: ' + N.toString()
+					$scope.name = N.toString();
+				}
+				else { $scope.message = 'could not fine next available box' }
+			})
+			.catch( function (err) {
+				console.log(err);
+				console.log("Error retrieving next item in list");
+			});
+		}
+		else { console.log("no parent or name ... skipping autoset") }
+	}
+
+	$scope.old_set_default_name = function () {
+		
 		// $scope.reset_messages();
 		if ($scope.parent) {
 			var parent = $scope.parent.replace(/^LOC/i,'');
