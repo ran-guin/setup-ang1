@@ -79,6 +79,8 @@ module.exports.routes = {
 
   /* Generic Record control options */
 
+  'GET /rebuildFK' : 'RecordController.build_FK',
+
   'GET /record/list/:model' : 'RecordController.list',   
   'POST /record/list' : 'RecordController.list',    
   'GET /record/view/:model/:id' : 'RecordController.view',
