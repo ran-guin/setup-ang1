@@ -47,6 +47,29 @@ app.controller('FancyFormController',
             }
         }
 
+        $scope.form_validated = false;
+        $scope.validated = {};
+
+        $scope.validate_form = function() {
+            var failed = false;
+            var checks = Object.keys($scope.validated);
+
+            console.log(checks.length + " validation checks");
+
+            for (var i=0; i<checks.length; i++) {
+                if ( ! $scope.validated[checks[i]]) {
+                    failed = true;
+                    console.log("Failed " + checks[i] + ' validation');
+                }
+                else {
+                    console.log("Passed " + checks[i] + ' validation');
+                }
+            }
+            if (failed) { $scope.form_validated = false }
+            else { $scope.form_validated = true }
+
+        }
+
         $scope.testUnique = function (element, model, field) {
             console.log("CHECK UNIQUENESS");
             
@@ -77,6 +100,7 @@ app.controller('FancyFormController',
 
         $scope.passwordValidation = /^[a-zA-Z]\w{3,14}$/;
         $scope.confirmedPassword = false;
+
         $scope.compare = function (repeatEntry) {
             console.log("Compared " + repeatEntry + " with " + $scope.password);
             $scope.confirmedPassword = $scope.password == repeatEntry ? true : false;
@@ -364,6 +388,149 @@ app.controller('FancyFormController',
                 $scope.updateLookup(identifier); 
             }
         }
+
+        $scope.next_in_line = function (options) {
+            if (!options) { options = {} }
+
+            var query = options.query;
+
+            var index = options.index;
+            var table = options.table;
+
+            var name = options.name || '';      
+            var counter = options.counter || 'counter';
+            var require = options.require || {};
+            var errMsg  = options.errMsg;
+            var fill    = options.fill;
+            var prefix = options.prefix || '';
+            var repeat = options.repeat || 1;
+
+            var return_list = [];
+
+            var deferred = $q.defer();
+
+            if (!require) { require = {} }
+            required = Object.keys(require);
+
+            if (index && table && !query) {
+                var count = 'CAST(' + index + ' AS UNSIGNED)';
+                query = "SELECT " + count + ' AS ' + counter +  ' FROM ' + table;
+                query = query + ' ORDER BY ' + count;
+                if (!fill) { query = query + ' DESC LIMIT 1'}
+            }
+
+            var rack_alias = 'Loc #';
+
+            var url = "/remoteQuery";
+            console.log(query);
+
+            $http.post(url, { query : query })
+            .then ( function (result) {
+                var N = null;
+                var msg = '';
+                var note = '';
+                
+                if (result.data[0].constructor === String) {
+                    console.log(result.data[0]);
+                    $scope.error("Data querying error - please check with administrator");
+                    deferred.reject(result.data[0])
+                }
+                else {
+ 
+                console.log(JSON.stringify(result));
+
+                    if (result.data && result.data.length) {
+                        var passed = true;
+                        
+                        console.log("test " + required.length);
+
+                        if (require) {
+                            for (i=0; i<required.length; i++) {
+                                var expect = require[required[i]];
+                                var type = result.data[0].type;
+                                if (expect !== type) {
+                                    note   = 'Expecting ' + expect + ' but found ' + type;
+                                    passed = false;
+                                }
+                                console.log('tested ' + type + ' vs ' + expect + ": " + passed);
+                            }
+                        }
+
+                        if (passed) {
+                            if (result.data[0][counter] === null) {
+                                N = 1;
+                                return_list.push(prefix + N);
+
+                                console.log("null found...");
+                            }
+                            else {
+                                var list = _.pluck(result.data,counter);
+                                console.log(result.data.length + " List: " + list.join(','));
+
+                                if (fill) {
+                                    for (var i=1; i<=list.length; i++) {
+                                        if ( list.indexOf(i) === -1 ) {
+                                                console.log(N + " Missing " + i);
+
+                                                N = i;
+                                                return_list.push(prefix + N);
+                                                if (list.length == repeat) {
+                                                    i = result.data.length + 1; 
+                                                }
+                                        }
+                                    }
+                                }
+                                else if (list.length) {
+                                    N = list[list.length-1] + 1;
+                                    return_list.push(prefix + N)
+                                }
+
+                                if ( !N ) { 
+                                    N = list.length || result.data.length
+                                    N++;
+                                    return_list.push(prefix + N)
+                                }
+                            }
+
+                            if (fill && N < list[list.length-1]) {
+                                msg = "Using first available (missing) " + counter + ": '" + prefix + N + "'"; 
+                            }
+                            else { msg = "Next Available " + name + ": '" + prefix + N + "'"}
+
+                            for (var i=return_list.length; i<repeat; i++) {
+                                N++;
+                                return_list.push(prefix + N);
+                            }
+
+                            console.log('List: ' + JSON.stringify(return_list));
+                            $scope.message(msg);                                    
+                            
+                            if (repeat > 1) { deferred.resolve( return_list ) }
+                            else { deferred.resolve( return_list[0] ) }
+                        }
+                        else {
+                            if (errMsg) { $scope.error(errMsg) }
+                            if (note) { $scope.warning(note) }
+
+                            deferred.reject();
+                        }
+                    }
+                    else if (result.data && result.data.length == 0) {
+                        $scope.error("Could not find valid data")
+                        deferred.reject();
+                    }
+                    else { 
+                        $scope.error("Error retrieving data");
+                        deferred.reject();
+                    }
+                }
+            })
+            .catch( function (err) {
+                console.log("Error retrieving data: " + query);
+                deferred.reject(err);
+            });
+            return deferred.promise;
+        }    
 
         $scope.colours = [ { name: 'Red'}, { name:'White'} , {name: 'Blue'}];
         $scope.colour = ''; // {name: 'Blue'};
