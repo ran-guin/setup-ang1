@@ -430,7 +430,7 @@ app.controller('FancyFormController',
                 var msg = '';
                 var note = '';
                 
-                if (result.data[0].constructor === String) {
+                if (result.data && result.data.length && result.data[0].constructor === String) {
                     console.log(result.data[0]);
                     $scope.error("Data querying error - please check with administrator");
                     deferred.reject(result.data[0])
@@ -516,8 +516,12 @@ app.controller('FancyFormController',
                         }
                     }
                     else if (result.data && result.data.length == 0) {
-                        $scope.error("Could not find valid data")
-                        deferred.reject();
+                        $scope.warning("This appears to be the first item of its kind in the database.  (If this is not the case, please consult with an administrator)");
+                        for (var i=return_list.length+1; i<=repeat; i++) {
+                            return_list.push(prefix + i);
+                        }
+
+                        deferred.resolve(return_list);
                     }
                     else { 
                         $scope.error("Error retrieving data");
