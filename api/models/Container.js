@@ -142,7 +142,7 @@ module.exports = {
 				left_joins.push('Rack AS Box ON Rack.FKParent_Rack__ID=Box.Rack_ID');
 				fields.push ("case WHEN Box.Rack_Type='Box' THEN Box.Rack_ID ELSE NULL END as box_id");
 				fields.push ("case WHEN Box.Rack_Type='Box' THEN Box.Capacity ELSE NULL END as box_size");
-				fields.push ("case WHEN Rack.Rack_Type='Slot' THEN Rack.Rack_Name ELSE NULL END as position");
+				fields.push ("Rack.Rack_Name as position");
 			}
 
 			if ( include.match(/attribute/) ) {
@@ -384,6 +384,7 @@ module.exports = {
 		}
 		else if (Options.transfer_type === 'Transfer' ) {
 			resetSource['Plate_Status'] = 'Thrown Out';
+			// set location to garbage below (since it requires promise)
 		}
 
 		var qtyField = Container.alias('qty');
@@ -447,9 +448,24 @@ module.exports = {
 		}
 
 		var reset = { target: resetTarget, clone: resetClone, source: resetSource}
-		deferred.resolve(reset);
-
 		console.log('Reset:  ' + JSON.stringify(reset));
+
+		if (Options.transfer_type === 'Transfer' ) {
+			Rack.garbage()
+			.then (function (id) {
+				resetSource['FK_Rack__ID'] = id;
+				deferred.resolve(reset);
+			})
+			.catch ( function (err) {
+				console.log('Error retrieving garbage location');
+				deferred.resolve(reset);			
+			});
+		}
+		else {
+			console.log('Reset:  ' + JSON.stringify(reset));
+			deferred.resolve(reset);
+		}
+
 		return deferred.promise;
 	},
 
