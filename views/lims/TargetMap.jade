@@ -50,7 +50,7 @@ div(ng-if="targetMapStatus!='Pending'")
 								- bg=lightbg;
 							- var well = row + col;
 
-							td(style='padding: 1px' ng-show="Map.columns.indexOf(#{col}) >= 0")
+							td(class='wellmap' ng-show="Map.columns.indexOf(#{col}) >= 0")
 								div(ng-if="batch['#{row}#{col}'] && Map.Transfer[batch['#{row}#{col}']['target_index']]")
 									a(href='#' onclick='return false' data-toggle='tooltip' title="{{ Map.Transfer[batch['#{row}#{col}']['target_index']]['qty'] }}  {{ Map.Transfer[batch['#{row}#{col}']['target_index']]['qty_units'] }} from #{{ Map.Transfer[batch['#{row}#{col}']['target_index']]['source_id'] }}" style='color:#{bg}') 
 										div.wellmap( style="background-color:{{ batch['#{row}#{col}']['colour_code'] }}")
