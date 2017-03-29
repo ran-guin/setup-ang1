@@ -58,7 +58,19 @@ module.exports = {
   },
 
   garbage : function () {
-    return 1; 
+    Record.query_promise("Select Rack_ID from Rack where Rack_Name = 'Garbage'" )
+    .then (function (result) {
+      if (result.length == 1) {
+        return result[0].Rack_ID;
+      }
+      else {
+        return null;
+      }
+      
+    })
+    .catch ( function (err) {
+      return null;
+    })
   },
 
   addSlottedBox : function addSlottedBox (parent, name, size) {
