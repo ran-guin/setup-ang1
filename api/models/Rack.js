@@ -58,19 +58,24 @@ module.exports = {
   },
 
   garbage : function () {
+
+    var deferred = q.defer();
+
     Record.query_promise("Select Rack_ID from Rack where Rack_Name = 'Garbage'" )
     .then (function (result) {
       if (result.length == 1) {
-        return result[0].Rack_ID;
+        deferred.resolve(result[0].Rack_ID);
       }
       else {
-        return null;
+        deferred.resolve(null);
       }
       
     })
     .catch ( function (err) {
-      return null;
-    })
+      deferred.reject(err);
+    });
+
+    return deferred.promise;
   },
 
   addSlottedBox : function addSlottedBox (parent, name, size) {
