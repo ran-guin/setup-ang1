@@ -1,6 +1,0 @@
-export PLUGIN='lims'
-cp -R ./views ../views/$PLUGIN;
-cp -R ./images ../assets/images/$PLUGIN;
-cp -Ri ./models/*.js ../api/models/;
-cp -Ri ./controllers/*.js ../api/controllers/;
- 

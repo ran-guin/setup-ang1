@@ -1,4 +1,0 @@
-export PLUGIN='lims'
-rm -fR ../views/$PLUGIN/*.js;
-rm -fR /assets/images/$PLUGIN;
- 
