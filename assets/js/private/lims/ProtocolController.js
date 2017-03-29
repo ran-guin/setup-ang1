@@ -168,7 +168,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
                 missing_units++;
             }
 
-            if ( ! Samples[i].position ) {
+            if ( ! Samples[i].box_id) {
                 unslotted = true;
             }
         }    
