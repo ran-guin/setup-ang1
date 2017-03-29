@@ -28,3 +28,7 @@ div.grow-header {
     background: rgba(255, 255, 255, 0.89) url(/images/lims/BCG-transparent.png) no-repeat 42% bottom; 
     padding: 5px;
 }
+
+.section-block {
+    padding: 2px;
+}
