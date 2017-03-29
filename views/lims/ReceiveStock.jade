@@ -112,7 +112,7 @@ block content
                   div.col-md-4
                     button.btn.btn-lg.btn-success(type='reset') Reset Form
                 hr
-                div(ng-show="type && type !== 'Reagent'")
+                div(ng-show="type && type !== 'Reagent' && type !=='Equipment'")
                   div.alert.alert-danger
                     b  Receipt of {{ type }} Stock types have not yet been set up
             
@@ -120,7 +120,7 @@ block content
               button.btn.btn-primary.btn-xs(type='button' ng-show="!injectedAlready('rcvdStock')" ng-click="injectData('/Stock/received?render=1','rcvdStock')") Previously Received Stock
  
               hr
-              div(ng-show="type && type !== 'Reagent'")
+              div(ng-show="type && type !== 'Reagent' && type !=='Equipment'")
                 div.alert.alert-danger
                   b  Receipt of {{ type }} Stock types have not yet been set up
                   
