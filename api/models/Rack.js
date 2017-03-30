@@ -120,7 +120,7 @@ module.exports = {
               var box = boxResult.insertId;
               var slots = slotResult.affectedRows;
               
-              var msg = "Added Box #" + box + " with " + slots + ' Slots'
+              var msg = "Added Box [#" + box + "] with " + slots + ' Slots'
               deferred.resolve({box: boxResult, slots: slotResult, message: msg});
             })
             .catch (function (err) {
