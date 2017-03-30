@@ -165,6 +165,7 @@ module.exports = {
 						console.log("Found " + rows + ' x ' + cols + ' matrix');
 						var map = {};
 						var applied = 0;
+						var empty = 0;
 
 						new_codes = [];
 						for (var i=0; i<rows; i++) {
@@ -175,20 +176,29 @@ module.exports = {
 								posn = posn + j.toString();
 
 								map[posn] = obj[f].data[i][j-1];
+
+								if ( map[posn].match(/(EMPTY|No Tube)/i) ) { empty++ }
+								console.log("MAP " + map[posn]);
+
 								applied = applied + 1;
 								new_codes.push( map[posn] );
 							}
 
 						}
 
-						if (applied > Samples.length) {
-							warnings.push(applied + " Matrix tubes expected, but only " + Samples.length + " current Samples found");
+						if (applied > Samples.length + empty) {
+							var expected = applied - empty;
+							warnings.push(expected + " Matrix tubes expected, but only " + Samples.length + " current Samples found");
 						}
-						else if (Samples.length > applied) {
+						else if (Samples.length + empty > applied) {
 							warnings.push(Samples.length + " active Samples, but data supplied for " + applied);
 						}
 
 						console.log(Samples.length + ' Sample(s) found');
+						if (empty) { 
+							console.log(empty + ' marked as empty');
+							warnings.push(empty + ' Empty wells identified (okay)');
+						}
 						
 						// First check for conflicts (matrix barcode already set to another sample )
 						var query = "SELECT FK_Plate__ID as id, Attribute_Value as barcode from Plate_Attribute where FK_Attribute__ID = " + MatrixAttribute_ID;
@@ -216,27 +226,27 @@ module.exports = {
 										if (barcoded_index >= 0) {
 											if (barcoded_values[barcoded_index] === mapped) {
 												console.log("Already mapped... ignoring");
-												warnings.push('BCG#' + barcoded_ids[barcoded_index] + ' already defined as: ' + mapped + ' (okay ... skipping)');
+												warnings.push(position + ': BCG#' + barcoded_ids[barcoded_index] + ' already defined as: ' + mapped + ' (okay ... skipping)');
 											}
 											else {
-												errors.push('BCG#' + barcoded_ids[barcoded_index] + ': ' + barcoded_values[barcoded_index] + ' (in DB) != ' + mapped + ' (in file) ... skipping');
+												errors.push(position + ': BCG#' + barcoded_ids[barcoded_index] + " conflict: '" + barcoded_values[barcoded_index] + "' (in DB) != '" + mapped + "' (in file) ... aborting");
 											}
 										}
 										else if ( exists[mapped] ) {
 											if (exists[mapped] === id) {
-												messages.push("Barcode already defined for " + id + " as: " + mapped);
+												messages.push(position + ": Barcode already defined for " + id + " as: " + mapped);
 											}
 											else {
-												errors.push(mapped + " is already assigned to another sample ! [BCG" + exists[mapped] + "] - please investigate !");
+												errors.push(position + ': ' + mapped + " is already assigned to another sample ! [BCG" + exists[mapped] + "] - please investigate !");
 											}
 										}
 										else {
-											messages.push("Set matrix barcode for BCG# " + id + ": " + mapped);
+											messages.push(position + ": Set matrix barcode for BCG# " + id + ": " + mapped);
 											data.push([id, mapped]);
 										}
 									}
 									else {
-										warnings.push("Nothing mapped to " + position);
+										warnings.push(position + ": Nothing mapped");
 									}
 								}
 								else {
@@ -247,24 +257,29 @@ module.exports = {
 							console.log("upload " + JSON.stringify(data));
 
 							sails.config.warnings = warnings;
-							// sails.config.errors = errors;
-							sails.config.messages = messages;
 
 							if (errors.length || (! force && warnings.length)) {
+								// sails.config.errors = errors;
 								console.log("Errors: " + JSON.stringify(errors));
-								errors.push("Aborting due to errors");
 								
-								var e = new Errors('Errors detected');
+								var e = new Error(errors[errors.length-1]);
 								e.context = 'uploadMatrix';
+
 								deferred.reject(e);
 							}
 							else {
+								sails.config.messages = messages; // only show on success... 
+
 								console.log("Map: " + JSON.stringify(map));
 								console.log("Matrix Data: " + JSON.stringify(data));
 
 								var attribute = MatrixAttribute_ID;
 
 								if (data.length) {
+									console.log("upload data: ");
+									console.log(JSON.stringify(attribute));
+									console.log(JSON.stringify(data));
+
 									Attribute.uploadAttributes('Plate', attribute, data)
 									.then ( function (result) {
 										console.log("Response: " + JSON.stringify(result));
@@ -281,6 +296,7 @@ module.exports = {
 								}
 								else {
 									warnings.push("nothing to update");
+									deferred.resolve();
 								}
 							}	
 						})
