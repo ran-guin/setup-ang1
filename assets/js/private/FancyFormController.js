@@ -390,6 +390,7 @@ app.controller('FancyFormController',
         }
 
         $scope.next_in_line = function (options) {
+            // supply either query or table, counter, 
             if (!options) { options = {} }
 
             var query = options.query;
