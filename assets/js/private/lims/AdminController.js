@@ -110,22 +110,16 @@ function adminController ($scope, $rootScope, $http, $q ) {
 		if ($scope.parent) {
 			var parent = $scope.parent.replace(/^LOC/i,'');
 			var Bnum = "CAST(Mid(Slot.Rack_Name, 2, 2) AS UNSIGNED)";
-			var query  = "SELECT Rack.Rack_Type as type," + Bnum + " AS Bnum FROM Rack LEFT JOIN Rack as Slot ON Slot.FKParent_Rack__ID=Rack.Rack_ID WHERE Rack.Rack_ID = " + parent + " ORDER BY " + Bnum;
-
-			$scope.next_in_line({ query: query, prefix: 'B', name: 'Box', require: { 'type' : 'Rack'}})
+			var query  = "SELECT Rack.Rack_Type as type," + Bnum + " AS Bnum FROM Rack LEFT JOIN Rack as Slot ON Slot.FKParent_Rack__ID=Rack.Rack_ID WHERE Rack.Rack_ID = " + parent + " ORDER BY " + Bnum;			
+			var require = { 'Rack_Type' : 'Rack' }
+			
+			$scope.next_in_line({ query: query, counter: 'Bnum', fill: true, prefix: 'B', require: require} )
 			.then ( function (result) {
-				console.log("Next in line: " + JSON.stringify(result));
-				var N = result;
-				if (N) { 
-					$scope.message = 'Next available box: ' + N.toString()
-					$scope.name = N.toString();
-				}
-				else { $scope.message = 'could not fine next available box' }
+				$scope.name = result;
 			})
-			.catch( function (err) {
-				console.log(err);
-				console.log("Error retrieving next item in list");
-			});
+			.catch ( function (err) {
+				console.log("Problem retrieving next in line");
+			})
 		}
 		else { console.log("no parent or name ... skipping autoset") }
 	}
