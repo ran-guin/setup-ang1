@@ -45,6 +45,8 @@ function wellMapper() {
     this.missing_boxes = 0;       // 
     this.missing_wells = 0;
 
+    this.significant_digits = 5;
+
     this.colourMap = function (length, options) {
 
         if (!options) { options = {} }
@@ -1094,8 +1096,10 @@ function wellMapper() {
             }  
             else if (current_volume >= max) { 
                 // OKAY - no adjustment req'd  
-                this.sample_remaining[source.id] = current_volume - max; 
-                console.log(source.id + ":  Remaining volume: " + current_volume + ' - ' + max + ' = ' + this.sample_remaining[source.id]);
+                var remaining = current_volume - max; 
+                this.sample_remaining[source.id] = parseFloat(remaining.toPrecision(this.significant_digits));
+
+                console.log(source.id + ":  Remaining volume: " + this.significant_digits + ' : ' + current_volume + ' - ' + max + ' = ' + this.sample_remaining[source.id]);
                 return max;
             }
             else { 
