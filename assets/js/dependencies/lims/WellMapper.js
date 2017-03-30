@@ -605,9 +605,11 @@ function wellMapper() {
             for (var h=0; h<splitX; h++) { 
                                         
                 // account for partially empty batches at back end... 
-                var skip = batches[0].length - batch.length;
+                var skip = pack_size - batch.length;
                 var position_in_batch = 1;
-                
+
+                console.log("SKIP" + skip );
+
                 for (l=0; l<batch.length; l++, count++) {
                     var i = batch[l];
                     
@@ -749,15 +751,21 @@ function wellMapper() {
 
                         // skip partially used portion of batches
                         // (list of available wells would use empty batch targets before splits)
+                        console.log("NOW SKIP ? " + skip + ': ' + position_in_batch + ' >= ' + batch.length + '?');
+
                         if (skip && ( position_in_batch >= batch.length )) {
+
                             // if this is the first empty target well in the batch
-                            while ( position_in_batch < batches[0].length ) {
+                            var skip_counter = skip;
+                            while ( skip_counter ) {  // } position_in_batch < batches[0].length ) {
                                 position_in_batch++;     // empty target index within batch
                                 target_index++;   // target index within box
                                 target++;         // absolute target count
+                                skip_counter--;
 
-                                next = this.next_available(batch_index, target_index, skip, l);
+                                next = this.next_available(batch_index, target_index);
                             }
+                            console.log("Skipped ahead to " + JSON.stringify(next));
                         }
                         else {
                             position_in_batch++;
