@@ -1428,7 +1428,7 @@ module.exports = {
 			else if (value.match(/^<.*>$/)) {
 				value = value.replace(/^</,'');
 				value = value.replace(/>$/,'');
-				if (debug) { console.log("SQL statement detected: " + value) }
+				console.log("SQL statement value detected: " + value);
 				noQuote = 1;
 			}
 
@@ -1455,7 +1455,7 @@ module.exports = {
 		}
 		else {
 			// leave booleans unquoted... //
-			if (value.constructor == Boolean)  
+			if (value.constructor == Boolean) {  
 
 			}
 			else {
