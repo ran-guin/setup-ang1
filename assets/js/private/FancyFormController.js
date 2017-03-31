@@ -405,6 +405,7 @@ app.controller('FancyFormController',
             var fill    = options.fill;
             var prefix = options.prefix || '';
             var repeat = options.repeat || 1;
+            var condition = options.condition;
 
             var return_list = [];
 
@@ -416,6 +417,9 @@ app.controller('FancyFormController',
             if (index && table && !query) {
                 var count = 'CAST(' + index + ' AS UNSIGNED)';
                 query = "SELECT " + count + ' AS ' + counter +  ' FROM ' + table;
+
+                if (condition) { query = query + ' WHERE ' + condition }
+ 
                 query = query + ' ORDER BY ' + count;
                 if (!fill) { query = query + ' DESC LIMIT 1'}
             }
