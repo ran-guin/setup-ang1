@@ -9,6 +9,8 @@ var q = require('q');
 var fs = require('fs');
 var _ = require('underscore-node');
 
+var significant_digits = 4;
+
 module.exports = {
 
 	attributes: {
@@ -1369,7 +1371,12 @@ module.exports = {
 
 		var noQuote = 0;
 
-		if (typeof value == 'number') { value = value.toString() }
+		if (typeof value == 'number') { 
+			// round to 4 significant digits to avoid saving infinitesimal floating point variations
+			// var round_value = value.toPrecision(significant_digits); 
+			// console.log("Round " + value + ' to ' + round_value);
+			// value = round_value.toString();
+		}
 
 		var onDuplicate;
 		
@@ -1447,7 +1454,13 @@ module.exports = {
 			return value;
 		}
 		else {
-			return "\"" + value + "\"";
+			// leave booleans unquoted... //
+			if (value.constructor == Boolean)  
+
+			}
+			else {
+				return "\"" + value + "\"";
+			}
 		}
 	},
 
