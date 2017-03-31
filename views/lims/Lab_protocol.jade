@@ -9,6 +9,8 @@ block content
   
     hr 
 
+    - max_step = 1;
+
     h3 Protocol Steps:
     ul
       each step,i in Steps
@@ -16,10 +18,18 @@ block content
         - id   = step.id;
         - num = step.step_number
         - message = step.message;
-        
+    
+        if num > max_step
+            - max_step = num;
+
         li 
           a(href="/protocol_step/edit/#{id}") #{num} - #{name} 
-            i [ #{message} ]
+            i [ #{message} ] &nbsp; &nbsp;
 
+          a(href="/Lab_protocol/addStep/#{Steps[0].Lab_protocol}/#{num}") 
+            button.btn.btn-default Insert Step 
+    hr
+
+    a(href="/Lab_protocol/addStep/#{Steps[0].Lab_protocol}/#{max_step}") Add Step
 
       
