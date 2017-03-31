@@ -423,7 +423,9 @@ module.exports = {
 					adjustments.push(0);
 				}
 				else {	
-					adjustments.push("<" + qtyField + " - " + Transfer[i].qty + ">");		
+					adjustments.push("<" + qtyField + " - " + Transfer[i].qty + ">");
+					console.log("Adjust qty: " + qtyField + ' - ' + Transfer[i].qty);
+					console.log(' = ' + qtyField - Transfer[i].qty);	
 				}
 			}
 			resetTarget[qtyField] = quantities;
