@@ -175,6 +175,9 @@ module.exports.routes = {
   'POST /protocol_step/update'  : 'Lab_protocolController.update_step',
   'POST /lab_protocol/update'  : 'Lab_protocolController.update',
 
+  'GET /Lab_protocol/addStep/:id/:step'    : 'Custom_APIController.add_step',
+
+
   // Demo Pages 
   'GET /demo/test': 'DemoController.test',
   'GET /demo/patient': 'DemoController.patient',
