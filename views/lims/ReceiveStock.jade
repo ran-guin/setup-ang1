@@ -75,11 +75,6 @@ block content
                     div.col-md-6
                       input-lg.form-control.my-datepicker#expiry(type="text" ng-model="expiry")
 
-                  div.form-group.input-lg
-                    label.col-md-2.control-label(for='notes') Notes:
-                    div.col-md-10
-                      input.input-lg.form-control#notes(type='text' ng-model='notes' placeholder='Notes')
-
                 div(ng-show="type === 'Equipment'")
                   p &nbsp;
 
@@ -96,11 +91,11 @@ block content
 
                   // my-dropdown#catalog(placeholder="Loation" list="MenuList['catalog']" selected="catalog" property="name" ng-init="setup_Menu('location')")
 
-                  div.form-group.input-lg
-                    label.col-md-2.control-label(for='notes') Comments: 
-                    div.col-md-10
-                      input.input-lg#notes(type='text' ng-model='comments' placeholder='Comments ')
-    
+                div.form-group.input-lg
+                  label.col-md-2.control-label(for='notes') Notes:
+                  div.col-md-10
+                    input.input-lg.form-control#notes(type='text' ng-model='notes' placeholder='Notes')
+                      
                 hr
                 div.form-group.input-lg 
                   div.col-md-offset-2.col-md-10
