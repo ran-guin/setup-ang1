@@ -1443,6 +1443,11 @@ module.exports = {
 			noQuote=1;
 		}
 
+		if (value === undefined) {
+			value = null;
+			console.log('switched undef to null');
+		}
+
 
 		if (value === null && defaultTo) {
 			return defaultTo;
@@ -1456,7 +1461,8 @@ module.exports = {
 		else {
 			// leave booleans unquoted... //
 			if (value.constructor == Boolean) {  
-
+				console.log('pass boolean: ' + value);
+				return value;
 			}
 			else {
 				return "\"" + value + "\"";
