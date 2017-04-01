@@ -60,7 +60,11 @@ block content
                 b {{ key }} &nbsp; 
                   i.fa.fa-arrow-right
                   span &nbsp; {{ value }}
+          br
 
+          a(href="/Lab_protocol/view/#{record.Lab_protocol}")
+            button.btn.btn-danger(type='button') Cancel
+          hr
           form.form-horizontal(role='form' width='100%')
             b Basics &nbsp;
             span(ng-show="!edit_basics")
