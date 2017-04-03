@@ -24,8 +24,11 @@ block content
             br 
 
             div(ng-show="MenuList['limsuser'].length")
-              div.alert.alert-warning
-                b {{ MenuList['limsuser'].length }} User(s) Pending activation 
+              div.alert.alert-warning(ng-show='!all_users')
+                b {{ MenuList['limsuser'].length }} User(s) Pending activation
+              div.alert.alert-info(ng-show='all_users')
+                b {{ MenuList['limsuser'].length }} User(s) Found
+
             form.form-horizontal#adminForm(role='form' name='adminForm' enctype='form-data')
               div.form-group
                 label.input-lg.col-sm-2(for='lps') Lab Protocols:
@@ -34,16 +37,31 @@ block content
                     button.btn.btn-primary(type='button') Manage Protocols 
                 div.col-sm-6 &nbsp;
 
-              div.form-group(ng-show="MenuList['limsuser'].length")
-                  label.input-lg.col-sm-2(for='user') Activate Users:
+
+              hr
+              div.form-group()
+                  label.input-lg.col-sm-2(for='user') User Access:
+
                   div.col-sm-4#user
-                    my-dropdown(placeholder='Select User' list="MenuList['limsuser']" selected='limsuser' ng-init="setup_Menu('limsuser', 'FK(user)', \"status='pending'\")" property='name') 
-                  div.col-sm-2
-                    button.btn-lg.btn-primary(type='button' ng-click="activate_user()") Activate User
-                  div.col-sm-4
-                    input.input-lg#admin(type='checkbox' ng-model='make_admin')
-                    label.input-lg(for='admin') make admin
-              div(ng-show="! MenuList['limsuser'].length")
-                div.col-sm-offset-2
-                  b (no pending users to activate)  
+                    input(type='radio' ng-click="all_users=1; setup_Menu('limsuser', 'FK(user)')")
+                    span &nbsp; Control access for existing users
+                    br
+                    div(ng-show="! MenuList['limsuser'].length")
+                      b (no pending users to activate)  
+                    div(ng-show="MenuList['limsuser'].length")
+                      my-dropdown(placeholder='Select User' list="MenuList['limsuser']" selected='limsuser' ng-init="setup_Menu('limsuser', 'FK(user)', \"status='pending'\")" property='name') 
+                  div.col-sm-2(ng-show="MenuList['limsuser'].length")
+                    button.btn-lg.btn-primary(type='button' ng-click="activate_user()") Update Access
+                  div.col-sm-4(ng-show="MenuList['limsuser'].length")
+                    input#admin(type='radio' name='status' value='lab' checked=1 ng-model='access')
+                    label(for='admin') &nbsp; Lab
+                    br                    
+                    input#admin(type='radio' name='status' value='admin' ng-model='access')
+                    label(for='admin') &nbsp; Admin
+                    br
+                    input#labadmin(type='radio' name='status' value='lab admin' ng-model='access')
+                    label(for='labadmin') &nbsp; Lab Admin
+                    br
+                    input#labadmin(type='radio' name='status' value='deactivate' ng-model='access')
+                    label(for='labadmin') &nbsp; De-activate user
 
