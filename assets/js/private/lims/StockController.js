@@ -207,8 +207,19 @@ function stockController ($scope, $rootScope, $http, $q) {
                 }
             }
             else {
-                $scope.message("Added Stock Record(s)");
-                $scope.injectData('/Stock/received?render=1&limit=1','rcvdStock');
+                var firstId = result.data.insertId;
+                var count = result.data.affectedRows;
+
+                var msg = "Added Stock Record(s) : " + $scope.type + ' # ' + firstId;
+                if (count>1) { 
+                    var lastId = firstId + count - 1;
+                    msg += '..' + lastId;
+                }
+
+                $scope.message(msg);
+                var url = '/Stock/received?render=1&limit=1&type=' + $scope.type;
+                console.log('call ' + url);
+                $scope.injectData(url,'rcvdStock');
             }
 
             // add barcodes in createNew automatically ... 
