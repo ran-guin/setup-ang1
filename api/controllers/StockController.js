@@ -59,7 +59,7 @@ module.exports = {
 			fields.push("GROUP_CONCAT(DISTINCT Equipment_ID SEPARATOR ', ') as ids");
 			fields.push("GROUP_CONCAT(DISTINCT Serial_Number SEPARATOR ', ') as serial");			
 			left_joins.push('Equipment ON Equipment.FK_Stock__ID=Stock_ID');
-			group.push('Stock_Catalog_ID, Stock_ID, Serial_Number');
+			group.push('Stock_Catalog_ID, Stock_ID');
 		}
 
 		var suffix = '';
