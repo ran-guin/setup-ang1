@@ -20,9 +20,9 @@ module.exports = {
   // Note name must exactly match printer_group names in the database...
  
   printer_groups: [
-        '3rd Floor BCG',
-        '7th Floor CG',
         '13th Floor BCG',
+        '13th Floor CCR',
+        '7th Floor CG',
         'Printing Disabled'
   ],
 
