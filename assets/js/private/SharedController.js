@@ -266,7 +266,7 @@ app.controller('SharedController',
                     $scope[element]  = true;
                 })
                 .catch ( function (err) {
-                    err.context('injectData');
+                    err.context = 'injectData';
                     $scope.remoteLog(err, 'warning')
                     console.log("Error getting injection data: " + JSON.stringify(err));
                 });
