@@ -412,7 +412,7 @@ module.exports = {
 
 		if (tables) { query = query + ' FROM (' + tables.join(',') + ')' }
 		
-		if (left_joins) { query = query + ' LEFT JOIN ' + left_joins.join(' LEFT JOIN ') }
+		if (left_joins && left_joins.length) { query = query + ' LEFT JOIN ' + left_joins.join(' LEFT JOIN ') }
 		if (conditions && conditions.length) { query = query + ' WHERE ' + conditions.join(' AND ') }
 
 		if (groupBy && groupBy.length) { query = query + ' GROUP BY ' + groupBy.join(',') }
