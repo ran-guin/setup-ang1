@@ -43,9 +43,18 @@ block content
                   - var Snum = index+1;
              
                     div(ng-show="#{Snum} == step.stepNumber")
-                      - var flds = Step.input_options.split(':');
-                      - var formats = Step.input_format.split(':');
-                      - var defaults = Step.input_defaults.split(':');
+                      - var flds = [];
+                      if (Step.input_options) 
+                        - flds = Step.input_options.split(':')
+
+                      - var formats = [];
+                      if (Step.input_format) 
+                        - formats = Step.input_format.split(':')
+
+                      - var defaults = [];
+                      if (Step.input_defaults) 
+                        - defaults = Step.input_defaults.split(':')
+
                       - var prompted = {};
 
                       div.alert.alert-info(style='opacity:0.9')
@@ -195,7 +204,7 @@ block content
                 br
                 h3 Debugging
 
-                custom: {{ Custom_Options }}
+                b custom: {{ Custom_Options }}
                 hr
                 h5 Step: {{ Step }}
                 hr
