@@ -185,9 +185,14 @@ module.exports = {
       return res.render('customize/private_home', req.session.payload);
     }
     else {
-      var printers = sails.config.printer_groups || Printer_group.printer_groups;
-      console.log("Load Printer Groups " + JSON.stringify(printers));
-      return res.render('customize/public_home', { printers : printers });
+      Printer_group.printer_groups()
+      .then ( function (printers) {
+        console.log("Loaded Printer Groups " + JSON.stringify(printers));
+        return res.render('customize/public_home', { printers : printers });
+      })
+      .catch ( function (err) {
+        return res.render('customize/public_home');
+      });
     }
   },
 
@@ -228,8 +233,6 @@ module.exports = {
           // Create a User with the params sent from
           // the sign-up form --> signup.jade
             console.log("Create user : " + user);
-            var printers = sails.config.printer_groups || Printer_group.printer_groups;
-            console.log("Load Printer groups " + JSON.stringify(printers));
 
             var alDenteID; 
             var get_ID = "SELECT Employee_ID as alDenteID FROM Employee WHERE Email_Address = '" + email + "'";
@@ -256,9 +259,15 @@ module.exports = {
                     // send back an easily parseable status code.
                     if (err.invalidAttributes && err.invalidAttributes.email && err.invalidAttributes.email[0]
                       && err.invalidAttributes.email[0].rule === 'unique') {
-                      
-                      return res.render('customize/public_home', { printers : printers, error : "Email address already in use" });                      
-                      // return res.emailAddressInUse();
+                    
+                        Printer_group.printer_groups()
+                        .then (function (printers) {
+                          return res.render('customize/public_home', { printers : printers, error : "Email address already in use" });                      
+                        })
+                        .catch (function (err) {
+                          return res.render('customize/public_home', { error : "Email address already in use" });                      
+                        })
+                        // return res.emailAddressInUse();
                     }
 
                     // Otherwise, send back something reasonable as our error response.
@@ -368,11 +377,15 @@ module.exports = {
       // Wipe out the session (log out)
       req.session.User = null;
 
-      var printers = sails.config.printer_groups || Printer_group.printer_groups;
-      console.log("Load printer groups " + JSON.stringify(printers));
+      Printer_group.printer_groups()
+      .then (function (result) {
+        return res.render('customize/public_home', { printers : result } );
+      })
+      .catch ( function (err) {
+        return res.render('customize/public_home' );
+      });
 
       // Either send a 200 OK or redirect to the home page
-      return res.render('customize/public_home', { printers : printers } );
 
     // });
   }
