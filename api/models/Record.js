@@ -423,9 +423,15 @@ module.exports = {
 		return query;
 	},
 
-	query_promise: function (query) {
+	query_promise: function (query, opt) {
 		// Wrapper for standard Record.query returning a promise //	
 		var deferred = q.defer();
+
+		if (!opt) { opt = {} }
+
+		if (sails && sails.config && ( sails.config.debug || opt.debug) ) {
+			console.log("SQL query: " + query);
+		}
 
 		Record.query(query, function (err, result) {
 			if (err) { 
@@ -433,11 +439,18 @@ module.exports = {
 				console.log(err);
 
 				var parsed_error = Record.parse_standard_error(err);
-				console.log("Parsed: " + parsed_error);
+				console.log("Parsed error: " + parsed_error);
 
 				deferred.reject(parsed_error);
 			}
-			else { deferred.resolve(result) }
+			else {
+				if (sails && sails.config && sails.config.debug && (result.constructor === Array )) { 
+					var show = JSON.stringify(result[0]);
+					if (result.length > 1) { show = show + '...[' + result.length + ' records]' }
+					console.log('SQL result: ' + show);
+				}
+				deferred.resolve(result)
+			}
 		});
 
 		return deferred.promise;	
