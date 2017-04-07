@@ -6,6 +6,7 @@
 */
 
 var q = require('q');
+var _ = require('underscore-node');
 
 module.exports = {
 
@@ -19,12 +20,31 @@ module.exports = {
   // customize this list, since it is needed prior to connection to the database
   // Note name must exactly match printer_group names in the database...
  
-  printer_groups: [
-        '13th Floor BCG',
-        '13th Floor CCR',
-        '7th Floor CG',
-        'Printing Disabled'
-  ],
+  // printer_groups: function () {
+  //       '13th Floor BCG',
+  //       '13th Floor CCR',
+  //       '7th Floor CG',
+  //       'Printing Disabled'
+  // ],
+
+
+  printer_groups: function () {
+    var deferred = q.defer();
+
+    var query = "SELECT Printer_Group_Name as name from Printer_Group where Printer_Group_Status = 'Active'";
+    
+    Record.query_promise(query)
+    .then (function (result) {
+      var list = _.pluck(result, 'name');
+      deferred.resolve(list);
+    })
+    .catch (function (err){
+      console.log("error trying to retrieve printers: " + err);
+      deferred.resolve([]);
+    });
+
+    return deferred.promise;
+  },
 
   load_printer : function (group, type) {
 
