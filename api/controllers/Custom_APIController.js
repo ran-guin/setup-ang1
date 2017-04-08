@@ -26,7 +26,9 @@ module.exports = {
 		if (protocol && step) {
 			var data = {
 				Lab_protocol: protocol,
-				step_number: step
+				name: 'new step name',
+				step_number: step,
+				prompt: true
 			};
 
 			console.log('create new record: ' + JSON.stringify(data));

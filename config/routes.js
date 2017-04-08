@@ -133,6 +133,10 @@ module.exports.routes = {
 
   'POST /uploadData' : 'Record_APIController.uploadData',
 
+
+  'GET /help/:string' : 'HelpController.find',
+  'POST /help' : 'HelpController.find',
+
   'GET /test' : 'TestController.test',
   /***************************************************************************
   *                                                                          *

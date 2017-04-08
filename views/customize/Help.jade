@@ -1,0 +1,21 @@
+extends privateLayout
+block content
+  - var config = { payload: sails.config.payload };
+  - var init = "initialize_payload(" + JSON.stringify(config) + ")";
+
+  if !found found = [];
+
+  div.main.container
+     div(ng-app='myApp' ng-cloak=1)
+      div(ng-controller="SharedController")       
+
+        h2 Help
+        input.input-lg(name='string' placeholder='search string')
+  
+        hr    
+
+        each result,i in found
+          a(href='#' onclick="return false;" data-toggle='modal' data-target='#HelpModal')
+              #{found[i].title}
+
+    include HelpModal.jade

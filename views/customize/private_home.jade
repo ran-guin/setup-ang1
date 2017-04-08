@@ -10,16 +10,19 @@ block content
         div(ng-controller="FancyFormController") 
             h3 Dashboard
               div.navbar-right
-                if sails.config.payload && sails.config.payload.access === 'admin'
-                    a(href="/admin")
-                      button.btn.btn-danger(type='button') Admin
-                    span &nbsp; &nbsp;
-                    a(href="/lab_admin")
-                      button.btn.btn-danger(type='button') Lab Admin
 
-                if sails.config.payload && sails.config.payload.access === 'lab admin'
-                    a(href="/lab_admin")
-                      button.btn.btn-danger(type='button') Lab Admin
+                include ./../customize/helpBox.jade
+
+                  if sails.config.payload && sails.config.payload.access === 'admin'
+                      a(href="/admin")
+                        button.btn.btn-danger(type='button') Admin
+                      span &nbsp; &nbsp;
+                      a(href="/lab_admin")
+                        button.btn.btn-danger(type='button') Lab Admin
+
+                  if sails.config.payload && sails.config.payload.access === 'lab admin'
+                      a(href="/lab_admin")
+                        button.btn.btn-danger(type='button') Lab Admin
 
             hr 
 
@@ -33,8 +36,8 @@ block content
                   span.input-group-addon
                     i.fa.fa-barcode.fa-2x(style='padding:0px; color:#000')
                   input.form-control.input-lg(type='text' placeholder='-- Scan Barcode Here --' id='barcode' name='barcode' ng-model='barcode')
-              span &nbsp;
-              button.btn.btn-success.btn-lg(type='submit' ng-disabled='!barcode') Submit
+                  span.input-group-btn
+                    button.btn.btn-success.btn-lg(type='submit' ng-disabled='!barcode') Submit
 
             // hr 
             
@@ -56,9 +59,11 @@ block content
                 button.btn.btn-danger(type='button') 
                   i.fa.fa-4x.fa-upload
                   span &nbsp; Upload Data
+
             hr
             p &nbsp;
             p &nbsp;
             p &nbsp;
 
-    include uploadFileModal.jade
+            include uploadFileModal.jade
+            include helpModal.jade

@@ -1,0 +1,11 @@
+
+form.form-inline(role='form')   
+
+  span.form-group.has-success.has-feedback
+    div.input-group
+      input.form-control(type="text" name='string' placeholder="" ng-model='helpString')
+      span.input-group-btn
+        a(href='' onclick="return false;" data-toggle='modal' data-target='#HelpModal')
+          button.btn.btn-primary(type="button" ng-click='getHelp()')
+            i.fa.fa-search
+  span &nbsp; &nbsp;

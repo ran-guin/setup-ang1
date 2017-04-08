@@ -37,6 +37,30 @@ app.controller('FancyFormController',
 
         $scope.custom_disable = false;
 
+        // Standard Help - drives HelpModal content
+        $scope.helpString = '';
+        $scope.helpTitle = '';
+        $scope.helpText  = '';
+        $scope.foundHelp = [];
+        $scope.searchHelpDescription = 0;
+
+        $scope.getHelp = function (search) {
+
+            if ( ! search) { search = $scope.helpString }
+            
+            var url = "/help";
+            // how to load defined help pages ??... 
+
+            $http.post(url, { string : search, extend: $scope.searchHelpDescription })
+            .then ( function (result) {
+                console.log(JSON.stringify(result));
+                $scope.foundHelp = result.data;
+            })
+            .catch ( function (err) {
+                $scope.foundHelp = [ { title: 'search results', description: 'Error retrieving help'}];
+            });
+        }
+
         $scope.mysql_date = function (date) {
             if (date.constructor === Date) {
                 var dd = date.getDate();

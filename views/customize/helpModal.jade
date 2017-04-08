@@ -1,0 +1,32 @@
+.container
+  div.modal.fade#HelpModal
+    .modal-dialog
+      // Modal content
+      .modal-content
+        .modal-header
+          button.close(type='button', data-dismiss='modal') ×
+          h2 Search Results:
+        .modal-body
+          div(ng-show='foundHelp.length==0 || !foundHelp[0].title')
+            h5 searching for: '{{helpString}}'
+            hr
+            p No help found
+          div(ng-show='foundHelp.length==1')
+            b {{foundHelp[0].title}}
+            hr
+            p {{foundHelp[0].description}}
+          div(ng-show='foundHelp.length > 1')
+            h5 results containing: '{{helpString}}'
+            ul
+              li(ng-repeat="found in foundHelp track by $index")
+                a(href='' onclick='return false;' ng-click="getHelp(found.title)")
+                  b {{found.title}}
+
+        .modal-footer
+          button.btn.btn-default.btn-danger.pull-left(type='submit', data-dismiss='modal')
+            i.fa.fa-remove
+            |  Cancel
+          p
+            | Questions ? 
+            a(href='mailto:cosinesystems.org?Subject=Litmus Help: HelpModal') Contact Us
+

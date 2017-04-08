@@ -1,0 +1,23 @@
+Stock_Catalog_ID        Stock_Catalog_Name      Stock_Catalog_Description       Stock_Catalog_Number    Stock_Type      Stock_Source    Stock_Status    Stock_Size      Stock_Size_Units        FK_Organization__ID     FKVendor_Organization__ID     Model   FK_Equipment_Category__ID
+1       -20 Freezer     NULL    MF-183  Equipment       Order   Active  1       pcs     3       6       MF-183  13
+2       -80 Freezer [MDF-U73V]  First F80-5 was Sanyo Model # MDF-U73V.  Second F80-5 was a Panasonic MDF-U76VC (Nov. 2014).    MDF-U73V        Equipment       Order   Active  1       pcs     2       7       MDF-U73V        14
+3       Fridge  NULL    FR465   Equipment       Order   Active  1       pcs     4       5       FR465   15
+4       zebra   NULL    zebra   Equipment       Order   Active  1       pcs     3       7       Zebra   7
+5       LIquid Nitrogen Freezer (MVE)   Large Liquid Nitrogen Freezer   MVE 1879-190F-GB-BB     Equipment       Order   Active  1800    litres  9       8       MVE113814943    16
+6       Undefined       Undefined Equipment Items               Equipment       Order   Inactive        1       pcs     10      10              81
+7       Poured Agar Plates      Agar plates prepared with Agarose and Antibiotic                Untracked       Made in House   Active  0       n/a     10      10              0
+8       Poured Glycerol Plates  Glycerol plates prepared with Antibiotic                Untracked       Made in House   Active  0       n/a     10      10              0
+9       Virtual Storage Meta-equipment for tracking general Locations unrelated to Freezers             Equipment       Made in House   Active  0       n/a     10      10              83
+10      -80 Freezer [88500D60]          88500D60        Equipment       Order   Active  1       pcs     29      29      88500D60        14
+11      -80 Freezer [MDF-U72V]          MDF-U72V        Equipment       Order   Active  1       pcs     2       2       MDF-U72V        14
+12      -80 Freezer [MDF-U74V]          MDF-U74V        Equipment       Order   Active  1       pcs     2       2       MDF-U74V        14
+13      Fridge +4 Degrees       Fridge, no freezer section, 17 cu. Ft.(no units-assumed 1pc)    NULL    Equipment       Order   Active  1       pcs     30      31      NULL    15
+14      Freezer - -20 Degrees   NULL    FFU21M7HW       Equipment       Order   Active  1       pcs     33      32      Frigidaire 21cuft.      13
+15      Refrigerator    NULL    NULL    Equipment       Order   Active  1       pcs     34      34      NULL    15
+16      -20oC freezer   NULL    NULL    Equipment       Order   Active  1       pcs     34      34      NULL    13
+17      Cabinet NULL    NULL    Equipment       Order   Active  1       pcs     32      32      NULL    85
+18      Liquid Nitrogen Vapor Phase Freezer     NULL    MVE 1536-190F-GB-BB     Equipment       Order   Active  1       pcs     9       8       NULL    16
+19      Picogreen                       Reagent Order   Active  1       pcs     0       0               NULL
+20      Qiagen Kit      NULL    NULL    Reagent Order   Active  1       pcs     NULL    NULL    NULL    0
+21      Tris-EDTA       10mM Tris, 1mM EDTA, pH 8.0     BP2473-1        Reagent Order   Active  1       litres  39      39      NULL    NULL
+

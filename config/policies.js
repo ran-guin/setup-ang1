@@ -31,6 +31,10 @@ module.exports.policies = {
     '*' : true
   },
   
+  'public_API' : {
+    '*' : true
+  },
+
   'main' : {
     'showDemoPage' : true
   }, 

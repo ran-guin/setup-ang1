@@ -18,9 +18,9 @@ block content
 
     form.form-horizontal(role='form' width='100%')
     div(ng-app='myApp' ng-cloak=1)
-        div(ng-controller="SharedController")
-            input(type='checkbox' ng-model="include_all")
-            b &nbsp; Include unprompted steps
+        div(ng-controller="SharedController" ng-init="include_all=1")
+            input(type='checkbox' name='include_all' checked=1 ng-model="include_all")
+            b &nbsp; Include unprompted steps a = {{include_all}}
             
             h3 
                 u Protocol Steps:  
