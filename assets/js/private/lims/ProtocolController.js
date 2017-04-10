@@ -14,6 +14,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
     $scope.SplitFields = {};
     $scope.backfill_date = null;
     $scope.invalidate_form = false;
+    $scope.initialized = 0;
 
     $scope.initialize = function (config, options) {
         console.log("initialize protocol");
@@ -102,6 +103,8 @@ function protocolController ($scope, $rootScope, $http, $q) {
                 $scope.messages.push("Starting new protocol " + $scope.timestamp);
             }
 
+            $scope.step.stepNumber = $scope.active.stepNumber || 1;
+
             $scope.Options = config['Options'] || {};   
 
             $scope.Attributes = config['Attributes'];
@@ -145,6 +148,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
             $scope.get_plate_sets();
         }
 
+        $scope.initialized = 1;
         console.log("initialization complete...");
     }
 
@@ -191,6 +195,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
         $scope.active.last_step.name = Samples[0].last_step;
         $scope.active.last_step.protocol = Samples[0].last_protocol;
         $scope.active.last_step.protocol_id = Samples[0].last_protocol_id;
+        $scope.active.last_step.number = Samples[0].last_step_number;
 
         if ($scope.active.last_step.name === 'Completed Protocol') {
             $scope.active.last_step.status = 'Completed';
@@ -648,7 +653,9 @@ function protocolController ($scope, $rootScope, $http, $q) {
     $scope.redistribute = function distribute (reset) {
         console.log("Distribute samples...");
         console.log('reset messages before redistribution');
-        $scope.reset_messages();
+
+        if ($scope.initialized) { $scope.reset_messages() }
+        else { console.log('skip reset .. .not yet initialized ' + $scope.initialized ) }
 
         var deferred = $q.defer(); 
 
@@ -666,7 +673,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
 
             if (entered_qty && entered_qty.constructor === String && entered_qty.match(/d*/) ) {
                 // okay...
-                console.log("enterd qty: " + entered_qty);
+                console.log("entered qty: " + entered_qty);
                 qty = entered_qty;
                 qty_units = qty_unts || 'ml';
             }
@@ -786,9 +793,14 @@ function protocolController ($scope, $rootScope, $http, $q) {
 
         if (! $scope.Step ) { $scope.error("No Steps Defined for this Protocol !") }
         else {
-            $scope.input = $scope.Step['input_options'].split(':');
-            $scope.defaults = $scope.Step['input_defaults'].split(':');
-            $scope.formats   = $scope.Step['input_format'].split(':');
+            $scope.input = [];
+            if ($scope.Step['input_options']) { $scope.input = $scope.Step['input_options'].split(':') }
+
+            $scope.defaults = [];
+            if ($scope.Step['input_defaults']) { $scope.defaults = $scope.Step['input_defaults'].split(':') }
+
+            $scope.formats = [];            
+            if ($scope.Step['input_format']) { $scope.formats   = $scope.Step['input_format'].split(':') }
 
             var custom_options = $scope.Step['custom_settings'];
 
@@ -871,6 +883,18 @@ function protocolController ($scope, $rootScope, $http, $q) {
             }
             else if (Opts[keys[i]] == null) {
                 console.log(keys[i] + ' = ' + Opts[keys[i]] + " .. custom not defined");
+            }
+            else if ( keys[i].match(/_qty$/) ) {
+                var qty = $scope.form[ keys[i] + $scope.step.stepNumber] || Opts[keys[i]];
+                
+                var units = qty.match(/[a-zA-Z]+/);
+                if (units && units.length) {
+                    qty = qty.replace(units[0],''); 
+
+                    console.log(JSON.stringify(qty + ' -> ' + qty + ' units: ' + units[0]) );
+                    $scope.Step[keys[i]] = qty;
+                    $scope.Step[keys[i] + '_units'] = units[0];
+                }
             }
             else {
                 $scope.Step[keys[i]] = $scope.form[ keys[i] + $scope.step.stepNumber] || Opts[keys[i]];
