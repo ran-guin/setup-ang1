@@ -71,7 +71,7 @@ module.exports = {
 				sails.config.warnings.push("Samples appear to be at different stages of the pipeline: ['" + protocols.join("' AND '") + "']");
 			}
 			else if (numbers.length > 1) {
-				sails.config.warnings.push("Samples appear to be at different stages of the last protocol: " + steps.join(' AND ') );
+				sails.config.warnings.push("Samples appear to be at different stages of the last protocol: " + names.join(' AND ') );
 				last_step = { protocol_id : protocol_ids[0]}
 			}
 			else {
@@ -154,7 +154,10 @@ module.exports = {
 		var list = [];
  		for (i=0; i<query_result.length; i++) {
 			var input = query_result[i]['input_options'];
-			if (input) { 				var stepInput = input.split(':');
+			if (input) { 	
+				var cleaned = input.replace('*','');
+				var stepInput = cleaned.split(':');
+
 				list = _.union(list, stepInput);
 			}
 		}
