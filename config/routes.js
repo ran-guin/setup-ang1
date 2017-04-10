@@ -133,6 +133,8 @@ module.exports.routes = {
 
   'POST /uploadData' : 'Record_APIController.uploadData',
 
+  'POST /remote_log' : 'Custom_API.remote_log',
+
   'GET /test' : 'TestController.test',
   /***************************************************************************
   *                                                                          *
