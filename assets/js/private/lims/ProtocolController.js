@@ -313,12 +313,16 @@ function protocolController ($scope, $rootScope, $http, $q) {
         var PlateAttributes = {};
         var PrepAttributes = {};
 
+        console.log("INPUT: " + JSON.stringify($scope.input));
+        
         if (action != 'Skipped') {
             // Load Attribute Data 
             for (var i=0; i<$scope.attribute_list.length; i++) {
                 var att = $scope.Attributes[ $scope.attribute_list[i] ];
+
                 var key = att.name + $scope.step.stepNumber;
-                if (att.type == 'Count' && att.model == 'Plate') { 
+                if (att.type == 'Count' && att.model == 'Plate' && ($scope.input.indexOf(att.name) >= 0) ) {
+                    console.log("check " + key + ' : ' + $scope.form[key]); 
                     $scope.form[key] = '<increment>';
                     PlateAttributes[att.id] = $scope.form[key];
                 }
@@ -339,7 +343,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
                 }
             }
             console.log("Plate Attribute Data: " + JSON.stringify(PlateAttributes));
-            console.log("Plate Attribute Data: " + JSON.stringify(PrepAttributes));
+            console.log("Prep Attribute Data: " + JSON.stringify(PrepAttributes));
         }
 
         var status = 'In Process';
