@@ -84,5 +84,5 @@ Extract DNA	24	4	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	1	NULL	NULL	NULL	1
 Add Hydration Buffer	24	5	NULL	NULL	NULL	NULL	NULL	solution*:solution_qty	NULL	NULL	NULL	1	NULL	NULL	NULL	105	NULL	NULL
 Indicate PCR Batch ID	26	1	NULL	NULL	NULL	NULL	NULL	DNA_BGGLOBIN_Batch*	NULL	NULL	NULL	1	NULL	NULL	NULL	106	NULL	NULL
 Add Hydration Buffer	27	2	NULL	NULL	NULL	NULL	NULL	solution*:solution_qty*	NULL	NULL	NULL	1	NULL	NULL	NULL	107	NULL	NULL
-Aliquot DNA	27	1	NULL	NULL	NULL	NULL	NULL	solution_qty*	NULL	NULL	{\"transfer_type\" : \"Aliquot\", \"transfer_qty\" : \"true\"}	1	NULL	NULL	NULL	108	NULL	NULL
+Aliquot DNA	27	1	NULL	NULL	NULL	NULL	NULL	transfer_qty*:solution_qty*	NULL	NULL	{\"transfer_type\" : \"Aliquot\", \"transfer_qty\" : \"true\"}	1	NULL	NULL	NULL	108	NULL	NULL
 Track Extraction Kit	24	1	NULL	NULL	NULL	NULL	NULL	solution*	NULL	NULL	NULL	1	NULL	NULL	NULL	110	NULL	NULL
