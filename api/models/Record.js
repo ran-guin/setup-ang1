@@ -9,8 +9,6 @@ var q = require('q');
 var fs = require('fs');
 var _ = require('underscore-node');
 
-var significant_digits = 4;
-
 module.exports = {
 
 	attributes: {
@@ -159,6 +157,95 @@ module.exports = {
 		.catch ( function (err) {
 			console.log("Error with primary query for " + model);
 			console.log(err);
+			deferred.reject(err);
+		});
+
+		return deferred.promise;
+	},
+
+	search : function (options) {
+	
+		var deferred = q.defer();
+
+		if (!options) { options = {} }
+		var scope = options.scope;
+		var condition = options.condition || {};
+		var search    = options.search || '';
+
+		if (! scope ) {
+			// Generic Search 
+			scope = { 
+				'user' : ['email', 'name'] 
+			};
+		}
+
+		console.log("Condition: " + JSON.stringify(condition));
+
+		var Prefix = Barcode.prefix();
+		var models   = Object.keys(Prefix);
+
+		var promises = [];
+
+		var tables = Object.keys(scope);
+		for (var i=0; i< tables.length; i++) {
+			var fields = scope[tables[i]];
+			var query = "SELECT id," + fields.join(',') + " FROM " + tables[i];
+			
+			var search_condition = '';
+			if (search) {
+				var add_condition = [];
+				for (var j=0; j<fields.length; j++) {
+					add_condition.push(fields[j] + " LIKE '%" + search + "%'");
+				}
+
+				console.log(tables[i] + "in PREFIXES ?: " + JSON.stringify(Prefix));
+				if (Prefix[tables[i]]) {
+
+					var regex = new RegExp(Prefix[tables[i]],'i');
+					var barcode = search.replace(regex,'');
+					var barcode_id = barcode.match(/^\d+$/);
+					
+					console.log(search + ' : ' + barcode);
+					if (barcode_id) {
+						add_condition.push('id=' + barcode_id );
+					}
+				}
+
+				search_condition = '(' + add_condition.join(' OR ') + ')';
+			}
+
+			if (condition &&  condition.constructor === Object && condition[tables[i]] )  { query = query + " WHERE " + condition[tables[i]] }
+			else if (condition && condition.constructor === String) { query = query + " WHERE " + condition }
+			else { query = query + " WHERE 1"}
+
+			if (search_condition) { query = query + " AND " + search_condition }
+			console.log("\n** Search: " + query);
+			promises.push( Record.query_promise(query));
+		}
+
+		var returnval = { search: search };
+
+		var Found = {};
+		q.all(promises) 
+		.then ( function ( results ) {
+			for (var i=0; i<results.length; i++) {
+				console.log(i + '' + tables[i] + ' : ' + JSON.stringify(results[i]));
+				if (results[i] && results[i].length) {
+					Found[tables[i]] = results[i];
+				}
+			}
+			console.log("Found: " + JSON.stringify(Found));
+			
+			if (tables.length === 1) { 
+				returnval.results = results[0];
+			}
+			else { returnval.results = results }
+
+			deferred.resolve(returnval);
+		})
+		.catch ( function (err) {
+			Logger.error(err, 'search error', 'remote search');
+			console.log("Error searching tables: " + err);
 			deferred.reject(err);
 		});
 
@@ -412,7 +499,7 @@ module.exports = {
 
 		if (tables) { query = query + ' FROM (' + tables.join(',') + ')' }
 		
-		if (left_joins && left_joins.length) { query = query + ' LEFT JOIN ' + left_joins.join(' LEFT JOIN ') }
+		if (left_joins) { query = query + ' LEFT JOIN ' + left_joins.join(' LEFT JOIN ') }
 		if (conditions && conditions.length) { query = query + ' WHERE ' + conditions.join(' AND ') }
 
 		if (groupBy && groupBy.length) { query = query + ' GROUP BY ' + groupBy.join(',') }
@@ -423,15 +510,9 @@ module.exports = {
 		return query;
 	},
 
-	query_promise: function (query, opt) {
+	query_promise: function (query) {
 		// Wrapper for standard Record.query returning a promise //	
 		var deferred = q.defer();
-
-		if (!opt) { opt = {} }
-
-		if (sails && sails.config && ( sails.config.debug || opt.debug) ) {
-			console.log("SQL query: " + query);
-		}
 
 		Record.query(query, function (err, result) {
 			if (err) { 
@@ -439,18 +520,11 @@ module.exports = {
 				console.log(err);
 
 				var parsed_error = Record.parse_standard_error(err);
-				console.log("Parsed error: " + parsed_error);
+				console.log("Parsed: " + parsed_error);
 
 				deferred.reject(parsed_error);
 			}
-			else {
-				if (sails && sails.config && sails.config.debug && (result.constructor === Array )) { 
-					var show = JSON.stringify(result[0]);
-					if (result.length > 1) { show = show + '...[' + result.length + ' records]' }
-					console.log('SQL result: ' + show);
-				}
-				deferred.resolve(result)
-			}
+			else { deferred.resolve(result) }
 		});
 
 		return deferred.promise;	
@@ -1264,7 +1338,6 @@ module.exports = {
 				.catch ( function (err) {
 					var msg = Record.parse_standard_error(err);
 					console.log("Error uploading data: " + msg);
-					console.log(JSON.stringify(err));  // parse_error
 					err.context = 'upload Data';
 					deferred.reject(msg);
 				})
@@ -1384,12 +1457,7 @@ module.exports = {
 
 		var noQuote = 0;
 
-		if (typeof value == 'number') { 
-			// round to 4 significant digits to avoid saving infinitesimal floating point variations
-			// var round_value = value.toPrecision(significant_digits); 
-			// console.log("Round " + value + ' to ' + round_value);
-			// value = round_value.toString();
-		}
+		if (typeof value == 'number') { value = value.toString() }
 
 		var onDuplicate;
 		
@@ -1441,7 +1509,7 @@ module.exports = {
 			else if (value.match(/^<.*>$/)) {
 				value = value.replace(/^</,'');
 				value = value.replace(/>$/,'');
-				console.log("SQL statement value detected: " + value);
+				if (debug) { console.log("SQL statement detected: " + value) }
 				noQuote = 1;
 			}
 
@@ -1456,11 +1524,6 @@ module.exports = {
 			noQuote=1;
 		}
 
-		if (value === undefined) {
-			value = null;
-			console.log('switched undef to null');
-		}
-
 
 		if (value === null && defaultTo) {
 			return defaultTo;
@@ -1472,14 +1535,7 @@ module.exports = {
 			return value;
 		}
 		else {
-			// leave booleans unquoted... //
-			if (value.constructor == Boolean) {  
-				console.log('pass boolean: ' + value);
-				return value;
-			}
-			else {
-				return "\"" + value + "\"";
-			}
+			return "\"" + value + "\"";
 		}
 	},
 
@@ -1753,6 +1809,32 @@ module.exports = {
     	});
 
     	return deferred.promise;
+    },
+
+    delete_record : function (model, id) {
+
+    	var deferred = q.defer();
+    	
+    	var Mod = sails.models[model] || {};    	
+    	var	table = Mod.tableName || model;
+
+		// add access check potentially ...
+		var idfield = table;
+		if (Mod.alias && Mod.alias('id')) { idfield = Mod.alias('id') } 
+
+		var sql = "DELETE FROM " + table + " WHERE " + idfield + "=" + id;
+		
+		console.log(sql);
+		Record.query_promise(sql)
+		.then (function (result) {
+			deferred.resolve(result);
+		})
+		.catch ( function (err) {
+			deferred.reject(err);
+		})
+
+		return deferred.promise;
+    
     }
 };
 
