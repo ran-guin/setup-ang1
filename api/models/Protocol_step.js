@@ -155,7 +155,7 @@ module.exports = {
  		for (i=0; i<query_result.length; i++) {
 			var input = query_result[i]['input_options'];
 			if (input) { 	
-				var cleaned = input.replace('*','');
+				var cleaned = input.replace(/\*/g,'');
 				var stepInput = cleaned.split(':');
 
 				list = _.union(list, stepInput);
