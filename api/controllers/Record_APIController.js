@@ -35,7 +35,6 @@ module.exports = {
 		var body = req.body || {};
 		console.log("Search API");
 
-		var string = body.search;
 		var scope = body.scope;
 		var condition = body.condition || {};
 		var search    = body.search || '';
@@ -43,55 +42,17 @@ module.exports = {
 		if (! scope ) {
 			// Generic Search 
 			scope = { 
-				'user' : ['email', 'username'] 
+				'user' : ['email', 'name'] 
 			};
 		}
 
-		console.log("Condition: " + JSON.stringify(condition));
-
-		var promises = [];
-
-		var tables = Object.keys(scope);
-		for (var i=0; i< tables.length; i++) {
-			var fields = scope[tables[i]];
-			var query = "SELECT " + fields.join(',') + " FROM " + tables[i];
-			
-			var search_condition = '';
-			if (search) {
-				var add_condition = [];
-				for (var i=0; i<fields.length; i++) {
-					add_condition.push(fields[i] + " LIKE '%" + search + "%'");
-				}
-				search_condition = '(' + add_condition.join(' OR ') + ')';
-			}
-
-			if (condition &&  condition.constructor === Object && condition[tables[i]] )  { query = query + " WHERE " + condition[tables[i]] }
-			else if (condition && condition.constructor === String) { query = query + " WHERE " + condition }
-			else { query = query + " WHERE 1"}
-
-			if (search_condition) { query = query + " AND " + search_condition }
-			console.log("\n** Search: " + query);
-			promises.push( Record.query_promise(query));
-		}
-
-		var returnval = { search: search };
-
-		q.all(promises) 
-		.then ( function ( results ) {
-			for (var i=0; i<results.length; i++) {
-				console.log(i + ': ' + JSON.stringify(results[i]));
-			}
-			if (tables.length === 1) { returnval.results = results[0] }
-			else { returnval.results = results }
-
-			return res.json(returnval);
+		Record.search({scope : scope, search : search, condition: condition})
+		.then (function (result) {
+			return res.json(result);
 		})
 		.catch ( function (err) {
-			Logger.error(err, 'search error', 'remote search');
-			console.log("Error searching tables: " + err);
 			return res.json(err);
 		});
-
 	},
 
 	parseMetaFields : function (req, res) {
