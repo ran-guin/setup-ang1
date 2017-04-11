@@ -19,6 +19,7 @@ module.exports = {
 
   models: {
      connection: 'testDB'
-  }
+  },
 
+  hookTimeout: 60000
 };
