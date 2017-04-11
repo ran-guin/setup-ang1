@@ -67,6 +67,22 @@ module.exports = {
 			console.log("No protocol or step number supplied... ");
 			res.send({ Error: "no protocol or step number supplied"})
 		}
+	},
+
+	remote_log: function (req, res) {
+		var body = req.body;
+		var warning = body.warning;
+		var error   = body.error;
+
+		if (warning) {
+			res.send(Logger.warning(warning))
+		}
+		else if (error) {
+			res.send(Logger.error(error));
+		}
+		else {
+			res.send();
+		}
 	}
 
 };

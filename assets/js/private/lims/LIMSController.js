@@ -48,7 +48,20 @@ function limsController ($scope, $rootScope, $http, $q) {
             console.log(JSON.stringify(response));
         })
         .catch ( function (err) {
-            console.log("Printing error: " + err);
+            $scope.remote_log({error: 'api printing error'});
+        });
+    }
+
+    $scope.remote_log = function (data) {
+        // logs errors and warnings to Rollbar for remote monitoring
+
+        $http.post('/remote_log' , data)
+        .then( function (result) {
+            console.log("remote log : " + JSON.stringify(data));
+            console.log('returned: ' + JSON.stringify(result));
+        })
+        .catch (function (err) {
+            console.log("Error with remote_log of " + JSON.stringify(data));
         });
     }
 
@@ -73,11 +86,11 @@ function limsController ($scope, $rootScope, $http, $q) {
             params = params + 'printer_group=' + payload.printer_group + '&';
             params = params + 'model=' + model + '&';
 
-            var url = "http://bcgpdev5.bccrc.ca/SDB_rg/cgi-bin/barcode_printer.pl?";
+            var alDente_url = "http://bcgpdev5.bccrc.ca/SDB_rg/cgi-bin/barcode_printer.pl?";
             
-            console.log(url);
+            console.log(alDente_url);
             console.log("params: " + params);
-            $http.get(url + params)
+            $http.get(alDente_url + params)
             .then (function (response) {
                 console.log("Response: " + JSON.stringify(response));
                 if (response.data) {

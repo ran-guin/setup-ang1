@@ -51,7 +51,9 @@ app.factory('FancyFormFactory', function($rootScope, $http){
                 console.log("Loaded Lookup successfully: ");
                 //console.log(JSON.stringify(options));
 
-                document.getElementById('Lookup-' + elementId ).innerHTML=response;
+                var el = document.getElementById('Lookup-' + elementId );
+                if (el) { el.innerHTML=response }
+                else { console.log("Could not find element: Lookup-" + elementId) }
 
 /*
                 lookup.options = options;

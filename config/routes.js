@@ -137,6 +137,8 @@ module.exports.routes = {
   'GET /help/:string' : 'HelpController.find',
   'POST /help' : 'HelpController.find',
 
+  'POST /remote_log' : 'Custom_API.remote_log',
+
   'GET /test' : 'TestController.test',
   /***************************************************************************
   *                                                                          *

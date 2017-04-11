@@ -210,7 +210,7 @@ function wellMapperController ($scope, $rootScope, $http, $q ) {
         $scope.targetMapStatus = 'Pending';
         $scope.sourceMapStatus = 'Pending';
 
-        if (Options && Options.reset) {
+        if (Options && Options.reset && $scope.initialized) {
             console.log("reset messages before redistribute_Samples");
             $scope.reset_messages();
             console.log("Redistribute Samples ");

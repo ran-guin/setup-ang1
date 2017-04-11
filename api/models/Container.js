@@ -396,7 +396,7 @@ module.exports = {
 			Options.solution_qty = parseFloat(Options.solution_qty);
 		}
 		
-		if (Transfer[0].qty && Options.transfer_type !== 'Pre-Print') {
+		if (Options.transfer_type !== 'Pre-Print') {              // && Transfer[0].qty &&    ... need to allow for 0 qt... 
 			resetTarget[qtyUnits] = Transfer[0].qty_units || Options.transfer_qty_units;
 			var quantities = [];
 			var adjustments = [];
@@ -404,7 +404,7 @@ module.exports = {
 			for (var i=0; i<Transfer.length; i++) {		
 				
 				var target_qty = Transfer[i].qty;
-				if (target_qty && target_qty.constructor === String) {
+				if (target_qty.constructor === String && target_qty.length) {   // need to allow for 0ml transfer (eg DNA extraction)
 					target_qty = parseFloat(target_qty);
 				}
 				
