@@ -50,7 +50,6 @@ Aliquot Blood Plasma to 1 ml cryovial	14	10		Aliquot 1.0 mL per tube	22	10	NULL	
 Pool to 50 ml Conical Tube	15	1		Pool sample tubes together	14	NULL	NULL	comments			NULL	1	NULL	1	NULL	66	NULL	NULL
 Aliquot to 50 ml Conical Tube	15	4		Split into 2 tubes	14	NULL	NULL	Split:location*:comments	:	2::	{\"transfer_type\" : \"Aliquot\", \"target_format\" : 14, \"fill_by\" : \"position\" }	0	Aliquot	1	NULL	67	NULL	NULL
 Weigh Tube	16	1	Measure and record Full Tube weight in grams. 		NULL	NULL	NULL	Measured_Tube_Weight_in_g			NULL	1	NULL	1	NULL	68	NULL	NULL
-Store samples	16	4			NULL	NULL	NULL	location*			NULL	1	NULL	1	NULL	69	NULL	NULL
 Transfer DNA to 1.8 ml eppendorf	17	16			23	11	NULL	:location*		:	{\"transfer_type\" : \"Transfer\", \"target_format\" : 23, \"target_sample\" : 11, \"fill_by\" : \"position\" }	1	Transfer	1	NULL	71	NULL	NULL
 Incubate	17	4	Incubate sample overnight at 50 C	Incubate sample overnight at 50 C	NULL	NULL	NULL				NULL	1	NULL	1	NULL	72	NULL	NULL
 Resuspend	17	15	Resuspend in 1ml of hydration buffer	Resuspend Pellet in 50 ul of DNA Buffer	NULL	NULL	NULL	solution:solution_qty	:	:50ul	NULL	1	NULL	1	NULL	74	NULL	NULL
