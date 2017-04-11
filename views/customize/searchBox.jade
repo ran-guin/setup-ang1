@@ -1,0 +1,9 @@
+
+form.form-inline(role='form' method='post' action='/Record/search')   
+  span.form-group.has-success.has-feedback
+    div.input-group
+      input.form-control(type="text" default='' force=1 name='search' placeholder="- search -" required)
+      span.input-group-btn
+          button.btn.btn-primary(type="submit" disabled=false)
+            i.fa.fa-search
+  span &nbsp; &nbsp;
