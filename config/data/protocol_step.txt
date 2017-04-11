@@ -80,7 +80,7 @@ Transfer DNA to 0.5 ml Matrix Tube	22	14			27	0	0	transfer_qty:location*:comment
 Add Picogreen Data	23	1	Upload data from Picogreen protocol	Upload Picogreen data	0	0	0	solution*:DNA_Conc_PG_Batch*			NULL	1	NULL	41	0	98	2016-04-18 07:00:00	2016-04-18 07:00:00
 Standard Thaw	25	1	Update Thaw Count for current samples 	Track Thaw Instance and note Thaw Temperature	0	0	0	Thaw_Count:Thaw_Temp			NULL	1	NULL	4	0	100	2016-04-18 07:00:00	2016-04-18 07:00:00
 Update Thaw & Extraction information	24	2	NULL	Update Thaw information	NULL	NULL	NULL	Thaw_Temp*:Thaw_Count	NULL	NULL	NULL	1	NULL	NULL	NULL	101	NULL	NULL
-Transfer to conical tube	24	3	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	{\"transfer_type\" : \"Transfer\", \"Target_sample\" : \"11\", \"Target_format\" : \"14\", \"transfer_qty\" : \"0\" }	1	NULL	NULL	NULL	102	NULL	NULL
+Transfer to conical tube	24	3	NULL	NULL	NULL	NULL	NULL	location*	NULL	NULL	{\"transfer_type\" : \"Transfer\", \"Target_sample\" : \"11\", \"Target_format\" : \"14\", \"transfer_qty\" : \"0ml\" }	1	NULL	NULL	NULL	102	NULL	NULL
 Extract DNA	24	4	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	1	NULL	NULL	NULL	104	NULL	NULL
 Add Hydration Buffer	24	5	NULL	NULL	NULL	NULL	NULL	solution*:solution_qty	NULL	NULL	NULL	1	NULL	NULL	NULL	105	NULL	NULL
 Indicate PCR Batch ID	26	1	NULL	NULL	NULL	NULL	NULL	DNA_BGGLOBIN_Batch*	NULL	NULL	NULL	1	NULL	NULL	NULL	106	NULL	NULL
