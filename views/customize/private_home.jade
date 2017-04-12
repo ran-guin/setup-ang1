@@ -11,8 +11,6 @@ block content
             h3 Dashboard
               div.navbar-right
 
-                include ./../customize/helpBox.jade
-
                   if sails.config.payload && sails.config.payload.access === 'admin'
                       a(href="/admin")
                         button.btn.btn-danger(type='button') Admin
