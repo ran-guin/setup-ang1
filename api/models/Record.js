@@ -235,13 +235,13 @@ module.exports = {
 				}
 			}
 			console.log("Found: " + JSON.stringify(Found));
-			
+
 			if (tables.length === 1) { 
 				returnval.results = results[0];
 			}
 			else { returnval.results = results }
 
-			deferred.resolve(returnval);
+			deferred.resolve(Found);
 		})
 		.catch ( function (err) {
 			Logger.error(err, 'search error', 'remote search');
