@@ -1,6 +1,6 @@
 name	createdBy	status	description	Container_format	Sample_type	repeatable	id	createdAt	updatedAt
 Standard	1	Archived	NULL	NULL	NULL	1	1	NULL	NULL
-LIMS_Lab_Protocol	4	Active	Selenium Test Create Protocol	NULL	NULL	1	2	NULL	NULL
+LIMS_Lab_Protocol	4	Archived	Selenium Test Create Protocol	NULL	NULL	1	2	NULL	NULL
 new ACD Tube SOP	4	Active	Protocol for handling ACD Blood Collection Tubes	1	4	2	3	NULL	NULL
 SST Tube SOP	4	Active	Protocol for handling SST Blood Collection Tubes	2	4	2	4	NULL	NULL
 EDTA Tube SOP	4	Active	Protocol for handling EDTA Blood Collection Tubes	3	4	2	5	NULL	NULL
@@ -10,13 +10,18 @@ Receive Samples	1	Archived	Receive samples exported from another site	NULL	NULL	
 Add to Sample Shipment	1	Archived	Collect Samples into Transporter Box	NULL	NULL	1	9	NULL	NULL
 Blood Separation Protocol	4	Archived	Protocol for handling EDTA Blood Collection Tubes	NULL	4	2	10	NULL	NULL
 PST Protocol	4	Active	Protocol for handling PST Blood Collection Tubes	6	4	2	11	NULL	NULL
-EDTA 6 mL Extraction Protocol	1	Active	Protocol for handling plasma and sucrose DNA extraction.	16	NULL	2	12	NULL	NULL
-EDTA 4 mL Extraction Protocol	1	Active	Protocol for handling plasma and sucrose DNA extraction.	20	NULL	2	14	NULL	NULL
-EDTA RBC WBC Protocol	1	Active	Protocol for handling blood cell mixing.	NULL	12	2	15	NULL	NULL
+EDTA 6 mL Extraction Protocol	1	Archived	Protocol for handling plasma and sucrose DNA extraction.	16	NULL	2	12	NULL	NULL
+EDTA 4 mL Extraction Protocol	1	Archived	Protocol for handling plasma and sucrose DNA extraction.	20	NULL	2	14	NULL	NULL
+EDTA RBC WBC Protocol	1	Archived	Protocol for handling blood cell mixing.	NULL	12	2	15	NULL	NULL
 Weigh Tube	1	Active	Calculate sample volume by weighing tube & subtracting empty weight	NULL	NULL	1	16	NULL	NULL
 Saliva DNA Extraction	1	Active	DNA extraction from Saliva	13	9	1	17	NULL	NULL
 Sucrose Extraction	1	Active	Sucrose DNA extraction from RBC/WBC samples	NULL	NULL	1	18	NULL	NULL
 Gender_Test	41	Active	Track Gender Test Results for Samples	NULL	NULL	2	19	NULL	NULL
 DNA_Quantification	41	Active	Update DNA Quantification information	NULL	NULL	2	20	NULL	NULL
-Test Protocol	0	Active	Test input 	NULL	NULL	0	21	NULL	NULL
-DNA Extraction	41	Active	DNA Extraction Protocol	NULL	4	0	22	2016-05-05 00:00:00	0000-00-00 00:00:00
+Test Protocol	0	Archived	Test input 	NULL	NULL	0	21	NULL	NULL
+DNA Extraction	41	Active	DNA Extraction Protocol	NULL	4	0	22	2016-05-05 00:00:00	2016-05-05 00:00:00
+Picogreen Protocol	41	Active	Picogreen Protocol	NULL	NULL	0	23	2016-06-05 00:00:00	2016-05-05 00:00:00
+Qiagen Flexigene 	41	Active	Qiagen Flexigene Protocol	NULL	NULL	0	24	2016-06-05 00:00:00	2016-05-05 00:00:00
+Thaw Samples 	41	Active	Track Thawing of Samples	NULL	NULL	0	25	2016-06-05 00:00:00	2016-05-05 00:00:00
+B-Globin PCR	15	Active		NULL	NULL	NULL	26	2016-09-01 00:00:00	2016-09-01 00:00:00
+DNA Normalization	15	Active		NULL	NULL	NULL	27	2016-09-01 00:00:00	2016-09-01 00:00:00
