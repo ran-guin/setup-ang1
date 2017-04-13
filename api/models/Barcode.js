@@ -9,6 +9,8 @@ var q = require('q');
 var bwipjs = require('bwip-js');
 var request = require('request');
 
+var Logger = require('../services/logger');
+
 module.exports = {
 
   attributes: {
@@ -22,6 +24,7 @@ module.exports = {
   		'Rack' : 'Loc',
   		'Equipment' : 'Eqp',
       'Set' : 'Set',
+      'user' : 'Emp'
     };
 
   	if (model == undefined) {
@@ -173,7 +176,146 @@ module.exports = {
     return Scanned;
   },
 
+  custom_scan : function (barcode) {
+    // input : barcode
+    // output : customized scan results with warnings, errors
+    var deferred = q.defer();
+
+    Barcode.interpret(barcode)
+    .then ( function (Scanned) {
+
+      console.log("Scanned: " + JSON.stringify(Scanned));
+
+      var plate_ids = [];
+      var condition = '';
+      var promises = [];
+      var box_order;
+
+      if ( Scanned['Plate'].length) {
+        plate_ids = Scanned['Plate'];
+      }
+      else if ( Scanned['Rack'].length ) {
+        var boxes = Scanned['Rack'].join(',');
+        condition = "Box.Rack_ID IN (" + boxes + ')';
+        console.log("condition: " + condition);
+        box_order = Scanned['Rack'];
+      }
+      else if ( Scanned['Set'].length ) {
+        var sets = Scanned['Set'];
+        var query = "Select GROUP_CONCAT(FK_Plate__ID) as ids from Plate_Set WHERE Plate_Set_Number IN (" + sets.join(',') + ")";
+        console.log('query: ' + query);
+        promises.push( Record.query_promise(query) );
+      }
+
+      console.log('run ' + promises.length + ' promises');
+      q.all( promises )
+      .then ( function (result) { 
+        console.log("completed promises");      
+        var errors = Scanned['Errors'] || [];
+        var warnings = [];
+        var messages = [];
+
+        if (result && result[0] && result[0].length && result[0][0].ids) {
+          var ids = result[0][0].ids;
+          condition = "Plate.Plate_ID IN (" + ids + ")";
+        }
+        else if (result && result[0] && result[0].length ) {
+          errors.push("Nothing found in Set(s) " + sets);
+        }
+    
+        if (plate_ids.length || condition) {
+          console.log("Load: " + plate_ids.join(',') + ' samples from box(es) ' + boxes);
+
+          Container.loadData(plate_ids, condition, { box_order: box_order})
+          .then (function (data) {
+            console.log("loaded data " + JSON.stringify(data));
+            var sampleList = [];
+            if (data.length == 0) {
+              if (plate_ids.length) {
+                warnings.push("expecting ids: " + plate_ids.join(', '));
+                // return res.render('customize/private_home', { warnings : warnings} );
+              }
+              else if (Scanned['Rack'].length) {
+                messages.push("Scanned Loc#s: " + Scanned['Rack'].join(', '));
+                warnings.push("No Box Contents Detected");
+                warnings.push("(Note: Rack / Shelf types are ignored... or Boxes may be full)");
+              } 
+              else {
+                warnings.push("nothing found (?)");
+              }
+              warnings.push("No useable records retrieved");
+              
+              deferred.resolve({ found: null, messages: messages, warnings: warnings });
+              // return res.render('customize/private_home', );
+            }
+            else {
+              for (var i=0; i<data.length; i++) {
+                sampleList.push(data[i].id);
+              }
+
+              if (sampleList.length < plate_ids.length) { 
+                warnings.push("Scanned " + plate_ids.length + " records but only found " + sampleList.length);
+              }
+
+              var get_last_step = Protocol_step.parse_last_step(data);  
+
+              var last_step = get_last_step.last_step;
+              if (get_last_step.warning) { warnings.push(get_last_step.warning) }
+
+              messages.push('loaded Matrix Tube(s)');
+
+              var returnval = { 
+                plate_ids: plate_ids.join(','), 
+                last_step : last_step, 
+                Samples: data , 
+                //sampleList : sampleList,
+                messages : messages,
+                warnings : warnings,
+                errors : errors,
+                //target_formats : target_formats 
+                found: 'Container'
+              };
+
+              deferred.resolve(returnval);
+              // return res.render('lims/Container', 
+            }
+
+          })
+          .catch (function (err) {
+            // Logger.error(err, 'Error loading container data');
+            deferred.reject({ messages: messages, warnings: warnings, errors : errors });
+            //return res.render('customize/private_home', {messages: messages, warnings: warnings, errors : errors });
+          });     
+        }
+        else {
+          // Logger.info('Unrecognized barcode: ' + barcode);
+          deferred.reject({ errors: errors, warnings: warnings });
+            // return res.render("customize/private_home", { errors: errors, warnings: warnings });
+        }
+      })
+      .catch ( function (err) {
+        errors.push("Error retrieving set");
+        // Logger.error(err, 'Error retrieving set');
+        deferred.reject({ errors : errors } );
+      })
+        // return res.render('customize/private_home', { errors : errors } );
+      // })
+    })
+    .catch ( function (err) {
+      errors.push('Error interpretting barcode: ' + barcode);
+      errors.push(err);
+
+      // Logger.error(err, 'Error interpretting barcode');
+      deferred.reject({ errors: errors } );
+      //res.render('customize/private_home', { errors: errors } );
+    });
+        
+    return deferred.promise;
+  },
+
   interpret : function (barcode) {
+    // input : barcode
+    // output 
     var Scanned = {};
 
     var deferred = q.defer();
@@ -200,7 +342,9 @@ module.exports = {
               Scanned['Plate'] = _.pluck(result,'FK_Plate__ID');   // need to adjust slightly to accept multiple scanned barcodes ... 
               deferred.resolve(Scanned);
             }
-            deferred.resolve(Scanned);
+            else {
+              deferred.resolve(Scanned);
+            }
           })
           .catch (function (err) {
               console.log("Error checking for Matrix Barcode");
