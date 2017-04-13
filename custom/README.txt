@@ -21,6 +21,7 @@ controllers/
 styles/
 js/
 images/
+data/
 views/
 	customize
 	<package>
