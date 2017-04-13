@@ -26,32 +26,41 @@ module.exports = {
 
 		Barcode.custom_scan(barcode)
 		.then (function (result) {
+			console.log('ran custom scan');
 			if (result.found) {
-				console.log("Rendering results for " + result.found);
+				console.log("Rendering results for " + view + '=' + result.found);
+				console.log(JSON.stringify(result));
 				var view = 'lims/' + result.found;
+				// return res.send(result);
 				res.render(view, result);
 			}
 			else {
 				console.log('nothing found...');
 				console.log(JSON.stringify(result));
-				res.render('customize/private_home', result);
+				// return res.send(result);
+//				res.render('customize/private_home', result);
 			}
 		})
 		.catch ( function (err) {
+			console.log("scan error");
+			console.log(JSON.stringify(err));
+			
 			if (search) {
+				console.log("aborted custom scan... ");
 				// if explicit barcode not entered ... try db search
 				Record.search({scope : scope, search : search, condition: condition})
 				.then (function (result) {
+					console.log('got result ' + JSON.stringify(result));
 					return res.json(result);
 				})
-				.catch ( function (err) {
-					return res.json(err);
+				.catch ( function (err2) {
+					console.log('result err');
+					return res.json(err2);
 				});				
 			}
 			else {
-				console.log("scan error");
-				console.log(JSON.stringify(err));
-				res.render('customize/private_home', err);
+				// return res.send('scanning error');
+				return res.render('customize/private_home', err);
 			}
 		});
 
