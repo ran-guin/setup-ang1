@@ -38,7 +38,7 @@ module.exports = {
 				console.log('nothing found...');
 				console.log(JSON.stringify(result));
 				// return res.send(result);
-//				res.render('customize/private_home', result);
+				res.render('customize/private_home', result);
 			}
 		})
 		.catch ( function (err) {
