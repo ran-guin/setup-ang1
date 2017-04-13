@@ -30,6 +30,12 @@ module.exports = {
 
 	},
 
+    related: {
+            table: 'Tube',
+            fk: 'FK_Plate__ID',
+            custom: {}
+    },
+
 	alias: function (name) {
 		// enable customization of field names if non-standard //
 		var alias = { 
@@ -135,6 +141,7 @@ module.exports = {
 				fields.push("MAX(protocol_step.step_number) as last_step_number");
 				fields.push("Prep.Prep_Name as last_step");
 				fields.push("CASE WHEN Prep.Prep_Name like 'Completed %' THEN 'Completed' WHEN Prep.Prep_Name IS NULL THEN 'N/A' ELSE 'In Process' END as protocol_status");
+				fields.push('custom_settings as transfer_settings');
 			}
 
 			if ( include.match(/position/) ) {
@@ -162,9 +169,11 @@ module.exports = {
 		    		for (var i=0; i<result.length; i++) {
 		    			if (
 		    				result[i].protocol_status == 'In Process' 
-		    				&& result[i].last_step && result[i].last_step.constructor === String 
-		    				&&  result[i].last_step.match(/^(Aliquot|Extract|Transfer|Pre-Print) /)
-		    				&& ! result[i].last_step.match(/ out to /) 
+                            && result[i].transfer_settings
+                            && result[i].transfer_settings.match('transfer_type')
+		    				// && result[i].last_step && result[i].last_step.constructor === String 
+		    				// &&  result[i].last_step.match(/^(Aliquot|Extract|Transfer|Pre-Print) /)
+		    				// && ! result[i].last_step.match(/ out to /) 
 		    				) {
 		    					// differentiate internal transfer steps from later (inapplicable) steps 
 		    					result[i].protocol_status = 'Completed Transfer';
