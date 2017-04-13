@@ -282,6 +282,7 @@ module.exports = {
 
           })
           .catch (function (err) {
+            console.error('problem loading plate data');
             // Logger.error(err, 'Error loading container data');
             deferred.reject({ messages: messages, warnings: warnings, errors : errors });
             //return res.render('customize/private_home', {messages: messages, warnings: warnings, errors : errors });
