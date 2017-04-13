@@ -78,6 +78,45 @@ module.exports = {
 			return deferred.promise;
 	},
 
+	loadViewData : function (ids, condition, options) {			
+		var deferred = q.defer();
+
+		Container.loadData(ids, condition, options)
+		.then (function (data) {
+			console.log("loaded data " + JSON.stringify(data));
+			
+			var sampleList = [];
+
+			for (var i=0; i<data.length; i++) {
+				sampleList.push(data[i].id);
+			}
+
+			console.log("g1");
+			var get_last_step = {}; // Protocol_step.parse_last_step(data);  
+
+			var last_step = get_last_step.last_step;
+			console.log("g1");
+
+			if (get_last_step.warning) { warnings.push(get_last_step.warning) }
+			console.log("g2");
+
+			var viewData = {
+			    plate_ids: ids.join(','), 
+			    last_step : last_step, 
+			    Samples: data , 
+			};
+
+			console.log("returned viewData " + JSON.stringify(viewData));
+			deferred.resolve(viewData);
+		})
+		.catch ( function (err) {
+			console.log("error retrieving plate data");
+			deferred.reject();
+		});
+
+		return deferred.promise;
+	},
+
 	loadData : function (ids, condition, options) {
 
 		if (! options) { options = {} }
