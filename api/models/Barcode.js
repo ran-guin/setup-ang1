@@ -191,31 +191,49 @@ module.exports = {
       var promises = [];
       var box_order;
 
+      var errors = Scanned['Errors'] || [];
+      var warnings = [];
+      var messages = [];
+
+      var objects = [];
+
       if ( Scanned['Plate'].length) {
         plate_ids = Scanned['Plate'];
+        objects.push('Plate');
       }
       else if ( Scanned['Rack'].length ) {
         var boxes = Scanned['Rack'].join(',');
         condition = "Box.Rack_ID IN (" + boxes + ')';
         console.log("condition: " + condition);
         box_order = Scanned['Rack'];
+        objects.push('Plate');
       }
       else if ( Scanned['Set'].length ) {
         var sets = Scanned['Set'];
         var query = "Select GROUP_CONCAT(FK_Plate__ID) as ids from Plate_Set WHERE Plate_Set_Number IN (" + sets.join(',') + ")";
         console.log('query: ' + query);
         promises.push( Record.query_promise(query) );
+        objects.push('Plate');
+      }
+      
+      if ( Scanned['Solution'].length) {
+        console.log("Scanned solution");
+        warnings.push("Reagent home page has not yet been set up");
+        objects.push('Solution');
+      }
+      if ( Scanned['Equipment'].length) {
+        console.log("Scanned equipment");
+        warnings.push("Equipment home page has not yet been set up");        
+        objects.push('Equipment');
       }
 
       console.log('run ' + promises.length + ' promises');
       q.all( promises )
       .then ( function (result) { 
         console.log("completed promises");      
-        var errors = Scanned['Errors'] || [];
-        var warnings = [];
-        var messages = [];
 
-        if (result && result[0] && result[0].length && result[0][0].ids) {
+        if (result && result[0] && result[0].length 
+          && result[0][0].ids && objects[0]==='Plate') {
           var ids = result[0][0].ids;
           condition = "Plate.Plate_ID IN (" + ids + ")";
         }
