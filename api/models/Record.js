@@ -172,10 +172,12 @@ module.exports = {
 		var condition = options.condition || {};
 		var search    = options.search || '';
 
+		var foundLength = 0;
+
 		if (! scope ) {
 			// Generic Search 
 			scope = { 
-				'user' : ['email', 'name'] 
+				'user' : ['email', 'name'], 
 			};
 		}
 
@@ -186,10 +188,17 @@ module.exports = {
 
 		var promises = [];
 
-		var tables = Object.keys(scope);
-		for (var i=0; i< tables.length; i++) {
-			var fields = scope[tables[i]];
-			var query = "SELECT id," + fields.join(',') + " FROM " + tables[i];
+		var models = Object.keys(scope);
+		for (var i=0; i< models.length; i++) {
+			var Mod = sails.models[models[i]] || {};
+			var table = Mod.tableName || models[i];
+			var primaryField = Mod.primaryField || 'id';
+			console.log("primary field for " + models[i] + Mod.primaryField);
+
+			var fields = scope[models[i]];
+			var selectFields = primaryField;
+			if (fields.length) { selectFields = selectFields +  ',' + fields.join(',') }
+			var query = "SELECT " + selectFields + " FROM " + table;
 			
 			var search_condition = '';
 			if (search) {
@@ -198,48 +207,55 @@ module.exports = {
 					add_condition.push(fields[j] + " LIKE '%" + search + "%'");
 				}
 
-				console.log(tables[i] + "in PREFIXES ?: " + JSON.stringify(Prefix));
-				if (Prefix[tables[i]]) {
+				if (Prefix[table]) {
 
-					var regex = new RegExp(Prefix[tables[i]],'i');
-					var barcode = search.replace(regex,'');
-					var barcode_id = barcode.match(/^\d+$/);
-					
-					console.log(search + ' : ' + barcode);
-					if (barcode_id) {
-						add_condition.push('id=' + barcode_id );
+					var regex = new RegExp(Prefix[table] + '(\\d+)','ig');
+					var found = search.match(regex);
+
+					var regex2 = new RegExp(Prefix[table], 'i');					
+					var ids = [];
+					if (found) {
+						ids = found.map( function(x) {
+							foundLength = x.length;
+							return x.replace(regex2,'');
+						});
+					}
+
+					var barcode_ids = ids.join(',');
+
+					if (barcode_ids) {
+						add_condition.push(primaryField + ' IN (' + barcode_ids + ')' );
 					}
 				}
 
-				search_condition = '(' + add_condition.join(' OR ') + ')';
+				if (add_condition.length) {	
+					search_condition = '(' + add_condition.join(' OR ') + ')';
+				}
 			}
 
-			if (condition &&  condition.constructor === Object && condition[tables[i]] )  { query = query + " WHERE " + condition[tables[i]] }
+			if (condition &&  condition.constructor === Object && condition[table] )  { query = query + " WHERE " + condition[table] }
 			else if (condition && condition.constructor === String) { query = query + " WHERE " + condition }
 			else { query = query + " WHERE 1"}
 
-			if (search_condition) { query = query + " AND " + search_condition }
-			console.log("\n** Search: " + query);
-			promises.push( Record.query_promise(query));
+			if (search_condition) { 
+				// only perform search if there is an applicable condition found.. 
+				query = query + " AND " + search_condition;
+				console.log("\n** Search: " + query);
+				promises.push( Record.query_promise(query));
+			}
 		}
-
-		var returnval = { search: search };
+			
+		console.log(foundLength + ' vs ' + search.length);
 
 		var Found = {};
 		q.all(promises) 
 		.then ( function ( results ) {
 			for (var i=0; i<results.length; i++) {
-				console.log(i + '' + tables[i] + ' : ' + JSON.stringify(results[i]));
 				if (results[i] && results[i].length) {
-					Found[tables[i]] = results[i];
+					Found[models[i]] = results[i];
 				}
 			}
 			console.log("Found: " + JSON.stringify(Found));
-
-			if (tables.length === 1) { 
-				returnval.results = results[0];
-			}
-			else { returnval.results = results }
 
 			deferred.resolve(Found);
 		})
