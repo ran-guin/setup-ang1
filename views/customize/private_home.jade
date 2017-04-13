@@ -8,7 +8,7 @@ block content
       div(ng-controller="SharedController")       
        div(ng-controller="LIMSController" ng-init="#{init}")
         div(ng-controller="FancyFormController") 
-            h3 Dashboard
+            h2 Dashboard
               div.navbar-right
 
                   if sails.config.payload && sails.config.payload.access === 'admin'
