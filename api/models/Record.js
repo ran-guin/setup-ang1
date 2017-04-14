@@ -11,8 +11,18 @@ var _ = require('underscore-node');
 
 module.exports = {
 
-	attributes: {
+	migrate: 'safe',
+	tableName: 'Change_History',
+	primaryField: 'Change_History_ID',
 
+	attributes: {
+		FK_DBField__ID : { type : 'integer' },
+		Old_Value : { type : 'string'},
+		New_Value : { type : 'string'},
+		FK_Employee__ID : { type : 'integer'},
+		Modified_Date : { type : 'time' },
+		Record_ID : { type : 'int' },
+		Comment : { type : 'text'}
 	},
 
 	isReference : function (model, field) {
