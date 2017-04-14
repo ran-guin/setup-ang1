@@ -11,7 +11,15 @@ var xlsx = require('node-xlsx');
 module.exports = {
 
 	attributes: {
-
+		type : { 
+			type : 'string',
+			enum : ['update', 'upload', 'custom']
+		},
+		timestamp : { type : 'time' },
+		details : { type : 'json' },
+		filename : { type : 'string' },
+		model : { type : 'string' },    // reference DBtable 
+		template : { type : 'string'},  // could change to lookup
 	},
 
 
@@ -296,7 +304,7 @@ module.exports = {
 								}
 								else {
 									warnings.push("nothing to update");
-									deferred.resolve();
+									deferred.resolve(	);
 								}
 							}	
 						})
