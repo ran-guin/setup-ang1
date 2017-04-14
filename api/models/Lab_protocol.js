@@ -88,6 +88,14 @@ module.exports = {
 				}
 				else {
 					console.log("Not a transfer step..." + JSON.stringify(data));
+					
+					var qty = _.pluck(data.Plate,'Solution_Quantity');
+
+					if (qty) {
+						var qty_units = _.pluck(data.Plate,'Solution_Quantity_Units');
+						console.log("update current volume: add " + qty.join(',') + qty_units);
+						Container.adjust_volumes(ids, qty, qty_units);						
+					}
 				}
 				
 				console.log("save attributes to plates: " + plate_list + '; prep: ' + first_prep_id);
