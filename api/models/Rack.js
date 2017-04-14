@@ -17,7 +17,7 @@ module.exports = {
 	attributes: {
 		Rack_ID : { type : 'integer'},
 		Rack_Name : { type : 'string' },
-		Rack_Alias : { type : 'stirng' },
+		Rack_Alias : { type : 'string' },
 		FK_Equipment__ID : { model : 'equipment'},
 		FKParent_Rack__ID : { model : 'rack'},
     Rack_Type : { 
