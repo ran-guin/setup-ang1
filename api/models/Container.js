@@ -401,6 +401,11 @@ module.exports = {
 	},
 
 	adjust_volumes : function (ids, qty, qty_units) {
+		// For now assume qty_units are the same (TEMPORARY)
+		//
+		// ... should account for this by converting units if required or generating error if no units supplied.
+		// TEMPORARY
+		//
 		console.log("Add " + qty + qty_units + ' to ids: ' + ids.join(','));
 
 		var data= {
