@@ -42,7 +42,8 @@ module.exports = {
 		if (! scope ) {
 			// Generic Search 
 			scope = { 
-				'user' : ['email', 'name'] 
+				'user' : ['email', 'name'],
+				'container' : [],
 			};
 		}
 
