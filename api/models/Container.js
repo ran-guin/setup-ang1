@@ -180,7 +180,7 @@ module.exports = {
 				fields.push("MAX(protocol_step.step_number) as last_step_number");
 				fields.push("Prep.Prep_Name as last_step");
 				fields.push("CASE WHEN Prep.Prep_Name like 'Completed %' THEN 'Completed' WHEN Prep.Prep_Name IS NULL THEN 'N/A' ELSE 'In Process' END as protocol_status");
-				fields.push('custom_settings as transfer_settings');
+				fields.push('GROUP_CONCAT(DISTINCT custom_settings) as transfer_settings');
 			}
 
 			if ( include.match(/position/) ) {
@@ -201,15 +201,24 @@ module.exports = {
 
 		    Record.query(query, function (err, result) {
 		    	if (err) {
+		    		console.log("Error with query ? " + err);
 		    		deferred.reject(err);
 		    	}
 		    	else {
 
 		    		for (var i=0; i<result.length; i++) {
+
+		    			if (result[i].transfer_settings && result[i].transfer_settings.match('transfer_type') ) {
+
+		    				var transfer_settings = JSON.parse(result[i].transfer_settings);
+		    				result[i].last_step_transfer_type = transfer_settings.transfer_type;
+		    				result[i].last_step_was_transfer = true;
+		    				result[i].last_step_transfer_settings = transfer_settings;
+		    			}
+		    			else { result[i].transfer_step = false}
+		    				
 		    			if (
-		    				result[i].protocol_status == 'In Process' 
-                            && result[i].transfer_settings
-                            && result[i].transfer_settings.match('transfer_type')
+		    				result[i].protocol_status == 'In Process' && result[i].transfer_step
 		    				// && result[i].last_step && result[i].last_step.constructor === String 
 		    				// &&  result[i].last_step.match(/^(Aliquot|Extract|Transfer|Pre-Print) /)
 		    				// && ! result[i].last_step.match(/ out to /) 
@@ -391,6 +400,29 @@ module.exports = {
 		return deferred.promise;
 	},
 
+	adjust_volumes : function (ids, qty, qty_units) {
+		console.log("Add " + qty + qty_units + ' to ids: ' + ids.join(','));
+
+		var data= {
+			'Current_Volume' : 'Current_Volume + ' + parseFloat(qty)
+		}
+
+		var promises = [];
+		for (var i=0; i< ids.length; i++) {
+			var data = { 'Current_Volume' : '<Current_Volume + ' + parseFloat(qty[i]) + '>' };
+			promises.push( Record.update('container', ids[i], data) );
+		}
+
+		q.all(promises)
+		.then (function (okay) {
+			console.log('updated volume');
+		})
+		.catch (function (err) {
+			console.log('Error updating volume: ' + err);
+		});
+		return;
+	},
+
 	reset_transfer_data : function (Transfer, Options) {
 		// Standard fields that are reset for transferred samples (varies depending upon input options)
 		//
@@ -497,17 +529,18 @@ module.exports = {
 
 		}
 
-		var reset = { target: resetTarget, clone: resetClone, source: resetSource}
 		console.log('Reset:  ' + JSON.stringify(reset));
 
 		if (Options.transfer_type === 'Transfer' ) {
 			Rack.garbage()
 			.then (function (id) {
 				resetSource['FK_Rack__ID'] = id;
+				var reset = { target: resetTarget, clone: resetClone, source: resetSource}
 				deferred.resolve(reset);
 			})
 			.catch ( function (err) {
 				console.log('Error retrieving garbage location');
+				var reset = { target: resetTarget, clone: resetClone, source: resetSource}
 				deferred.resolve(reset);			
 			});
 		}
