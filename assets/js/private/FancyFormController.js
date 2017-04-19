@@ -176,27 +176,29 @@ app.controller('FancyFormController',
                     }
                     else { required_alias = required_element }
 
-                    if (!form[required_element]) {
-                        valid = false;
-
-                        var split = required_element.match(/^(.+)(\d+)$/);
-                        if ($scope.initialized) { 
-                            if ($scope.visited[required_element] || force) {      
-                                // $scope.error("Missing " + split[1] + ' in step ' + split[2] + ": " + $scope.form[required_element]);
-                                console.log('missing ' + required_element);
-                                $scope.error("Missing " + required_alias);
-                            }
-                            else {
-                                console.log(required_element + ' not yet visited');
-                            }
+                    $scope.check_input(form, required_element)
+                    .then ( function (result) {
+                        console.log('Result check: ' + JSON.stringify(result));
+                        if (result.found && result.found.length) {
+                            console.log("validated " + result.element + ": " + result.found);
                         }
                         else {
-                            console.log('not yet initialized... skipping this time...');
+                            valid = false;
+                            if ($scope.visited[required_element] || force) {
+                                console.log('missing ' + required_element);
+                                $scope.error("Missing " + required_alias);                                
+                            }
+                            else if ($scope.initialized) { 
+                                console.log(required_element + ' not yet visited');                                
+                            }
+                            else {
+                                console.log('form not yet initialized');
+                            }                            
                         }
-                    }
-                    else {
-                        console.log('validated ' + required_element + ' : ' + form[required_element]);
-                    }
+                    })
+                    .catch ( function (err) {
+                        console.log("error checking for " + required_element + ' in form');
+                    });
                 }
             }
 
@@ -218,6 +220,33 @@ app.controller('FancyFormController',
             $scope.initialized = true;
             $scope.invalidate_form = !valid;
             $scope.form_validated = valid;
+        }
+
+        $scope.check_input = function (form, element) {
+            var deferred = $q.defer();
+
+            if (element.match(/\|/)) {
+                check = new RegExp(element);
+
+                var elements = element.split('|');
+                var found = 0;
+
+                console.log("check element(s): " + JSON.stringify(elements));
+                for (var i=0; i<elements.length; i++) {
+                    if (form[elements[i]] && form[elements[i]].length) {
+                        found++;
+                        deferred.resolve({found: form[elements[i]], element: elements[i] })
+                    }
+                }
+
+                if (!found) {
+                    deferred.resolve({found: '', element: elements[0]});
+                }
+            }
+            else {
+                deferred.resolve({found: form[element], element: element })
+            } 
+            return deferred.promise;
         }
 
         $scope.visited = function (context) {
