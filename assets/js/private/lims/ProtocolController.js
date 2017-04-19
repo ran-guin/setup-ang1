@@ -32,7 +32,12 @@ function protocolController ($scope, $rootScope, $http, $q) {
                Samples = JSON.parse(config['Samples'])
             }
 
-            $scope.initialize_Progress(Samples);            
+            if (config['last_step']) {
+                $scope.active.last_step = config['last_step'];
+            }
+            else {
+                $scope.initialize_Progress(Samples);            
+            }
 
             $scope.validate_Samples(Samples);
 

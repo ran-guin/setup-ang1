@@ -191,31 +191,49 @@ module.exports = {
       var promises = [];
       var box_order;
 
+      var errors = Scanned['Errors'] || [];
+      var warnings = [];
+      var messages = [];
+
+      var objects = [];
+
       if ( Scanned['Plate'].length) {
         plate_ids = Scanned['Plate'];
+        objects.push('Plate');
       }
       else if ( Scanned['Rack'].length ) {
         var boxes = Scanned['Rack'].join(',');
         condition = "Box.Rack_ID IN (" + boxes + ')';
         console.log("condition: " + condition);
         box_order = Scanned['Rack'];
+        objects.push('Plate');
       }
       else if ( Scanned['Set'].length ) {
         var sets = Scanned['Set'];
         var query = "Select GROUP_CONCAT(FK_Plate__ID) as ids from Plate_Set WHERE Plate_Set_Number IN (" + sets.join(',') + ")";
         console.log('query: ' + query);
         promises.push( Record.query_promise(query) );
+        objects.push('Plate');
+      }
+      
+      if ( Scanned['Solution'].length) {
+        console.log("Scanned solution");
+        warnings.push("Reagent home page has not yet been set up");
+        objects.push('Solution');
+      }
+      if ( Scanned['Equipment'].length) {
+        console.log("Scanned equipment");
+        warnings.push("Equipment home page has not yet been set up");        
+        objects.push('Equipment');
       }
 
       console.log('run ' + promises.length + ' promises');
       q.all( promises )
       .then ( function (result) { 
         console.log("completed promises");      
-        var errors = Scanned['Errors'] || [];
-        var warnings = [];
-        var messages = [];
 
-        if (result && result[0] && result[0].length && result[0][0].ids) {
+        if (result && result[0] && result[0].length 
+          && result[0][0].ids && objects[0]==='Plate') {
           var ids = result[0][0].ids;
           condition = "Plate.Plate_ID IN (" + ids + ")";
         }
@@ -226,11 +244,11 @@ module.exports = {
         if (plate_ids.length || condition) {
           console.log("Load: " + plate_ids.join(',') + ' samples from box(es) ' + boxes);
 
-          Container.loadData(plate_ids, condition, { box_order: box_order})
-          .then (function (data) {
-            console.log("loaded data " + JSON.stringify(data));
-            var sampleList = [];
-            if (data.length == 0) {
+          Container.loadViewData(plate_ids, condition, { box_order: box_order})
+          .then (function (viewData) {
+            console.log("got view data " + JSON.stringify(viewData));
+
+            if (viewData.Samples.length == 0) {
               if (plate_ids.length) {
                 warnings.push("expecting ids: " + plate_ids.join(', '));
                 // return res.render('customize/private_home', { warnings : warnings} );
@@ -249,40 +267,17 @@ module.exports = {
               // return res.render('customize/private_home', );
             }
             else {
-              for (var i=0; i<data.length; i++) {
-                sampleList.push(data[i].id);
-              }
+              console.log("update viewData");
+              viewData.found = 'Container';
+              viewData.messages = messages;
+              viewData.warnings = warnings;
+              viewData.errors = errors;
 
-              if (sampleList.length < plate_ids.length) { 
-                warnings.push("Scanned " + plate_ids.length + " records but only found " + sampleList.length);
-              }
-
-              var get_last_step = Protocol_step.parse_last_step(data);  
-
-              var last_step = get_last_step.last_step;
-              if (get_last_step.warning) { warnings.push(get_last_step.warning) }
-
-              messages.push('loaded Matrix Tube(s)');
-
-              var returnval = { 
-                plate_ids: plate_ids.join(','), 
-                last_step : last_step, 
-                Samples: data , 
-                //sampleList : sampleList,
-                messages : messages,
-                warnings : warnings,
-                errors : errors,
-                //target_formats : target_formats 
-                found: 'Container'
-              };
-
-              deferred.resolve(returnval);
-              // return res.render('lims/Container', 
+              deferred.resolve(viewData);
             }
-
           })
           .catch (function (err) {
-            console.error('problem loading plate data');
+            console.log("Error calling loadView for container");
             // Logger.error(err, 'Error loading container data');
             deferred.reject({ messages: messages, warnings: warnings, errors : errors });
             //return res.render('customize/private_home', {messages: messages, warnings: warnings, errors : errors });
@@ -295,19 +290,22 @@ module.exports = {
         }
       })
       .catch ( function (err) {
-        errors.push("Error retrieving set");
+        // errors.push("Error retrieving set");
         // Logger.error(err, 'Error retrieving set');
-        deferred.reject({ errors : errors } );
+        console.log("Error retrieving set");
+        console.log(err);
+        deferred.reject(err);
       })
         // return res.render('customize/private_home', { errors : errors } );
       // })
     })
     .catch ( function (err) {
-      errors.push('Error interpretting barcode: ' + barcode);
-      errors.push(err);
+      console.log("error interpretting");
+      // errors.push('Error interpretting barcode: ' + barcode);
+      // errors.push(err);
 
       // Logger.error(err, 'Error interpretting barcode');
-      deferred.reject({ errors: errors } );
+      deferred.reject(err);
       //res.render('customize/private_home', { errors: errors } );
     });
         
