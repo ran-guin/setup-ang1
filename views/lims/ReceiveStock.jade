@@ -23,6 +23,10 @@ block content
             div.col-md-8
               
               form(role='form' name='Stock' method='post' action='Stock/receive')
+
+                div(ng-show="form.type && form.type !== 'Reagent' && form.type !=='Equipment'")
+                  div.alert.alert-danger
+                    b  Receipt of {{ form.type }} Stock types have not yet been set up                    
     
                 div.form-group
                   label.input-lg.col-md-2.control-label(for='number_in_batch') Items Received: 
@@ -94,7 +98,6 @@ block content
                   label.col-md-2.control-label(for='notes') Notes:
                   div.col-md-10
                     input.input-lg.form-control#notes(type='text' ng-model='form.notes' placeholder='Notes')
-                      
                 hr
                 div.form-group.input-lg 
                   div.col-md-offset-2.col-md-10
@@ -114,9 +117,6 @@ block content
               button.btn.btn-primary.btn-xs(type='button' ng-show="!injectedAlready('rcvdStock')" ng-click="injectData('/Stock/received?render=1','rcvdStock')") Previously Received Stock
  
               hr
-              div(ng-show="form.type && type !== 'Reagent' && type !=='Equipment'")
-                div.alert.alert-danger
-                  b  Receipt of {{ type }} Stock types have not yet been set up
                   
               div#rcvdStock
 
