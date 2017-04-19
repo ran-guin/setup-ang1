@@ -71,27 +71,158 @@ app.controller('FancyFormController',
             }
         }
 
+        /* Form Validation Functionality */
+        /*
+
+        Usage:
+
+            in Angular module:
+
+            validate_form({form : formobjects, required : , warnings: local_warnings, errors: local_errors });
+
+            in view:
+
+            button(type='submit' ng-disabled=form_validated)
+
+            // where:
+            //      required = list of required elements (should match elements in formobjects)
+            //      local_warnings = warning messages generated between validation checks
+            //.     local_errors.  = error messages generated between validation checks
+
+                
+            */
+
+        $scope.initialized = false;
         $scope.form_validated = false;
         $scope.validated = {};
+        $scope.visited = {};
 
-        $scope.validate_form = function() {
+        $scope.validate_form = function validate_form(options) {
+            console.log("VALIDATE FORM: ");
+            
+            if (!options) { options = {} }
+
+            var form = options.form || {};
+            var required = options.required || [];
+
+            var errors = options.errors || {};       // locally generated warnings (keyed on context)
+            var warnings = options.warnings || {};
+
+            var validate = options.validate || [];    // locally validated elements 
+            var element = options.element;
+
+            if (element) { $scope.visited(element) }
+
+            var force = options.force || false;  // force messages even if field hasn't been visited
+
+            var keys = Object.keys(form);
+            console.log("form keys: " + keys.join(','));
+
+            var valid = true;
             var failed = false;
-            var checks = Object.keys($scope.validated);
+            
+            $scope.reset_messages();
 
-            console.log(checks.length + " validation checks");
+            var error_contexts = Object.keys(errors);
+            if (error_contexts.length) { console.log(error_contexts.length + ' validation errors found') }
 
-            for (var i=0; i<checks.length; i++) {
-                if ( ! $scope.validated[checks[i]]) {
-                    failed = true;
-                    console.log("Failed " + checks[i] + ' validation');
-                }
-                else {
-                    console.log("Passed " + checks[i] + ' validation');
+            for (var i=0; i<error_contexts.length; i++) {
+                var errs = errors[error_contexts[i]];
+                if (errs && errs.length) {
+                    valid = false;
+                    console.log(JSON.stringify(errs));
+                    if (1) {
+                        if (errs.length) {
+                            console.log(errs.length + " Validation error(s) found in " + error_contexts[i]);
+                        }
+
+                        for (var j=0; j<errs.length; j++) {
+                            console.log(errs[j]);
+                            $scope.error(errs[j]);
+                        }
+                    }
                 }
             }
-            if (failed) { $scope.form_validated = false }
-            else { $scope.form_validated = true }
 
+            var warning_contexts = Object.keys(warnings);
+            for (var i=0; i<warning_contexts.length; i++) {
+                var warns = warnings[warning_contexts[i]];
+                if (warns && warns.length) {
+                    // do not invalidate for warnings .... 
+                    console.log(JSON.stringify(warns));
+                    if (1) {
+                        for (var j=0; j<warns.length; j++) {
+                            $scope.warning(warns[i]);
+                        }
+                    }
+                }
+            }
+
+            console.log("Required: " + JSON.stringify(required));
+            console.log("Visited: " + JSON.stringify($scope.visited));
+            console.log("Form: " + form);
+
+            if (required.length) {
+                for (var i=0; i<required.length; i++) {
+                    var required_element = required[i];
+
+                    if (required_element.constructor === Object) {
+
+                        var keys = Object.keys(required_element);
+                        var vals = Object.values(required_element);
+                        
+                        required_element = keys[0];
+                        required_alias  = vals[0];
+                    }
+                    else { required_alias = required_element }
+
+                    if (!form[required_element]) {
+                        valid = false;
+
+                        var split = required_element.match(/^(.+)(\d+)$/);
+                        if ($scope.initialized) { 
+                            if ($scope.visited[required_element] || force) {      
+                                // $scope.error("Missing " + split[1] + ' in step ' + split[2] + ": " + $scope.form[required_element]);
+                                console.log('missing ' + required_element);
+                                $scope.error("Missing " + required_alias);
+                            }
+                            else {
+                                console.log(required_element + ' not yet visited');
+                            }
+                        }
+                        else {
+                            console.log('not yet initialized... skipping this time...');
+                        }
+                    }
+                    else {
+                        console.log('validated ' + required_element + ' : ' + form[required_element]);
+                    }
+                }
+            }
+
+            console.log(validate.length + " validation checks");
+
+            var failed = false;
+            for (var i=0; i<validate.length; i++) {
+                if ( ! $scope.validated[validate[i]]) {
+                    failed = true;
+                    console.log("Failed " + validate[i] + ' validation');
+                }
+                else {
+                    console.log("Passed " + validate[i] + ' validation');
+                }
+            }
+
+            valid = valid && !failed;
+
+            $scope.initialized = true;
+            $scope.invalidate_form = !valid;
+            $scope.form_validated = valid;
+        }
+
+        $scope.visited = function (context) {
+            console.log("DID VISIT: " + context)
+            $scope.visited[context] = true;
         }
 
         $scope.testUnique = function (element, model, field) {
@@ -707,8 +838,7 @@ app.controller('FancyFormController',
                 scope.label = item[scope.property];
 
                 console.log("Selected from " + scope.list)
-
-            };
+            }
 
             scope.filter = function(event) {
                 var key = window.event ? event.keyCode : event.which;

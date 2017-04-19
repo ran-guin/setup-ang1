@@ -10,48 +10,62 @@ function stockController ($scope, $rootScope, $http, $q) {
 
     $scope.context = 'Receiving';
 
-    $scope.received = $scope.datestamp;
+    $scope.form.received = $scope.datestamp;
 
     $scope.pick_stock_type = function () {
 
-        console.log("Filter on " + $scope.type);
+        console.log("Filter on " + $scope.form.type);
 
         // filter catalog 
-        var condition = "Stock_Type = '" + $scope.type + "'";
-        $scope.setup_Menu('catalog', 'FK(catalog)',condition)
+        var condition = "Stock_Type = '" + $scope.form.type + "'";
+        $scope.setup_Menu('form.catalog', 'FK(catalog)',condition)
         $scope.validate_stock_form();
     }
 
     $scope.clear_form = function () {
-        $scope.number_in_batch = '';
-        $scope.received = null;
-        $scope.lot_number = '';
-        $scope.catalog = null;
-        $scope.notes = '';
-        $scope.type = null;
+        $scope.form.form.number_in_batch = '';
+        $scope.form.received = null;
+        $scope.form.lot_number = '';
+        $scope.form.catalog = null;
+        $scope.form.notes = '';
+        $scope.form.type = null;
     }
 
-    $scope.validate_stock_form = function () {
+    $scope.validated.serial = true;  // optional so initially okay.... 
+    $scope.validate_stock_form = function (context) {
 
-        $scope.validated.catalog = $scope.catalog;
-        $scope.validated.number = $scope.number_in_batch;
+        // $scope.validated.catalog = $scope.form.catalog;
+        // $scope.validated.number = $scope.form.number_in_batch;
     
-        if ($scope.type === 'Equipment') {
-            // $scope.split_serial();   // validate to start since this is optional 
-            $scope.validated.name = $scope.name;
-            console.log("Name ? " + $scope.name);
-            console.log(JSON.stringify($scope.validated));
-        } 
-        else if ($scope.type === 'Reagent') {
-            delete $scope.validated.serial;
-            delete $scope.validated.name;
+        // if ($scope.form.type === 'Equipment') {
+        //     // $scope.split_serial();   // validate to start since this is optional 
+        //     $scope.validated.name = $scope.form.name;
+        //     console.log("Name ? " + $scope.form.name);
+        //     console.log(JSON.stringify($scope.validated));
+        // } 
+        // else if ($scope.form.type === 'Reagent') {
+        //     delete $scope.validated.serial;
+        //     delete $scope.validated.name;
+        // }
+        if (context) { $scope.visited[context] = true }
+
+        var required = ['catalog','number_in_batch', 'type'];
+        var validate = ['catalog']
+        if ($scope.form.type === 'Equipment') {
+            required.push('name');
+            required.push('name|names');
+    
+            validate.push('serial|serialNames');
         }
 
-        $scope.validate_form();
+        validate.push('serial|serialNames');
+
+        console.log("Call validation...");
+        $scope.validate_form({form: $scope.form, required: required, validate: validate, errors: $scope.validation_errors});
     }
 
     $scope.validate_receipt = function () {
-       if (! $scope.catalog) {
+       if (! $scope.form.catalog) {
             console.log("Catalog required");
             $scope.validate.catalog = false ;
         }
@@ -65,13 +79,13 @@ function stockController ($scope, $rootScope, $http, $q) {
 
         $scope.reset_messages();
 
-        if ($scope.catalog && $scope.catalog.name && $scope.catalog.id) {
+        if ($scope.form.catalog && $scope.form.catalog.name && $scope.form.catalog.id) {
             
            $scope.validated.catalog = true;
             
-            if ($scope.type == 'Equipment') {
+            if ($scope.form.type == 'Equipment') {
                 var url = "/remoteQuery";
-                var query = "SELECT Prefix from Stock_Catalog, Equipment_Category WHERE FK_Equipment_Category__ID=Equipment_Category_ID AND Stock_Catalog_ID = " + $scope.catalog.id;
+                var query = "SELECT Prefix from Stock_Catalog, Equipment_Category WHERE FK_Equipment_Category__ID=Equipment_Category_ID AND Stock_Catalog_ID = " + $scope.form.catalog.id;
 
                 $http.post(url, { query : query })
                     .then ( function (result) {   
@@ -88,18 +102,18 @@ function stockController ($scope, $rootScope, $http, $q) {
                                 table: 'Equipment', 
                                 fill: false, 
                                 condition: "Equipment_Name LIKE '" + prefix + "%'",
-                                repeat: $scope.number_in_batch, 
+                                repeat: $scope.form.number_in_batch, 
                                 prefix: prefix
                             }
                         )
                         .then ( function (result) {
-                            $scope.name = result;
+                            $scope.form.name = result;
                             
-                            if ($scope.number_in_batch > 1) {
-                                $scope.names = result;
+                            if ($scope.form.number_in_batch > 1) {
+                                $scope.form.names = result;
                             }
                             else {
-                                delete $scope.names;
+                                delete $scope.form.names;
                             }
                         })
                         .catch ( function (err) {
@@ -116,34 +130,40 @@ function stockController ($scope, $rootScope, $http, $q) {
                     $scope.validated.catalog = false;
                 });
             }
+            $scope.validate_stock_form('catalog');
         }
         else {
-            console.log("no catalog " + $scope.catalog + ' : ' + JSON.stringify($scope.catalog));
+            console.log("no catalog " + $scope.form.catalog + ' : ' + JSON.stringify($scope.form.catalog));
+
             $scope.validated.catalog = false;
+            
+            if ($scope.visited.catalog) { $scope.validate_stock_form('catalog') }
+            $scope.visited.catalog = true;
+            
 
         }
 
-        $scope.validate_stock_form();
+        // $scope.validate_stock_form();
 
     }
 
     $scope.split_serial = function () {
         
-        $scope.reset_messages();
+        $scope.validation_errors.serial = [];
 
-        if ($scope.serial && $scope.number_in_batch) {
-            var serials = $scope.serial.split(/\s*,\s*/);
-            if (serials.length === $scope.number_in_batch) {
-                $scope.serialNumbers = serials;
+        if ($scope.form.serial && $scope.form.number_in_batch) {
+            var serials = $scope.form.serial.split(/\s*,\s*/);
+            if (serials.length === $scope.form.number_in_batch) {
+                $scope.form.serialNumbers = serials;
                 $scope.validated.serial = true;
             }
             else { 
-                $scope.warning('Number of Serial Numbers must match number in batch')
+                $scope.validation_errors.serial.push('Number of Serial Numbers must match number in batch');
                 $scope.validated.serial = false;
             }
         }
         else {
-            console.log("no serial");
+            console.log("no serial... ok");
         }
 
         $scope.validate_stock_form();
@@ -153,43 +173,43 @@ function stockController ($scope, $rootScope, $http, $q) {
 
         $scope.reset_messages();
         
-        console.log($scope.received);
+        console.log($scope.form.received);
    
-        if ($scope.expiry && $scope.expiry.constructor === Date ) { $scope.expiry = $scope.mysql_date( $scope.expiry ) }
-        if ($scope.received && $scope.received.constructor === Date ) { $scope.received = $scope.mysql_date( $scope.received ) }
+        if ($scope.form.expiry && $scope.form.expiry.constructor === Date ) { $scope.form.expiry = $scope.mysql_date( $scope.form.expiry ) }
+        if ($scope.form.received && $scope.form.received.constructor === Date ) { $scope.form.received = $scope.mysql_date( $scope.form.received ) }
 
     	var StockData = {
-    		'number_in_batch' : $scope.number_in_batch,
-    		'received'        : $scope.received,
-    		'lot_number'      : $scope.lot_number,
-    		// 'type'            : $scope.type,
-            'catalog'         : $scope.catalog.id,
-            'notes'           : $scope.notes,
+    		'form.number_in_batch' : $scope.form.number_in_batch,
+    		'received'        : $scope.form.received,
+    		'lot_number'      : $scope.form.lot_number,
+    		// 'type'            : $scope.form.type,
+            'catalog'         : $scope.form.catalog.id,
+            'notes'           : $scope.form.notes,
     	};
 
-    	var data = { Stock : StockData, type: $scope.type };
+    	var data = { Stock : StockData, type: $scope.form.type };
 
-    	if ($scope.type === 'Reagent') {
+    	if ($scope.form.type === 'Reagent') {
             var subData = {
-    			'expiry'            : $scope.expiry,
-    			// 'number_in_batch'   : $scope.number_in_batch,
-                'qty'               : $scope.qty,
-                'qty_units'         : $scope.qty_units,
+    			'expiry'            : $scope.form.expiry,
+    			// 'form.number_in_batch'   : $scope.form.number_in_batch,
+                'qty'               : $scope.form.qty,
+                'qty_units'         : $scope.form.qty_units,
                 'type'              : 'Reagent',
     		};
 
     		data['Reagent'] = subData;
     	}
-        else if ($scope.type === 'Equipment') {
+        else if ($scope.form.type === 'Equipment') {
 
             var subData = {
-                // 'number_in_batch'   : $scope.number_in_batch,
-                'name'              : name,
+                // 'form.number_in_batch'   : $scope.form.number_in_batch,
+                'name'              : $scope.form.name,
                 'status'            : 'In Use',
             };
 
-            if ($scope.serialNumbers) { subData.serial = $scope.serialNumbers }
-            if ($scope.names) { subData.name = $scope.names }
+            if ($scope.form.serialNumbers) { subData.serial = $scope.form.serialNumbers }
+            if ($scope.form.names) { subData.name = $scope.form.names }
 
             data['Equipment'] = subData;
         }
@@ -210,14 +230,14 @@ function stockController ($scope, $rootScope, $http, $q) {
                 var firstId = result.data.insertId;
                 var count = result.data.affectedRows;
 
-                var msg = "Added Stock Record(s) : " + $scope.type + ' # ' + firstId;
+                var msg = "Added Stock Record(s) : " + $scope.form.type + ' # ' + firstId;
                 if (count>1) { 
                     var lastId = firstId + count - 1;
                     msg += '..' + lastId;
                 }
 
                 $scope.message(msg);
-                var url = '/Stock/received?render=1&limit=1&type=' + $scope.type;
+                var url = '/Stock/received?render=1&limit=1&type=' + $scope.form.type;
                 console.log('call ' + url);
                 $scope.injectData(url,'rcvdStock');
             }

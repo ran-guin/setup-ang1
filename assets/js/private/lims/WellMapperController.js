@@ -144,7 +144,7 @@ function wellMapperController ($scope, $rootScope, $http, $q ) {
                 var N_boxes = target_boxes.length;
 
                 if (! target_boxes.length) {
-                    $scope.error("No valid target boxes");
+                    if ($scope.initialized) { $scope.error("No valid target boxes") }
                     target_rack = '';
                     target_boxes = [];
                 }
@@ -209,15 +209,6 @@ function wellMapperController ($scope, $rootScope, $http, $q ) {
 
         $scope.targetMapStatus = 'Pending';
         $scope.sourceMapStatus = 'Pending';
-
-        if (Options && Options.reset && $scope.initialized) {
-            console.log("reset messages before redistribute_Samples");
-            $scope.reset_messages();
-            console.log("Redistribute Samples ");
-        }
-        else {
-            console.log("Redistribute Samples (no reset");            
-        }
 
         console.log("Load by " + $scope.map.load_by);
 
@@ -301,9 +292,8 @@ function wellMapperController ($scope, $rootScope, $http, $q ) {
             var wells = Map.wells || {};
             // $scope.map.use_rows = wells.rows;
             // $scope.map.use_cols = wells.cols;
+            
             console.log("WELLS: " + JSON.stringify(wells));
-
-
             console.log("Samples: " + JSON.stringify(Samples));
             // console.log("NEW MAP: " + JSON.stringify(Map));
             console.log("Rows: " + JSON.stringify(Map.rows));
@@ -315,13 +305,13 @@ function wellMapperController ($scope, $rootScope, $http, $q ) {
 
             if ( Map.warnings && Map.warnings.length ) { 
                 for (var i=0; i<Map.warnings.length; i++ ) {
-                    $scope.warning(Map.warnings[i]);
+                    // $scope.warning(Map.warnings[i]);
                 } 
             }
 
             if ( Map.errors && Map.errors.length ) { 
                 for (var i=0; i<Map.errors.length; i++ ) {
-                    $scope.error(Map.errors[i]);
+                    if ($scope.initialized) { $scope.error(Map.errors[i]) }
                 } 
             }
 

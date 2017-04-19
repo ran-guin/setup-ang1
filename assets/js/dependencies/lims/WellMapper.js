@@ -1096,7 +1096,8 @@ function wellMapper() {
             }  
             else if (current_volume >= max) { 
                 // OKAY - no adjustment req'd  
-                var remaining = current_volume - max; 
+                
+                var remaining = parseFloat(current_volume.toPrecision(4)) - parseFloat(max.toPrecision(4)); 
                 this.sample_remaining[source.id] = parseFloat(remaining.toPrecision(this.significant_digits));
 
                 console.log(source.id + ":  Remaining volume: " + this.significant_digits + ' : ' + current_volume + ' - ' + max + ' = ' + this.sample_remaining[source.id]);

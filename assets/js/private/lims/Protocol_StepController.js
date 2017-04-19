@@ -434,6 +434,11 @@ function protocol_stepController ($scope, $rootScope, $http, $q) {
         $scope.changes = Object.keys($scope.changed).length;
     }
 
+    $scope.reset_custom = function (field) {
+        console.log(JSON.stringify($scope.Record.custom_settings));
+        $scope.changed['custom_settings'] = $scope.Record.custom_settings;
+    }
+
     $scope.save = function (type) {
         
         $scope.reset_input();
