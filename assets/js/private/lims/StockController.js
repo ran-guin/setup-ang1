@@ -10,6 +10,7 @@ function stockController ($scope, $rootScope, $http, $q) {
 
     $scope.context = 'Receiving';
 
+    $scope.form = {};
     $scope.form.received = $scope.datestamp;
 
     $scope.pick_stock_type = function () {
@@ -31,6 +32,9 @@ function stockController ($scope, $rootScope, $http, $q) {
         $scope.form.type = null;
     }
 
+
+    $scope.validation_errors = {};
+    $scope.validation_warnings = {};
     $scope.validated.serial = true;  // optional so initially okay.... 
     $scope.validate_stock_form = function (context) {
 
@@ -53,12 +57,22 @@ function stockController ($scope, $rootScope, $http, $q) {
         var validate = ['catalog']
         if ($scope.form.type === 'Equipment') {
             required.push('name');
-            required.push('name|names');
-    
-            validate.push('serial|serialNames');
+            required.push('name|names');    
         }
 
-        validate.push('serial|serialNames');
+        // Check serial number for matching count with number_in_batch... 
+        if (! $scope.form.serial) {
+            console.log("no serial number ... okay");
+        }
+        else {
+            var list = $scope.form.serialNumbers || [$scope.form.serial];
+            if ($scope.form.number_in_batch === list.length) {
+                console.log(list.length + " serial numbers supplied (if defined) must match number in batch");
+            }
+            else {
+                $scope.validation_errors['serial'] = ['Require ' + $scope.form.number_in_batch + ' distinct serial #s (if supplied)'];
+            }
+        }
 
         console.log("Call validation...");
         $scope.validate_form({form: $scope.form, required: required, validate: validate, errors: $scope.validation_errors});
@@ -158,7 +172,7 @@ function stockController ($scope, $rootScope, $http, $q) {
                 $scope.validated.serial = true;
             }
             else { 
-                $scope.validation_errors.serial.push('Number of Serial Numbers must match number in batch');
+                $scope.validation_errors.serial.push('Number of Serial Numbers (if supplied) must match number in batch');
                 $scope.validated.serial = false;
             }
         }
