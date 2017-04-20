@@ -534,18 +534,21 @@ module.exports = {
 
 		}
 
-		console.log('Reset:  ' + JSON.stringify(reset));
+		var reset = { target: resetTarget, clone: resetClone, source: resetSource};
 
 		if (Options.transfer_type === 'Transfer' ) {
 			Rack.garbage()
 			.then (function (id) {
 				resetSource['FK_Rack__ID'] = id;
-				var reset = { target: resetTarget, clone: resetClone, source: resetSource}
+				reset.source = resetSource;
+
+				console.log('Reset:  ' + JSON.stringify(reset));
 				deferred.resolve(reset);
 			})
 			.catch ( function (err) {
 				console.log('Error retrieving garbage location');
-				var reset = { target: resetTarget, clone: resetClone, source: resetSource}
+				console.log('Reset:  ' + JSON.stringify(reset));
+
 				deferred.resolve(reset);			
 			});
 		}
