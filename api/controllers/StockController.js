@@ -47,7 +47,7 @@ module.exports = {
 		var left_joins = [];
 		var order = ['Stock_ID DESC'];
 
-		if ( type.match(/(Solution|Reagent)/) ) {
+		if ( type && type.match(/(Solution|Reagent)/) ) {
 			fields.push("Group_Concat( DISTINCT Concat(Solution_Quantity,Solution_Quantity_Units) SEPARATOR ', ') as size");
 			fields.push("GROUP_CONCAT(DISTINCT Solution_ID SEPARATOR ', ') as ids");
 			fields.push('Solution_Status as status');
@@ -60,6 +60,9 @@ module.exports = {
 			fields.push("GROUP_CONCAT(DISTINCT Serial_Number SEPARATOR ', ') as serial");			
 			left_joins.push('Equipment ON Equipment.FK_Stock__ID=Stock_ID');
 			group.push('Stock_Catalog_ID, Stock_ID');
+		}
+		else {
+			console.log('type unidentified: ' + type);	
 		}
 
 		var suffix = '';
