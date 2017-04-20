@@ -86,7 +86,7 @@ module.exports = {
 		var Mod = sails.models[model] || {};
 		var table = Mod.tableName || model;
 
-		if ( Attribute.models.indexOf(model) ) {
+		if ( Attribute.models.indexOf(model) >= 0) {
 			console.log('clone attributes for ' + table + ' Record(s): ' + targets.join(',' ));
 
 			var source_list = sources.join(',');
