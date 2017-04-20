@@ -7,12 +7,14 @@ block content
   div.container
     h3 Sample History:
       ul
-        each step,i in steps
-          - protocol = step.Lab_protocol.name;
-          - name = step.name;
-          - id   = step.id; 
-          li 
-            a(href="/record/Prep/#{id}") #{name} 
-      
+        if steps.length
+          each step,i in steps
+            - protocol = step.Lab_protocol.name;
+            - name = step.name;
+            - id   = step.id; 
+            li 
+              a(href="/record/Prep/#{id}") #{name} 
+        if !steps.length
+          li b No steps recorded
 
       
