@@ -20,5 +20,10 @@ select.centred {
 }
 
 input.mandatory {
-	border: 1px solid red !important;
+	border: 3px solid red !important;
 }
+
+input.validated-mandatory {
+	border: 3px solid green !important;
+}
+

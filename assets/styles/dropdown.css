@@ -34,8 +34,12 @@ my-dropdown > div {
   float: left;
   width: 100%;
 }
+my-dropdown.validated-mandatory > div > div.dropdown-display > input {
+  border: solid 3px green !important;
+  border-radius: 6px;
+}
 my-dropdown.mandatory > div > div.dropdown-display > input {
-  border: solid 1px red !important;
+  border: solid 3px red !important;
   border-radius: 6px;
 }
 my-dropdown > div > div.dropdown-display > input {
