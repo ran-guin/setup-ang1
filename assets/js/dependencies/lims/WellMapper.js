@@ -47,6 +47,11 @@ function wellMapper() {
 
     this.significant_digits = 5;
 
+    this.warnings = [];
+    this.errors   = [];
+    this.messages = [];
+    
+
     this.colourMap = function (length, options) {
 
         if (!options) { options = {} }
@@ -203,7 +208,12 @@ function wellMapper() {
         var y;
 
         if (this.available && this.available[batch] && this.available[batch].length > target_index+1) {
-            console.log(this.available[batch].length + ' are avail in ' + batch + " of " + target_index);
+            console.log(this.available[batch].length + ' are still avail in ' + batch + " of " + target_index);
+            
+            // if (this.target_boxes[batch_index]) {
+            //     this.messages.push(this.available[batch].length + ' wells are still available in box#' + this.target_boxes[batch_index]);
+            // }
+
             target_index++;
         }
         else {
@@ -328,10 +338,14 @@ function wellMapper() {
         this.available = Options.available;
         
         this.transfer_type = Options.transfer_type;
-        this.target_boxes  = Options.target_boxes;
+        this.target_boxes  = Options.target_boxes || [Options.target_rack];
 
         this.source_boxes = _.unique(_.pluck(sources, 'box_id'));
 
+        this.warnings = [];
+        this.errors   = [];
+        this.messages = [];
+    
 
         this.source_count = sources.length;
  
@@ -358,6 +372,7 @@ function wellMapper() {
             this.available = { 'TBD' : avail };  // test temporary .. 
         }
         console.log("TARGET BOXES: " + JSON.stringify(this.target_boxes));
+        if (!this.target_boxes[0]) { this.errors.push('Missing or invalid target box')}
 
         var boxes_required = 0;
         if (Options.available) {
@@ -423,9 +438,7 @@ function wellMapper() {
 //
 
         var Transfers = [];
-        var warnings = [];
-        var errors   = [];
-    
+
         this.reset_qty_adjustments();
 
         var targetMap = [];
@@ -616,7 +629,7 @@ function wellMapper() {
                     var i = batch[l];
                     
                     if (! sources[i].position) { 
-                        warnings.push("No Source Position Information for Sample " + sources[i].id);
+                        this.warnings.push("No Source Position Information for Sample " + sources[i].id);
                         sources[i].position = ''
                     }
 
@@ -638,7 +651,7 @@ function wellMapper() {
                         };
                     }
                     else {
-                        warnings.push("Box information missing for sample " + i);
+                        this.warnings.push("Box information missing for sample " + i);
                     }
 
                     var target_position;
@@ -790,7 +803,7 @@ function wellMapper() {
             var avail_array = this.available[target_box] || [];
             var avail_count = avail_array.length;
 
-            console.log(avail_count + " wells available in Box" + target_box );
+            // console.log(avail_count + " wells available in Box" + target_box );
             Available_wells[target_box] = _.pluck(this.available[target_box], 'position')
         } 
 
@@ -802,23 +815,23 @@ function wellMapper() {
         if (this.missing_wells > 1) {
             this.missing_wells--; // last call to next_available would generate missing_well ...
             
-            var msg = this.missing_wells + ' Target sample(s) require target boxes...  Please scan ' + this.missing_boxes + " more Target Box(es)";
-            errors.push(msg);
+            var msg = this.missing_wells + ' Target sample(s) still require target boxes...  Please scan ' + this.missing_boxes + " more Target Box(es)";
+            this.errors.push(msg);
             console.log(msg);
         }
 
         // Generate warnings for insuffienct sample quantities ... 
         if (this.empty && this.empty.length) {
             var msg = this.empty.length + " wells are empty (no sample can be transferred)";
-            warnings.push(msg);
+            this.warnings.push(msg);
         }
         if (this.unfilled && this.unfilled.length) {
             var msg = this.unfilled.length + " wells will be unfilled (< min required sample)";
-            warnings.push(msg);
+            this.warnings.push(msg);
         }
         if (this.partially_filled && this.partially_filled.length) {
             var msg = this.partially_filled.length + " wells will be partially filled (not sufficient sample to provide volume requested)";
-            warnings.push(msg);
+            this.warnings.push(msg);
         }
 
         console.log("completed Distribution... ");
@@ -836,8 +849,9 @@ function wellMapper() {
             wells: this.wells,
             rows: this.rows,
             columns: this.columns,
-            warnings: warnings,
-            errors: errors,
+            messages: this.messages,
+            warnings: this.warnings,
+            errors: this.errors,
             source_boxes: this.source_boxes,
         };
 
@@ -901,7 +915,7 @@ function wellMapper() {
                 if (input_array.length > 1 && input_array.length != split) {
                     //$scope.errMsg = "Multiple value count must match split count";
                     //$scope['form' + $scope.stepNumber].$invalid = true;
-                    errors.push("Multiple value count must match split count");
+                    this.errors.push("Multiple value count must match split count");
                     disable = true;
                     console.log("FAIL");
                 }
@@ -922,7 +936,7 @@ function wellMapper() {
                 disable = false;
             }
             else {
-                errors.push("# of entered values must be factor of " + N);
+                this.errors.push("# of entered values must be factor of " + N);
                 disable = true;
                 //$scope[field+'_errors'] = "# of entered values must be factor of " + $scope.N;
                 //$scope.formDisabled  = true;
@@ -1057,6 +1071,8 @@ function wellMapper() {
                 console.log(".. remaining volume = " + current_volume + source.qty_units);
             }
 
+            current_volume = parseFloat(current_volume);
+
             var min = extract.match(/min:(\d+)/i);
             if (! min) { min = extract.match(/>(\d+)/) }
 
@@ -1081,6 +1097,9 @@ function wellMapper() {
                     if (max) { max = this.convert_units(max,extract_units,source.qty_units) }
                     if (min) { min = this.convert_units(min,extract_units,source.qty_units) }
             }
+
+            max = parseFloat(max);
+            min = parseFloat(min);
 
             console.log("Extract : " + extract + extract_units + " [ " + min + ' : ' + max + ' ] from ' + current_volume + source.qty_units);
             if (current_volume <= 0 ) { 
