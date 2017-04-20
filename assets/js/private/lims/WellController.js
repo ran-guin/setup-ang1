@@ -44,9 +44,6 @@ function wellController ($scope, $rootScope, $http, $q ) {
 
         console.log("SIZES: " + JSON.stringify($scope.sizes));
 
-        console.log("INIT Map");
-        $scope.form_validated = false;
-
         // $scope.map.transfer_qty_units = 'ml';  // custom default
 
         if (options && options.distribute) {
@@ -69,6 +66,7 @@ function wellController ($scope, $rootScope, $http, $q ) {
 
     $scope.redistribute = function (reset, execute) {
 
+        console.log("Redistribute wells");
         if (execute) {
             $scope.distributionStatus = 'Pending';
         }
@@ -142,80 +140,6 @@ function wellController ($scope, $rootScope, $http, $q ) {
     $scope.clear_volume = function () {
          $scope.map.transfer_qty = '';
         $scope.map.transfer_qty_units = '';       
-    }
-
-    $scope.validate_redistribution_form = function validated_form() {
-        
-        if ($scope.map.transfer_type === 'Move') {
-            if ( $scope.map.splitX > 1) {
-                $scope.map.splitX = 1;
-                $scope.redistribute('reset');
-                console.log("reset split to 1... ");
-            }
-        }
-
-        var qs = $scope.map.transfer_qty.split(',');
-        if (qs.length > 1 && $scope.map.splitX > 1) {
-            if (qs.length !== $scope.map.splitX) {
-                $scope.form_validated = false;
-                $scope.error("multiple transfer volumes (" + qs.length + ") must match split count: " + $scope.map.splitX);
-            }
-        }
-
-        $scope.redistribution_errors = {};
-        console.log("Validate " + $scope.map.transfer_type);
-        if (! $scope.map.transfer_qty && $scope.map.transfer_type==='Aliquot') { 
-
-            $scope.redistribution_errors.transfer.push('missing qty for aliquot');
-
-            // $scope.map.transfer_qty_errors = true;
-            // console.log("missing qty for aliquot");
-            // var testElement = document.getElementById('transfer_qty') || {} ;
-            // testElement.style = "border-color: red; border-width: 2px;";
-        }
-        // else if ($scope.map.transfer_qty) { 
-        //     $scope.map.transfer_qty_errors = false;
-        //     var testElement = document.getElementById('transfer_qty') || {};
-        //     testElement.style = "border-color: green; border-width: 2px;";
-        // }
-        // else {
-        //     $scope.map.transfer_qty_errors = false;
-        //     var testElement = document.getElementById('transfer_qty') || {};
-        //     testElement.style = "border-color: null; border-width: 2px;";            
-        // }
-
-        if ($scope.map.transfer_qty && !$scope.map.transfer_qty) {
-            $scope.redistribution_errors.transfer.push('missing qty for aliquot');             
-            // if ( $scope.map.transfer_qty_units) { 
-            //     $scope.units_errors = false;
-            //     var testElement = document.getElementById('transfer_qty_units') || {};
-            //     testElement.style = "border-color: green; border-width: 2px;";
-            // }
-            // else { 
-            //     $scope.units_errors = true;
-            //     var testElement = document.getElementById("transfer_qty_units") || {};
-            //     testElement.style = "border-color: red; border-width: 2px;";
-            // }
-        }
-        // else {
-        //     $scope.units_errors = false;
-        //     testElement = document.getElementById("transfer_qty_units") || {};
-        //     testElement.style = "border-color: green; border-width: 2px;";            
-        // }
-
-
-        // if ($scope.map.transfer_qty_errors || $scope.units_errors) {
-        //     console.log("failed validation");
-        //     $scope.form_validated = false ;
-        // }
-        // else {
-        //     console.log("passed validation"); 
-        //     $scope.form_validated = true;
-        // }
-
-        $scope.mandatory_list = ['target_format'];
-
-        $scope.validate_form( { form: $scope.map, required: $scope.mandatory_list, errors: $scope.redistribution_errors} );
     }
 
     $scope.parse_custom_options_OLD = function () {
