@@ -61,15 +61,13 @@ block content
                   p &nbsp;
                   div.form-group.input-lg
                     label.col-md-3.control-label(for='qty') Unit Size: 
-                    // input.col-md-3.input-lg#qty(type='text' ng-model='form.qty' required placeholder='Volume')
-                    // input.col-md-3.input-lg(type='text' ng-model='form.qty_units' required placeholder='Volume_Units')
                     div.col-md-6
                       table
                         tr
                           td(width='100%')                
-                            input.input-lg.form-control.preaddon#qty(type='text' aria-describedBy='qty' placeholder='Qty', ng-model='form.qty' size='16')
+                            input.input-lg.form-control.preaddon#qty(type='text' aria-describedBy='qty' placeholder='Qty', ng-model='form.qty' size='16' ng-change='validate_stock_form()')
                           td     
-                            my-dropdown.mini-dropdown.addon#qty_units(placeholder='units..' list="MenuList['form.qty_units']" selected="form.qty_units" property='name' track='name', ng-init="setup_Menu('qty_units','l,ml,g,mg,units')") 
+                            my-dropdown.mini-dropdown.addon#qty_units(placeholder='units..' list="MenuList['form.qty_units']" selected="form.qty_units" property='name' track='name', ng-click='validate_stock_form()' ng-init="setup_Menu('form.qty_units','l,ml,g,mg,units')") 
 
                     div.col-md-3 &nbsp;
 
