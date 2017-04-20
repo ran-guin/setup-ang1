@@ -5,17 +5,36 @@ app.controller('FancyFormController',
     function ($scope, $q, $rootScope, $http, $location, FancyFormFactory, Upload) {
         console.log('loaded Fancy Form Controller');
         
-        // Support Basic Password Validation and Confirmation
-        // usage: ng-model='repeat' ng-key-up="compare(repeat)"
+        // Functionality to Support Numerous Standard Form Features including:
+        // 
+        // - Basic Password Validation and Confirmation
+        //         usage: ng-model='repeat' ng-key-up="compare(repeat)"
+        //
+        // - Generate dropdown menu from enum list or reference to database lookup field
+
+ 
+        // Simple form accessors 
+        
+        $scope.setField = function (field, value) {
+            console.log("SET " + field + ' to ' + value);
+            $scope[field] = value;
+        }
+
+        $scope.mysql_date = function (date) {
+            if (date.constructor === Date) {
+                var dd = date.getDate();
+                var mm = date.getMonth() + 1;
+                var yyyy = date.getFullYear();
+
+                return yyyy.toString() + '-' + mm.toString() + '-' + dd.toString(); 
+            }
+        }
+
+        // Standardize units fields associated with quantity fields
+
+        // Usage: 
+
         $scope.stdForm = {};
-        $scope.MenuList = {};
-        $scope.ReverseLookup = {};
-
-        $scope.form = {};
-        $scope.split = {};
-        $scope.paste = {};
-        $scope.cut = {};
-
         $scope.stdForm.units = {
             'ul' :  1/1000,
             'ml' : 1,
@@ -37,7 +56,8 @@ app.controller('FancyFormController',
 
         $scope.custom_disable = false;
 
-        // Standard Help - drives HelpModal content
+        // Feature: Standard Help - drives HelpModal content
+
         $scope.helpString = '';
         $scope.helpTitle = '';
         $scope.helpText  = '';
@@ -61,17 +81,8 @@ app.controller('FancyFormController',
             });
         }
 
-        $scope.mysql_date = function (date) {
-            if (date.constructor === Date) {
-                var dd = date.getDate();
-                var mm = date.getMonth() + 1;
-                var yyyy = date.getFullYear();
 
-                return yyyy.toString() + '-' + mm.toString() + '-' + dd.toString(); 
-            }
-        }
-
-        /* Form Validation Functionality */
+        /* Feature: Form Validation */
         /*
 
         Usage:
@@ -92,77 +103,186 @@ app.controller('FancyFormController',
                 
             */
 
-        $scope.initialized = false;
+        $scope.form_initialized = false;
         $scope.form_validated = false;
         $scope.validated = {};
         $scope.visited = {};
 
+        $scope.validation_messages = {};
+        $scope.validation_warnings = {};
+        $scope.validation_errors = {};
+
+        $scope.validation_message = function (context, message) {
+            if (! $scope.validation_messages[context]) { $scope.validation_messages[context] = [] }
+
+            if (message.constructor === Array) { $scope.validation_messages[context] = message }
+            else { $scope.validation_messages[context].push(message) }
+            console.log(JSON.stringify(message));
+            console.log(JSON.stringify($scope.validation_messages));        
+        }
+
+        $scope.validation_warning = function (context, warning) {
+            if (! $scope.validation_warnings[context]) { $scope.validation_warnings[context] = [] }
+
+            if (warning.constructor === Array) { $scope.validation_warnings[context] = warning }
+            else { $scope.validation_warnings[context].push(warning) }
+        }
+
+        $scope.validation_error = function (context, error) {
+            if (! $scope.validation_errors[context]) { $scope.validation_errors[context] = [] }
+            
+            if (error.constructor === Array) { $scope.validation_errors[context] = error }
+            else { $scope.validation_errors[context].push(error) }
+
+        }
+
+        $scope.reset_form_validation = function () {
+            $scope.validation_errors = {};
+            $scope.validation_warnings = {};
+            $scope.validation_messages = {};
+        }
+
+        $scope.check_form = function (form) {
+            var keys = Object.keys(form);
+            var values = Object.values(form);
+            
+            console.log("form keys: " + keys.join(','));
+
+            console.log("form values: " + JSON.stringify(values));
+
+        }
+
         $scope.validate_form = function validate_form(options) {
             console.log("VALIDATE FORM: ");
             
+            $scope.reset_messages();
+
             if (!options) { options = {} }
 
             var form = options.form || {};
             var required = options.required || [];
 
-            var errors = options.errors || {};       // locally generated warnings (keyed on context)
-            var warnings = options.warnings || {};
+            var errors = options.errors || $scope.validation_errors;       // locally generated warnings (keyed on context)
+            var warnings = options.warnings || $scope.validation_warnings;
+            var messages = options.messages || $scope.validation_messages;
 
             var validate = options.validate || [];    // locally validated elements 
             var element = options.element;
 
-            if (element) { $scope.visited(element) }
-
             var force = options.force || false;  // force messages even if field hasn't been visited
+            var trim = options.trim || true;     // trim trailing index numbers from element names when generating message
+            var count = options.count;           // check number of multiplexed values that may be allowed.  N or 1 
 
-            var keys = Object.keys(form);
-            console.log("form keys: " + keys.join(','));
+            if (element) { $scope.visit(element) }
 
             var valid = true;
             var failed = false;
-            
-            $scope.reset_messages();
+
+            var promises = [];
+
+            promises.push($scope.validate_errors(errors, 'error'));
+            promises.push($scope.validate_errors(warnings, 'warning'));
+            promises.push($scope.validate_errors(messages, 'message'));
+
+            console.log(required.length + " Required: " + JSON.stringify(required));
+            promises.push( $scope.validate_required(form, required, trim, force) );
+
+            console.log($scope.visited.length + " Visited: " + JSON.stringify($scope.visited));
+
+            console.log(validate.length + " explicit validation checks: " + JSON.stringify($scope.validate));
+            promises.push( $scope.validate_explicit($scope.validate) );
+
+            $q.all(promises)
+            .then (function (result) {
+                console.log(result.length + ' validated promises [errors, warnings, messages, required, explicit:]');
+                var valid = true;
+                for (var i=0; i<result.length; i++) {
+                    console.log(i + ': ' + JSON.stringify(result[i]));
+                    if (! result[i].valid) { valid = false }
+                }
+
+                $scope.form_initialized = true;
+                $scope.invalidate_form = !valid;
+                $scope.form_validated = valid;
+
+                console.log("valid ?: " + valid + '; initialized : ' + $scope.form_initialized);
+            })
+            .catch ( function (err) {
+                console.log("Error with validation... see administrator");
+                valid = false;
+
+                $scope.form_initialized = true;
+                $scope.invalidate_form = !valid;
+                $scope.form_validated = valid;
+            })
+
+        }
+
+        $scope.validate_explicit = function validate_explicit(validate) {
+            var deferred = $q.defer();
+
+            if (!validate) { validate = [] }
+
+            var valid = true;
+            for (var i=0; i<validate.length; i++) {
+                if ( ! $scope.validated[validate[i]]) {
+                    valid = false;
+                    console.log("Failed " + validate[i] + ' validation');
+                }
+                else {
+                    console.log("Passed " + validate[i] + ' validation');
+                }
+            }
+            deferred.resolve({valid: valid});
+            return deferred.promise;
+        }
+
+        $scope.validate_errors = function validate_errors(errors, type) {
+            var deferred = $q.defer();
+
+            if (! type ) { type = 'error' }
 
             var error_contexts = Object.keys(errors);
             if (error_contexts.length) { console.log(error_contexts.length + ' validation errors found') }
 
+            var valid = true;
             for (var i=0; i<error_contexts.length; i++) {
                 var errs = errors[error_contexts[i]];
                 if (errs && errs.length) {
-                    valid = false;
-                    console.log(JSON.stringify(errs));
-                    if (1) {
-                        if (errs.length) {
-                            console.log(errs.length + " Validation error(s) found in " + error_contexts[i]);
-                        }
+                    if (type === 'error') { valid = false }
+                    console.log( type + ': ' + JSON.stringify(errs));
 
-                        for (var j=0; j<errs.length; j++) {
-                            console.log(errs[j]);
+                    if (errs.length) {
+                        console.log(errs.length + ' Validation ' + type + '(s) found in ' + error_contexts[i]);
+                    }
+
+                    for (var j=0; j<errs.length; j++) {
+                        console.log(errs[j]);
+                        if (type === 'error') {
                             $scope.error(errs[j]);
                         }
+                        else if (type === 'warning') { $scope.warning(errs[j]) }
+                        else if (type === 'message') { $scope.message(errs[i]) }
                     }
                 }
-            }
-
-            var warning_contexts = Object.keys(warnings);
-            for (var i=0; i<warning_contexts.length; i++) {
-                var warns = warnings[warning_contexts[i]];
-                if (warns && warns.length) {
-                    // do not invalidate for warnings .... 
-                    console.log(JSON.stringify(warns));
-                    if (1) {
-                        for (var j=0; j<warns.length; j++) {
-                            $scope.warning(warns[i]);
-                        }
-                    }
+                else {
+                    console.log("error has no length ?");
+                    console.log(JSON.stringify(errs));
                 }
             }
+            deferred.resolve({valid: valid});
+            return deferred.promise;
+        }
 
-            console.log("Required: " + JSON.stringify(required));
-            console.log("Visited: " + JSON.stringify($scope.visited));
-            console.log("Form: " + form);
+        $scope.validate_required = function(form, required, trim, force) {
+
+            var deferred = $q.defer();
+
+            var valid = true;
 
             if (required.length) {
+                var promises = [];
+
                 for (var i=0; i<required.length; i++) {
                     var required_element = required[i];
 
@@ -176,53 +296,57 @@ app.controller('FancyFormController',
                     }
                     else { required_alias = required_element }
 
-                    $scope.check_input(form, required_element)
-                    .then ( function (result) {
-                        console.log('Result check: ' + JSON.stringify(result));
-                        if (result.found && result.found.length) {
-                            console.log("validated " + result.element + ": " + result.found);
-                        }
-                        else {
+                    console.log('check input for ' + required_element);
+                    
+                    promises.push( $scope.check_input(form, required_element, trim) );
+                }
+
+                $q.all(promises)
+                .then ( function (results) {
+                    for (var i=0; i<results.length; i++) {
+                        var result = results[i];
+                        
+                        console.log(i + ' Validation results: ' + JSON.stringify(result));
+                        
+                        if (result.found === null) {
                             valid = false;
-                            if ($scope.visited[required_element] || force) {
-                                console.log('missing ' + required_element);
-                                $scope.error("Missing " + required_alias);                                
+                            
+                            $scope.validate_element(result.element, false);
+
+                            if ($scope.visited[result.element] || force) {
+                                console.log('missing ' + result.element);
+                                $scope.error("Missing " + result.required);                                
                             }
-                            else if ($scope.initialized) { 
-                                console.log(required_element + ' not yet visited');                                
+                            else if ($scope.form_initialized) { 
+                                console.log(result.element + ' not yet visited');                                
                             }
                             else {
                                 console.log('form not yet initialized');
                             }                            
                         }
-                    })
-                    .catch ( function (err) {
-                        console.log("error checking for " + required_element + ' in form');
-                    });
-                }
+                        else {
+                            $scope.validate_element(result.element, true);
+                            console.log("validated " + result.element + ": " + JSON.stringify(result.found));
+                        }
+                    }
+                    deferred.resolve({ valid: valid });
+                })
+                .catch ( function (err) {
+                    console.log("error checking for " + result.required + ' in form');
+                    deferred.reject(err);
+                });
+                
+            }
+            else {
+                deferred.resolve({valid: true});
             }
 
-            console.log(validate.length + " validation checks");
+            return deferred.promise;
 
-            var failed = false;
-            for (var i=0; i<validate.length; i++) {
-                if ( ! $scope.validated[validate[i]]) {
-                    failed = true;
-                    console.log("Failed " + validate[i] + ' validation');
-                }
-                else {
-                    console.log("Passed " + validate[i] + ' validation');
-                }
-            }
-
-            valid = valid && !failed;
-
-            $scope.initialized = true;
-            $scope.invalidate_form = !valid;
-            $scope.form_validated = valid;
         }
 
-        $scope.check_input = function (form, element) {
+        $scope.check_input = function (form, element, trim) {
+            // trim optionally trims indexes from end of element names for messaging eg  qty5 -> qty 
             var deferred = $q.defer();
 
             if (element.match(/\|/)) {
@@ -235,24 +359,97 @@ app.controller('FancyFormController',
                 for (var i=0; i<elements.length; i++) {
                     if (form[elements[i]] && form[elements[i]].length) {
                         found++;
-                        deferred.resolve({found: form[elements[i]], element: elements[i] })
+                        deferred.resolve({found: form[elements[i]], element: elements[i], required: elements[i]})
                     }
                 }
 
                 if (!found) {
-                    deferred.resolve({found: '', element: elements[0]});
+                    deferred.resolve({found: '', element: elements[0], required: element});
                 }
             }
             else {
-                deferred.resolve({found: form[element], element: element })
+                var alias = element;
+                if (trim) { alias = alias.replace(/\d+$/,'') }
+
+                if (form[element]) {
+                    if ( form[element].constructor === Array || form[element].constructor === String) {
+                        if ( form[element].length ) {
+                            console.log('found ' + form[element]);
+                        }
+                        else {
+                            console.log(element + ' is empty string');
+                        }
+                        deferred.resolve({found: form[element], element: element, required: alias})           
+                    }         
+                    else if (form[element].constructor === Object) {
+                        if (form[element].id) { 
+                            console.log('found id for Object = ' + form[element].id);
+                        }
+                        else {
+                            console.log("found object but no id key ");
+                        }
+                        deferred.resolve({found: form[element], element: element, required: alias})           
+                    }
+                    else if (form[element].constructor === Number && form[element]) {
+                        deferred.resolve({found: form[element].id, element: element, required: alias})
+                    }
+                    else { 
+                        console.log('unidentified element type ?');
+                        deferred.resolve({found: form[element], element: element, required: alias});
+                    }
+                }
+                else {
+                    console.log(element + ' not found..' + alias);
+                    
+                    $scope.check_form(form);
+
+                    deferred.resolve({found: null, element: element, required: alias});
+                }
             } 
             return deferred.promise;
         }
 
-        $scope.visited = function (context) {
-            console.log("DID VISIT: " + context)
+        $scope.validate_element = function (element, validate) {
+            var el = document.getElementById(element);
+            console.log('retrieve ' + element);
+
+            if (el) {           
+                if (validate === true) {
+                    console.log('validate ' + element);
+                    el.classList.remove('mandatory');
+                    el.classList.add('validated-mandatory'); 
+                }
+                else if (validate === false) {
+                    console.log('flag ' + element);
+                    el.classList.remove('validated-mandatory');
+                    el.classList.add('mandatory'); 
+                }
+                else {
+                    console.log('clearing validation formatting');
+                    el.classList.remove('validated-mandatory');
+                    el.classList.remove('mandatory');
+                }
+            }
+            else {
+                console.log('could not find element ' + element + ' to flag');
+            }
+        }
+
+        $scope.restart_form = function () {
+            $scope.form_initialized = false;
+            $scope.reset_form_validation();
+        }
+
+        $scope.visit = function (context) {
+            console.log("visited: " + context)
             $scope.visited[context] = true;
         }
+
+        // end of Form Validation //
+
+        // Feature: Test for uniqueness of fields based upon database query 
+        // 
+        // Usage: 
 
         $scope.testUnique = function (element, model, field) {
             console.log("CHECK UNIQUENESS");
@@ -282,6 +479,8 @@ app.controller('FancyFormController',
             })
         }
 
+        // Feature:  Password management
+
         $scope.passwordValidation = /^[a-zA-Z]\w{3,14}$/;
         $scope.confirmedPassword = false;
 
@@ -296,6 +495,17 @@ app.controller('FancyFormController',
     		//return "\n<div class='container' style='padding:20px'>\n" + view + "</div>\n";
     	}
 
+        // Feature: enable cut and paste (eg from excel spreadsheet) into field element 
+        //
+        //  This enables expand / compress, where compress converts linefeeds from cut/paste to delimited string
+
+        // Cut and paste functionality for textfields to enable simple cut/paste from excel spreadsheet or other table
+ 
+
+        $scope.cutpaste = {};
+        $scope.split = {};
+        $scope.paste = {};
+        $scope.cut = {};
         $scope.pasteData = function (element, separator) {
 
             if (! separator) { separator = ','}
@@ -316,75 +526,25 @@ app.controller('FancyFormController',
             }           
 
             var formatted = concat.join(separator);
-            $scope.form[element] = formatted;
+            if (! $scope.cutpaste) { $scope.cutpaste = {} }
+
+
+            var test = 'form.solution5';
+
+            $scope.cutpaste[element] = formatted;
             $scope.cut[element] = 0;
-            
-            console.log("formatted " + element + " to " + formatted);
+
+            console.log("formatted " + element + " to " + $scope.cutpaste[element]);
         }
 
-        $scope.set_dropdown_default = function (name, label, target_name) {
-            for (var i=0; i<$scope[name].length; i++) {
-                if ($scope[name][i].name === label) {
-                    $scope[target_name] = i;
-                }
 
-            }
-        }
+        // Feature: 
+        //
+        // Generating dropdown menu from enum or database lookup table 
+        //
 
-        $scope.get_List = function (type, condition) {
-
-            var deferred = $q.defer();
-            
-            var enums = type.match(/^ENUM\('(.*)'\)$/i);
-            var ref   = type.match(/^FK[\_\(](.+)(__ID|\))/);
-            
-            var list = [];
-            if (enums) {
-                var options = enums[1]  ;
-                list = options.split(/'?\s*,\s*'?/);
-                console.log("Enums: " + list.join(', '));
-                deferred.resolve(list);
-            }
-            else if (ref) { 
-                console.log("reference dropdown: " + JSON.stringify(ref[1]));
-                var reference = ref[1]; // .replace(/^FK[\_\(]/,'').replace(/(__ID|\))$/,'');
-                console.log('get list from reference: ' + reference);
-                
-                var url = '/lookup/' + reference + '?';
-                if (condition) { 
-                    condition = encodeURIComponent(condition);
-                    url = url + 'condition=' + condition;
-                }
-
-                console.log("get lookup for " + reference);
-                console.log(url);
-                $http.get(url)
-                .then ( function (result) {
-                    console.log("R: " + JSON.stringify(result));
-                    var list = result.data;
-                    var options = [];
-                    for (var i=0; i<list.length; i++) {
-                        options.push( { id: list[i].id, name: list[i].label } );
-                    }
-                    console.log("OPTIONS: " + JSON.stringify(options));
-                    deferred.resolve(options);
-                })
-                .catch ( function (err) {
-                    console.log("GET error...");
-                    console.log(err);
-                    options = [{}];
-                    deferred.reject(err);
-                });
-            }
-            else { 
-                options = type;
-                list = options.split(/'?\s*,\s*'?/);
-                console.log("Simple List: " + list.join(', '));
-                deferred.resolve(list);
-            }
-
-            return deferred.promise;
-        }
+        $scope.MenuList = {};
+        $scope.ReverseLookup = {};
 
         $scope.setup_Menu = function (element, enumType, condition, defaultTo) {
             // convert ENUM('A','B','C') to dropdown menu ... 
@@ -474,6 +634,70 @@ app.controller('FancyFormController',
             $scope.transfer_qty_units = 'ul';
         }
 
+        $scope.set_dropdown_default = function (name, label, target_name) {
+            for (var i=0; i<$scope[name].length; i++) {
+                if ($scope[name][i].name === label) {
+                    $scope[target_name] = i;
+                }
+
+            }
+        }
+
+        $scope.get_List = function (type, condition) {
+
+            var deferred = $q.defer();
+            
+            var enums = type.match(/^ENUM\('(.*)'\)$/i);
+            var ref   = type.match(/^FK[\_\(](.+)(__ID|\))/);
+            
+            var list = [];
+            if (enums) {
+                var options = enums[1]  ;
+                list = options.split(/'?\s*,\s*'?/);
+                console.log("Enums: " + list.join(', '));
+                deferred.resolve(list);
+            }
+            else if (ref) { 
+                console.log("reference dropdown: " + JSON.stringify(ref[1]));
+                var reference = ref[1]; // .replace(/^FK[\_\(]/,'').replace(/(__ID|\))$/,'');
+                console.log('get list from reference: ' + reference);
+                
+                var url = '/lookup/' + reference + '?';
+                if (condition) { 
+                    condition = encodeURIComponent(condition);
+                    url = url + 'condition=' + condition;
+                }
+
+                console.log("get lookup for " + reference);
+                console.log(url);
+                $http.get(url)
+                .then ( function (result) {
+                    console.log("R: " + JSON.stringify(result));
+                    var list = result.data;
+                    var options = [];
+                    for (var i=0; i<list.length; i++) {
+                        options.push( { id: list[i].id, name: list[i].label } );
+                    }
+                    console.log("OPTIONS: " + JSON.stringify(options));
+                    deferred.resolve(options);
+                })
+                .catch ( function (err) {
+                    console.log("GET error...");
+                    console.log(err);
+                    options = [{}];
+                    deferred.reject(err);
+                });
+            }
+            else { 
+                options = type;
+                list = options.split(/'?\s*,\s*'?/);
+                console.log("Simple List: " + list.join(', '));
+                deferred.resolve(list);
+            }
+
+            return deferred.promise;
+        }
+
         $scope.$watch("tqu", function (value) {
             $scope['transfer_qty_units'] = $scope.tqu;
         }); 
@@ -534,10 +758,7 @@ app.controller('FancyFormController',
 
 	    }
 
-	    $scope.setField = function (field, value) {
-	    	console.log("SET " + field + ' to ' + value);
-	    	$scope[field] = value;
-	    }
+        // enaable update to lookup dropdown when element is added ... 
 
         $scope.updateLookup = function ( lookup ) {
             var model = lookup + '-id';
@@ -573,6 +794,10 @@ app.controller('FancyFormController',
             }
         }
 
+        // Feature:  retrieve next item in ordered list 
+
+        //  (eg retrieve next Rack in list of Racks: R1 ... R217)
+        
         $scope.next_in_line = function (options) {
             // supply either query or table, counter, 
             if (!options) { options = {} }
