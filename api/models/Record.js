@@ -25,6 +25,50 @@ module.exports = {
 		Comment : { type : 'text'}
 	},
 
+	alias : function (model, alias, options) {
+		var Mod = sails.models[model] || {};
+
+		if (!options) { options = {} }
+
+		var map = Mod.alias || Mod.legacy_map || {};
+
+		if (map && map[alias]) {
+			return map[alias];
+		}
+		else { return alias }
+	},
+
+	validate : function (model, options) {
+		if ( !options ) { options = {} }
+
+		var deferred = q.defer();
+
+		var Mod = sails.models[model] || {};
+
+		var idField = Record.alias(model, 'id');
+		var table = Mod.tableName || model;
+
+		var ids = options.ids;
+		var q = "SELECT " + idField + " as id FROM " + table;
+
+		var conditions = ["idField IN (" + ids.join(',') + ')'];
+
+ 		if (options.condition) { conditions.push(optinos.condition) }
+
+ 		q +=  ' WHERE ' + conditions.join(' AND ');
+
+ 		Record.query_promise(q)
+ 		.then ( function (result) {
+ 			deferred.resolve({'ids' : ids, 'validated' : result.length});
+ 		})
+ 		.catch (function(err) {
+ 			deferred.resolve({'ids' : ids, 'validated' : null });
+ 		});
+ 		
+ 		return deferred.promise;
+
+	},
+
 	isReference : function (model, field) {
 
 		var Mod = sails.models[model];
@@ -42,6 +86,46 @@ module.exports = {
 			if (match && match.length > 1) { return match[1] }
 			else { return false } 
 		}
+	},
+
+	adjust_volumes : function (model, ids, qty, qty_units) {
+		// For now assume qty_units are the same (TEMPORARY)
+		//
+		// ... should account for this by converting units if required or generating error if no units supplied.
+		// TEMPORARY
+		//
+		console.log("Add " + qty + qty_units + ' to ' + model + ' ids: ' + ids.join(','));
+
+		var qtyField = Record.alias(model, 'qty');
+		var unitsField = Record.alias(model, 'qty_units');
+		
+		var data= {};
+		data[qtyField] = qtyField + ' + ' + parseFloat(qty);
+
+		var promises = [];
+		for (var i=0; i< ids.length; i++) {
+			var data = {}
+
+			var adjust = '<' + qtyField + ' + ' + parseFloat(qty[i]) + '>';			
+			if (qty[i] < 0) {
+				var F = qtyField;
+				var V = parseFloat(qty[i]);
+				adjust = "<CASE WHEN " + F + ' - ' + V + ' < ' + F + ' /1000 THEN 0 ELSE ' + F + ' - ' + V + " END>";
+			}
+
+			data[qtyField] = adjust;
+
+			promises.push( Record.update(model, ids[i], data) );
+		}
+
+		q.all(promises)
+		.then (function (okay) {
+			console.log('updated volume');
+		})
+		.catch (function (err) {
+			console.log('Error updating volume: ' + err);
+		});
+		return;
 	},
 
 	dump : function (model, options) {
@@ -906,14 +990,15 @@ module.exports = {
 		var idField = 'id';
 		if (sails.models[model]) {
 			var Mod = sails.models[model];
-			table = Mod.tableName || model;
-			if (Mod.alias && Mod.alias('id')) {
-				idField = Mod.alias('id');
-				console.log("set id alias to " + idField);
-			}
-			else {
-				console.log("leave id alias to " + idField);
-			}
+			idField = Record.alias(model, 'id');
+			// table = Mod.tableName || model;
+			// if (Mod.alias && Mod.alias['id']) {
+			// 	idField = Mod.alias['id'];
+			// 	console.log("set id alias to " + idField);
+			// }
+			// else {
+			// 	console.log("leave id alias to " + idField);
+			// }
 		}
 		else {
 			// alternate input for non standard tables : update('Plate:Plate_ID', ids, data);
@@ -1168,7 +1253,6 @@ module.exports = {
 			result['ids'] = ids;
 
 			if (ids && ids.length) {
-				console.log("Call barcode method");
 				Barcode.print_Labels(model, ids);
 			}
 
@@ -1401,8 +1485,9 @@ module.exports = {
 			var alias;
 			if (header) { alias = header.replace(/ /g,'_') }
 
-			if (Mod.alias && alias && Mod.alias(alias)) {
-				fields[alias] = Mod.alias(alias);
+			// if (Mod.alias && alias && Mod.alias(alias)) {
+			if ( Record.alias(model, alias) != alias ) {
+				fields[alias] = Record.alias(model, alias);				
 			}
 			else if (alias && Mod.attributes && Mod.attributes[alias]) {
 				fields[alias] = header;
@@ -1410,8 +1495,8 @@ module.exports = {
 				if (header === 'id') {
 				ids = { alias : alias, index: i};
 				}
-				else if (Mod.alias && Mod.alias('id') === alias) {
-				ids = { alias : alias, index: i};
+				else if ( Record.alias(model, 'id') === alias) {
+					ids = { alias : alias, index: i};
 				}
 			}
 			else {
@@ -1525,10 +1610,7 @@ module.exports = {
 				if (debug) { console.log('using current data: ' + value) }
 			}
 			else if (value.match(/^<id>$/i)) { 
-				var idField = 'id';
-				if (Mod.alias && Mod.alias('id')) {
-					idField = Mod.alias('id');
-				}
+				var idField = Record.alias(model, 'id');
 				value = idField;
 				if (debug) { console.log('using id field: ' + value) }
 			}
@@ -1651,8 +1733,7 @@ module.exports = {
 
 	    	if (! History[table]) { History[table] = {} }
 
-    		var idField = 'id';
-    		if (Mod && Mod.alias && Mod.alias('id')) { idField = Mod.alias('id') }
+    		var idField = Record.alias(model,'id');
 			
 			var query = "SELECT " + idField + ' as id, ' + track.join(',') + " FROM " + table + " WHERE " + idField + " IN (" + ids.join(',') + ')';
 
@@ -1845,8 +1926,8 @@ module.exports = {
     	var	table = Mod.tableName || model;
 
 		// add access check potentially ...
-		var idfield = table;
-		if (Mod.alias && Mod.alias('id')) { idfield = Mod.alias('id') } 
+		// var idfield = table;
+		var idfield = Record.alias(model, 'id');
 
 		var sql = "DELETE FROM " + table + " WHERE " + idfield + "=" + id;
 		
