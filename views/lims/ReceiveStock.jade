@@ -15,12 +15,20 @@ block content
          div(ng-controller="LIMSController" ng-init="#{init}")
           div(ng-controller="StockController")
           
-            h3 Receive Stock Items:
+            h3 Receive Stock Items: {{stockForm}}
+              div.navbar-right
 
+                button.btn.btn-primary.btn-xs(type='button' ng-show="!stockForm" ng-click="stockForm=1") Receive More Stock
+  
+                span &nbsp; &nbsp;
+                button.btn.btn-primary.btn-xs(type='button' ng-show="stockForm" ng-click="stockForm=0; injectData('/Stock/received?render=1','rcvdStock')") Previously Received Stock
+
+            hr
+ 
             include ./../core/errorAngularMsg.jade
             br
 
-            div.col-md-8
+            div.col-md-12(ng-show="stockForm")
               
               form(role='form' name='Stock' method='post' action='Stock/receive')
 
@@ -111,11 +119,7 @@ block content
                   div.alert.alert-danger
                     b  Receipt of {{ type }} Stock types have not yet been set up
             
-            div.col-md-4
-              button.btn.btn-primary.btn-xs(type='button' ng-show="!injectedAlready('rcvdStock')" ng-click="injectData('/Stock/received?render=1','rcvdStock')") Previously Received Stock
- 
-              hr
-                  
+            div.col-md-12(ng-show="!stockForm")                 
               div#rcvdStock
 
             if debug
