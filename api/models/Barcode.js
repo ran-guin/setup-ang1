@@ -17,7 +17,7 @@ module.exports = {
 
   },
 
-  prefix : function (model) {
+  prefix : function (table) {
   	var Prefixes = {
   		'Plate' : 'Bcg',
   		'Solution' : 'Sol',
@@ -27,11 +27,11 @@ module.exports = {
       'user' : 'Emp'
     };
 
-  	if (model == undefined) {
+  	if (table == undefined) {
   		return Prefixes;
   	}
   	else {
-  		return Prefixes[models];
+  		return Prefixes[table];
   	}
   },
 
