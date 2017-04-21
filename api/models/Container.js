@@ -36,9 +36,7 @@ module.exports = {
             custom: {}
     },
 
-	alias: function (name) {
-		// enable customization of field names if non-standard //
-		var alias = { 
+	alias: {
 			'id' : 'Plate_ID',
 			'BCG_id' : 'Plate_ID',
 			'Parent' : 'FKParent_Plate__ID',
@@ -50,10 +48,6 @@ module.exports = {
 			'location' : 'FK_Rack__ID',
 			'target_format' : 'FK_Plate_Format__ID',
 			'target_sample' : 'FK_Sample_Type__ID',
-		}
-
-		var field = alias[name];
-		return field;  // return null if no alias defined... 
 	},
 
 	track_history: [
@@ -336,7 +330,6 @@ module.exports = {
 		// 
 		// Returns: create data hash for new Plates.... (need to be able to reset samples attribute within Protocol controller (angular)
 
-		console.log("Executing Container Transfer ... " + Options.transfer_type);
 		var deferred = q.defer();
 
 		if (ids && Transfer && Options.transfer_type === 'Move') {
@@ -472,8 +465,8 @@ module.exports = {
 			// set location to garbage below (since it requires promise)
 		}
 
-		var qtyField = Container.alias('qty');
-		var qtyUnits = Container.alias('qty_units');
+		var qtyField = Container.alias.qty;
+		var qtyUnits = Container.alias.qty_units;
 
 		if ( ! Options.solution_qty ) { Options.solution_qty = 0 }
 
@@ -508,9 +501,15 @@ module.exports = {
 					adjustments.push(0);
 				}
 				else {	
-					adjustments.push("<" + qtyField + " - " + Transfer[i].qty + ">");
-					console.log("Adjust qty: " + qtyField + ' - ' + Transfer[i].qty);
-					console.log(' = ' + qtyField - Transfer[i].qty);	
+					var F = qtyField;
+					var V = Transfer[i].qty;
+
+					var rounded = "<CASE WHEN " + F + ' - ' + V + ' < ' + F + ' /1000 THEN 0 ELSE ' + F + ' - ' + V + " END>";
+					// This prevents volumes reaching extremely low non-zero values due to floating point rouunding errors.
+					adjustments.push(rounded);
+
+					console.log(rounded);
+					console.log(qtyField + ' - ' + Transfer[i].qty);
 				}
 			}
 			resetTarget[qtyField] = quantities;
@@ -518,6 +517,8 @@ module.exports = {
 		}
 		else if (Options.solution_qty) {
 			resetTarget[qtyField] = Options.solution_qty;
+			resetSolution['qty'] = Options.solution_qty;
+			resetSolution['qty_units'] = Transfer[0].qty_units || Options.transfer_qty_units;
 		}
 
 		// Target options 
@@ -609,7 +610,8 @@ module.exports = {
 					// clone new plates 
 					// Add new records to Database //
 					var clone_ids = _.pluck(Transfer,'source_id');
-					Options['id'] = Container.alias('id');
+					Options['id'] = Container.alias.id;
+
 					console.log("Clone Plates: " + clone_ids.join(','));
 					Record.clone('container', clone_ids, _.extend(resetTarget, resetClone), Options)
 					.then ( function (cloneData) {
