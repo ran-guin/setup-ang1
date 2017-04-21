@@ -96,18 +96,7 @@ block content
                                 span &nbsp; [ eg : 
                                   b(ng-show="listExample") {{ listExample }}
                                   b(ng-show="!listExample") awaiting selection...
-                                  span ]
-
-                          //- div(ng-if="Custom_Options && Custom_Options.transfer_type")
-                          //-   - fld = 'transfer_qty'
-                          //-   div.form-group.input-lg
-                          //-       label.col-sm-2.control-label(for="#{fld}#{Snum}") {{Custom_Options.transfer_type}} qty:
-                          //-       div.col-sm-6                           
-                          //-         input.input-lg.form-control(type='text' name="#{fld}#{Snum}" ng-required="#{mandatory}" placeholder = "-- Qty --" id='#{fld}#{Snum}' ng-model='form.#{fld}#{Snum}' ng-default='{{Custom_Options.transfer_qty}}' force=1 data-error="You must enter a valid quantity" ng-blur="visited['#{fld}#{Snum}'] = true; splitField('#{fld}#{Snum}'); #{execute}" ng-show="!cut.#{fld}#{Snum}" aria-describedby='expand#{fld}#{Snum}')
-                          //-       div.col-sm-4
-                          //-         - units = [ { name: 'ml'}, { name: 'ul'}]      
-                          //-         my-dropdown(id='#{fld}_units#{Snum}' placeholder='units..' list="MenuList['form.#{fld}_units#{Snum}']" selected="form.#{fld}_units#{Snum}" property='name' track='name', ng-init="setup_Menu('form.#{fld}_units#{Snum}','ml,ul,nl')") 
-                                      
+                                  span ]                                      
 
                           each field,i in flds
                             span &nbsp; 
@@ -123,13 +112,10 @@ block content
                                 - fType = attributes[alias].type || 'text'
                                 if fType === 'Count'
                                   - fType = 'hidden'
-                                // - var attr_index = attributes.indexOf(fld);
 
                               if (fld != field)
                                 - mandatory = true;
                                 - pattern = "^[\\S]{1,}$"; 
-
-                              // - fld = '_' + fld;
 
                               - alias = alias.replace(/\_/g, ' ');
                               - var execute = "reload(); validate_prep_form('" + fld + Snum + "')";
@@ -147,7 +133,7 @@ block content
                                   label.col-sm-2.control-label(for='#{fld}#{Snum}') #{alias}
                                   div.col-sm-6
                                     div.input-group
-                                      input.form-control(type='#{fType}' name="#{fld}#{Snum}" ng-required="#{mandatory}" placeholder = "-- Enter #{alias} --" id='#{fld}#{Snum}' ng-model='form.#{fld}#{Snum}' default='#{def}' force=1 data-error="You must enter a valid quantity" ng-change="splitField('#{fld}#{Snum}'); #{execute}" ng-show="!cut.#{fld}#{Snum}" aria-describedby='expand#{fld}#{Snum}')
+                                      input.form-control(type='#{fType}' name="#{fld}#{Snum}" ng-required="#{mandatory}" placeholder = "-- Enter #{alias} --" id='#{fld}#{Snum}' ng-model='form.#{fld}#{Snum}' ng-model-options="{debounce : 1000}" default='#{def}' force=1 data-error="You must enter a valid quantity" ng-change="update_splitField('#{fld}#{Snum}');" ng-show="!cut.#{fld}#{Snum}" aria-describedby='expand#{fld}#{Snum}')
                                       
                                       span.input-group-addon(id="expand#{fld}#{Snum}" ng-show="!cut.#{fld}#{Snum}")
                                         a(href="/" ng-click="cut.#{fld}#{Snum} = 1" onclick="return false" data-toggle='tooltip' title="Expand to enable paste<BR>(eg from excel spreadsheet)" data-html='true')
