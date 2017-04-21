@@ -81,7 +81,6 @@ module.exports = {
 				if (data['Transfer'] && data['Transfer_Options'] && data['Transfer_Options']['transfer_type']) {
 
 					data['Transfer_Options']['Prep'] = last_prep_id;
-					console.log('\n*** call Container.execute_transfer from Lab_protocol Model');
 					promises.push( Container.execute_transfer( ids, data['Transfer'], data['Transfer_Options']) );
 
 					transferred = promises.length; // point to promise index for transfer step (to retrieve appropriate sample ids)
@@ -98,6 +97,16 @@ module.exports = {
 					}
 				}
 				
+				// Update Solution quantities if applicable ... 
+				var sol_ids = _.pluck(data.Plate, 'FK_Solution__ID');
+				var sol_qty = _.pluck(data.Plate, 'Solution_Quantity');
+				var sol_qty_units = _.pluck(data.Plate, 'Solution_Quantity_Units');
+
+				if (sol_ids[0]) {
+					console.log("adjust reagent volumes for: " + sol_ids.join(','));
+					promises.push( Record.adjust_volumes('solution', sol_ids, sol_qty, sol_qty_units) );
+				}
+
 				console.log("save attributes to plates: " + plate_list + '; prep: ' + first_prep_id);
 
 				promises.push( Attribute.save('Plate', ids, data["Plate_Attribute"]) );
