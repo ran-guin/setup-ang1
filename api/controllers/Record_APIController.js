@@ -118,6 +118,25 @@ module.exports = {
 		});
 	},
 
+	validate : function (req, res) {
+		var body = req.body || {};
+
+		console.log('validate');
+		
+		var model = body.model || req.param('model');
+		var ids   = body.ids ;
+		var barcode = body.barcode;
+		var condition = body.condition ;
+
+		Record.validate({model: model, ids: ids, barcode: barcode, condition: condition})
+		.then (function (result) {
+			return res.json(result);
+		})
+		.catch (function (err) {
+			return res.json(err);
+		})
+
+	},
 
 	save : function (req, res) {
 		var body = req.body || {};
