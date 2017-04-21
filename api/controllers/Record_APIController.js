@@ -124,15 +124,20 @@ module.exports = {
 		console.log('validate');
 		
 		var model = body.model || req.param('model');
-		var ids   = body.ids ;
-		var barcode = body.barcode;
+		var ids   = body.ids || req.param('ids');
+		var barcode = body.barcode || req.param('barcode');
 		var condition = body.condition ;
 
-		Record.validate({model: model, ids: ids, barcode: barcode, condition: condition})
+		if (ids && ids.constructor === String) { ids = ids.split(',') }
+
+		console.log('validate ' + model);
+		Record.validate(model, {ids: ids, barcode: barcode, condition: condition})
 		.then (function (result) {
+			console.log('validation result: ' + JSON.stringify(result));
 			return res.json(result);
 		})
 		.catch (function (err) {
+			console.log('validation error: ' + err);
 			return res.json(err);
 		})
 
