@@ -75,7 +75,12 @@ function limsController ($scope, $rootScope, $http, $q) {
         var payload = $scope.payload;
         console.log(payload);
 
-        if (model && ids.length && payload) {
+        if (payload && payload.printer_group && payload.printer_group === 'Printing Disabled') {
+            console.log('printing disabled..');
+            $scope.message("Printing Disabled");
+            deferred.resolve();
+        }
+        else if (model && ids.length && payload) {
             console.log("Test Printer " + model + " : " + ids);
 
             var params = "database=" + payload.db + '&';
