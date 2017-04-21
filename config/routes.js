@@ -112,6 +112,9 @@ module.exports.routes = {
   'GET /record/add/:model': 'RecordController.form',
 
 // API routes 
+  'GET /validate/:model' : 'Record_APIController.validate',
+  'POST /validate' : 'Record_APIController.validate',  
+
   'GET /lookup/:model/:label' : 'Record_APIController.lookup',
   'GET /lookup/:model' : 'Record_APIController.lookup',
 
