@@ -161,6 +161,7 @@ app.controller('FancyFormController',
 
             var form = options.form || {};
             var required = options.required || [];
+            var db_validate = options.db_validate || [];
 
             var errors = options.errors || $scope.validation_errors;       // locally generated warnings (keyed on context)
             var warnings = options.warnings || $scope.validation_warnings;
@@ -186,6 +187,9 @@ app.controller('FancyFormController',
 
             console.log(required.length + " Required: " + JSON.stringify(required));
             promises.push( $scope.validate_required(form, required, trim, force) );
+
+            console.log(db_validate.length + " DB Validated: " + JSON.stringify(db_validate));
+            promises.push( $scope.db_validate(form, db_validate) );
 
             console.log($scope.visited.length + " Visited: " + JSON.stringify($scope.visited));
 
@@ -234,6 +238,72 @@ app.controller('FancyFormController',
                 }
             }
             deferred.resolve({valid: valid});
+            return deferred.promise;
+        }
+
+        $scope.db_validate = function db_validate(form, db_validate) {
+            // eg. db_validate : [ {'element' : 'sol5', model: 'solution', condition: "Solution_Status='Active'" } ]
+
+            var deferred = $q.defer();
+
+            var url = "/validate";
+            
+            var promises = [];
+            var valid = true;
+
+            for (var i=0; i<db_validate.length; i++) {
+                var element = db_validate[i].element;
+                var model = db_validate[i].model;
+                var barcode = db_validate[i].barcode;
+                var condition = db_validate[i].condition;
+                var count    = db_validate[i].count;  // must match count (or singleton)
+        
+                var data = { model: model };
+                
+                if (barcode) {
+                    data.barcode = form[element];
+                }
+                else if (form[element].match(/^[\d+\,]+$/) ) {
+                    data.ids = form[element].split(/\s*,\s*/);
+                }
+
+                if (condition) { data.condition = condition }
+
+                promises.push( $http.post(url, data) );
+            }
+
+            var validated = {};
+
+            var valid = true;
+            $q.all(promises)
+            .then ( function (result) {
+                for (var i=0; i<result.length; i++) {
+                    var returned = result[i];
+                    var found_ids = returned.ids.split(',');
+
+                    if (returned.excluded) { 
+                        console.log("unrecognized input: " + returned.excluded);
+                        valid = false;
+                    }
+                    else if (count && found_ids.length === count) {
+                        console.log("validated " + count + ' records from ' + model);
+                    }
+                    else if (found_ids.length) {
+                        console.log("found valid ' + model + ' id(s): " + found_ids.join(','));
+                    }
+                    else {
+                        valid = false;
+                        console.log('failed to find valid ' + model + ' ids');
+                    }
+                    validated[db_validate[i].model] = returned;
+                }
+                deferred.resolve({validated: valid, data: validated});
+            })
+            .catch ( function (err) {
+                console.log("failed validation");
+                deferred.reject(err);
+            })
+                
             return deferred.promise;
         }
 
