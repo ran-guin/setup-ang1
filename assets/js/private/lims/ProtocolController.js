@@ -423,12 +423,19 @@ function protocolController ($scope, $rootScope, $http, $q) {
 
             // console.log(JSON.stringify(result));
             if (promises.length) { 
+                var Map = promises[0].data;
+                console.log(JSON.stringify(Map));
+
                 data['Transfer_Options'] = $scope.map.Options;
 
                 // use backfill data for Plate creation date 
                 if ($scope.backfill_date) {
                     data['Transfer_Options'].timestamp = $scope.backfill_date;
                 }
+
+                console.log($scope.map.Options);
+
+                console.log($scope.Map.Transfer);
 
                 data['Transfer'] = $scope.Map.Transfer;
                 console.log("transfer detected");
@@ -563,8 +570,22 @@ function protocolController ($scope, $rootScope, $http, $q) {
         return recordData;
     }
 
+    $scope.update_splitField = function (field, separator) {
+        $scope.splitField(field, separator)
+        .then (function (array) {
+            $scope.validate_prep_form(field);
+        })
+        .catch (function (err) {
+            console.log("Error splitting field");
+            $scope.validate_prep_form(field);            
+        })
+
+    }
     /* Enable split distribution in parallel or in series */
     $scope.splitField = function splitField (field, separator) {
+
+        var deferred = $q.defer();
+
         var input = $scope.form[field];
         if (field.match(/split/i)) {
             console.log("reset specs");
@@ -665,8 +686,9 @@ function protocolController ($scope, $rootScope, $http, $q) {
             }  
 
             console.log("\n** SPLIT: " + $scope.form[field] + ' OR ' + $scope.split[field]);
-   
-            return array;
+            
+            deferred.resolve(array);
+            return deferred.promise;
         }
         else { 
             console.log('not multiple values...');
@@ -715,7 +737,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
             options.required = $scope.current_mandatory_elements;
             options.form = $scope.form;
             options.count = $scope.sample_count;
-
+  
             // options.element = element;
             options.trim = true;
 
@@ -875,7 +897,6 @@ function protocolController ($scope, $rootScope, $http, $q) {
     }
 
     $scope.reload = function reload () {
-
         // $scope.reset_form();
 
         console.log("reload form at step " + $scope.step.stepNumber);
