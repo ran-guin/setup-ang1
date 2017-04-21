@@ -41,6 +41,9 @@ module.exports = {
 	validate : function (model, options) {
 		if ( !options ) { options = {} }
 
+		var ids = options.ids || [];
+		var barcode = options.barcode;
+
 		var deferred = q.defer();
 
 		var Mod = sails.models[model] || {};
@@ -48,23 +51,55 @@ module.exports = {
 		var idField = Record.alias(model, 'id');
 		var table = Mod.tableName || model;
 
-		var ids = options.ids;
-		var q = "SELECT " + idField + " as id FROM " + table;
+		var barcode_ids = [];
+		var valid = true;
+		if (barcode) {
+			var prefix = Barcode.prefix(table);
+			var regex = new RegExp( prefix, 'i');
 
-		var conditions = ["idField IN (" + ids.join(',') + ')'];
+			var list = barcode.split(regex);
+			list.shift(); 
 
- 		if (options.condition) { conditions.push(optinos.condition) }
+			for (var i=0; i< list.length; i++) {
+				if (list[i].match(/[a-zA-Z]/i)) { 
+					valid = false;
+					i = list.length;
+				}
+				else {
+					ids.push( list[i] );
+				}
+			}
+			console.log(barcode + ' -> ' + ids.join(','));
+		}
 
- 		q +=  ' WHERE ' + conditions.join(' AND ');
+		ids = ids.map( function (i) { return parseInt(i) });
 
- 		Record.query_promise(q)
- 		.then ( function (result) {
- 			deferred.resolve({'ids' : ids, 'validated' : result.length});
- 		})
- 		.catch (function(err) {
- 			deferred.resolve({'ids' : ids, 'validated' : null });
- 		});
- 		
+		if (! valid || !ids.length) { 
+			console.log("no valid " + model + ' ids found');
+			deferred.reject();
+		}
+		else {
+			var query = "SELECT " + idField + " as id FROM " + table;
+			var conditions = [ idField + " IN ( " + ids.join(',') + ')'];
+
+	 		if (options.condition) { conditions.push(options.condition) }
+	 		query +=  ' WHERE ' + conditions.join(' AND ');
+
+	 		Record.query_promise(query)
+	 		.then ( function (result) {
+	 			var excluded = [];
+	 			var validated = _.pluck(result,'id');
+
+	 			if (ids.length !== result.length) {
+	 				excluded = _.difference( ids , validated);
+	 			}
+	 			deferred.resolve({'ids' : ids, 'validated' : validated, excluded: excluded});
+	 		})
+	 		.catch (function(err) {
+	 			deferred.resolve({'ids' : ids, 'validated' : null });
+	 		});
+	 	}
+
  		return deferred.promise;
 
 	},
