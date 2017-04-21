@@ -268,7 +268,7 @@ app.controller('FancyFormController',
                 }
 
                 if (condition) { data.condition = condition }
-
+console.log("validate: " + JSON.stringify(data));
                 promises.push( $http.post(url, data) );
             }
 
@@ -278,8 +278,9 @@ app.controller('FancyFormController',
             $q.all(promises)
             .then ( function (result) {
                 for (var i=0; i<result.length; i++) {
-                    var returned = result[i];
-                    var found_ids = returned.ids.split(',');
+                    var returned = result[i].data;
+                    console.log(JSON.stringify(returned));
+                    var found_ids = returned.ids || [];
 
                     if (returned.excluded) { 
                         console.log("unrecognized input: " + returned.excluded);
@@ -288,7 +289,7 @@ app.controller('FancyFormController',
                     else if (count && found_ids.length === count) {
                         console.log("validated " + count + ' records from ' + model);
                     }
-                    else if (found_ids.length) {
+                    else if (found_ids && found_ids.length) {
                         console.log("found valid ' + model + ' id(s): " + found_ids.join(','));
                     }
                     else {
