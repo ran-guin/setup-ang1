@@ -271,7 +271,8 @@ module.exports = {
     if (wells && Mod) {
       if (ids.length == wells.length) {
         var promises = [];
-        var idField = Mod.alias('id') || 'id';
+        var idField = Record.alias(model, 'id');
+        
         for (var i=0; i<wells.length; i++) {
           var update =  "Update " + model + ", Rack SET  FK_Rack__ID = Rack.Rack_ID "
             + " WHERE Rack.FKParent_Rack__ID =" + target_rack + " AND Rack_Name = '" + wells[i] 
