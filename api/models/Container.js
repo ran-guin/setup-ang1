@@ -100,7 +100,7 @@ module.exports = {
 			    Samples: data , 
 			};
 
-			console.log("returned viewData " + JSON.stringify(viewData));
+			// console.log("returned viewData " + JSON.stringify(viewData));
 			deferred.resolve(viewData);
 		})
 		.catch ( function (err) {
@@ -535,7 +535,7 @@ module.exports = {
 
 		}
 
-		var reset = { target: resetTarget, clone: resetClone, source: resetSource};
+		var reset = { target: resetTarget, clone: resetClone, source: resetSource, solution: resetSolution};
 
 		if (Options.transfer_type === 'Transfer' ) {
 			Rack.garbage()

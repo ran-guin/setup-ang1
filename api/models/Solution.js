@@ -13,7 +13,6 @@
 
 	},
 
-
   	legacy_map : {
   		'number' : 'Solution_Number',
 		'number_in_batch' : 'Solution_Number_in_Batch',
