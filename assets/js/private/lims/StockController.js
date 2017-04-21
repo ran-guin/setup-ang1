@@ -12,6 +12,7 @@ function stockController ($scope, $rootScope, $http, $q) {
 
     $scope.form = {};
     $scope.form.received = $scope.datestamp;
+    $scope.stockForm = 1;
 
     $scope.pick_stock_type = function () {
 
@@ -24,7 +25,7 @@ function stockController ($scope, $rootScope, $http, $q) {
     }
 
     $scope.clear_form = function () {
-        $scope.form.form.number_in_batch = '';
+        $scope.form.number_in_batch = '';
         $scope.form.received = null;
         $scope.form.lot_number = '';
         $scope.form.catalog = null;
@@ -205,7 +206,7 @@ function stockController ($scope, $rootScope, $http, $q) {
         if ($scope.form.received && $scope.form.received.constructor === Date ) { $scope.form.received = $scope.mysql_date( $scope.form.received ) }
 
     	var StockData = {
-    		'form.number_in_batch' : $scope.form.number_in_batch,
+    		'number_in_batch' : $scope.form.number_in_batch,
     		'received'        : $scope.form.received,
     		'lot_number'      : $scope.form.lot_number,
     		// 'type'            : $scope.form.type,
@@ -263,6 +264,8 @@ function stockController ($scope, $rootScope, $http, $q) {
                 }
 
                 $scope.message(msg);
+                $scope.stockForm = 0;
+
                 var url = '/Stock/received?render=1&limit=1&type=' + $scope.form.type;
                 console.log('call ' + url);
                 $scope.injectData(url,'rcvdStock');
