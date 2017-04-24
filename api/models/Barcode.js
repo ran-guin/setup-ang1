@@ -24,7 +24,14 @@ module.exports = {
   		'Rack' : 'Loc',
   		'Equipment' : 'Eqp',
       'Set' : 'Set',
-      'user' : 'Emp'
+      'user' : 'Emp',
+
+      // allow models as well ?
+      'container' : 'Bcg',
+      'solution' : 'Sol',
+      'rack' : 'Loc',
+      'equipment' : 'Eqp',
+      'plate_set' : 'Set',
     };
 
   	if (table == undefined) {
