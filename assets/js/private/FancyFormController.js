@@ -301,7 +301,7 @@ app.controller('FancyFormController',
                     else {
                         valid = false;
                         console.log('failed to find valid ' + model + ' ids');
-                        $scope.warning("failed " + model + ' validation');
+                        $scope.error("failed " + model + ' validation');
                     }
                     validated[db_validate[i].model] = returned;
                 }
