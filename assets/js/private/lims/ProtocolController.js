@@ -688,13 +688,15 @@ function protocolController ($scope, $rootScope, $http, $q) {
             console.log("\n** SPLIT: " + $scope.form[field] + ' OR ' + $scope.split[field]);
             
             deferred.resolve(array);
-            return deferred.promise;
         }
         else { 
             console.log('not multiple values...');
             $scope.split[field] = null;
             $scope.SplitFields[field] = null;
+            deferred.resolve([]);
         }
+            
+        return deferred.promise;
 
     }
 
@@ -737,7 +739,8 @@ function protocolController ($scope, $rootScope, $http, $q) {
             options.required = $scope.current_mandatory_elements;
             options.form = $scope.form;
             options.count = $scope.sample_count;
-  
+            options.db_validate = $scope.db_validate_elements;
+
             // options.element = element;
             options.trim = true;
 
@@ -946,12 +949,25 @@ function protocolController ($scope, $rootScope, $http, $q) {
             var Attributes = { Plate : [], Prep : [] };
 
             $scope.current_mandatory_elements = [];
-            
+            $scope.db_validate_elements = [];
+
             for (var i=0; i<$scope.input.length; i++) {
                 var input = $scope.input[i];
                 var mandatory = input.match(/\*$/);
                 var key = input.replace('*','');
                 var id = key + $scope.step.stepNumber;
+
+                var sol_input = input.match(/solution/);
+                var equ_input = input.match(/equipment/);
+
+                var step = $scope.step.stepNumber;
+                if (sol_input) {
+                    $scope.db_validate_elements.push( { model: 'solution', barcode: true, element: 'solution' + step, count: $scope.sample_count})
+                }
+
+                if (equ_input) {
+                    $scope.db_validate_elements.push( { model: 'equipment', barcode: true, element : 'equipment' + step, count: $scope.sample_count})
+                }
 
                 var req = {};
                 req[id] = key + ' input';
@@ -990,7 +1006,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
             console.log("Defaults: " + JSON.stringify($scope.Default));
             console.log("Format: " + JSON.stringify($scope.Format));
             console.log("Input: " + JSON.stringify($scope.input));
-
+            console.log("validate: " + JSON.stringify($scope.db_validate_elements));
             $scope.errMsg = '';
 
             console.log("... validate again...");
