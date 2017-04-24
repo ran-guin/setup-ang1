@@ -25,21 +25,22 @@ module.exports = {
   		'Equipment' : 'Eqp',
       'Set' : 'Set',
       'user' : 'Emp',
-
-      // allow models as well ?
-      'container' : 'Bcg',
-      'solution' : 'Sol',
-      'rack' : 'Loc',
-      'equipment' : 'Eqp',
-      'plate_set' : 'Set',
     };
 
   	if (table == undefined) {
   		return Prefixes;
   	}
   	else {
-  		return Prefixes[table];
+      if (! Prefixes[table]) {
+        // check if model supplied instead... 
+        var Mod = sails.models[table] || {};
+        if (Mod.tableName && Prefixes[Mod.tableName]) {
+          return Prefixes[Mod.tableName];
+        }
+      }
   	}
+    return Prefixes[table];
+
   },
 
   printLabel : function (barcode, code, printer) {
