@@ -177,8 +177,8 @@ module.exports = {
 
 		Record.uploadData(model, headers, data, reference)
 		.then ( function (result) {
-			sails.config.messages.push("uploaded");
 			console.log("Uploaded");
+			console.log(JSON.stringify(result));
 			return res.json(result);
 		})
 		.catch (function (err) {
