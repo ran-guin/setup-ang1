@@ -1,9 +1,9 @@
 title BC Generations
 
-- var colour = '#ddd';
-- var env_colour = {'production' : '#ddd', 'development' : '#f66'}
-if session && session.payload && session.payload.mode
-	- colour = env_colour[session.payload.mode];
+- var colour = '#6f6';
+- var env_colour = {'lims' : '#ddd', 'lims_test' : '#f66'}
+if session && session.payload && session.payload.db && env_colour[session.payload.db]
+	- colour = env_colour[session.payload.db];
 
 .mini-header(style='background-color:#344')
 	h2(style='color:#{colour}') 
