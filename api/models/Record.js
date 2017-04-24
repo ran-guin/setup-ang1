@@ -1378,7 +1378,7 @@ module.exports = {
 		var deferred = q.defer();
 		
 		var user;
-		var timestamp = 'CURDATE()';
+		var timestamp = '<now>';
 
 		if (sails.config && sails.config.payload) {
 			var payload = sails.config.payload;
@@ -1387,6 +1387,9 @@ module.exports = {
 		else {
 			deferred.reject('payload with user credentials unavailable');
 		}
+
+		var prefix = Barcode.prefix(model);
+		var prefixRegexp = new RegExp(prefix, 'i');
 
 		Record.parseMetaFields(model, headers)
 		.then ( function (metaFields) {
@@ -1416,6 +1419,7 @@ module.exports = {
 					var condition;
 					var conditions = [];
 					var include_tables;
+
 					if ('index' in ids) {
 						id = data[row][id_index+1];
 					}
@@ -1431,6 +1435,16 @@ module.exports = {
 							var att_id = attributes[idField].id;
 							condition = "Attribute_Value = '" + data[row][1] + "'";
 							include_tables = {'Plate_Attribute' : "FK_Plate__ID=Plate_ID AND FK_Attribute__ID = " + att_id };
+						}
+					}
+
+					// convert string and remove barcode prefix if used... 
+					if (id && id.constructor === String) {
+						if ( prefix && id.match(prefixRegexp) ) {
+							id = parseInt(id.replace(prefixRegexp,''));
+						}
+						else {
+							id = parseInt(id);
 						}
 					}
 
