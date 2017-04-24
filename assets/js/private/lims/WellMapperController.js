@@ -111,7 +111,7 @@ function wellMapperController ($scope, $rootScope, $http, $q ) {
         //     testElement.style = "border-color: null; border-width: 2px;";            
         // }
 
-        if ($scope.map.transfer_qty && !$scope.map.transfer_qty_units) {
+        else if ($scope.map.transfer_qty && !$scope.map.transfer_qty_units) {
             $scope.validation_error('transfer','missing transfer qty units');             
             // if ( $scope.map.transfer_qty_units) { 
             //     $scope.units_errors = false;
@@ -123,6 +123,9 @@ function wellMapperController ($scope, $rootScope, $http, $q ) {
             //     var testElement = document.getElementById("transfer_qty_units") || {};
             //     testElement.style = "border-color: red; border-width: 2px;";
             // }
+        }
+        else {
+            $scope.validation_error('transfer',[]);
         }
         // else {
         //     $scope.units_errors = false;
