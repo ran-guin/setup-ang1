@@ -93,7 +93,7 @@ module.exports = {
 					if (qty) {
 						var qty_units = _.pluck(data.Plate,'Solution_Quantity_Units');
 						console.log("update current volume: add " + qty.join(',') + qty_units);
-						Container.adjust_volumes(ids, qty, qty_units);						
+						Record.adjust_volumes('container', ids, qty, qty_units);						
 					}
 				}
 				
