@@ -440,6 +440,7 @@ module.exports = {
 		
 		var resetSource = {};
 		var resetTarget = {};
+		var resetSolution = {};
 
 		var creation_date = Options.timestamp || '<now>';
 		var resetClone = {
@@ -571,6 +572,7 @@ module.exports = {
 			var resetTarget = result.target;
 			var resetSource = result.source;
 			var resetClone  = result.clone;
+			var resetSolution = result.solution;
 
 			console.log("\n*** Reset Values: " + JSON.stringify(result));
 
