@@ -24,7 +24,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
 
         if (config && config['backfill_date']) {
             $scope.backfill_date = config['backfill_date'];
-            }
+        }
  
         if (config && config['Samples']) {
             // both protocol tracking and standard Container page 
@@ -54,6 +54,9 @@ function protocolController ($scope, $rootScope, $http, $q) {
             $scope.sample_count = $scope.active.Samples.length;
         }
 
+        console.log("Steps: " + JSON.stringify(config['Steps']));
+        console.log('Protoco: ' + JSON.stringify(config['protocol']));
+
         if (config && config['Steps'] && config['protocol']) { 
 
             $scope.initialize_mapper(config, options);
@@ -73,36 +76,44 @@ function protocolController ($scope, $rootScope, $http, $q) {
 
             if ($scope.active.last_step && $scope.active.last_step.protocol && $scope.active.protocol && $scope.active.last_step.protocol == $scope.active.protocol.name) {
                 console.log("noted last step: " + JSON.stringify($scope.active.last_step));
-                for (var i=0; i<$scope.Steps.length; i++) {
-                    if ($scope.Steps[i].step_number === $scope.active.last_step.number) {
-                        if (i > $scope.Steps.length-1) {
-                            console.log("Already completed last step ..." + i + ' of ' + $scope.Steps.length);
-                            $scope.warning('Already completed this step');
-                        }
-                        else if ( $scope.active.last_step.status === 'Completed Protocol') {
-                            $scope.messages.push("Completed '" + $scope.active.last_step.protocol + "' protocol");
-                        }
-                        else if ( $scope.active.last_step.status === 'Completed Transfer') {
-                            var format = $scope.active.Samples[0].container_format;
+                
+                // figure out starting step number ... 
+                if ( $scope.active.last_step.name === 'Completed Protocol') {
+                    $scope.warnings.push("Already Completed '" + $scope.active.last_step.protocol + "' protocol");
+                    $scope.active.stepNumber = 1;
+                }
+                else {
+                    for (var i=0; i<$scope.Steps.length; i++) {
+                        if ($scope.Steps[i].step_number === $scope.active.last_step.number) {
+                            if (i > $scope.Steps.length-1) {
+                                console.log("Already completed last step ..." + i + ' of ' + $scope.Steps.length);
+                                $scope.warning('Already completed this step');
+                            }
+                            else if ( $scope.active.last_step.name === 'Completed Protocol') {
+                                $scope.messages.push("Completed '" + $scope.active.last_step.protocol + "' protocol");
+                            }
+                            else if ( $scope.active.last_step.status === 'Completed Transfer') {
+                                var format = $scope.active.Samples[0].container_format;
 
-                            if ($scope.active.last_step.name.match(format) ) {
-                                console.log("Target plates found");
-                                $scope.active.stepNumber = i+2;
-                                $scope.messages.push("Continuing protocol after '" + $scope.active.last_step.name + "' ...");
+                                if ($scope.active.last_step.name.match(format) ) {
+                                    console.log("Target plates found");
+                                    $scope.active.stepNumber = i+2;
+                                    $scope.messages.push("Continuing protocol after '" + $scope.active.last_step.name + "' ...");
 
+                                }
+                                else {
+                                    console.log($scope.active.last_step.name + ' not ' + format);
+                                    $scope.active.stepNumber = i+1;
+                                    $scope.messages.push("already completed '" + $scope.active.last_step.name + "' ... repeat if required or fetch target samples to continue protocol");
+                                }
                             }
                             else {
-                                console.log($scope.active.last_step.name + ' not ' + format);
-                                $scope.active.stepNumber = i+1;
-                                $scope.messages.push("already completed '" + $scope.active.last_step.name + "' ... repeat if required or fetch target samples to continue protocol");
+                                $scope.active.stepNumber = i+2;
+                                console.log("point to next step if applicable");
+                                $scope.message("already completed: '" + $scope.active.last_step.name + "' ... continuing to next step");
                             }
+                            i = $scope.Steps.length; // stop here.. 
                         }
-                        else {
-                            $scope.active.stepNumber = i+2;
-                            console.log("point to next step if applicable");
-                            $scope.messages.push("already completed: '" + $scope.active.last_step.name + "' ... continuing to next step");
-                        }
-                        i = $scope.Steps.length; // stop here.. 
                     }
                 }
             }
@@ -903,7 +914,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
         // $scope.reset_form();
 
         console.log("reload form at step " + $scope.step.stepNumber);
-        $scope.reset_messages();
+        //$scope.reset_messages();
         // $scope.reset_form_validation();
 
         // $scope.validation_warnings = [];
@@ -1011,6 +1022,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
 
             console.log("... validate again...");
             console.log("got " + $scope.form.solution_qty5 + $scope.form.solution_qty_units5);
+            
             // $scope.validate_prep_form();
         }
     }
