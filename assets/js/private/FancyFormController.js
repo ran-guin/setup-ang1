@@ -155,7 +155,9 @@ app.controller('FancyFormController',
         $scope.validate_form = function validate_form(options) {
             console.log("VALIDATE FORM: ");
             
-            $scope.reset_messages();
+            if ($scope.form_initialized) {
+                $scope.reset_messages();
+            }
 
             if (!options) { options = {} }
 
