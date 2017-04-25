@@ -123,45 +123,116 @@ module.exports = {
 		}
 	},
 
-	adjust_volumes : function (model, ids, qty, qty_units) {
+	adjust_volumes : function (model, ids, qty, qty_units, options) {
 		// For now assume qty_units are the same (TEMPORARY)
 		//
 		// ... should account for this by converting units if required or generating error if no units supplied.
 		// TEMPORARY
 		//
-		console.log("Add " + qty + qty_units + ' to ' + model + ' ids: ' + ids.join(','));
+
+		if (!options) { options = {} }
+		var subtract = options.subtract || false;
+		var convert  = options.convert;
+
+		if (qty_units.constructor === Array) {
+			qty_units = qty_units[0];
+		}
+
+		if (subtract) {
+			console.log("Subtract " + qty + qty_units + ' from ' + model + ' ids: ' + ids.join(','));
+		}
+		else {
+			console.log("Add " + qty + qty_units + ' to ' + model + ' ids: ' + ids.join(','));
+		}
 
 		var qtyField = Record.alias(model, 'qty');
 		var unitsField = Record.alias(model, 'qty_units');
-		
+
 		var data= {};
 		data[qtyField] = qtyField + ' + ' + parseFloat(qty);
 
+		var Mod = sails.models[model] || {};
+		var table = Mod.tableName || model;
+		var id_field = Record.alias(model, 'id');
+
 		var promises = [];
-		for (var i=0; i< ids.length; i++) {
+		for (var index=0; index< ids.length; index++) {
 			var data = {}
 
-			var adjust = '<' + qtyField + ' + ' + parseFloat(qty[i]) + '>';			
-			if (qty[i] < 0) {
-				var F = qtyField;
-				var V = parseFloat(qty[i]);
-				adjust = "<CASE WHEN " + F + ' - ' + V + ' < ' + F + ' /1000 THEN 0 ELSE ' + F + ' - ' + V + " END>";
-			}
+			var query = "SELECT " + index + ' as i, ' + unitsField + " as units FROM " + table + " WHERE " + id_field + " = '" + ids[index] + "'";
+			Record.query_promise(query)
+			.then (function (result) {
+				var units = result[0].units;
+				var i = result[0].i;
 
-			data[qtyField] = adjust;
+				if (qty[i]) {
+					if (subtract) { qty[i] = 0 - parseFloat(qty[i]) }
+					else { qty[i] = parseFloat(qty[i]) }
+					
+					var F = qtyField;
+					var V = qty[i];
 
-			promises.push( Record.update(model, ids[i], data) );
-		}
+					if (qty_units !== units) { V = Record.convert_units(V, qty_units, units) }
+
+					var adjust = '<' + qtyField + ' + ' + V + '>';			
+					if (V < 0) {
+						adjust = "<CASE WHEN " + F + ' + ' + V + ' < ' + F + ' /1000 THEN 0 ELSE ' + F + ' + ' + V + " END>";
+					}
+
+					data[qtyField] = adjust;
+					promises.push( Record.update(model, ids[i], data) );
+				}
+			})
+			.catch (function (err) {
+				console.log("Error retrieving units field for " + model + ': ' + ids[index]);
+			});
+		}	
 
 		q.all(promises)
 		.then (function (okay) {
-			console.log('updated volume');
+			console.log('updated volume(s)');
 		})
 		.catch (function (err) {
-			console.log('Error updating volume: ' + err);
+			console.log('Error updating volume(s): ' + err);
 		});
+
 		return;
 	},
+
+	convert_units : function (qty, from, to) {
+        var factor = {
+            'l' : 1000,
+            'ml' : 1,
+            'ul' : 1/1000,
+            'nl' : 1/1000000,
+        }
+
+        from = from.toLowerCase();
+        to   = to.toLowerCase();
+
+        var from_factor = factor[from];
+        var to_factor   = factor[to];
+
+        if (from_factor && to_factor) {
+            if (from_factor > to_factor ) {
+                var intVal = from_factor / to_factor;
+                console.log(from_factor + ' / ' + to_factor + ' : ' + intVal);
+                return qty * Math.round( intVal );
+            }
+            else if ( to_factor > from_factor ) {
+                var intVal = to_factor / from_factor;
+                console.log('inverse of ' + to_factor + ' / ' + from_factor + ' : ' + intVal);
+                return qty / Math.round(intVal);
+            }
+            else {
+                return qty;
+            }
+        }
+        else {
+            console.log('Error - could not recognize units ' + from_factor + ' or ' + to_factor);
+            return  qty;
+        }
+    },
 
 	dump : function (model, options) {
 		if (!options) { options = {} }
@@ -1001,7 +1072,7 @@ module.exports = {
 		console.log(JSON.stringify(options));
 
 		// setup History Tracking if applicable
-    	var Mod = sails.models[model];
+    	var Mod = sails.models[model] || {};
     	var track = [];
     	var History;
     	var data_fields = [];
@@ -1021,7 +1092,8 @@ module.exports = {
 
 		if (!options) { options = {} }
 
-		var table = model;
+		var table = Mod.tableName || model;
+
 		var idField = 'id';
 		if (sails.models[model]) {
 			var Mod = sails.models[model];
