@@ -75,6 +75,7 @@ module.exports = {
 				console.log("\nPrep ID: (just inserted) " + last_prep_id );
 				console.log("Transfer: (supplied by POST) " + JSON.stringify(data['Transfer']));
 				console.log("Options: " + JSON.stringify(data['Transfer_Options']));
+				console.log("Plate: " + JSON.stringify(data.Plate));
 				//console.log("Custom: " + JSON.stringify(data['CustomData']));
 
 				var transferred;
@@ -104,7 +105,7 @@ module.exports = {
 
 				if (sol_ids[0]) {
 					console.log("adjust reagent volumes for: " + sol_ids.join(','));
-					promises.push( Record.adjust_volumes('solution', sol_ids, sol_qty, sol_qty_units) );
+					promises.push( Record.adjust_volumes('solution', sol_ids, sol_qty, sol_qty_units, { subtract: true }) );
 				}
 
 				console.log("save attributes to plates: " + plate_list + '; prep: ' + first_prep_id);
