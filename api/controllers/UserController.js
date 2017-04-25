@@ -90,6 +90,12 @@ module.exports = {
       // from the database (`user.password`)
       console.log('Grps: ');
       console.log("Confirming password for " + JSON.stringify(user));
+      console.log("compare " + pwd + ' to ' + user.encryptedPassword);
+
+      if (!user.encryptedPassword) {
+        return res.render("customize/public_login", {error: "User has not set up password.  Please see admin." });
+      }
+
       Passwords.checkPassword({
         passwordAttempt: pwd,
         encryptedPassword: user.encryptedPassword
@@ -235,7 +241,11 @@ module.exports = {
             console.log("Create user : " + user);
 
             var alDenteID; 
-            var get_ID = "SELECT Employee_ID as alDenteID FROM Employee WHERE Email_Address = '" + email + "'";
+            var get_ID = "SELECT null as alDenteID";
+            if (sails.config.alt_id) {
+              get_ID = "SELECT Employee_ID as alDenteID FROM Employee WHERE Email_Address = '" + email + "'";
+            }
+
             console.log(get_ID);
             Record.query_promise(get_ID)
             .then ( function (result) {
@@ -282,14 +292,21 @@ module.exports = {
                   var payload = { id: newUser.id, access: 'New User', alDenteID: alDenteID, url: sails.config.globals.url };
                   var token = jwToken.issueToken(payload);
                   
-                  sails.config.messages.push("Generated new user... ");
+                  sails.config.messages.push("Generated new user successfully [ name: '" + user + "'; id: " + newUser.id + '; alt_id: ' + alDenteID + ' ]');
 
                   console.log('Generated new user: ' + JSON.stringify(payload));
                   console.log("Token issued: " + token);
                   
                   req.session.token = token;
-              
-                  return res.render('customize/public_home', {  printers : printers, message : "Registered.  Access pending approval by administrator" })
+                        
+                  Printer_group.printer_groups()
+                  .then (function (printers) {
+                    return res.render('customize/public_home', { printers : printers, message: "Registered.  Access pending approval by administrator"  });                      
+                  })
+                  .catch (function (err) {
+                    return res.render('customize/public_home', { error : "Error loading printers" });                      
+                  })              
+                  // return res.render('customize/public_home', {  printers : printers, message : })
                   //return res.json(200, { user: user, token: token });
                 });
               }
