@@ -79,7 +79,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
                 
                 // figure out starting step number ... 
                 if ( $scope.active.last_step.name === 'Completed Protocol') {
-                    $scope.warnings.push("Already Completed '" + $scope.active.last_step.protocol + "' protocol");
+                    $scope.warnings.push("Already Completed '" + $scope.active.last_step.protocol + "' protocol.  (Do you want to use parent samples instead ?)");
                     $scope.active.stepNumber = 1;
                 }
                 else {
@@ -914,12 +914,6 @@ function protocolController ($scope, $rootScope, $http, $q) {
         // $scope.reset_form();
 
         console.log("reload form at step " + $scope.step.stepNumber);
-        //$scope.reset_messages();
-        // $scope.reset_form_validation();
-
-        // $scope.validation_warnings = [];
-        // $scope.validation_errors = [];
-        // $scope.reset_form();
 
         $scope.Step = $scope.Steps[$scope.step.stepNumber-1];
         console.log(JSON.stringify($scope.Step));
@@ -1023,7 +1017,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
             console.log("... validate again...");
             console.log("got " + $scope.form.solution_qty5 + $scope.form.solution_qty_units5);
             
-            // $scope.validate_prep_form();
+            $scope.validate_prep_form();
         }
     }
 
