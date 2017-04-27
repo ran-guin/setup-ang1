@@ -121,7 +121,7 @@ module.exports = {
 		console.log("BODY" + JSON.stringify(req.body));
 
 		if (req.body) {
-			var samples = req.body['Samples'];
+			var samples = req.body['Samples'] || {};
 			var target  = req.body['Target'] || "{}";
 			var options = req.body['Options'] || "{}";
 
