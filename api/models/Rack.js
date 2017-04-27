@@ -390,6 +390,10 @@ module.exports = {
       conditions.push("Parent.Rack_ID=Rack.FKParent_Rack__ID");
       conditions.push("Parent.Rack_Alias = '" + rack_name + "'");      
     }
+    else { 
+      conditions.push("0")
+      deferred.reject("No input criteria");
+    }
 
     if (rows) {
       var row_options = rows.join("','");
