@@ -128,6 +128,14 @@ block content
                                   div.col-sm-6
                                     my-dropdown(placeholder="#{alias}" list="MenuList['form.#{fld}#{Snum}']" selected="form.#{fld}#{Snum}" property="name" track='name' default="#{def}" ng-click="#{execute}" ng-init="setup_Menu('form.#{fld}#{Snum}', \"#{fType}\",'','#{def}')")
                                   div.col-sm-4 &nbsp; 
+                              else if fld.match(/^(location|solution|equipment)/) 
+                                // these input options do not have cut/paste options ... and wait for blur to trigger validation....
+                                div.form-group.input-lg
+                                  label.col-sm-2.control-label(for='#{fld}#{Snum}') #{alias}
+                                  div.col-sm-6
+                                    div.input-group
+                                      input.form-control(type='#{fType}' name="#{fld}#{Snum}" ng-required="#{mandatory}" placeholder = "-- Enter #{alias} --" id='#{fld}#{Snum}' ng-model='form.#{fld}#{Snum}' ng-model-options="{debounce : 1000}" default='#{def}' force=1 data-error="You must enter a valid quantity" ng-blur="update_splitField('#{fld}#{Snum}');" ng-show="!cut.#{fld}#{Snum}" aria-describedby='expand#{fld}#{Snum}')
+
                               else 
                                 div.form-group.input-lg
                                   label.col-sm-2.control-label(for='#{fld}#{Snum}') #{alias}
