@@ -83,6 +83,9 @@ function wellMapperController ($scope, $rootScope, $http, $q ) {
             }
         }
 
+        // if (!$scope.map.target_format) { $scope.validation_error('target_format','Still require format info'); }
+        // else {  $scope.validation_error('target_format', []);  }
+
         var qs = $scope.map.transfer_qty.split(',');
         if (qs.length > 1 && $scope.map.splitX > 1) {
             if (qs.length !== $scope.map.splitX) {
@@ -214,7 +217,7 @@ function wellMapperController ($scope, $rootScope, $http, $q ) {
                         rack_list.push(thisBox); // returnData.data.id;
                     }
                     else if (returnData.data.name) {
-                        $scope.validation_warning('target',"no wells available in " + returnData.data.name );
+                        $scope.validation_warning('target',"no wells available in " + returnData.data.name + ' [' + returnData.data.alias + ']');
 
                         // $scope.warning("no wells available in " + returnData.data.name )
                         target_boxes = [];
