@@ -162,7 +162,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
                 }
             }
 
-            $scope.validate_prep_form();
+            // $scope.validate_prep_form();
         }
         else {
             // No protocol loaded ... 
