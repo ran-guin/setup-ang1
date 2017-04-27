@@ -107,7 +107,7 @@ function wellController ($scope, $rootScope, $http, $q ) {
         
         $scope.redistribute_Samples($scope.active.Samples, Target, Options)
         .then ( function (result) {
-            console.log("MAP: " + JSON.stringify(result.Map));
+            // console.log("MAP: " + JSON.stringify(result.Map));
             $scope.validate_redistribution_form();
             // $scope.Map = result.Map;
             // if (result.errors.length) {
@@ -122,11 +122,11 @@ function wellController ($scope, $rootScope, $http, $q ) {
         })
         .catch ( function (err) {
             if (execute) { $scope.distributionStatus = 'Failed' }
+            $scope.validate_redistribution_form();
             console.log("Error redistributing samples");
         });
 
         console.log('validate');
-        $scope.validate_redistribution_form();
     }
 
     $scope.load_entire_volume = function () {
