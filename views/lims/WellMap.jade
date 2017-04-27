@@ -82,7 +82,7 @@ block content
                     - var condition = "Transferrable LIKE 'Y%'"
 
                     label(for='target_format' style='padding-top: 0px')
-                    my-dropdown#target_format(style='width:100%' placeholder='Target Format...' required list="MenuList['map.target_format']" selected="map.target_format" property='name' track='id' ng-init="setup_Menu('map.target_format','FK(container_format)',\"#{condition}\")" mandatory='true')        
+                    my-dropdown#target_format(style='width:100%' placeholder='Target Format...' required list="MenuList['map.target_format']" selected="map.target_format" property='name' track='id' ng-click="redistribute('reset')" ng-init="setup_Menu('map.target_format','FK(container_format)',\"#{condition}\")" mandatory='true')        
               hr 
 
               div.form-group
