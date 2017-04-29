@@ -359,17 +359,20 @@ function protocolController ($scope, $rootScope, $http, $q) {
         var PlateAttributes = {};
         var PrepAttributes = {};
 
+        console.log("*** FORM: *** " + JSON.stringify($scope.form));
+        console.log("*: INPUT: *** " + JSON.stringify($scope.input));
         if (action != 'Skipped') {
             // Load Attribute Data 
             for (var i=0; i<$scope.attribute_list.length; i++) {
                 var att = $scope.Attributes[ $scope.attribute_list[i] ];
                 var key = att.name + $scope.step.stepNumber;
 
-                if (att.type == 'Count' && att.model == 'Plate') { 
+                if (att.type == 'Count' && att.model == 'Plate' && $scope.input.indexOf(att.name) > -1) { 
                     $scope.form[key] = '<increment>';
                     PlateAttributes[att.id] = $scope.form[key];
+                    console.log("*** ATT " + key + " : " + JSON.stringify($scope.form[key]));
                 }
-                else if (att.model == 'Plate' && $scope.SplitFields[key] && $scope.SplitFields[key].length ) {
+                else if (att.model == 'Plate' && $scope.SplitFields[key] && $scope.SplitFields[key].length) {
                     PlateAttributes[att.id] = $scope.SplitFields[key];
                     console.log(key + ' : ' + $scope.SplitFields[key]);
                 }
@@ -377,7 +380,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
                     PlateAttributes[att.id] = $scope.form[key];
                     console.log(key + ' : ' + $scope.form[key]);
                 }
-                else if (att.model == 'Prep' && $scope.form[key] != null) {
+                else if (att.model == 'Prep' && $scope.form[key] != null && $scope.form[key].length) {
                     PrepAttributes[att.id] = $scope.form[key];
                     console.log(key + ' = ' + $scope.form[key]);
                 }
@@ -390,7 +393,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
                 }
             }
             console.log("Plate Attribute Data: " + JSON.stringify(PlateAttributes));
-            console.log("Plate Attribute Data: " + JSON.stringify(PrepAttributes));
+            console.log("Prep Attribute Data: " + JSON.stringify(PrepAttributes));
         }
 
         var status = 'In Process';
@@ -732,25 +735,13 @@ function protocolController ($scope, $rootScope, $http, $q) {
 
         $q.all(promises)
         .then (function (result) {
-            if ($scope.form['solution_qty' + step_number] 
-                && !$scope.form['solution_qty_units' + step_number]) {
-
-                $scope.validation_error('qtyCheck', 'Must include units with qty');
-                console.log('qty without units');
-            }
-            else {
-                $scope.validation_error('qtyCheck',[]);
-                console.log('no qty');
-            }
-
-            // $scope.validate_reagents();
-            // $scope.validate_equipment();
-
             console.log("call general validation script for " + $scope.sample_count + ' samples');
+            
             options.required = $scope.current_mandatory_elements;
             options.form = $scope.form;
             options.count = $scope.sample_count;
             options.db_validate = $scope.db_validate_elements;
+            options.check_for_units = $scope.check_units;
 
             // options.element = element;
             options.trim = true;
@@ -859,7 +850,6 @@ function protocolController ($scope, $rootScope, $http, $q) {
         console.log("Options: " + JSON.stringify(Options));
 
         var newMap = new wellMapper();
-
         console.log("New Map: " + JSON.stringify(newMap));
 
         newMap.from($scope.active.Samples);
@@ -877,6 +867,14 @@ function protocolController ($scope, $rootScope, $http, $q) {
                 $scope.validation_warning('mapping', Map.warnings);
                 $scope.validation_error('mapping', Map.errors);
                 $scope.validation_message('mapping', Map.messages);
+
+                var el = 'location' + $scope.step.stepNumber;
+                if (Map.errors) { 
+                    $scope.invalidate(el);
+                    $scope.message('invalidate ' + el);
+                }
+                else { $scope.validate(el) }
+
             }
             else { console.log('form not initiated') }
 
@@ -911,7 +909,8 @@ function protocolController ($scope, $rootScope, $http, $q) {
     }
 
     $scope.reload = function reload () {
-        // $scope.reset_form();
+        // $scope.reset_form();  // affects counter fields !! 
+        // $scope.form = {};
 
         console.log("reload form at step " + $scope.step.stepNumber);
 
@@ -955,6 +954,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
 
             $scope.current_mandatory_elements = [];
             $scope.db_validate_elements = [];
+            $scope.check_units = [];
 
             for (var i=0; i<$scope.input.length; i++) {
                 var input = $scope.input[i];
@@ -965,6 +965,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
                 var sol_input = input.match(/solution/);
                 var equ_input = input.match(/equipment/);
 
+                console.log("check input: " + JSON.stringify(input));
                 var step = $scope.step.stepNumber;
                 if (sol_input) {
                     $scope.db_validate_elements.push( { model: 'solution', barcode: true, element: 'solution' + step, count: $scope.sample_count})
@@ -976,10 +977,16 @@ function protocolController ($scope, $rootScope, $http, $q) {
 
                 var req = {};
                 req[id] = key + ' input';
+                                
+                if ( key.match(/\_qty$/) ) {
+                    var el = key + '_units' + $scope.step.stepNumber;
+                    $scope.check_units.push(el);
+                }     
+
                 if (mandatory) { 
                     $scope.current_mandatory_elements.push(req);
                     console.log('require ' + req);
-                }
+                }   
 
                 $scope.Show[key] = true;
                 if ($scope.defaults.length > i) {
@@ -1012,10 +1019,10 @@ function protocolController ($scope, $rootScope, $http, $q) {
             console.log("Format: " + JSON.stringify($scope.Format));
             console.log("Input: " + JSON.stringify($scope.input));
             console.log("validate: " + JSON.stringify($scope.db_validate_elements));
+            console.log("** FORM: **" + JSON.stringify($scope.form));
             $scope.errMsg = '';
 
             console.log("... validate again...");
-            console.log("got " + $scope.form.solution_qty5 + $scope.form.solution_qty_units5);
             
             $scope.validate_prep_form();
         }
