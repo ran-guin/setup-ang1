@@ -418,8 +418,9 @@ function wellMapper() {
 
         this.target_boxes = this.Options.target_boxes;       // target box ids 
         //this.available = Options.available || {};   // hash of available wells keyed on target box ids
+        console.log("Map errors: " + this.errors.join('; '));
     }
-
+ 
     this.distribute = function ( sources, Target, Options, callback) {
 //
 //        Input:
