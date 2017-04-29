@@ -21,7 +21,7 @@ function stockController ($scope, $rootScope, $http, $q) {
         // filter catalog 
         var condition = "Stock_Type = '" + $scope.form.type + "'";
         $scope.setup_Menu('form.catalog', 'FK(catalog)',condition)
-        $scope.validate_stock_form();
+        $scope.validate_stock_form('type');
     }
 
     $scope.clear_form = function () {
@@ -33,73 +33,43 @@ function stockController ($scope, $rootScope, $http, $q) {
         $scope.form.type = null;
     }
 
-
     $scope.validated.serial = true;  // optional so initially okay.... 
     $scope.validate_stock_form = function (context) {
 
-        // $scope.validated.catalog = $scope.form.catalog;
-        // $scope.validated.number = $scope.form.number_in_batch;
-    
-        // if ($scope.form.type === 'Equipment') {
-        //     // $scope.split_serial();   // validate to start since this is optional 
-        //     $scope.validated.name = $scope.form.name;
-        //     console.log("Name ? " + $scope.form.name);
-        //     console.log(JSON.stringify($scope.validated));
-        // } 
-        // else if ($scope.form.type === 'Reagent') {
-        //     delete $scope.validated.serial;
-        //     delete $scope.validated.name;
-        // }
+        var deferred = $q.defer();
+
+        var promises = [];
+
         if (context) { $scope.visited[context] = true }
 
+        var check_for_units = ['qty_units'];
         var required = ['catalog','number_in_batch', 'type'];
-        var validate = ['catalog']
+        var list = ['name','serial'];
         if ($scope.form.type === 'Equipment') {
-            required.push('name|names');    
-        }
-
-        // Check serial number for matching count with number_in_batch... 
-        if ($scope.form.qty && !$scope.form.qty_units) {
-            $scope.validate_element('qty_units', false)
-        }
-        else if ($scope.form.qty && $scope.form.qty_units) {
-            $scope.validate_element('qty_units', true)
-        }
-        else {
-            console.log("no qty field");
-
-            $scope.validate_element('qty_units')
-
-            console.log($scope.form.qty);
-            console.log($scope.form.qty_units);
-        }
-
-        if (! $scope.form.serial) {
-            console.log("no serial number ... okay");
-        }
-        else {
-            var list = $scope.form.serialNumbers || [$scope.form.serial];
-            if ($scope.form.number_in_batch === list.length) {
-                console.log(list.length + " serial numbers supplied (if defined) must match number in batch");
-            }
-            else {
-                $scope.validation_error('serial','Require ' + $scope.form.number_in_batch + ' distinct serial #s (if supplied)');
-            }
+            required.push('name|name_list');    
         }
 
         console.log("Call validation...");
-        $scope.validate_form({form: $scope.form, required: required, validate: validate});
-    }
-
-    $scope.validate_receipt = function () {
-       if (! $scope.form.catalog) {
-            console.log("Catalog required");
-            $scope.validate.catalog = false ;
-        }
-        else {
-            console.log("passed validation"); 
-            $scope.validate.catalog = true;
-        }
+        $q.all(promises)
+        .then ( function () {
+            $scope.validate_form({form: $scope.form, 
+                required: required, 
+                check_for_units: check_for_units,
+                list: list,
+                count: $scope.form.number_in_batch
+            })
+            .then ( function () {
+                deferred.resolve();
+            })
+            .catch ( function (err) {
+                console.log("Error validating form ? " + err);
+                deferred.reject();
+            })
+        })
+        .catch ( function (err) {
+            console.log("Error pre-validating stock form");
+            deferred.reject();
+        })
     }
 
     $scope.pick_catalog_item = function () {
@@ -107,92 +77,86 @@ function stockController ($scope, $rootScope, $http, $q) {
         $scope.reset_messages();
 
         if ($scope.form.catalog && $scope.form.catalog.name && $scope.form.catalog.id) {
-            
-           $scope.validated.catalog = true;
-            
+ 
             if ($scope.form.type == 'Equipment') {
-                var url = "/remoteQuery";
-                var query = "SELECT Prefix from Stock_Catalog, Equipment_Category WHERE FK_Equipment_Category__ID=Equipment_Category_ID AND Stock_Catalog_ID = " + $scope.form.catalog.id;
-
-                $http.post(url, { query : query })
-                    .then ( function (result) {   
-                    console.log(JSON.stringify(result));
-
-                    if (result.data.length) {         
-                        var prefix = result.data[0].Prefix + '-';
-                        var offset = prefix.length + 1;
-
-                        var condition = "Equipment_Name like '" + prefix + "%'";
-                        $scope.next_in_line(
-                            { 
-                                index: "Mid(Equipment.Equipment_Name," + offset + ',' + '6)', 
-                                table: 'Equipment', 
-                                fill: false, 
-                                condition: "Equipment_Name LIKE '" + prefix + "%'",
-                                repeat: $scope.form.number_in_batch, 
-                                prefix: prefix
-                            }
-                        )
-                        .then ( function (result) {
-                            $scope.form.name = result;
-                            
-                            if ($scope.form.number_in_batch > 1) {
-                                $scope.form.names = result;
-                            }
-                            else {
-                                delete $scope.form.names;
-                            }
-                        })
-                        .catch ( function (err) {
-                            console.log("Could not find next in line");
-                            $scope.validated.catalog = false;                    
-                        });
-                    }
-                    else {
-                        $scope.error("Error finding Equipment prefix");
-                    }
-                })  
-                .catch ( function (err) {
-                    console.log('Error getting Equipment prefix');
-                    $scope.validated.catalog = false;
+                $scope.set_equipment_names()
+                .then (function (err) {
+                    $scope.validate_stock_form('catalog');
+                })
+                .catch ( function (err2) {
+                    console.log("Error setting equipment names");
+                    $scope.warning("Error setting equipment name");
+                    $scope.validate_stock_form('catalog');                    
                 });
             }
-            $scope.validate_stock_form('catalog');
+            else { $scope.validate_stock_form('catalog') }
         }
         else {
-            console.log("no catalog " + $scope.form.catalog + ' : ' + JSON.stringify($scope.form.catalog));
+            // console.log("no catalog " + $scope.form.catalog + ' : ' + JSON.stringify($scope.form.catalog));
 
-            $scope.validated.catalog = false;
-            
-            if ($scope.visited.catalog) { $scope.validate_stock_form('catalog') }
-            $scope.visited.catalog = true;
-            
-
+            // $scope.invalidate('catalog');
+            $scope.validate_stock_form('catalog');
         }
+    }
 
-        // $scope.validate_stock_form();
+    $scope.set_equipment_names = function () {
 
+        var deferred = $q.defer();
+
+        var catalog_id = $scope.form.catalog.id
+        var url = "/remoteQuery";
+        var query = "SELECT Prefix from Stock_Catalog, Equipment_Category WHERE FK_Equipment_Category__ID=Equipment_Category_ID AND Stock_Catalog_ID = " + catalog_id;
+
+        $http.post(url, { query : query })
+            .then ( function (result) {   
+            console.log(JSON.stringify(result));
+
+            if (result.data.length) {         
+                var prefix = result.data[0].Prefix + '-';
+                var offset = prefix.length + 1;
+
+                var condition = "Equipment_Name like '" + prefix + "%'";
+                $scope.next_in_line(
+                    { 
+                        index: "Mid(Equipment.Equipment_Name," + offset + ',' + '6)', 
+                        table: 'Equipment', 
+                        fill: false, 
+                        condition: "Equipment_Name LIKE '" + prefix + "%'",
+                        repeat: $scope.form.number_in_batch, 
+                        prefix: prefix
+                    }
+                )
+                .then ( function (result) {
+                    $scope.form.name = result;
+                    
+                    if ($scope.form.number_in_batch > 1) {
+                        $scope.form.name_list = result;
+                    }
+                    else {
+                        delete $scope.form.name_list;
+                    }
+                    deferred.resolve();
+                })
+                .catch ( function (err) {
+                    deferred.reject("Error getting next equipment item");
+                    console.log("Could not find next in line");
+                });
+            }
+            else {
+                $scope.error("Error finding Equipment prefix");
+                deferred.reject("Error getting Equipment prefix");
+            }
+        })  
+        .catch ( function (err) {
+            deferred.reject(err);
+            console.log('Error getting Equipment prefix');
+        });
+
+        return deferred.promise;
     }
 
     $scope.split_serial = function () {
-        
-        $scope.validation_error('serial',[]);
-
-        if ($scope.form.serial && $scope.form.number_in_batch) {
-            var serials = $scope.form.serial.split(/\s*,\s*/);
-            if (serials.length === $scope.form.number_in_batch) {
-                $scope.form.serialNumbers = serials;
-                $scope.validated.serial = true;
-            }
-            else { 
-                $scope.validation_error('serial','Number of Serial Numbers (if supplied) must match number in batch');
-                $scope.validated.serial = false;
-            }
-        }
-        else {
-            console.log("no serial... ok");
-        }
-
+        $scope.form.serial_list = $scope.form.serial.split(/\s*,\s*/);
         $scope.validate_stock_form();
     }
 
@@ -235,8 +199,8 @@ function stockController ($scope, $rootScope, $http, $q) {
                 'status'            : 'In Use',
             };
 
-            if ($scope.form.serialNumbers) { subData.serial = $scope.form.serialNumbers }
-            if ($scope.form.names) { subData.name = $scope.form.names }
+            if ($scope.form.serial_list) { subData.serial = $scope.form.serial_list }
+            if ($scope.form.name_list) { subData.name = $scope.form.name_list }
 
             data['Equipment'] = subData;
         }
