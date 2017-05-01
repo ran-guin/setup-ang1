@@ -44,7 +44,7 @@ function wellMapper() {
     this.sample_remaining = {};
     this.missing_boxes = 0;       // 
     this.missing_wells = 0;
-    
+
     this.significant_digits = 5;
 
     this.warnings = [];
@@ -210,9 +210,15 @@ function wellMapper() {
         if (this.available && this.available[batch] && this.available[batch].length > target_index+1) {
             console.log(this.available[batch].length + ' are still avail in ' + batch + " of " + target_index);
             
-            // if (this.target_boxes[batch_index]) {
-            //     this.messages.push(this.available[batch].length + ' wells are still available in box#' + this.target_boxes[batch_index]);
-            // }
+            if (this.target_boxes[batch] && this.target_boxes[batch].length) {
+                this.messages.push(this.available[batch].length + ' wells are still available in box#' + this.target_boxes[batch_index]);
+            }
+            else if (this.target_boxes[batch]) {
+                this.errors.push('no wells available in box#' + this.target_boxes[batch_index]);
+            }
+            else {
+                // this.warnings.push('unrecognized box');
+            }
 
             target_index++;
         }
@@ -817,7 +823,7 @@ function wellMapper() {
         if (this.missing_wells > 1) {
             this.missing_wells--; // last call to next_available would generate missing_well ...
             
-            var msg = this.missing_wells + ' Target sample(s) still require target boxes...  Please scan box';
+            var msg = this.missing_wells + ' Target sample(s) still require target boxes...  Please scan (another) box';
             this.errors.push(msg);
             console.log(msg);
         }
