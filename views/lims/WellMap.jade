@@ -36,7 +36,7 @@ block content
             div(ng-show="distributionStatus=='Pending'")
               include ./../core/Pending.jade
 
-            form.form-horizontal(role='form' method='post' action="#{sails.config.root}/transfer" ng-show="! completed")
+            form.form-horizontal(role='form' ng-show="! completed")
               p &nbsp;
               if target
                 h2 Transfer Samples to #{target.Plate_Format_Type}
@@ -64,7 +64,7 @@ block content
                       tr
                         td(width='100%')
                           // preaddon & addon custom css only necessary for special type: dropdown 
-                          input.input-lg.preaddon#transfer_qty(type='text' aria-describedBy='tqu' placeholder=' -- Transfer Qty --', ng-model='map.transfer_qty' ng-blur="redistribute('reset')" size='24' ng-disabled="map.transfer_type=='Pre-Print'")
+                          input.input-lg.preaddon#transfer_qty(type='text' aria-describedBy='tqu' placeholder=' -- Transfer Qty --', ng-model='map.transfer_qty' ng-blur="visit('transfer_qty'); redistribute('reset')" size='24' ng-disabled="map.transfer_type=='Pre-Print'")
                           // span.lookup(id='Lookup-units' ng-init="loadLookup('units','','units')" mandatory)
                         
                         // include Units.jade
@@ -151,10 +151,16 @@ block content
                 div.col-sm-4
                   b Target : 
                   div
-                    input.input-lg(type='text' required name='map.target_rack' size='24' ng-blur="validate_target(); redistribute('reset');" ng-model="map.target_rack" placeholder='-- Scan Target Box(es) --')
+                    input.input-lg#target_rack(type='text' required name='map.target_rack' size='24' ng-blur="validate_target(); redistribute('reset');" ng-model="map.target_rack" placeholder='-- Scan Target Box(es) --')
                 div.col-sm-4 &nbsp;
                   button.btn.btn-lg.btn-primary(type='button' ng-click="redistribute('reset','execute');" ng-disabled="!form_validated || (map.transfer_type !== 'Move' && !map.target_format) || !map.target_rack") Relocate Samples
+                  span &nbsp;       
+                  a(href='#' onclick='return false;')
+                    button.btn.btn-xs(ng-show="invalidate_form" type='button' ng-click="show_validation_warnings(); validate_redistribution_form()")
+                      i.fa.fa-warning                  
                   p &nbsp;
+
+
                   input(type='radio' ng-click="reset_messages(); custom_distribution('Matrix'); redistribute();") 
                   span &nbsp; Custom Matrix sub-aliquot
                   br
