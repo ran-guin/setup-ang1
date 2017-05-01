@@ -743,6 +743,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
             options.count = $scope.sample_count;
             options.db_validate = $scope.db_validate_elements;
             options.check_for_units = $scope.check_units;
+            options.reset = true;
 
             // options.element = element;
             options.trim = true;
@@ -777,8 +778,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
 
         console.log("Distribute samples...");
         // console.log('reset messages before redistribution');
-        // $scope.reset_messages();
-
+        $scope.reset_messages();
 
         var deferred = $q.defer(); 
 
@@ -861,28 +861,12 @@ function protocolController ($scope, $rootScope, $http, $q) {
         
         console.log("call well redistribution...");
 
+        Options.target_element = 'location' + $scope.step.stepNumber;  
+
         $scope.redistribute_Samples($scope.active.Samples, Target, Options)
         .then ( function (result) {
 
             var Map = result.Map;
-            if ($scope.form_initialized) {
-                $scope.validation_warning('mapping', Map.warnings);
-                // $scope.validation_error('mapping', Map.errors);
-                $scope.validation_message('mapping', Map.messages);
-
-                var el = 'location' + $scope.step.stepNumber;
-                $scope.annotate_element(el, Map.errors, 'error');    
-                $scope.annotate_element(el, Map.warnings, 'warning');
-                $scope.annotate_element(el, Map.messages);
-
-                if (!Map.errors) { $scope.validate(el) }
-
-            }
-            else { console.log('form not initiated') }
-
-            console.log("MAPPING ERRORS: " + JSON.stringify(Map.errors));
-            console.log("MAPPING Warnings: " + JSON.stringify(Map.warnings));
-            // $scope.validate_Samples($scope.active.Samples);
 
             deferred.resolve(Map);
         })
@@ -966,6 +950,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
 
                 var sol_input = input.match(/solution/);
                 var equ_input = input.match(/equipment/);
+                var loc_input = input.match(/location/);
 
                 console.log("check input: " + JSON.stringify(input));
                 var step = $scope.step.stepNumber;
@@ -975,6 +960,10 @@ function protocolController ($scope, $rootScope, $http, $q) {
 
                 if (equ_input) {
                     $scope.db_validate_elements.push( { model: 'equipment', barcode: true, element : 'equipment' + step, count: $scope.sample_count})
+                }
+
+                if (loc_input) {
+                    $scope.db_validate_elements.push( { model: 'rack', barcode: true, element : 'location' + step});
                 }
 
                 var req = {};
