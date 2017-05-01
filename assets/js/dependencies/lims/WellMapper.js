@@ -44,7 +44,7 @@ function wellMapper() {
     this.sample_remaining = {};
     this.missing_boxes = 0;       // 
     this.missing_wells = 0;
-
+    
     this.significant_digits = 5;
 
     this.warnings = [];
@@ -240,6 +240,7 @@ function wellMapper() {
             this.target_boxes[batch_index] = batch;
             this.missing_boxes++;
             this.available[batch] = this.default.available;
+
             console.log(this.target_size + " Avail: " + JSON.stringify(this.available[batch]));
             console.log('box ' + batch_index + " = " + batch + ' -> ' + JSON.stringify(this.target_boxes));
             x = 'A'; 
@@ -335,7 +336,7 @@ function wellMapper() {
 
         this.splitX = Options.split || Options.splitX || 1;
 
-        this.available = Options.available;
+        this.available = Options.available || {};
         
         this.transfer_type = Options.transfer_type;
         this.target_boxes  = Options.target_boxes || [Options.target_rack];
@@ -816,7 +817,7 @@ function wellMapper() {
         if (this.missing_wells > 1) {
             this.missing_wells--; // last call to next_available would generate missing_well ...
             
-            var msg = this.missing_wells + ' Target sample(s) still require target boxes...  Please scan ' + this.missing_boxes + " more Target Box(es)";
+            var msg = this.missing_wells + ' Target sample(s) still require target boxes...  Please scan box';
             this.errors.push(msg);
             console.log(msg);
         }
