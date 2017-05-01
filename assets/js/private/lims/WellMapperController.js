@@ -288,6 +288,7 @@ function wellMapperController ($scope, $rootScope, $http, $q ) {
                 deferred.reject(err);
             });
         }  
+        else { deferred.resolve() }
 
         return deferred.promise;
     }
@@ -363,8 +364,10 @@ function wellMapperController ($scope, $rootScope, $http, $q ) {
                 };
             }
 
-            Options['target_boxes'] = Loaded.target_boxes;
-            Options['available'] = Loaded.available;  // reset in loadWells...
+            if (Loaded) {
+                Options['target_boxes'] = Loaded.target_boxes;
+                Options['available'] = Loaded.available;  // reset in loadWells...
+            }
             
             console.log('call distribute using:');
             console.log('Target: ' + JSON.stringify(Target) );
