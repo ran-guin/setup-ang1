@@ -66,6 +66,8 @@ function wellController ($scope, $rootScope, $http, $q ) {
 
     $scope.redistribute = function (reset, execute) {
 
+        $scope.reset_messages();
+        
         console.log("Redistribute wells");
         if (execute) {
             $scope.distributionStatus = 'Pending';
@@ -121,6 +123,7 @@ function wellController ($scope, $rootScope, $http, $q ) {
             $scope.validate_redistribution_form()
             .then ( function () {
                 console.log("error redistributing samples");
+                console.log(err);   
                 $scope.error("could not distribute samples");
             })
             .catch ( function (err2) {
