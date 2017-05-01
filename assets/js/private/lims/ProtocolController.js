@@ -4,6 +4,8 @@ app.controller('ProtocolController',
 ['$scope', '$rootScope', '$http', '$q'  ,   
 function protocolController ($scope, $rootScope, $http, $q) {
 
+    // $scope.debug = 1;   
+
     console.log('loaded protocol controller');        
     $scope.context = 'Protocol';
 
@@ -14,7 +16,6 @@ function protocolController ($scope, $rootScope, $http, $q) {
     $scope.SplitFields = {};
     $scope.backfill_date = null;
  
-
     $scope.form = {};
     $scope.sample_count = 0;
 
@@ -775,8 +776,9 @@ function protocolController ($scope, $rootScope, $http, $q) {
     $scope.initiate_transfer = function distribute () {
 
         console.log("Distribute samples...");
-        console.log('reset messages before redistribution');
+        // console.log('reset messages before redistribution');
         // $scope.reset_messages();
+
 
         var deferred = $q.defer(); 
 
@@ -786,7 +788,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
         if ( $scope.form['transfer_qty' + $scope.step.stepNumber + '_split']) {
             qty = $scope.form['transfer_qty' + $scope.step.stepNumber + '_split'].split(',');
         }  
-        var qty_units = $scope['units_label'] || $scope.Step['transfer_qty_units'];;
+        var qty_units = $scope['units_label'] || $scope.Step['transfer_qty_units'];
 
         if ($scope.Step.transfer_type === 'Transfer') {
             var entered_qty = $scope.form['transfer_qty' + $scope.step.stepNumber] || $scope.form['transfer_qty' + $scope.step.stepNumber + '_split'];
@@ -865,15 +867,15 @@ function protocolController ($scope, $rootScope, $http, $q) {
             var Map = result.Map;
             if ($scope.form_initialized) {
                 $scope.validation_warning('mapping', Map.warnings);
-                $scope.validation_error('mapping', Map.errors);
+                // $scope.validation_error('mapping', Map.errors);
                 $scope.validation_message('mapping', Map.messages);
 
                 var el = 'location' + $scope.step.stepNumber;
-                if (Map.errors) { 
-                    $scope.invalidate(el);
-                    $scope.message('invalidate ' + el);
-                }
-                else { $scope.validate(el) }
+                $scope.annotate_element(el, Map.errors, 'error');    
+                $scope.annotate_element(el, Map.warnings, 'warning');
+                $scope.annotate_element(el, Map.messages);
+
+                if (!Map.errors) { $scope.validate(el) }
 
             }
             else { console.log('form not initiated') }
