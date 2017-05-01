@@ -30,6 +30,12 @@ module.exports = {
     },
   },
 
+  alias: {
+    'id' : 'Rack_ID',
+    'parent' : 'FKParent_Rack__ID',
+    'name' : 'Rack_Alias',
+  },
+
   subtypes : ['Shelf','Rack','Box','Slot'],
 
   wells : {
