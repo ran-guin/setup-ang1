@@ -47,12 +47,12 @@ module.exports = {
 				var f = 0; // file index
 
 				if (uploadedFiles[f]) { console.log("ok")}
-				var matrix = uploadedFiles[f].fd
-				console.log("matrix uploaded");
+				var grid = uploadedFiles[f].fd
+				console.log("grid uploaded");
 
 				try {
 					console.log('parse');
-					var obj = xlsx.parse(matrix);
+					var obj = xlsx.parse(grid);
 					console.log('parsed');
 					var i = page - 1;  // only upload one page at a time for now... 
 
@@ -94,7 +94,7 @@ module.exports = {
 					}
 					else {
 						console.log(" No data from page " + i  );
-						deferred.reject("could not find matrix data");
+						deferred.reject("could not find grid data");
 					}
 				}
 				catch (e) {
