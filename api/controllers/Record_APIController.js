@@ -169,13 +169,14 @@ module.exports = {
 		var headers = body.headers;
 		var data    = body.data;
 		var reference = body.reference;
+		var onDuplicate = body.onDuplicate;
 
 		console.log("UPLOAD DATA");
 		console.log("model : " + model);
 		console.log("headers: " + JSON.stringify(headers));
 		console.log("data: " + JSON.stringify(data));
 
-		Record.uploadData(model, headers, data, reference)
+		Record.uploadData(model, headers, data, { reference: reference, onDuplicate: onDuplicate})
 		.then ( function (result) {
 			console.log("Uploaded");
 			console.log(JSON.stringify(result));
