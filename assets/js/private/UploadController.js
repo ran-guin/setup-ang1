@@ -25,6 +25,8 @@ function uploadController ($scope, $rootScope, $http, $q) {
 		$scope.header_row = 1;
 		$scope.header_rows = 1;
 
+		$scope.onDuplicate = '';  // allow for Ignore or Update... (Note: update only works for mysql...)
+
 		$scope.validated = false;
 
 		if ($scope.data && $scope.data[$scope.page-1] && $scope.data[$scope.page-1].data) {
@@ -223,6 +225,7 @@ function uploadController ($scope, $rootScope, $http, $q) {
 			if (!okay) {
 				var e = new Error('Data validation errors');
 				$scope.remoteLog(e, 'warning', 'Validation Errors');
+				$scope.validated = false;
 			}
 			else {
 				if (found.ids && found.ids.index != null )  {
@@ -308,7 +311,7 @@ function uploadController ($scope, $rootScope, $http, $q) {
 		console.log("\n** Upload References: " + JSON.stringify($scope.reference));
 
 		$scope.reset_messages();
-		$http.post('/uploadData', { model: model, headers: $scope.headers, data: data, reference: $scope.reference })
+		$http.post('/uploadData', { model: model, headers: $scope.headers, data: data, reference: $scope.reference, onDuplicate: $scope.onDuplicate })
 		.then ( function (result) {
 			console.log("Upload Result " + JSON.stringify(result));
 			if (result.data && result.data.error) {
@@ -357,6 +360,7 @@ function uploadController ($scope, $rootScope, $http, $q) {
 
 					if (count) {
 						$scope.message("Added/Updated " + count + " Data Record(s)");
+						if ($scope.onDuplicate === 'replace') { $scope.message('(Note: replaced records count as 2 updates (delete + insert)') }
 					}
 					if (total_changed) {
 						$scope.message(total_changed + " Values Edited");

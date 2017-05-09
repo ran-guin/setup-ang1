@@ -38,8 +38,16 @@ my-dropdown.validated-mandatory > div > div.dropdown-display > input {
   border: solid 3px green !important;
   border-radius: 6px;
 }
-my-dropdown.mandatory > div > div.dropdown-display > input {
+my-dropdown.pending-mandatory > div > div.dropdown-display > input {
+  border: solid 3px orange !important;
+  border-radius: 6px;
+}
+my-dropdown.failed-mandatory > div > div.dropdown-display > input {
   border: solid 3px red !important;
+  border-radius: 6px;
+}
+my-dropdown.mandatory > div > div.dropdown-display > input {
+  border: solid 1px red !important;
   border-radius: 6px;
 }
 my-dropdown > div > div.dropdown-display > input {

@@ -38,6 +38,21 @@ module.exports = {
 		else { return alias }
 	},
 
+	unalias : function (model, alias) {
+		var Mod = sails.models[model] || {};
+		var map = Mod.alias || Mod.legacy_map || {};
+		
+		var keys = Object.keys(map);
+
+		var found = '';
+		for (var i=0; i<keys.length; i++) {
+			if (map[keys[i]] === alias) {
+				found = map[keys[i]];
+			}
+		}
+		return found;
+	},
+
 	validate : function (model, options) {
 		if ( !options ) { options = {} }
 
@@ -88,7 +103,7 @@ module.exports = {
 	 		Record.query_promise(query)
 	 		.then ( function (result) {
 	 			var excluded = [];
-	 			var validated = _.pluck(result,'id');
+	 			var validated = _.pluck(result,'id') || [];
 
 	 			if (ids.length !== result.length) {
 	 				excluded = _.difference( ids , validated);
@@ -96,7 +111,7 @@ module.exports = {
 	 			deferred.resolve({'ids' : ids, 'validated' : validated, excluded: excluded});
 	 		})
 	 		.catch (function(err) {
-	 			deferred.resolve({'ids' : ids, 'validated' : null });
+	 			deferred.resolve({'ids' : ids, 'validated' : [], error: err});
 	 		});
 	 	}
 
@@ -1278,15 +1293,31 @@ module.exports = {
 		options = options || {};
 		var resetData   = options.reset;
 
-		var onDuplicate = '';
+		var replace = options.replace;
+		var ignore = options.ignore;
+
+		var onDuplicate = options.onDuplicate;
+
 		var action = 'INSERT';
-		if ( options.onDuplicate) {
-			if (options.onDuplicate.match(/replace/i)) {
-				action = 'REPLACE';
+		if ( onDuplicate) {
+			if (onDuplicate === 'replace') {
+				replace = true;
+				onDuplicate = '';
+			}
+			else if (onDuplicate === 'ignore') {
+				ignore = true;
+				onDuplicate = '';
 			}
 			else {
-				onDuplicate = ' ON DUPLICATE KEY ' + options.onDuplicate;
+				onDuplicate = ' ON DUPLICATE KEY ' + onDuplicate;
 			}
+		}
+
+		if (replace) {
+			action = 'REPLACE';  // use UPDATE instead of REPLACE to prevent new id values... (replace deletes record and rewrites...)
+		}
+		else if (ignore) {
+			action = 'INSERT IGNORE';
 		}
 
 		var Mod = sails.models[model] || {};
@@ -1445,10 +1476,15 @@ module.exports = {
 
 	},
 
-	uploadData : function (model, headers, data, reference) {
+	uploadData : function (model, headers, data, options) {
 
 		var deferred = q.defer();
 		
+		if (!options) { options = {} }
+
+		var reference = options.reference;
+		var onDuplicate = options.onDuplicate;
+
 		var user;
 		var timestamp = '<now>';
 
@@ -1558,7 +1594,7 @@ module.exports = {
 				}
 
 				if (update_attributes.length) {
-					promises.push( Record.createNew('Plate_Attribute', update_attributes) );
+					promises.push( Record.createNew('Plate_Attribute', update_attributes, { onDuplicate: onDuplicate}) );
 					console.log("\n** Update Attributes: " + JSON.stringify(update_attributes)  );
 				}
 
@@ -1607,20 +1643,30 @@ module.exports = {
 			if (header) { alias = header.replace(/ /g,'_') }
 
 			// if (Mod.alias && alias && Mod.alias(alias)) {
-			if ( Record.alias(model, alias) != alias ) {
+			if ( Record.alias(model, alias) && Record.alias(model, alias) !== alias ) {
+				// eg - id for legacy table (id -> User_ID )
 				fields[alias] = Record.alias(model, alias);				
 			}
 			else if (alias && Mod.attributes && Mod.attributes[alias]) {
+				// any defined attribute of the given model
 				fields[alias] = header;
 
 				if (header === 'id') {
-				ids = { alias : alias, index: i};
+					ids = { alias : alias, index: i};
 				}
 				else if ( Record.alias(model, 'id') === alias) {
 					ids = { alias : alias, index: i};
 				}
 			}
+			else if (alias && Record.unalias(model,alias) ) {
+				// eg actual legacy id field ( User_ID )
+				fields[alias] = alias;
+				if (Record.unalias(model, alias) === 'id') {
+					ids = { alias: alias, index: i};
+				}
+			}
 			else {
+				// check for attributes tied to this model... 
 				check_attributes.push(i);
 			}
 			

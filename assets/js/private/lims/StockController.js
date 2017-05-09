@@ -52,11 +52,13 @@ function stockController ($scope, $rootScope, $http, $q) {
         console.log("Call validation...");
         $q.all(promises)
         .then ( function () {
-            $scope.validate_form({form: $scope.form, 
+            $scope.validate_form({
+                form: $scope.form, 
                 required: required, 
                 check_for_units: check_for_units,
                 list: list,
-                count: $scope.form.number_in_batch
+                count: $scope.form.number_in_batch,
+                reset: true,
             })
             .then ( function () {
                 deferred.resolve();

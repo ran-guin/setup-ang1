@@ -112,21 +112,77 @@ app.controller('FancyFormController',
         $scope.validation_warnings = {};
         $scope.validation_errors = {};
 
+        $scope.validation_elements = {};  // track messages tied to elements rather than specific
+
+        $scope.force_validation = false;
+
+        $scope.show_validation_warnings = function () {
+            $scope.force_validation = true;
+        }
+
         $scope.validate = function (key) {
-            $scope.validated[key] = true;
-            $scope.validate_element(key, true);  // set class if available
+
+            if ($scope.validation_errors[key] && $scope.validation_errors[key].length ) {
+                console.log('validation already failed');
+                $scope.invalidate(key);
+            }
+            else {
+                var keys = Object.keys($scope.validation_errors);
+                console.log("validation errors: " + keys.join(','));
+
+                $scope.validated[key] = true;
+                console.log("** validate " + key);
+                $scope.validate_element(key, true);  // set class if available
+            }
         }
 
         $scope.invalidate = function (key) {
+            console.log("** invalidate " + key);
             $scope.validated[key] = false;
             $scope.validate_element(key, false);
         }
 
+        $scope.annotate_element = function (element, message, type) {  
+            // // similar to validation error, but using element as context (may be suppressed until element is visited)
+            $scope.validation_elements[element] = true;
+            if (type && type.match(/error/)) {
+                $scope.validation_error(element, message);
+            }
+            else if (type && type.match(/warning/)) {
+                $scope.validation_warning(element, message);
+            }
+            else {
+                $scope.validation_message(element, message);
+            }
+        }
+
+        $scope.clear_validations = function (context, type) {           
+            if (!type) {  type = 'errors, warnings, messages' }
+
+            if (type.match(/error/)) {
+                $scope.validation_errors[context] = []
+            }
+            else if (type.match(/warning/)) {
+                $scope.validation_errors[context] = []
+            }
+            else if (type.match(/message/)) {
+                $scope.validation_errors[context] = []
+            }
+        }
+
         $scope.validation_message = function (context, message) {
+
             if (! $scope.validation_messages[context]) { $scope.validation_messages[context] = [] }
 
-            if (message.constructor === Array) { $scope.validation_messages[context] = message }
-            else { $scope.validation_messages[context].push(message) }
+            if (message && message.constructor === Array) { 
+                for (var i=0; i<message.length; i++) {
+                    $scope.validation_messages[context].push(message[i]);
+                }
+            }
+            else if (message) { 
+                $scope.validation_messages[context].push(message);
+            }
+
             console.log(JSON.stringify(message));
             console.log(JSON.stringify($scope.validation_messages));        
         }
@@ -134,16 +190,23 @@ app.controller('FancyFormController',
         $scope.validation_warning = function (context, warning) {
             if (! $scope.validation_warnings[context]) { $scope.validation_warnings[context] = [] }
 
-            if (warning.constructor === Array) { $scope.validation_warnings[context] = warning }
-            else { $scope.validation_warnings[context].push(warning) }
+            if (warning && warning.constructor === Array) { 
+                 for (var i=0; i<warning.length; i++) {
+                    $scope.validation_warnings[context].push(warning[i]);
+                }
+            }
+            else if (warning) { $scope.validation_warnings[context].push(warning) }
         }
 
         $scope.validation_error = function (context, error) {
             if (! $scope.validation_errors[context]) { $scope.validation_errors[context] = [] }
             
-            if (error.constructor === Array) { $scope.validation_errors[context] = error }
-            else { $scope.validation_errors[context].push(error) }
-
+            if (error && error.constructor === Array) { 
+                for (var i=0; i<error.length; i++) {
+                    $scope.validation_errors[context].push(error[i]);
+                }
+            }
+            else if (error) { $scope.validation_errors[context].push(error) }
         }
 
         $scope.reset_form_validation = function () {
@@ -157,21 +220,21 @@ app.controller('FancyFormController',
             var values = Object.values(form);
             
             console.log("form keys: " + keys.join(','));
-
             console.log("form values: " + JSON.stringify(values));
-
         }
 
         $scope.validate_form = function validate_form(options) {
             console.log("VALIDATE FORM: ");
             
             var deferred = $q.defer();
-
-            if ($scope.form_initialized) {
-                $scope.reset_messages();
-            }
-
             if (!options) { options = {} }
+
+            if ($scope.form_initialized && options.reset) {
+                console.log("reset validation messages");
+                $scope.reset_messages();
+                console.log(JSON.stringify($scope.validation_messages));
+            }
+            else { console.log("no reset validation") }
 
             var form = options.form || {};
             var required = options.required || [];
@@ -191,6 +254,7 @@ app.controller('FancyFormController',
             var force = options.force || false;  // force messages even if field hasn't been visited
             var trim = options.trim || true;     // trim trailing index numbers from element names when generating message
 
+            if (force) { $scope.force_validation = true }
             if (element) { $scope.visit(element) }
 
             var valid = true;
@@ -243,7 +307,7 @@ app.controller('FancyFormController',
                 $scope.form_validated = valid;
 
                 console.log("valid ?: " + valid + '; initialized : ' + $scope.form_initialized);
-
+                console.log(JSON.stringify($scope.validation_errors));
                 deferred.resolve();
             })
             .catch ( function (err) {
@@ -337,10 +401,14 @@ app.controller('FancyFormController',
                         $scope.message("validated " + model);
                         $scope.validate(element);
                     }
-                    else if (returned.ids && returned.ids.length && returned.ids[0]) {
+                    else if (returned.ids && returned.ids.length && returned.validated && returned.validated.length === returned.ids.length) {
                         console.log('found ' + found_ids.length + ' valid ' + model + ' id(s): ' + found_ids.join(','));
                         $scope.message("validated " + model);
                         $scope.validate(element);
+                    }
+                    else if (returned.validated && returned.excluded && returned.exclued.length && returned.validated.lenght) {
+                        $scope.message("partial validations");
+                        $scope.validate_element(element, 'pending');
                     }
                     else {
                         valid = false;
@@ -376,7 +444,7 @@ app.controller('FancyFormController',
                 var errs = errors[error_contexts[i]];
                 if (errs && errs.length) {
                     if (type === 'error') { valid = false }
-                    console.log( type + ': ' + JSON.stringify(errs));
+                    console.log( '** validation ' + type + ': ' + JSON.stringify(errs));
 
                     if (errs.length) {
                         console.log(errs.length + ' Validation ' + type + '(s) found in ' + error_contexts[i]);
@@ -384,11 +452,19 @@ app.controller('FancyFormController',
 
                     for (var j=0; j<errs.length; j++) {
                         console.log(errs[j]);
-                        if (type === 'error') {
-                            $scope.error(errs[j]);
+
+                        if ($scope.validation_elements[error_contexts[i]] 
+                            && !$scope.visited[error_contexts[i]]
+                            && !$scope.force_validation) {
+
+                            console.log("suppress " + error_contexts[i] + ' ' + type + " until element visited");
+                            console.log(errs[j]);
                         }
-                        else if (type === 'warning') { $scope.warning(errs[j]) }
-                        else if (type === 'message') { $scope.message(errs[i]) }
+                        else {
+                            if (type === 'error') { $scope.error(errs[j]) }
+                            else if (type === 'warning') { $scope.warning(errs[j]) }
+                            else if (type === 'message') { $scope.message(errs[i]) }
+                        }
                     }
                 }
                 else {
@@ -400,7 +476,7 @@ app.controller('FancyFormController',
             return deferred.promise;
         }
 
-        $scope.validate_required = function(form, required, trim, force) {
+        $scope.validate_required = function(form, required, trim) {
 
             var deferred = $q.defer();
 
@@ -437,21 +513,21 @@ app.controller('FancyFormController',
                         if (result.found === null) {
                             valid = false;
                             
-                            $scope.validate_element(result.element, false);
+                            $scope.invalidate(result.element);
 
-                            if ($scope.visited[result.element] || force) {
+                            if ($scope.visited[result.element] || $scope.force_validation) {
                                 console.log('missing ' + result.element);
                                 $scope.error("Missing " + result.required);                                
                             }
                             else if ($scope.form_initialized) { 
-                                console.log(result.element + ' not yet visited');                                
+                                console.log(result.element + ' not yet visited ' + $scope.force_validation);                                
                             }
                             else {
                                 console.log('form not yet initialized');
                             }                            
                         }
                         else {
-                            $scope.validate_element(result.element, true);
+                            $scope.validate(result.element);
                             console.log("validated " + result.element + ": " + JSON.stringify(result.found));
                         }
                     }
@@ -540,24 +616,36 @@ app.controller('FancyFormController',
             var deferred = $q.defer();
 
             var el = document.getElementById(element);
-            console.log('retrieve ' + element + ': ' + validate);
+            console.log('retrieve validation for ' + element + ': ' + validate);
+            console.log("validate visited ? " + JSON.stringify($scope.visited));
 
-            if (el) {           
+            if (el) {     
                 if (validate === true) {
-                    console.log('validate ' + element);
+                    if ($scope.visited[element] || $scope.force_validation) {      
+                        console.log('validate element ' + element);
 
-                    el.classList.remove('mandatory');
-                    el.classList.add('validated-mandatory'); 
+                        el.classList.remove('panding-mandatory');
+                        el.classList.remove('failed-mandatory');
+                        el.classList.add('validated-mandatory'); 
+                    }
                 }
                 else if (validate === false) {
                     console.log('flag ' + element);
                     el.classList.remove('validated-mandatory');
-                    el.classList.add('mandatory'); 
+                    el.classList.remove('pending-mandatory');
+                    el.classList.add('failed-mandatory'); 
+                }
+                else if (validate === 'pending') {
+                    console.log('pending validation ');
+                    el.classList.remove('validated-mandatory');
+                    el.classList.remove('failed-mandatory');
+                    el.classList.add('pending-mandatory');                    
                 }
                 else {
                     console.log('clearing validation formatting');
                     el.classList.remove('validated-mandatory');
-                    el.classList.remove('mandatory');
+                    el.classList.remove('failed-mandatory');
+                    el.classList.remove('pending-mandatory');
                 }
             }
             else {
@@ -1293,7 +1381,6 @@ app.controller('FancyFormController',
                 var key = window.event ? event.keyCode : event.which;
                 if (key) {
                     var keyval = String.fromCharCode(key);
-                
                     for (var i=0; i<scope.list.length; i++) {
                         if ( scope.list[i].name.charAt(0).toLowerCase() == keyval.toLowerCase() ) {
                             console.log(keyval.toLowerCase() + ' = ' + scope.list[i].name.charAt(0).toLowerCase());
