@@ -2,6 +2,15 @@
     background: url(/images/lims/bcg-background.png);
 }
 
+.modal-header {
+    background-color: grey;
+    color: #fff;
+}
+
+.modal-footer {
+    background-color: lightgrey
+}
+
 div.header {
     -webkit-transition: 16s;
     -moz-transition: 16s;
