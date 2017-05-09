@@ -786,7 +786,9 @@ function protocolController ($scope, $rootScope, $http, $q) {
         if ( $scope.form['transfer_qty' + $scope.step.stepNumber + '_split']) {
             qty = $scope.form['transfer_qty' + $scope.step.stepNumber + '_split'].split(',');
         }  
-        var qty_units = $scope['units_label'] || $scope.Step['transfer_qty_units'];;
+        
+        var qty_units = $scope.form['transfer_qty_units' + $scope.step.stepNumber] 
+            || $scope.Step['transfer_qty_units'];
 
         if ($scope.Step.transfer_type === 'Transfer') {
             var entered_qty = $scope.form['transfer_qty' + $scope.step.stepNumber] || $scope.form['transfer_qty' + $scope.step.stepNumber + '_split'];
@@ -794,9 +796,9 @@ function protocolController ($scope, $rootScope, $http, $q) {
 
             if (entered_qty && entered_qty.constructor === String && entered_qty.match(/d*/) ) {
                 // okay...
-                console.log("entered qty: " + entered_qty);
+                console.log("entered qty: " + entered_qty + qty_units);
                 qty = entered_qty;
-                qty_units = qty_unts || 'ml';
+                qty_units = qty_units || 'ml';
             }
             else if (hidden_qty && hidden_qty.constructor === String && hidden_qty.match(/\d+/) ) {
                 console.log("hidden qty: " + hidden_qty);
