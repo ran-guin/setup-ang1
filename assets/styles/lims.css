@@ -11,6 +11,10 @@
     background-color: lightgrey
 }
 
+.popover {
+	max-width: 100%
+}
+
 div.header {
     -webkit-transition: 16s;
     -moz-transition: 16s;
