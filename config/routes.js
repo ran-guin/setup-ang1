@@ -72,7 +72,7 @@ module.exports.routes = {
   // Default User pages 
   'GET /user/dashboard/:id': 'UserController.dashboard',
   //'GET /user/:id': 'UserController.dashboard',  // reserve for waterline standard 
-
+  'GET /user/changePrinters' : 'UserController.changePrinters',
 
   'GET /': { view: 'customize/public_home' },
   'GET /home': 'UserController.home',
