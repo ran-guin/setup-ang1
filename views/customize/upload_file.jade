@@ -40,13 +40,28 @@ block content
                   input(type='number' ng-model='columns' ng-change="get_block()")               
                 td
                   span &nbsp;
-                td
-                  button.btn.btn-lg.btn-success(type='button', ng-click='validate_data()') Validate
-              tr(ng-show='validated')
+
+              tr(ng-show='1 || validated')
                 td(colspan=2)
-                  button.btn.btn.lg.btn-warning(type='button', ng-click='modify()') Modify
+                  button.btn.btn-lg.btn-success(type='button', ng-click='validate_data()' ng-show="!validated") Validate
+                  span &nbsp;
+                  button.form-control.btn.btn.lg.btn-warning(type='button', ng-click='modify()' ng-show="validated") Modify
                 td(colspan=2)
-                  button.btn.btn.lg.btn-success(type='button' ng-click="upload()") Upload Data
+                  button.btn.btn.lg.btn-success(type='button' ng-click="upload()" ng-show="validated") Upload Data
+                td(colspan=2)
+                  a(href='#' onclick="return false;" tooltip='instructions' data-toggle="tooltip" title="<div style='text-align:left'>* <b>Skip</b> records that exist<br><span style='text-align:left'>* <b>Overwrite</b> conflicts<br><span style='text-align:left'>* <B>Abort</B> if conlicts found" data-html='true')
+                    i.fa.fa-question-circle
+                  span &nbsp; 
+                  b If data already defined: &nbsp;
+                  input(nome='onduplicate' type='radio' ng-model='onDuplicate' value='ignore')
+                  span &nbsp;Skip &nbsp;
+                  input(nome='onduplicate' type='radio' ng-model='onDuplicate' value='replace')
+                  span &nbsp;Overwrite &nbsp;
+                  input(nome='onduplicate' type='radio' ng-model='onDuplicate' value='')
+                  span &nbsp;Abort &nbsp; &nbsp;
+
+                  //- a(href='#' onclick="return false;" tooltip='instructions' data-toggle="popover" data-placement="left" data-trigger="focus" title="Instructions" data-content="#{Step.instructions}")
+
               tr
                 td
                   b Data:
