@@ -30,6 +30,12 @@ module.exports = {
     },
   },
 
+  alias: {
+    'id' : 'Rack_ID',
+    'parent' : 'FKParent_Rack__ID',
+    'name' : 'Rack_Alias',
+  },
+
   subtypes : ['Shelf','Rack','Box','Slot'],
 
   wells : {
@@ -349,6 +355,11 @@ module.exports = {
     else if (rack_id && rack_id.constructor === String && rack_id.match(/[a-zA-Z]/)) {
       var Scanned = Barcode.parse(rack_id);
       console.log("Scanned: " + JSON.stringify(Scanned));
+      
+      if (Scanned.Errors && Scanned.Errors.length) {
+        deferred.reject(Scanned.Errors);
+      }
+
       rack_ids = Scanned['Rack'];
     }
     else if (rack_id && rack_id.constructor === Array) {
@@ -390,9 +401,9 @@ module.exports = {
       conditions.push("Parent.Rack_ID=Rack.FKParent_Rack__ID");
       conditions.push("Parent.Rack_Alias = '" + rack_name + "'");      
     }
-    else { 
-      conditions.push("0")
-      deferred.reject("No input criteria");
+    else {
+      conditions.push('0');
+      deferred.reject("No rack conditions specified");
     }
 
     if (rows) {

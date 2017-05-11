@@ -66,6 +66,8 @@ function wellController ($scope, $rootScope, $http, $q ) {
 
     $scope.redistribute = function (reset, execute) {
 
+        $scope.reset_messages();
+        
         console.log("Redistribute wells");
         if (execute) {
             $scope.distributionStatus = 'Pending';
@@ -108,25 +110,28 @@ function wellController ($scope, $rootScope, $http, $q ) {
         $scope.redistribute_Samples($scope.active.Samples, Target, Options)
         .then ( function (result) {
             // console.log("MAP: " + JSON.stringify(result.Map));
-            $scope.validate_redistribution_form();
-            // $scope.Map = result.Map;
-            // if (result.errors.length) {
-            //     // $scope.form_validated = false;
-            //     // need to ensure validation is performed when boxes are updated.. 
-            //     console.log(result.errors);
-            //     console.log('invalidate form');
-            //     $scope.form_validated = false;
-            // }
-
-            if (execute) { $scope.execute_transfer() }
+            $scope.validate_redistribution_form()
+            .then ( function () {
+                if (execute) { $scope.execute_transfer() }
+            })
+            .catch ( function (err) {
+                console.log(err);
+            })
         })
         .catch ( function (err) {
             if (execute) { $scope.distributionStatus = 'Failed' }
-            $scope.validate_redistribution_form();
-            console.log("Error redistributing samples");
+            $scope.validate_redistribution_form()
+            .then ( function () {
+                console.log("error redistributing samples");
+                console.log(err);   
+                $scope.error("could not distribute samples");
+            })
+            .catch ( function (err2) {
+                $scope.error("could not distribute samples");
+                $scope.error("also could not validate form...");
+            })
         });
 
-        console.log('validate');
     }
 
     $scope.load_entire_volume = function () {

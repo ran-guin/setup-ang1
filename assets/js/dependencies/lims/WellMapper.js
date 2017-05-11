@@ -210,9 +210,15 @@ function wellMapper() {
         if (this.available && this.available[batch] && this.available[batch].length > target_index+1) {
             console.log(this.available[batch].length + ' are still avail in ' + batch + " of " + target_index);
             
-            // if (this.target_boxes[batch_index]) {
-            //     this.messages.push(this.available[batch].length + ' wells are still available in box#' + this.target_boxes[batch_index]);
-            // }
+            if (this.target_boxes[batch] && this.target_boxes[batch].length) {
+                this.messages.push(this.available[batch].length + ' wells are still available in box#' + this.target_boxes[batch_index]);
+            }
+            else if (this.target_boxes[batch]) {
+                this.errors.push('no wells available in box#' + this.target_boxes[batch_index]);
+            }
+            else {
+                // this.warnings.push('unrecognized box');
+            }
 
             target_index++;
         }
@@ -240,6 +246,7 @@ function wellMapper() {
             this.target_boxes[batch_index] = batch;
             this.missing_boxes++;
             this.available[batch] = this.default.available;
+
             console.log(this.target_size + " Avail: " + JSON.stringify(this.available[batch]));
             console.log('box ' + batch_index + " = " + batch + ' -> ' + JSON.stringify(this.target_boxes));
             x = 'A'; 
@@ -335,7 +342,7 @@ function wellMapper() {
 
         this.splitX = Options.split || Options.splitX || 1;
 
-        this.available = Options.available;
+        this.available = Options.available || {};
         
         this.transfer_type = Options.transfer_type;
         this.target_boxes  = Options.target_boxes || [Options.target_rack];
@@ -418,8 +425,9 @@ function wellMapper() {
 
         this.target_boxes = this.Options.target_boxes;       // target box ids 
         //this.available = Options.available || {};   // hash of available wells keyed on target box ids
+        console.log("Map errors: " + this.errors.join('; '));
     }
-
+ 
     this.distribute = function ( sources, Target, Options, callback) {
 //
 //        Input:
@@ -815,7 +823,7 @@ function wellMapper() {
         if (this.missing_wells > 1) {
             this.missing_wells--; // last call to next_available would generate missing_well ...
             
-            var msg = this.missing_wells + ' Target sample(s) still require target boxes...  Please scan ' + this.missing_boxes + " more Target Box(es)";
+            var msg = this.missing_wells + ' Target sample(s) still require target boxes...  Please scan (another) box';
             this.errors.push(msg);
             console.log(msg);
         }

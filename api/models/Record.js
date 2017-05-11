@@ -88,7 +88,7 @@ module.exports = {
 	 		Record.query_promise(query)
 	 		.then ( function (result) {
 	 			var excluded = [];
-	 			var validated = _.pluck(result,'id');
+	 			var validated = _.pluck(result,'id') || [];
 
 	 			if (ids.length !== result.length) {
 	 				excluded = _.difference( ids , validated);
@@ -96,7 +96,7 @@ module.exports = {
 	 			deferred.resolve({'ids' : ids, 'validated' : validated, excluded: excluded});
 	 		})
 	 		.catch (function(err) {
-	 			deferred.resolve({'ids' : ids, 'validated' : null });
+	 			deferred.resolve({'ids' : ids, 'validated' : [], error: err});
 	 		});
 	 	}
 

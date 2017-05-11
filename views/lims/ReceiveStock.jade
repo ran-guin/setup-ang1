@@ -38,7 +38,7 @@ block content
     
                 div.form-group
                   label.input-lg.col-md-2.control-label(for='number_in_batch') Items Received: 
-                  input.input-lg#number_in_batch(type='number' min=1 ng-model='form.number_in_batch' ng-blur="validate_stock_form('number_in_batch')" required placeholder='Number in Batch')              
+                  input.input-lg#number_in_batch(type='number' min=1 ng-model='form.number_in_batch' ng-change="validate_stock_form('number_in_batch')" required placeholder='Number in Batch')              
 
                 div.form-group
                   label.input-lg.col-md-2.control-label(for='lot_number') Lot #: 
@@ -90,12 +90,12 @@ block content
                   div.form-group.input-lg
                     label.col-md-2.control-label(for='name') Alias:
                     div.col-md-6
-                      input.input-lg.form-control#notes(type='text' ng-model='form.name' ng-disabled='1' placeholder='Name')
+                      input.input-lg.form-control#name(type='text' ng-model='form.name' ng-disabled='1' placeholder='Name')
                     div.col-md-4 &nbsp;                    
                   div.form-group.input-lg
                     label.col-md-2.control-label(for='name') Serial #:
                     div.col-md-6
-                      input.input-lg.form-control#notes(type='text' ng-model='form.serial' placeholder='Serial #', ng-change='split_serial()')
+                      input.input-lg.form-control#serial(type='text' ng-model='form.serial' placeholder='Serial #', ng-change='split_serial()')
                     div.col-md-4 &nbsp;                    
 
                   // my-dropdown#catalog(placeholder="Loation" list="MenuList['form.catalog']" selected="form.catalog" property="name" ng-init="setup_Menu('location')")
