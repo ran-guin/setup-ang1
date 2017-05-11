@@ -2,7 +2,14 @@ title BC Generations
 
 - var colour = '#ddd';
 
-if session && session.payload && session.payload.db && sails && sails.config && sails.config.connections && sails.config.connections.productionDB && sails.config.connections.productionDB !== session.payload.db
+- var prodD ;
+- var sessionDB ;
+if sails && sails.config && sails.config.connections && sails.config.connections.productionDB
+	- prodDB = sails.config.connections.productionDB.database
+if session && session.payload && session.payload.db
+	- sessionDB = session.payload.db
+
+if prodDB && prodDB !== sessionDB
 	- colour = '#f44'
 
 .mini-header(style='background-color:#344')
