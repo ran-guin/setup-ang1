@@ -17,6 +17,7 @@ module.exports = {
    * environment (see config/connections.js and config/models.js )           *
    ***************************************************************************/
 
+  migrate: 'safe',
   models: {
      connection: 'productionDB'
   },

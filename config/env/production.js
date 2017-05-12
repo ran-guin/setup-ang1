@@ -18,9 +18,11 @@ module.exports = {
    ***************************************************************************/
 
   models: {
-    connection: 'testDB',
+    connection: 'productionDB',
     migrate: 'safe',
   },
+
+  hookTimeout: 30000,
 
   /***************************************************************************
    * Set the port in the production environment to 80                        *
