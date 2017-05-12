@@ -19,7 +19,7 @@ module.exports = {
 
   migrate: 'safe',
   models: {
-     connection: 'productionDB'
+     connection: 'testDB'
   },
 
   hookTimeout: 60000
