@@ -17,6 +17,11 @@ module.exports = {
 
   },
 
+  alias : {
+    'id' : 'Printer_Group_ID',
+    'name' : 'Printer_Group_Name'
+  },
+  
   // customize this list, since it is needed prior to connection to the database
   // Note name must exactly match printer_group names in the database...
  
