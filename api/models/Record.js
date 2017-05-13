@@ -1296,7 +1296,7 @@ module.exports = {
 		var replace = options.replace;
 		var ignore = options.ignore;
 
-		var onDuplicate = options.onDuplicate;
+		var onDuplicate = options.onDuplicate || '';
 
 		var action = 'INSERT';
 		if ( onDuplicate) {

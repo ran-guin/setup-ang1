@@ -27,6 +27,11 @@ module.exports = {
 		FK_Rack__ID: { model: 'rack'},
 		// FK_Pipeline__ID: { model: 'pipeline'},
 		FK_Employee__ID: { model: 'employee'},
+		Plate_Comments: { type: 'string'},
+		Plate_Status: { 
+			type: 'string', 
+			enum: ['Active','Pre-Printed','Reserved','Temporary','Failed','Thrown Out','Exported','Archived','On Hold']
+		}
 
 	},
 

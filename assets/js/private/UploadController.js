@@ -32,7 +32,8 @@ function uploadController ($scope, $rootScope, $http, $q) {
 		if ($scope.data && $scope.data[$scope.page-1] && $scope.data[$scope.page-1].data) {
 			$scope.currentPage = $scope.data[$scope.page-1];
 		}		
-
+ 
+ 		$scope.model = 'container'
 		$scope.initiate_page();
 
 	}
@@ -180,7 +181,7 @@ function uploadController ($scope, $rootScope, $http, $q) {
 		$scope.reload_headers();
 		console.log("HEADERS: " + $scope.headers.join(','));
 
-		var model = $scope.model || 'container'; // default for now testing.. 
+		var model = $scope.model; // default for now testing.. 
 
 		$scope.message("Validating headers for " + $scope.columns + ' columns for ' + $scope.rows + " Records starting on row " + $scope.starting_row + ' of Page ' + $scope.page );
 
@@ -204,40 +205,40 @@ function uploadController ($scope, $rootScope, $http, $q) {
 
 				if ( el && fields.indexOf(header) >=0 ) { 
 					el.style = 'border-color:green';
-					$scope.message("'" + header + "' is a recognized field");
+					$scope.message("'" + header + "' is a recognized field for " + model);
 				}
 				else if ( el && attributes.indexOf(header) >=0 ) { 
 					el.style = 'border-color:green';
-					$scope.message("'" + header + "' is a recognized attribute");
+					$scope.message("'" + header + "' is a recognized attribute for " + model);
 				}
 				else if (el) { 
-					$scope.error("'" + header + "' not a recognized field or attribute - (case sensitive)");
+					$scope.error("'" + header + "' not a recognized field or attribute for " + model + " - (case sensitive)");
 					el.style = 'border-color:red';
 					okay = false;
 				}
 				else { 
-					$scope.error(header + " not a recognized field or attribute");
+					$scope.error(header + " not a recognized field or attribute for " + model);
 					console.log("Attributes: " + JSON.stringify(attributes));
 					okay = false;
 				}
 			}
 
 			if (!okay) {
-				var e = new Error('Data validation errors');
+				var e = new Error(model + ' Data validation errors');
 				$scope.remoteLog(e, 'warning', 'Validation Errors');
 				$scope.validated = false;
 			}
 			else {
 				if (found.ids && found.ids.index != null )  {
 					var id_index = found.ids.index;
-					$scope.message("Using column: '" + $scope.headers[id_index] + "' as an ID reference ");
+					$scope.message("Using column: '" + $scope.headers[id_index] + "' as an ID reference for " + model);
 				}
 				else { 
-					$scope.message("No ID field supplied - using 1st column: " + $scope.headers[0] + ' as a reference (okay)');
+					$scope.message("No ID field supplied - using 1st column: " + $scope.headers[0] + ' as a reference (okay) for ' + model);
 				}
 
 				if (found.ids && found.ids.index != null ) {
-					$scope.message("confirming id list");
+					$scope.message("confirming " + model + " id list");
 					$scope.validated = okay;
 				}
 				else {
@@ -305,7 +306,7 @@ function uploadController ($scope, $rootScope, $http, $q) {
 		var data = $scope.dataBlock;
 		$scope.reload_headers();
 
-		var model = $scope.model || 'container'; // default for now testing.. 
+		var model = $scope.model; // default for now testing.. 
 
 		console.log("\n** Upload Headers: " + JSON.stringify($scope.headers));
 		console.log("\n** Upload References: " + JSON.stringify($scope.reference));
