@@ -1300,11 +1300,11 @@ module.exports = {
 
 		var action = 'INSERT';
 		if ( onDuplicate) {
-			if (onDuplicate === 'replace') {
+			if (onDuplicate.match(/replace/i)) {
 				replace = true;
 				onDuplicate = '';
 			}
-			else if (onDuplicate === 'ignore') {
+			else if (onDuplicate.match(/ignore/i)) {
 				ignore = true;
 				onDuplicate = '';
 			}
