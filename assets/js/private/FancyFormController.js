@@ -54,7 +54,7 @@ app.controller('FancyFormController',
 
         $scope.stdForm.units_lookup = $scope.stdForm.units_options[0].name;
 
-        $scope.custom_disable = false;
+        $scope.custom_disable = {};
 
         // Feature: Standard Help - drives HelpModal content
 
@@ -733,29 +733,35 @@ app.controller('FancyFormController',
         // Feature: Test for uniqueness of fields based upon database query 
         // 
         // Usage: 
+        $scope.validateLogin = function (element, field) {    
+            // used only for login field (accessible at login page)
 
-        $scope.testUnique = function (element, model, field) {
-            console.log("CHECK UNIQUENESS");
-            
             if (! field) { field = element }   // default to same name as element 
 
-            var url = "/remote_login/validate/" + model + '?value=' + $scope[element] + '&field=' + field;
-            console.log("URL: " + url); 
-            $http.get(url)
+            var url = "/remote_login/validate";
+             // + model + '?value=' + $scope[element] + '&field=' + field;
+            var val = $scope[element];
+            var el = document.getElementById(element);
+
+            console.log("check " + element + ' for ' + "'" + val + "'"); 
+            $http.post(url, {value: val, field: field})
             .then ( function (result) {
                 console.log("Got " + JSON.stringify(result.data));
-                if (result.data && result.data[0] && result.data[0].count) {
+                if (result.data && result.data[0]) {
                     var msg = $scope[element] + " is already used.  (" + element + " must be unique) ";
                     $scope.warnings.push(msg);
                     $scope[element + '_errors'] = msg;
-                    $scope.custom_disable = true; 
+                    $scope.custom_disable[element] = true; 
                     console.log("Conflict");
+                    if (el) { el.style="border: 2px solid red" }
         		}
         		else { 
-                    console.log("no conflict"); 
                     $scope[element + '_errors'] = false;
-                    $scope.custom_disable = false;
+                    $scope.custom_disable[element] = false;
+                    console.log("no conflict"); 
+                    if (el) { el.style="border: 2px solid green" }
                 }
+                $scope.update_disabled();
     	    })
             .catch ( function (err) {
                 $scope.warnings.push('could not confirm uniqueness');
@@ -763,14 +769,43 @@ app.controller('FancyFormController',
         }
 
         // Feature:  Password management
-
         $scope.passwordValidation = /^[a-zA-Z]\w{3,14}$/;
         $scope.confirmedPassword = false;
 
-        $scope.compare = function (repeatEntry) {
-            console.log("Compared " + repeatEntry + " with " + $scope.password);
-            $scope.confirmedPassword = $scope.password == repeatEntry ? true : false;
-            if ($scope.confirmedPassword) { document.getElementById('confirm_password').style="color:green" }
+        $scope.confirmPassword = function (p1, p2) {
+            p1 = p1 || 'password';
+            p2 = p2 || 'confirm_password';
+
+            var e1 = document.getElementById(p1);
+            var e2 = document.getElementById(p2);
+
+            $scope.confirmedPassword = $scope[p1] == $scope[p2] ? true : false;
+            if ($scope.confirmedPassword) { 
+                if (e1) { e1.style="border: 2px solid green" }
+                if (e2) { e2.style="border: 2px solid green" }
+                $scope[p2 + '_errors'] = false;
+                $scope.custom_disable[p1] = false;
+            }
+            else {
+                if (e1) { e1.style="border: 2px solid red" }
+                if (e2) { e2.style="border: 2px solid red" }
+                $scope[p2 + '_errors'] = "Passwords do not match";
+                $scope.custom_disable[p1] = true;
+            }
+            $scope.update_disabled();
+        }
+
+        $scope.update_disabled = function() {
+           var keys = Object.keys($scope.custom_disable);
+           var valid = true;
+           console.log("Disable hash:" + JSON.stringify($scope.custom_disable));
+           for (var i=0; i<keys.length; i++) {
+                if ($scope.custom_disable[keys[i]]) {
+                    valid = false;
+                }
+            }
+            console.log('valid ? ' + valid);
+            $scope.custom_disabled = !valid;
         }
 
     	$scope.padded = function (view) {
