@@ -10,7 +10,7 @@ before(function(done) {
   console.log("lift...");
   sails.lift({
     // configuration for testing purposes
-    models: { connection: 'lims_demo' }
+    models: { connection: 'testDB' }
 
   }, function(err, server) {
     if (err) {
