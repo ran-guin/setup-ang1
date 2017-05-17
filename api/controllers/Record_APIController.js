@@ -57,6 +57,7 @@ module.exports = {
 			else if (keys.length == 1 && result[keys[0]].length == 1) {
 				console.log(JSON.stringify(result));
 
+				// Go to single page if applicable .. 
 				if (keys[0] == 'container') {
 					var ids = _.pluck(list,'Plate_ID');
 					
@@ -118,30 +119,6 @@ module.exports = {
 		});
 	},
 
-	validate : function (req, res) {
-		var body = req.body || {};
-
-		console.log('validate');
-		
-		var model = body.model || req.param('model');
-		var ids   = body.ids || req.param('ids');
-		var barcode = body.barcode || req.param('barcode');
-		var condition = body.condition ;
-
-		if (ids && ids.constructor === String) { ids = ids.split(',') }
-
-		console.log('validate ' + model);
-		Record.validate(model, {ids: ids, barcode: barcode, condition: condition})
-		.then (function (result) {
-			console.log('validation result: ' + JSON.stringify(result));
-			return res.json(result);
-		})
-		.catch (function (err) {
-			console.log('validation error: ' + err);
-			return res.json(err);
-		})
-
-	},
 
 	save : function (req, res) {
 		var body = req.body || {};
@@ -165,19 +142,9 @@ module.exports = {
 	uploadData : function (req, res) {
 		var body = req.body;
 
-		var model   = body.model;
-		var headers = body.headers;
-		var data    = body.data;
-		var reference = body.reference;
-		var onDuplicate = body.onDuplicate;
-
-		console.log("UPLOAD DATA");
-		console.log("model : " + model);
-		console.log("headers: " + JSON.stringify(headers));
-		console.log("data: " + JSON.stringify(data));
-
-		Record.uploadData(model, headers, data, { reference: reference, onDuplicate: onDuplicate})
+		Record.uploadData(body)
 		.then ( function (result) {
+			sails.config.messages.push("uploaded");
 			console.log("Uploaded");
 			console.log(JSON.stringify(result));
 			return res.json(result);
@@ -317,6 +284,45 @@ module.exports = {
 			else {
 				return res.json(result);
 			}
+		});
+	},
+
+	validate: function (req, res) {
+		var body = req.body || {};
+
+		var barcode = body.barcode || req.param('barcode');
+
+		var model = body.model || req.param('model');	
+		var select = body.select || req.param('select') || 'id';
+		var value = body.value || req.param('value') || '';
+		var field = body.field || req.param('field') || 'id'; // use name to validate based on name
+		var list = body.list || req.param('list') || '';
+		var prefix = body.prefix || req.param('prefix');   // strip id prefix (optional)
+		var reference = body.reference || req.param('reference');  // validate via attribute identifier
+		var grid = body.grid;
+
+		if (list.constructor === String) {
+			list = list.split(/,\s*/);
+		}
+
+		var specs = {
+			ids: list,
+			grid: grid,
+			field: field,
+			barcode: barcode,
+			attribute: reference
+		};
+
+		console.log("*** Record validation...");
+		console.log(model + ': ' + JSON.stringify(specs));
+		
+		Record.validate(model, specs)
+		.then (function (result) {
+			return res.json(result);
+		})
+		.catch ( function (err) {
+			console.log("encountered validation error");
+			return res.json(err);
 		});
 	},
 
