@@ -66,8 +66,9 @@ module.exports = {
 		// querying for headers only 
 		Upload.uploadFile(file, options)
 		.then ( function (results) {
+			var grid = results.grid;
 			console.log("Updated custom");
-			return res.render('customize/upload_file', { data : results });
+			return res.render('customize/upload_file', { data : grid });
 		})
 		.catch ( function (err) {
 			var msg = "Error uploading file: " + err;
