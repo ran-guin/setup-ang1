@@ -12,6 +12,7 @@ block content
 
     div(ng-app='myApp')
       div(ng-controller="SharedController", ng-init="#{init}")
+       div(ng-controller="LIMSController", ng-init="#{init}")
         div(ng-controller="UploadController", ng-init="#{init}")
 
           br 
@@ -21,7 +22,11 @@ block content
           form(role='form' method='post' action="/uploadData" enctype='form-data')
             table.table
               if access.match('admin')
-                tr(ng-show="! validated" style='background-color:#999')
+                tr
+                  td(colspan=6) 
+                    h3 
+                      b {{ upload_type }} records:
+                tr(ng-show="! validated" style='background-color:#aaa')
                   td 
                     b Model: &nbsp; 
                     a(href='#' onclick="return false;" tooltip='description' data-toggle="tooltip" title="Specify database model which upload data applies to<br>('id' column will reference data from this data model)<br>Validation will be based on this data model<br>(defaults to container/samples)<p />Only admins may change this to enable uploading of other data besides sample data" data-html='true')
@@ -35,9 +40,18 @@ block content
                     span(ng-show="model && model.length && !choose_model")
                       b {{model}} &nbsp;
                       button.btn.btn-primary.btn-xs(type='submit' onclick="return false;" ng-click="choose_model=1") change
+                  td &nbsp;
+                  td &nbsp;
+                  td 
+                    b Upload Type:
+                  td
+                    input(type='radio' ng-model='upload_type' value='append')
+                    span &nbsp; append &nbsp;
+                    input(type='radio' ng-model='upload_type' value='update')
+                    span &nbsp; update &nbsp;
               tr(ng-show="! validated")
                 td
-                  b Page: &nbsp; a= #{access}
+                  b Page: &nbsp; 
                 td
                   input(type='number' name='page' ng-model='page' ng-change="initiate_page()")
                 td
