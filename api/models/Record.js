@@ -55,63 +55,137 @@ module.exports = {
 
 	validate : function (model, options) {
 		if ( !options ) { options = {} }
+		var deferred = q.defer();
 
 		var ids = options.ids || [];
 		var barcode = options.barcode;
+		var attribute = options.attribute;
+		var field     = options.field;
+		var condition = options.condition || [];
+		var grid      = options.grid;
+			 	
+		var conditions = [];
+		var index = [];
+		if (options.condition) { conditions.push(options.condition) }
+		
+		if (grid) {
+			ids = []; 
+			var rows = Object.keys(grid);
+			console.log('read ' + rows.length + ' rows from grid');
 
-		var deferred = q.defer();
+			for (var i=0; i<rows.length; i++) {
+				ids.push(grid[rows[i]]);				
+				index.push(rows[i]);
+			}
+		}
 
-		var Mod = sails.models[model] || {};
+		console.log("validate: " + ids.join(', '));
+		console.log('barcode: ' + barcode);
+		console.log("attribute: " + attribute);
 
-		var idField = Record.alias(model, 'id');
+		var Mod = {};
+		if (sails && sails.models && sails.models[model]) {
+			Mod = sails.models[model];
+		}
+
+		var idField = this.alias(model, 'id');
+		field = field || idField;
+
 		var table = Mod.tableName || model;
+		var prefix = Barcode.prefix(table);
+		var regex = new RegExp( prefix, 'i');
 
 		var barcode_ids = [];
-		var valid = true;
-		if (barcode) {
-			var prefix = Barcode.prefix(table);
-			var regex = new RegExp( prefix, 'i');
+		var mapped = {};
+		var reverse_mapped = {};
 
-			var list = barcode.split(regex);
+		var valid = true;
+
+		var select = idField + ' AS id';
+
+		if (ids && ids[0] && ids[0].match(regex)) { 
+			// strip prefix from valid barcodes 
+			ids = ids.map( function (i) { 
+				var id = parseInt(i.replace(regex,''));
+				mapped[id] = i;
+				reverse_mapped[i] = id;
+				return parseInt(id); 
+			});
+
+			console.log("Converted barcodes to ids: " + ids.join(', '));
+			conditions.push(idField + " IN (" + ids.join(',') + ")");
+		}
+		else if (barcode && prefix) {
+			var list = barcode.split(new RegExp(prefix, 'i'));
+			console.log("original barcodes: " + JSON.stringify(list));
 			list.shift(); 
 
+			console.log('interpret barcodes: ' + JSON.stringify(list));
+
+			ids = [];
 			for (var i=0; i< list.length; i++) {
 				if (list[i].match(/[a-zA-Z]/i)) { 
 					valid = false;
 					i = list.length;
 				}
 				else {
-					ids.push( list[i] );
+					var intval = parseInt(list[i]);
+					if (intval) { 
+						ids.push(intval);
+						mapped[intval] = prefix + list[i];
+						reverse_mapped[prefix + list[i]] = intval;
+					}
 				}
 			}
-			console.log(barcode + ' -> ' + ids.join(','));
+			conditions.push(idField + " IN (" + ids.join(',') + ")");
+		}
+		else if (attribute) {
+			console.log("validate based upon " + attribute);
+			field = 'Attribute_Value';
+
+			conditions.push("FK_" + table + '__ID = ' + idField);
+			conditions.push('Attribute_ID=FK_Attribute__ID');
+			conditions.push(field + " IN ('" + ids.join("','") + "')");
+
+			table = table + ', Attribute, ' + table + '_Attribute';
+		}
+		else if (ids && ids.length) {
+			// .. okay... 
+			conditions.push(idField + " IN (" + ids.join(',') + ")");
+		}
+		else {
+			deferred.reject('nothing to validate');
 		}
 
-		ids = ids.map( function (i) { return parseInt(i) });
+		if (field === idField) {
+			ids = ids.map( function (i) { return parseInt(i) });
+		}
 
 		if (! valid || !ids.length) { 
 			console.log("no valid " + model + ' ids found');
-			deferred.reject();
+			deferred.resolve({validated: [], message: 'no valid ids'});
 		}
 		else {
-			var query = "SELECT " + idField + " as id FROM " + table;
-			var conditions = [ idField + " IN ( " + ids.join(',') + ')'];
+			var query = "SELECT " + select + " FROM " + table;
+			query += " WHERE " + conditions.join(' AND ');
 
-	 		if (options.condition) { conditions.push(options.condition) }
-	 		query +=  ' WHERE ' + conditions.join(' AND ');
+	 		console.log(query);
 
 	 		Record.query_promise(query)
 	 		.then ( function (result) {
+	 			console.log('validated: ' + JSON.stringify(result));
 	 			var excluded = [];
 	 			var validated = _.pluck(result,'id') || [];
 
 	 			if (ids.length !== result.length) {
 	 				excluded = _.difference( ids , validated);
 	 			}
-	 			deferred.resolve({'ids' : ids, 'validated' : validated, excluded: excluded});
+	 			console.log("Unrecognized: " + JSON.stringify(excluded));
+	 			deferred.resolve({'list' : ids, index: index, 'validated' : validated, excluded: excluded, mapped: mapped, reverse_mapped: reverse_mapped});
 	 		})
 	 		.catch (function(err) {
-	 			deferred.resolve({'ids' : ids, 'validated' : [], error: err});
+	 			console.log('validation failed: ' + JSON.stringify(err));
+	 			deferred.resolve({'list' : ids, index: index, 'validated' : [], error: err});
 	 		});
 	 	}
 
@@ -615,10 +689,19 @@ module.exports = {
 
 // Generic methods 
 
-	insert_Ids : function (result) {
+	insert_Ids : function (result, options) {
 		// parse returned value from createNew ...
+		if (!options) { options = {} }
+
+		var onDuplicate = options.onDuplicate;
+
 		var id = result.insertId;
 		var count = result.affectedRows;
+		var duplicates = result.Duplicates;
+
+		if (duplicates && onDuplicate.match(/replace/i) ) { 
+			count = count-duplicates;
+		}
 
 		var ids = [];
 		for (var i=0; i<count; i++) {
@@ -1082,7 +1165,7 @@ module.exports = {
 		//  
 
 		var ids = Record.cast_to(ids,'array')
-		console.log("Update " + model + ": " + ids.join(','));
+		console.log("*** Update *** " + model + ": " + ids.join(','));
 		console.log(JSON.stringify(data));
 		console.log(JSON.stringify(options));
 
@@ -1113,14 +1196,6 @@ module.exports = {
 		if (sails.models[model]) {
 			var Mod = sails.models[model];
 			idField = Record.alias(model, 'id');
-			// table = Mod.tableName || model;
-			// if (Mod.alias && Mod.alias['id']) {
-			// 	idField = Mod.alias['id'];
-			// 	console.log("set id alias to " + idField);
-			// }
-			// else {
-			// 	console.log("leave id alias to " + idField);
-			// }
 		}
 		else {
 			// alternate input for non standard tables : update('Plate:Plate_ID', ids, data);
@@ -1186,9 +1261,7 @@ module.exports = {
 					}
 				}
 				else {
-					console.log("parse " + setval);
 					var setVal = Record.parseValue(setval, { model : model });
-					console.log("parsed " + setVal);
 					Set1.push(fields[i] + " = " + setVal );
 				}
 			}
@@ -1196,7 +1269,7 @@ module.exports = {
 
 			Record.update_History(model, ids, data, track)
 			.then ( function (History) {
-				console.log("History: " + JSON.stringify(History));
+				// console.log("History: " + JSON.stringify(History));
 				var promises = [];
 
 				if (Set1.length) {
@@ -1228,13 +1301,12 @@ module.exports = {
 					}
 				}
 
-				console.log('run updates...');
+				// console.log('run updates...');
 				q.all( promises )
 				.then (function (results) {
 					var setValues = {};
 					var updateValues = {};
-					console.log("finished updates...");
-					console.log(JSON.stringify(results));
+					console.log('updated: ' + JSON.stringify(results));
 
 					if (Set1.length) { setValues = results[0] }
 					if (SetEach.length) { updateValues = results[results.length - 1] }
@@ -1259,7 +1331,7 @@ module.exports = {
 					}
 	//				console.log("updated: " + JSON.stringify(result));				
 					else {
-						console.log('no History tracking for ' + data_fields.join(','));
+						// console.log('no History tracking for ' + data_fields.join(','));
 						deferred.resolve({ set: setValues, updated: updateValues } );
 					}
 				})
@@ -1373,18 +1445,19 @@ module.exports = {
 
 		Record.query_promise(createString)
 		.then ( function (result) {
-			console.log("Result: " + JSON.stringify(result));
+			// console.log("Result: " + JSON.stringify(result));
 			var insertId = result.insertId;
 			var added    = result.affectedRows;
+			var duplicates = result.Duplicates;
 
 			var msg = added + ' ' + table + ' record(s) added: id(s) from ' + insertId;
-			console.log(msg);
+			// console.log(msg);
 
 			if (Mod.tableType && Mod.tableType.match(/lookup/i) ) { }
 			// else { sails.config.messages.push(msg) }
-			console.log("successfully created new " + table + ' record(s)');
+			// console.log("successfully created new " + table + ' record(s)');
 
-			var ids = Record.insert_Ids(result);
+			var ids = Record.insert_Ids(result,options);
 
 			result['model'] = model;
 			result['table'] = table;
@@ -1476,25 +1549,25 @@ module.exports = {
 
 	},
 
-	uploadData : function (model, headers, data, options) {
+	uploadData : function (options) {
 
 		var deferred = q.defer();
 		
 		if (!options) { options = {} }
+		var model = options.model;
+		var headers = options.headers;
+		var data = options.data;
 
+		if (!model || !headers || !data) { deferred.reject('require model, headers, data') }
+
+		var Mod = sails.models[model] || {};
+		var table = Mod.tableName || model;
+ 
 		var reference = options.reference;
-		var onDuplicate = options.onDuplicate;
+		var onDuplicate = options.onDuplicate || '';
+		var upload_type = options.upload_type; // append or update ...
 
-		var user;
-		var timestamp = '<now>';
-
-		if (sails.config && sails.config.payload) {
-			var payload = sails.config.payload;
-			user = payload.userid;
-		}
-		else {
-			deferred.reject('payload with user credentials unavailable');
-		}
+		console.log("Uploading data " + JSON.stringify(options));
 
 		var prefix = Barcode.prefix(model);
 		var prefixRegexp = new RegExp(prefix, 'i');
@@ -1506,8 +1579,11 @@ module.exports = {
 			var ids   = metaFields.ids;
 					
 			var id_index = ids.index || 0;
-			var idField = headers[id_index];
-			idField = idField.replace(/ /g,'_');
+			var idField;
+			if (upload_type.match(/update/i)) {
+				idField = headers[id_index];
+				idField = idField.replace(/ /g,'_');
+			}
 
 			var field_count = Object.keys(fields).length;
 			var attribute_count = Object.keys(attributes).length;
@@ -1519,7 +1595,6 @@ module.exports = {
 			if (data.length && data[0].length === headers.length+1 &&  field_count + attribute_count === headers.length) {
 
 				var promises = [];
-				var update_attributes = [];
 				for (var row=0; row<data.length; row++) {
 					var fieldData = {};
 
@@ -1527,14 +1602,18 @@ module.exports = {
 					var condition;
 					var conditions = [];
 					var include_tables;
-
+					var update_attributes = [];
+	
+					// id should be included or inferred for each record
 					if ('index' in ids) {
 						id = data[row][id_index+1];
+						console.log("used id: " + id);
 					}
 					else if (reference) {
 						id = reference[data[row][1]];  // data 0 is simply a row # ... 
+						console.log("ref id: " + id);
 					}
-					else {
+					else if (idField) {
 						// enable conditional field to act as id (first column must be associated with unique record) 
 						if (fields[idField]) {
 							condition = headers[0] + " = '" + data[row][1] + "'";
@@ -1542,7 +1621,8 @@ module.exports = {
 						else if (attributes[idField] && attributes[idField].id) {
 							var att_id = attributes[idField].id;
 							condition = "Attribute_Value = '" + data[row][1] + "'";
-							include_tables = {'Plate_Attribute' : "FK_Plate__ID=Plate_ID AND FK_Attribute__ID = " + att_id };
+							include_tables = {};
+							include_tables[ table + '_Attribute'] = "FK_" + table + "__ID=Plate_ID AND FK_Attribute__ID = " + att_id;
 						}
 					}
 
@@ -1556,58 +1636,146 @@ module.exports = {
 						}
 					}
 
-					console.log(ids.index + ' id = ' + id);
-					console.log("ref " + JSON.stringify(reference));
-
 					for (var col=1; col<=headers.length; col++) {
 						var header = headers[col-1];
 						header = header.replace(/ /g,'_');
 
 						var value = data[row][col]; // Record.parseValue(data[row][col]);
 
-						if (header === idField) {
+						if (idField && header === idField) {
 							// skip 
 							if (condition) { id_condition = condition + " = '" + value + "'" }
 							console.log("skip " + header);
 						}
 						else if (fields[header]) {
 							fieldData[fields[header]] = value;
-							console.log("set fieldData for " + header);
+							// console.log("set fieldData for " + header);
 						}
 						else if (attributes[header]) {
 							var att_id = attributes[header].id;
-							console.log("set attribute for " + header);
-							update_attributes.push( Attribute.insertHash(model, id, att_id, value, user, timestamp) );
+							// console.log("set attribute for " + header);
+							update_attributes.push( { id: att_id, value: value});
 						}
 						else {
 							console.log(header + ' not identified ??');
-						}
-						
+						}		
 					}
 					
 					if (condition) { conditions.push(condition) }
 
-					if (Object.keys(fields).length) {
-						promises.push( Record.update(model, id, fieldData, { conditions: conditions, include_tables: include_tables }) );
-						console.log("\n** Update Fields: " + id + JSON.stringify(fieldData));
+					var options = {
+						model : model,
+						table : table,
+						id : id,
+						upload_type : upload_type,
+						fieldData : fieldData,
+						attributes : update_attributes,
+						include_tables : include_tables,
+						conditions : conditions,
+						onDuplicate: onDuplicate,
 					}
-				}
-
-				if (update_attributes.length) {
-					promises.push( Record.createNew('Plate_Attribute', update_attributes, { onDuplicate: onDuplicate}) );
-					console.log("\n** Update Attributes: " + JSON.stringify(update_attributes)  );
+					promises.push(Record.uploadRecord(options));
 				}
 
 				q.all(promises)
 				.then ( function (result) {
-					deferred.resolve(result);
+					var insertIds = [];
+					var affectedRows = 0;
+					var changedRows = 0;
+					var affectedRecords = 0;
+					var changedRecords = 0;
+
+					var bulk_insert = {};
+					for (var i=0; i<result.length; i++) {
+						if (result[i].bulk_insert) {
+
+							var models = Object.keys(result[i].bulk_insert); 
+							for (var j=0; j<models.length; j++) {
+
+								if (!bulk_insert[models[j]]) { bulk_insert[models[j]] = [] }
+								
+								var bi = result[i].bulk_insert[models[j]];
+								for (var k=0; k<bi.length; k++) {
+									bulk_insert[models[j]].push(bi[k]);
+								}
+							}
+						}
+
+						if (result[i].insertId) { insertIds.push(result[i].insertId) }
+						if (result[i].affectedRows) { 
+							affectedRows += result[i].affectedRows
+							affectedRecords++;
+						}
+						if (result[i].changedRows) { 
+							changedRows += result[i].changedRows;
+							changedRecords++;
+						}
+					}
+
+					var bulk_inserts = [];
+
+					if (bulk_insert) {
+						console.log(onDuplicate + ' bulk insert: ' + JSON.stringify(bulk_insert));
+						var models = Object.keys(bulk_insert);
+						for (var i=0; i<models.length; i++) {
+							if ( bulk_insert[models[i]] && bulk_insert[models[i]].length ) {
+								bulk_inserts.push( Record.createNew(models[i], bulk_insert[models[i]], { onDuplicate: onDuplicate}));
+							}
+						}
+					}
+
+					q.all(bulk_inserts)
+					.then ( function (result) {
+						console.log("bulk insert result:");
+						console.log(JSON.stringify(result));
+
+						var duplicates = 0;
+						for (var i=0; i<result.length; i++) {
+							var insert_model = result[i].model;
+							if (model === insert_model) {
+								var dup = result[i].Duplicates;
+								if (dup) { duplicates += dup }
+								if (insertIds.length) {
+									for (var j=0; j<result[i].ids; j++) {
+										insertIds.push(result[i].ids[j]);
+									}
+								}
+								else { insertIds = result[i].ids }
+							}
+						}
+ 
+						var inserted = 
+						deferred.resolve({
+							rows: result.length, 
+							insertIds: insertIds, 
+							affectedRows: affectedRows, 
+							changedRows: changedRows,
+							affectedRecords: affectedRecords,
+							changedRecords: changedRecords,
+							duplicates: duplicates
+						});					
+					})
+					.catch ( function (err) {
+						console.log("error with bulk insertion: " + err);
+						deferred.reject("error adding records: " + err);
+						// deferred.resolve({
+						// 	rows: result.length, 
+						// 	insertIds: insertIds, 
+						// 	affectedRows: affectedRows, 
+						// 	changedRows: changedRows,
+						// 	affectedRecords: affectedRecords,
+						// 	changedRecords: changedRecords
+						// });
+					});
+
+					// console.log("updated " + result.length + ' record(s)');
 				})
 				.catch ( function (err) {
 					var msg = Record.parse_standard_error(err);
 					console.log("Error uploading data: " + msg);
 					err.context = 'upload Data';
 					deferred.reject(msg);
-				})
+				});
 			}
 			else {
 				var msg = "Data: " + data[0].length + '; headers: ' + headers.length + '; F: ' + Object.keys(fields).length + '; A: ' + Object.keys(attributes).length;
@@ -1623,6 +1791,129 @@ module.exports = {
 		return deferred.promise;
 	},
 
+	uploadRecord : function (options) {
+		// upload single record ... may include attribute updates (appends)
+		var deferred = q.defer();
+		if (!options) { options = {} }
+
+		console.log("*** Upload Record: " + JSON.stringify(options));
+		// options for non-explicit updates (eg using external attribute as reference)
+		var conditions = options.conditions;
+		var include_tables = options.include_tables; 
+		var id = options.id;
+		var model = options.model;
+		var table = options.table || model;
+		var upload_type = options.upload_type;
+		var attributes = options.attributes || [];
+		var fieldData = options.fieldData || {};
+		var onDuplicate = options.onDuplicate || '';
+
+		var bulk_insert = {};
+
+		if (! sails || !sails.config || !sails.config.payload) {
+			console.log("no payload ?");
+			deferred.reject('user credentials unavailable... please see LIMS admin');
+		}
+		else {
+			var payload = sails.config.payload;
+			var user = payload.userid;
+			var timestamp = '<now>';
+
+			var append_promises = [];
+			if (upload_type === 'append') {
+				// new records if applicable ...
+				console.log("\n** will Add " + model + " record(s): " + JSON.stringify(fieldData));
+				// append_promises.push(Record.createNew(model, fieldData));
+				bulk_insert[model] = [fieldData];
+			}
+
+			q.all(append_promises)
+			.then ( function (added) {
+				// console.log("*** Added new records...");
+				var promises = [];
+				var update_index = 0;
+				var attribute_index = 0;
+				
+				var appended;
+				var update_count;
+				var attribute_count;
+
+				if (upload_type === 'append') {
+					// appends only 
+					id = added.insertId;
+					appended = id;
+					console.log("added " + id);
+				}
+				else {
+					// updates only 
+					if (Object.keys(fieldData).length) {
+						console.log("\n** will Update Fields: " + JSON.stringify(fieldData));
+						promises.push( Record.update(model, id, fieldData, { conditions: conditions, include_tables: include_tables }) );							
+						update_index = 1;
+					}
+				}
+
+				if (attributes.length) {
+					var append_attributes = [];
+					for (var i=0; i<attributes.length; i++) {
+						var att_id = attributes[i].id;
+						var value = attributes[i].value;
+						append_attributes.push( Attribute.insertHash(model, id, att_id, value, user, timestamp) );
+					}
+
+					bulk_insert[table + '_Attribute'] = append_attributes;
+					// promises.push( Record.createNew(table + '_Attribute', append_attributes, { onDuplicate: onDuplicate}) );
+					// attribute_index = update_index + 1;
+					console.log("\n** will Update Attributes: " + JSON.stringify(append_attributes)  );
+				}
+
+				q.all(promises)
+				.then (function (result) {
+					var returnval = { insertId: appended };
+					var affected = 0;
+					var changed  = 0;
+					var found = 0;
+					if (update_index) { 
+						var got = result[update_index-1];
+						console.log("updates returned: " + JSON.stringify(got))
+						returnval['update'] = got;
+
+						if (got.set && got.set.affectedRows) {
+							affected += got.set.affectedRows;
+							found += got.set.affectedRows;
+						}
+						if (got.set.changedRows) {
+							changed += got.set.changedRows;
+						}
+
+						if (got.updated && got.updated.affectedRows) {
+							affected += got.updated.affectedRows;
+						}
+						if (got.updated.changedRows) {
+							changed += got.updated.changedRows;
+						}
+					}
+
+					returnval['changedRows'] = changed;
+					returnval['affectedRows'] = affected;
+					returnval['bulk_insert'] = bulk_insert;
+
+					deferred.resolve(returnval);
+				})
+				.catch ( function (err) {
+					console.log("Failed to update record(s)");
+					deferred.reject(err);
+				});
+			})
+			.catch (function (err) {
+				console.log("error adding new record");
+				deferred.reject(err);
+			});
+		}
+
+		return deferred.promise;
+	},	
+
 	parseMetaFields : function (model, headers) {
 	// parses meta fields (used to determine what headers apply to fields and/or attributes in uploaded file.  also returns index to id field if found)
 		var deferred = q.defer();
@@ -1634,7 +1925,7 @@ module.exports = {
 		var attributes = {};
 		var ids = {};
 
-		console.log("parse " + model + ': ' + headers.join(','));
+		// console.log("parse " + model + ': ' + headers.join(','));
 
 		var check_attributes = [];
 		for (var i=0; i<headers.length; i++) {
@@ -1685,6 +1976,7 @@ module.exports = {
 
 				for (var i=0; i<check_attributes.length; i++) {
 					var att = headers[check_attributes[i]];
+					console.log(check_attributes[i] + " Att: " + att);
 					var alias = att.replace(/ /g,'_');
 
 					var index = names.indexOf(alias);
