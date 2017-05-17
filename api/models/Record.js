@@ -52,7 +52,7 @@ module.exports = {
 		}
 		return found;
 	},
-
+	
 	validate : function (model, options) {
 		if ( !options ) { options = {} }
 		var deferred = q.defer();
@@ -61,6 +61,7 @@ module.exports = {
 		var barcode = options.barcode;
 		var attribute = options.attribute;
 		var field     = options.field;
+		var value     = options.value;
 		var condition = options.condition || [];
 		var grid      = options.grid;
 			 	
@@ -82,6 +83,8 @@ module.exports = {
 		console.log("validate: " + ids.join(', '));
 		console.log('barcode: ' + barcode);
 		console.log("attribute: " + attribute);
+		console.log('field: ' + field);
+		console.log('value: ' + value); 
 
 		var Mod = {};
 		if (sails && sails.models && sails.models[model]) {
