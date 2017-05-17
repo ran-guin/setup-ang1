@@ -739,7 +739,7 @@ app.controller('FancyFormController',
             
             if (! field) { field = element }   // default to same name as element 
 
-            var url = "/remote_login/validate?model=" + model + '&value=' + $scope[element] + '&field=' + field;
+            var url = "/remote_login/validate/" + model + '?value=' + $scope[element] + '&field=' + field;
             console.log("URL: " + url); 
             $http.get(url)
             .then ( function (result) {
