@@ -14,22 +14,30 @@ var Logger = require('../services/logger');
 module.exports = {
 
 	validate: function (req, res) {
-		var table = req.param('model');	
-		var test  = req.param('test') || 'Count(*) as count';
-		var value = req.param('value') || '';
-		var field = req.param('field') || 'name';
+		// login validations only ...
+		var body = req.body || {}; 
+		var model = body.model || req.param('model') || 'user';	
+		var value = body.value || req.param('value') || '';
+		var field = body.field || req.param('field') || 'name';
 
-		var query = "SELECT " + test + " FROM " + table + " WHERE " + field + " LIKE '" + value + "'";
-		console.log("Query: " + query);
-			Record.query_promise(query)
-			.then ( function (result) {
-				return res.json(result);
-			})
-			.catch (function (err) {
-				console.log(err);
-				Logger.warning(err, 'validation failure', 'validate')
-				return res.json(err);
-			});	
+		console.log(JSON.stringify(body));
+		
+		var Mod = sails.models[model] || {};
+		var table = Mod.tableName || model;
+
+		var query = 'SELECT ' + field + ' FROM ' + table;	
+		query += ' WHERE ' + field + " LIKE '" + value + "'";
+
+		console.log(query);
+		Record.query_promise(query)
+		.then (function (result) {
+			console.log(result);
+			return res.json(result);
+		})
+		.catch ( function (err) {
+			console.log("validation error");
+			return res.json(err);
+		});
 	},
 
 	test : function ( req, res ) {
