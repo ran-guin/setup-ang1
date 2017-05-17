@@ -26,9 +26,9 @@ module.exports = {
    * match a real user in the database, sign in to Activity Overlord.
    */
 
-
   dashboard: function (req, res) {
-    var id = req.param('id') || req.body.id;
+    var body = req.body || {};
+    var id = req.param('id') || body.id;
     
     console.log('sess: ' + JSON.stringify(req.session));
     console.log('params : ' + JSON.stringify(req.session.params));
@@ -210,12 +210,13 @@ module.exports = {
    * Sign up for a user account.
    */
   signup: function(req, res) {
+    var body = req.body || {};
 
-    var user = req.body.user ;
-    var email = req.body.email ;
+    var user = body.user || body.name;
+    var email = body.email ;
 
-    var pwd = req.body.password;
-    var pwd2 = req.body.confirm_password;
+    var pwd = body.password;
+    var pwd2 = body.confirm_password;
 
     console.log('signup...');
     var Passwords = require('machinepack-passwords');
