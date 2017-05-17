@@ -74,6 +74,10 @@ module.exports.policies = {
       'enum' : 'reset',
   },
 
+  record_API: {
+    '*' : true,
+  },
+
   user: {
       'create' : 'reset',
       'login'  : 'reset',
