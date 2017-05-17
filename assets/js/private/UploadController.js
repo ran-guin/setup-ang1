@@ -6,7 +6,6 @@ app.controller('UploadController',
 ['$scope', '$rootScope', '$http', '$q' , 
 function uploadController ($scope, $rootScope, $http, $q) {
 
-
 	$scope.headers = [];
 	$scope.data = [];
 
@@ -26,16 +25,18 @@ function uploadController ($scope, $rootScope, $http, $q) {
 		$scope.header_rows = 1;
 
 		$scope.onDuplicate = '';  // allow for Ignore or Update... (Note: update only works for mysql...)
-
+		$scope.upload_type = 'update';       // update or append ... 
 		$scope.validated = false;
 
 		if ($scope.data && $scope.data[$scope.page-1] && $scope.data[$scope.page-1].data) {
 			$scope.currentPage = $scope.data[$scope.page-1];
+		}
+		else { 
+			console.log('no data on page ' + $scope.page);
+			$scope.currentPage = {};
 		}		
- 
  		$scope.model = 'container'
 		$scope.initiate_page();
-
 	}
 
 	$scope.initiate_page = function () {
@@ -114,7 +115,7 @@ function uploadController ($scope, $rootScope, $http, $q) {
 			$scope.currentPage = $scope.data[$scope.page-1];
 		}		
 
-		if ($scope.currentPage) {
+		if ($scope.currentPage && $scope.currentPage.data) {
 	
 			console.log('PAGE DATA' + JSON.stringify($scope.currentPage));
 
@@ -171,19 +172,22 @@ function uploadController ($scope, $rootScope, $http, $q) {
 	$scope.reload_headers = function () {
 		$scope.headers = [];
 		for (var i=$scope.starting_column; i<=$scope.starting_column+$scope.columns-1; i++) {
-			$scope.headers.push( $scope.currentPage.data[$scope.header_row-1][i-1]);
+			if ($scope.currentPage.data && $scope.currentPage.data[$scope.header_row-1]) {
+				$scope.headers.push( $scope.currentPage.data[$scope.header_row-1][i-1]);
+			}
 		}
 	}
 
 	$scope.validate_data = function () {
 		$scope.reset_messages();
+		$scope.validated = false;
 
 		$scope.reload_headers();
 		console.log("HEADERS: " + $scope.headers.join(','));
 
 		var model = $scope.model; // default for now testing.. 
 
-		$scope.message("Validating headers for " + $scope.columns + ' columns for ' + $scope.rows + " Records starting on row " + $scope.starting_row + ' of Page ' + $scope.page );
+		$scope.message("Validating " + $scope.columns + ' on Page ' + $scope.page + ' - ' + $scope.rows + " Records starting on row " + $scope.starting_row);
 
 		$http.post('/parseMetaFields', { model: model, headers: $scope.headers })
 		.then ( function (result) {
@@ -193,6 +197,9 @@ function uploadController ($scope, $rootScope, $http, $q) {
 			
 			var fields = Object.keys(found.fields);
 			var attributes = Object.keys(found.attributes);
+
+			var field_columns = [];
+			var attribute_columns = [];
 
 			var okay = true;
 			for (var i=0; i<$scope.headers.length; i++) {
@@ -205,11 +212,14 @@ function uploadController ($scope, $rootScope, $http, $q) {
 
 				if ( el && fields.indexOf(header) >=0 ) { 
 					el.style = 'border-color:green';
-					$scope.message("'" + header + "' is a recognized field for " + model);
+					var index = attributes.indexOf(header);
+					$scope.message(i + " - '" + header + "' is a recognized field for " + model);
+					field_columns.push(i);
 				}
 				else if ( el && attributes.indexOf(header) >=0 ) { 
 					el.style = 'border-color:green';
-					$scope.message("'" + header + "' is a recognized attribute for " + model);
+					$scope.message(i + " '" + header + "' is a recognized attribute for " + model);
+					attribute_columns.push(i);
 				}
 				else if (el) { 
 					$scope.error("'" + header + "' not a recognized field or attribute for " + model + " - (case sensitive)");
@@ -223,71 +233,119 @@ function uploadController ($scope, $rootScope, $http, $q) {
 				}
 			}
 
+			$scope.attribute_columns = attribute_columns;
+			$scope.field_columns = field_columns;
 			if (!okay) {
 				var e = new Error(model + ' Data validation errors');
 				$scope.remoteLog(e, 'warning', 'Validation Errors');
-				$scope.validated = false;
+				$scope.validated_meta_fields = false;
 			}
 			else {
-				if (found.ids && found.ids.index != null )  {
-					var id_index = found.ids.index;
-					$scope.message("Using column: '" + $scope.headers[id_index] + "' as an ID reference for " + model);
-				}
-				else { 
-					$scope.message("No ID field supplied - using 1st column: " + $scope.headers[0] + ' as a reference (okay) for ' + model);
-				}
-
+				var id_index;
+				var select;
+				var reference;
 				if (found.ids && found.ids.index != null ) {
-					$scope.message("confirming " + model + " id list");
-					$scope.validated = okay;
+					id_index = found.ids.index;
+					$scope.message("Using column: '" + $scope.headers[id_index] + "' as an ID reference for " + model);
+
+					var idField = 'id';
+					if (found.ids.alias) {
+						idField = found.fields[found.ids.alias];
+					}
+					select = idField;
 				}
-				else {
+				else if ($scope.upload_type.match(/update/i) ) {
+					$scope.message("No ID field supplied - using 1st column: " + $scope.headers[0] + ' as a reference (okay) for ' + model);
 					$scope.message("Validating reference attributes");
 
 					console.log("BLOCK " + JSON.stringify($scope.dataBlock));
-					var list = [];
-					for (var i=0; i<$scope.dataBlock.length; i++) {
-						var v = $scope.dataBlock[i][1];
-						list.push(v);
-					}
 
 					var alias = $scope.headers[0].replace(/ /g,'_');
-
-					var query = "SELECT DISTINCT FK_Plate__ID as id, Attribute_Value as ref FROM Plate_Attribute,Attribute WHERE FK_Attribute__ID=Attribute_ID ";
-					query = query + " AND Attribute_Name like '" + alias + "' AND Attribute_Value IN ('" + list.join("','") + "')";
-
-					console.log("Q: " + query);
+					id_index = 0;
+					select = 'Plate_ID';
+					reference = alias;
 
 					$scope.reference = {};  // clear previous references... 
+				}
+				else {
+					// $scope.message("Appending records.. ");
+				}
 
-					$http.post('/remoteQuery', { query : query })
+				var list = [];
+				var grid = {};
+				for (var i=0; i<$scope.dataBlock.length; i++) {
+					var v = $scope.dataBlock[i][id_index+1];
+					list.push(v);
+					grid[i] = v;
+				}
+
+				if (!$scope.upload_type) { 
+					$scope.message("id reference found: Upload type defaulting to 'update'");
+				}
+
+				// $scope.message("confirming " + model + " id list");
+				console.log("found ids: " + JSON.stringify(found.ids));
+				$scope.validated_meta_fields = okay;
+
+				console.log("field_indices: " + $scope.field_columns.join(','));
+				console.log("attribute_indices: " + $scope.attribute_columns.join(','));
+				// $scope.message("Updating field columns: " + $scope.field_columns.join(','));
+				// $scope.message("Updating attribute columns: " + $scope.attribute_columns.join(','));
+
+				if ($scope.upload_type.match(/update/i)) {
+					$http.post('/validate', { 
+						model: model, 
+						select: select,
+						field: select,
+						grid: grid,
+						prefix: $scope.Prefix(model),
+						reference: reference,
+						type: $scope.upload_type,
+					})
+					// $http.post('/remoteQuery', { query : id_query })
 					.then ( function (result) {
-						var list = result.data;
-						if (list.length == $scope.rows) {
+						console.log("validation result: " + JSON.stringify(result));
+						var list = result.data.validated;
+						if (list && list.length == $scope.rows) {
 							$scope.validated = okay;
 							for (var i=0; i<list.length; i++) {
 								var id = list[i].id;
 								var ref = list[i].ref;
+								var index = list[i].index;
 								$scope.reference[ref] = id;
 							}
 							$scope.message("Found reference IDs for all " + list.length + " " + $scope.headers[0] + " values " + okay);
+							console.log("Reference ids: " + JSON.stringify($scope.reference));
+							
+							$scope.validated_data = list;
+
 							$scope.validated = okay;
 						}
-						else {
-							$scope.error("Could not find all records associated with reference column.  Found " + list.length + ' OF ' + $scope.rows)
+						else if (list && list.length) {
+							$scope.warning("Could not find all records associated with reference column.  Found " + list.length + ' OF ' + $scope.rows)
+							console.log(JSON.stringify(result));
+							
+							$scope.validated = okay;
+						}
+						else if ($scope.upload_type.match(/update/i) ) {
+							$scope.error("no valid records to update");
 							$scope.validated = false;
+						}
+						else {
+							$scope.message("Adding new records");
+							$scope.validated = true;
 						}
 					})
 					.catch( function (err) {
-						$scope.error("Error confirming attribute data from query " + query);
-						err.context = 'confirming attribute data';
+						$scope.error("Error validating records " + list.join(', '));
+						err.context = 'record validation';
 
-						$scope.remoteLog(err,'warning');
+						// $scope.remoteLog(err,'warning');
 						$scope.validated = false;
 					});
 				}
+				else { $scope.validated = $scope.validated_meta_fields }
 			}
-
 		})
 		.catch ( function (err) {
 			$scope.remoteLog(err,'warning');
@@ -300,7 +358,6 @@ function uploadController ($scope, $rootScope, $http, $q) {
 		$scope.validated = false;
 	}
 
-
 	$scope.upload = function () {
 		
 		var data = $scope.dataBlock;
@@ -312,70 +369,63 @@ function uploadController ($scope, $rootScope, $http, $q) {
 		console.log("\n** Upload References: " + JSON.stringify($scope.reference));
 
 		$scope.reset_messages();
-		$http.post('/uploadData', { model: model, headers: $scope.headers, data: data, reference: $scope.reference, onDuplicate: $scope.onDuplicate })
+		var post = {
+			model: model, 
+			headers: $scope.headers, 
+			data: data, 
+			reference: $scope.reference, 
+			onDuplicate: $scope.onDuplicate,
+			upload_type: $scope.upload_type
+		}
+
+		$http.post('/uploadData', post)
 		.then ( function (result) {
 			console.log("Upload Result " + JSON.stringify(result));
+
 			if (result.data && result.data.error) {
 				$scope.parse_standard_error(result.data.error);
 				// $scope.error(msg[0]);
 			}
 			else {
-				if (result.data && result.data.length) {
-					var count = 0;
-					var total_changed = 0;
-					for (var i=0; i<result.data.length; i++) {
-						var messages = [];
-						var more = result.data[i].affectedRows || 0;
-						
-						if (result.data[i].message) {
-							messages.push(result.data[i].message);
+				var changes = 0;
+				if (result.data ) {
+					if (result.data.duplicates) {
+						$scope.warning(result.data.duplicates + ' encountered');
+					}
+					
+					if (result.data.affectedRecords) {
+						changes++;
+						$scope.message(result.data.affectedRecords + ' records identified');
+					
+						if (result.data.changedRows == result.data.affectedRows) {
+							$scope.message(result.data.changedRows + ' fields/attributes updated')
+						} 
+						else {
+							$scope.message(result.data.changedRows + " of " + result.data.affectedRows + " values updated");
 						}
 
-						if (result.data[i].set) { 
-							if (result.data[i].set.affectedRows) {
-								more += result.data[i].set.affectedRows;
-							}
-							if (result.data[i].set.message) {
-								messages.push(result.data[i].set.message);
-							}
-						}
-						if (result.data[i].updated) { 
-							if (result.data[i].updated.affectedRows) {							
-								more += result.data[i].updated.affectedRows;
-							}
-							if (result.data[i].updated.message) {
-								messages.push(result.data[i].updated.message);
-							}
-						}							
-
-						var msg = '' + messages.join('; ');
-						count = count + more;
-
-						var change_message = msg.match(/Changed: (\d+)/);
-						if (change_message && change_message[1]) {
-							// may need to adjust for multiple changed messages (?)
-							var changed = parseInt(change_message[1]) || 0;
-							total_changed = total_changed + changed;
+						if (result.data.affectedRecords < result.data.rows) {
+							var missed = result.data.rows - result.data.affectedRows;
+							$scope.warning(missed + ' records not recognized');
 						}
 					}
 
-					if (count) {
-						$scope.message("Added/Updated " + count + " Data Record(s)");
-						if ($scope.onDuplicate === 'replace') { $scope.message('(Note: replaced records count as 2 updates (delete + insert)') }
-					}
-					if (total_changed) {
-						$scope.message(total_changed + " Values Edited");
-					}
-					if (!count && !total_changed) {
-						$scope.message('No changes detected')
+					if (result.data.insertIds && result.data.insertIds.length) {
+						changes++;
+						$scope.message("Added " + result.data.insertIds.length + ' ' + model + " records (new ids: " + result.data.insertIds[0] + ' ...)');
 					}
 				}
 				else { 
-					$scope.warning("No rows affected");
+					$scope.warning("update results missing");
+				}
+
+				if (!changes) {
+					$scope.warning('no records found to update');
 				}
 			}
 		})
 		.catch ( function (err) {
+			console.log("uploadData error: " + err);
 			var msg = $scope.parse_standard_error(err);
 			$scope.remoteLog(err,'warning');
 			$scope.error(msg);
