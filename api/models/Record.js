@@ -57,7 +57,7 @@ module.exports = {
 		if ( !options ) { options = {} }
 		var deferred = q.defer();
 
-		var ids = options.ids || [];
+		var ids = options.ids || options.list || [];
 		var barcode = options.barcode;
 		var attribute = options.attribute;
 		var field     = options.field;
@@ -1384,7 +1384,7 @@ module.exports = {
 				onDuplicate = '';
 			}
 			else {
-				onDuplicate = ' ON DUPLICATE KEY ' + onDuplicate;
+				onDuplicate = ' ON duplicate KEY ' + onDuplicate;
 			}
 		}
 
