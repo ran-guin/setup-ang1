@@ -387,7 +387,7 @@ app.controller('FancyFormController',
                 for (var i=0; i<result.length; i++) {
                     var returned = result[i].data;
                     console.log(JSON.stringify(returned));
-                    var found_ids = returned.ids || [];
+                    var found_ids = returned.list || [];
                     var element = db_validate[i].element;
 
                     if (returned.excluded && returned.excluded.length) { 
@@ -401,12 +401,12 @@ app.controller('FancyFormController',
                         $scope.message("validated " + model);
                         $scope.validate(element);
                     }
-                    else if (returned.ids && returned.ids.length && returned.validated && returned.validated.length === returned.ids.length) {
+                    else if (returned.list && returned.list.length && returned.validated && returned.validated.length === returned.list.length) {
                         console.log('found ' + found_ids.length + ' valid ' + model + ' id(s): ' + found_ids.join(','));
                         $scope.message("validated " + model);
                         $scope.validate(element);
                     }
-                    else if (returned.validated && returned.excluded && returned.exclued.length && returned.validated.lenght) {
+                    else if (returned.validated && returned.excluded && returned.excluded.length && returned.validated.lenght) {
                         $scope.message("partial validations");
                         $scope.validate_element(element, 'pending');
                     }
