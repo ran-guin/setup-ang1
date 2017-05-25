@@ -1580,7 +1580,7 @@ module.exports = {
 			var fields = metaFields.fields;
 			var attributes = metaFields.attributes;
 			var ids   = metaFields.ids;
-					
+
 			var id_index = ids.index || 0;
 			var idField;
 			if (upload_type.match(/update/i)) {
@@ -1732,30 +1732,47 @@ module.exports = {
 						console.log("bulk insert result:");
 						console.log(JSON.stringify(result));
 
+						var added = {};
 						var duplicates = 0;
 						for (var i=0; i<result.length; i++) {
 							var insert_model = result[i].model;
-							if (model === insert_model) {
-								var dup = result[i].Duplicates;
-								if (dup) { duplicates += dup }
-								if (insertIds.length) {
-									for (var j=0; j<result[i].ids; j++) {
-										insertIds.push(result[i].ids[j]);
+
+							var dup = result[i].Duplicates;
+							if (dup) { duplicates += dup }
+							
+							if (result[i].ids && result[i].ids.length) {
+								if (model === insert_model) {
+									if (insertIds.length) {
+										for (var j=0; j<result[i].ids.length; j++) {
+											insertIds.push(result[i].ids[j]);
+										}
+									}
+									else { insertIds = result[i].ids }
+								}
+								else {
+									console.log('tracking attribute additions as updates');
+									if (added[insert_model]) {
+										for (var j=0; j<result[i].ids.length; j++) {
+											added[insert_model].push(result[i].ids[j]);
+										}
+									}
+									else {
+										added[insert_model] = result[i].ids;
 									}
 								}
-								else { insertIds = result[i].ids }
 							}
 						}
- 
-						var inserted = 
+
+						console.log(data.length + ' return data: ' + JSON.stringify(data))
 						deferred.resolve({
-							rows: result.length, 
+							rows: data.length,
 							insertIds: insertIds, 
 							affectedRows: affectedRows, 
 							changedRows: changedRows,
 							affectedRecords: affectedRecords,
 							changedRecords: changedRecords,
-							duplicates: duplicates
+							duplicates: duplicates,
+							added: added
 						});					
 					})
 					.catch ( function (err) {
