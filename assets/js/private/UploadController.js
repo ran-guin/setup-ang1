@@ -187,7 +187,7 @@ function uploadController ($scope, $rootScope, $http, $q) {
 
 		var model = $scope.model; // default for now testing.. 
 
-		$scope.message("Validating " + $scope.columns + ' on Page ' + $scope.page + ' - ' + $scope.rows + " Records starting on row " + $scope.starting_row);
+		$scope.message("Validating " + $scope.columns + ' columns on Page ' + $scope.page + '.  Found ' + $scope.rows + " Records starting on row " + $scope.starting_row);
 
 		$http.post('/parseMetaFields', { model: model, headers: $scope.headers })
 		.then ( function (result) {
@@ -213,12 +213,12 @@ function uploadController ($scope, $rootScope, $http, $q) {
 				if ( el && fields.indexOf(header) >=0 ) { 
 					el.style = 'border-color:green';
 					var index = attributes.indexOf(header);
-					$scope.message(i + " - '" + header + "' is a recognized field for " + model);
+					$scope.message('col ' + i + ": '" + header + "' is a recognized field for " + model);
 					field_columns.push(i);
 				}
 				else if ( el && attributes.indexOf(header) >=0 ) { 
 					el.style = 'border-color:green';
-					$scope.message(i + " '" + header + "' is a recognized attribute for " + model);
+					$scope.message('col ' + i + ": '" + header + "' is a recognized attribute for " + model);
 					attribute_columns.push(i);
 				}
 				else if (el) { 
@@ -246,7 +246,7 @@ function uploadController ($scope, $rootScope, $http, $q) {
 				var reference;
 				if (found.ids && found.ids.index != null ) {
 					id_index = found.ids.index;
-					$scope.message("Using column: '" + $scope.headers[id_index] + "' as an ID reference for " + model);
+					$scope.message("Using '" + $scope.headers[id_index] + "' column as the reference column for " + model);
 
 					var idField = 'id';
 					if (found.ids.alias) {
@@ -317,7 +317,7 @@ function uploadController ($scope, $rootScope, $http, $q) {
 							if (result.data.reverse_mapped) { 
 								$scope.reference = result.data.reverse_mapped;
 
-								$scope.message("Found reference IDs for all " + list.length + " " + $scope.headers[0] + " values " + okay);
+								$scope.message("Found reference IDs for all " + list.length + " " + $scope.headers[0] + " values.");
 								console.log("Reference ids: " + JSON.stringify($scope.reference));
 							}
 
