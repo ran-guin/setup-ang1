@@ -700,10 +700,14 @@ module.exports = {
 
 		var id = result.insertId;
 		var count = result.affectedRows;
-		var duplicates = result.Duplicates;
+		
+		var dups = result.message.match(/Duplicates: (\d+)/);
+		var duplicates = 0;
+		if (dups) { duplicates = dups[1] }
 
 		if (duplicates && onDuplicate.match(/replace/i) ) { 
-			count = count-duplicates;
+			count = count - duplicates;
+			console.log('remove ' + duplicates + ' duplicates from record count... ');
 		}
 
 		var ids = [];
@@ -711,6 +715,19 @@ module.exports = {
 			ids.push(id++);
 		}
 		return ids;
+	},
+
+	insert_Duplicates : function (result, options) {
+		// parse returned value from createNew ...
+		if (!options) { options = {} }
+
+		var onDuplicate = options.onDuplicate;
+
+		var dups = result.message.match(/Duplicates: (\d+)/);
+		var duplicates = 0;
+		if (dups) { duplicates = dups[1] }
+
+		return duplicates;
 	},
 
 	restore_order : function (data, list, ref) {
@@ -1451,7 +1468,7 @@ module.exports = {
 			// console.log("Result: " + JSON.stringify(result));
 			var insertId = result.insertId;
 			var added    = result.affectedRows;
-			var duplicates = result.Duplicates;
+			var duplicates = Record.insert_Duplicates(result, options);
 
 			var msg = added + ' ' + table + ' record(s) added: id(s) from ' + insertId;
 			// console.log(msg);
@@ -1460,7 +1477,7 @@ module.exports = {
 			// else { sails.config.messages.push(msg) }
 			// console.log("successfully created new " + table + ' record(s)');
 
-			var ids = Record.insert_Ids(result,options);
+			var ids = Record.insert_Ids(result, options);
 
 			result['model'] = model;
 			result['table'] = table;
@@ -1737,8 +1754,11 @@ module.exports = {
 						for (var i=0; i<result.length; i++) {
 							var insert_model = result[i].model;
 
-							var dup = result[i].Duplicates;
-							if (dup) { duplicates += dup }
+							var dups = result[i].message.match(/Duplicates: (\d+)/);
+							if (dups) { 
+								console.log("Dups: " + JSON.stringify(dups));
+								duplicates += parseInt(dups[1]);
+							}
 							
 							if (result[i].ids && result[i].ids.length) {
 								if (model === insert_model) {
@@ -1761,6 +1781,7 @@ module.exports = {
 									}
 								}
 							}
+
 						}
 
 						console.log(data.length + ' return data: ' + JSON.stringify(data))
