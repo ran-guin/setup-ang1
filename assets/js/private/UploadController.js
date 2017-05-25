@@ -396,7 +396,7 @@ function uploadController ($scope, $rootScope, $http, $q) {
 					$scope.message("Uploading data for " + result.data.rows + ' record(s)... ');
 
 					if (result.data.duplicates) {
-						$scope.warning(result.data.duplicates + ' encountered');
+						$scope.warning(result.data.duplicates + ' duplicates encountered');
 					}
 					
 					if (result.data.affectedRecords) {
