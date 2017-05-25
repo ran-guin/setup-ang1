@@ -308,15 +308,19 @@ function uploadController ($scope, $rootScope, $http, $q) {
 						var list = result.data.validated;
 						if (list && list.length == $scope.rows) {
 							$scope.validated = okay;
-							for (var i=0; i<list.length; i++) {
-								var id = list[i].id;
-								var ref = list[i].ref;
-								var index = list[i].index;
-								$scope.reference[ref] = id;
+							// for (var i=0; i<list.length; i++) {
+							// 	var id = list[i].id;
+							// 	var ref = list[i].ref;
+							// 	var index = list[i].index;
+							// 	$scope.reference[ref] = id;
+							// }
+							if (result.data.reverse_mapped) { 
+								$scope.reference = result.data.reverse_mapped;
+
+								$scope.message("Found reference IDs for all " + list.length + " " + $scope.headers[0] + " values " + okay);
+								console.log("Reference ids: " + JSON.stringify($scope.reference));
 							}
-							$scope.message("Found reference IDs for all " + list.length + " " + $scope.headers[0] + " values " + okay);
-							console.log("Reference ids: " + JSON.stringify($scope.reference));
-							
+
 							$scope.validated_data = list;
 
 							$scope.validated = okay;
@@ -389,6 +393,8 @@ function uploadController ($scope, $rootScope, $http, $q) {
 			else {
 				var changes = 0;
 				if (result.data ) {
+					$scope.message("Uploading data for " + result.data.rows + ' record(s)... ');
+
 					if (result.data.duplicates) {
 						$scope.warning(result.data.duplicates + ' encountered');
 					}
@@ -413,6 +419,14 @@ function uploadController ($scope, $rootScope, $http, $q) {
 					if (result.data.insertIds && result.data.insertIds.length) {
 						changes++;
 						$scope.message("Added " + result.data.insertIds.length + ' ' + model + " records (new ids: " + result.data.insertIds[0] + ' ...)');
+					}
+
+					if (result.data.added) {
+						var keys = Object.keys(result.data.added);
+						for (var i=0; i<keys.length; i++) {
+							$scope.message("Added " + result.data.added[keys[i]].length + ' ' + keys[i] + ' Record(s)');
+							changes += result.data.added[keys[i]].length;
+						}
 					}
 				}
 				else { 
