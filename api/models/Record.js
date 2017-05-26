@@ -2069,8 +2069,13 @@ module.exports = {
 		if (value == null) { }			
 		else if (value.constructor === String) {
 			if (value.match(/^<user>$/i)) {
+				// change this to access user id and phase out alDente_ID ... 
 				if (sails.config.payload) { value = sails.config.payload.alDenteID || 0 }
 				if (debug) console.log("replacing <user> with " + value);
+			}
+			else if (value.match(/^<alDente_id>$/i)) {
+				if (sails.config.payload) { value = sails.config.payload.alDenteID || 0 }
+				if (debug) console.log("replacing <alDente_ID> with " + value);				
 			}
 			else if (value.match(/^<increment>$/i) ) {
 				if (action === 'insert') {  }  // leave onDuplicate set in createNew function
