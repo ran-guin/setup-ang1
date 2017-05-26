@@ -701,11 +701,8 @@ module.exports = {
 		var id = result.insertId;
 		var count = result.affectedRows;
 		
-		var dups = result.message.match(/Duplicates: (\d+)/);
-		var duplicates = 0;
-		if (dups) { duplicates = dups[1] }
-
-		if (duplicates && onDuplicate.match(/replace/i) ) { 
+		var duplicates = Record.insert_Duplicates(result, options);
+		if (duplicates) {
 			count = count - duplicates;
 			console.log('remove ' + duplicates + ' duplicates from record count... ');
 		}
@@ -723,9 +720,11 @@ module.exports = {
 
 		var onDuplicate = options.onDuplicate;
 
-		var dups = result.message.match(/Duplicates: (\d+)/);
 		var duplicates = 0;
-		if (dups) { duplicates = dups[1] }
+		if (result.message) {
+			var dups = result.message.match(/Duplicates: (\d+)/);
+			if (dups) { duplicates = parseInt(dups[1]) }
+		}
 
 		return duplicates;
 	},
@@ -1585,7 +1584,7 @@ module.exports = {
  
 		var reference = options.reference;
 		var onDuplicate = options.onDuplicate || '';
-		var upload_type = options.upload_type; // append or update ...
+		var upload_type = options.upload_type || 'upload'; // append or update ...
 
 		console.log("Uploading data " + JSON.stringify(options));
 
@@ -1600,7 +1599,7 @@ module.exports = {
 
 			var id_index = ids.index || 0;
 			var idField;
-			if (upload_type.match(/update/i)) {
+			if (upload_type && upload_type.match(/update/i)) {
 				idField = headers[id_index];
 				idField = idField.replace(/ /g,'_');
 			}
@@ -1754,11 +1753,7 @@ module.exports = {
 						for (var i=0; i<result.length; i++) {
 							var insert_model = result[i].model;
 
-							var dups = result[i].message.match(/Duplicates: (\d+)/);
-							if (dups) { 
-								console.log("Dups: " + JSON.stringify(dups));
-								duplicates += parseInt(dups[1]);
-							}
+							duplicates += Record.insert_Duplicates(result[i], options);
 							
 							if (result[i].ids && result[i].ids.length) {
 								if (model === insert_model) {
@@ -1781,7 +1776,6 @@ module.exports = {
 									}
 								}
 							}
-
 						}
 
 						console.log(data.length + ' return data: ' + JSON.stringify(data))
