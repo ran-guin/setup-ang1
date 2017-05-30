@@ -100,13 +100,15 @@ module.exports = {
 
 		var barcode_ids = [];
 		var mapped = {};
-		var reverse_mapped = {};
+		var reverse_mapped;
 
 		var valid = true;
 
 		var select = idField + ' AS id';
 
 		if (ids && ids[0] && ids[0].match(regex)) { 
+
+			reverse_mapped = {};
 			// strip prefix from valid barcodes 
 			ids = ids.map( function (i) { 
 				var id = parseInt(i.replace(regex,''));
@@ -119,6 +121,7 @@ module.exports = {
 			conditions.push(idField + " IN (" + ids.join(',') + ")");
 		}
 		else if (barcode && prefix) {
+			reverse_mapped = {};
 			var list = barcode.split(new RegExp(prefix, 'i'));
 			console.log("original barcodes: " + JSON.stringify(list));
 			list.shift(); 
@@ -1630,7 +1633,7 @@ module.exports = {
 					}
 					else if (reference) {
 						id = reference[data[row][1]];  // data 0 is simply a row # ... 
-						console.log("ref id: " + id);
+						console.log(data[row][1] + " references: " + id);
 					}
 					else if (idField) {
 						// enable conditional field to act as id (first column must be associated with unique record) 
