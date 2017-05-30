@@ -178,6 +178,7 @@ function stockController ($scope, $rootScope, $http, $q) {
     		// 'type'            : $scope.form.type,
             'catalog'         : $scope.form.catalog.id,
             'notes'           : $scope.form.notes,
+            'Received_by'     : "<USER>",
     	};
 
     	var data = { Stock : StockData, type: $scope.form.type };

@@ -24,6 +24,7 @@ module.exports = {
 		'lot_number' : 'Stock_Lot_Number',
 		'notes' : 'Stock_Notes',
 		'catalog' : 'FK_Stock_Catalog__ID',
+		'Received_by' : 'FK_Employee__ID',
 	},
 
 	barcode : true,

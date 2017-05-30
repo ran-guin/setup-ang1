@@ -54,3 +54,4 @@ Attribute_ID	Attribute_Name	Attribute_Format	Attribute_Type	FK_Grp__ID	Inherited
 64	Untracked_Thaw_Count		Int	3	Yes	Source	Editable	
 65	Untracked_Thaw_Count		Int	3	Yes	Plate	Editable	
 66	Matrix_Barcode		Int	3	Yes	Plate	Editable	
+67	Sex_Test_Batch	Int	8	No	Prep	Editable	NULL
