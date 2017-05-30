@@ -304,22 +304,27 @@ function uploadController ($scope, $rootScope, $http, $q) {
 					})
 					// $http.post('/remoteQuery', { query : id_query })
 					.then ( function (result) {
-						console.log("validation result: " + JSON.stringify(result));
+						console.log("Validation Result: " + JSON.stringify(result));
 						var list = result.data.validated;
+						var refs = result.data.list;
+						var indices = result.data.index;
+
+						console.log("Refs: " + JSON.stringify(refs));
 						if (list && list.length == $scope.rows) {
 							$scope.validated = okay;
-							// for (var i=0; i<list.length; i++) {
-							// 	var id = list[i].id;
-							// 	var ref = list[i].ref;
-							// 	var index = list[i].index;
-							// 	$scope.reference[ref] = id;
-							// }
 							if (result.data.reverse_mapped) { 
+								console.log("reverse mapped...");
 								$scope.reference = result.data.reverse_mapped;
-
-								$scope.message("Found reference IDs for all " + list.length + " " + $scope.headers[0] + " values.");
-								console.log("Reference ids: " + JSON.stringify($scope.reference));
 							}
+							else if (refs) {
+								for (var i=0; i<list.length; i++) {
+									console.log(refs[i] + ' -> ' + list[i]);
+									$scope.reference[refs[i]] = list[i];
+								}								
+							}
+
+							$scope.message("Found reference IDs for all " + list.length + " " + $scope.headers[0] + " values.");
+							console.log("Reference ids: " + JSON.stringify($scope.reference));
 
 							$scope.validated_data = list;
 
