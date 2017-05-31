@@ -139,8 +139,8 @@ function protocolController ($scope, $rootScope, $http, $q) {
             // well specific attributes handled in WellController //
             // eg SplitFields, split_mode, distribution_mode, target_format etc.
             
-            $scope.user = 'Ran';  // TEMP - use payload ... 
-            $scope.FK_Employee__ID = 2;  // test data 
+            $scope.user = $scope.payload.user;  // TEMP - use payload ... 
+            $scope.FK_Employee__ID = $scope.payload.alDenteID;  // test datac
 
             console.log("Steps: " + JSON.stringify($scope.Steps) );
             $scope.reload();
@@ -313,12 +313,13 @@ function protocolController ($scope, $rootScope, $http, $q) {
         $scope.action = action;
 
         var timestamp = $scope.backfill_date || $scope.timestamp;
+	console.log("Payload: " + JSON.stringify($scope.payload));
 
         // Legacy fields 
         var PrepData = { 
             'Prep_Name' : $scope.Step.name ,
             'FK_Lab_Protocol__ID' : $scope.Step['Lab_protocol'],
-            'FK_Employee__ID' : 1, 
+            'FK_Employee__ID' : $scope.payload.alDenteID, 
             'Prep_Action' : action,
             'Prep_Comments' : $scope.form['comments' + $scope.step.stepNumber],
             'Prep_DateTime' : timestamp,
