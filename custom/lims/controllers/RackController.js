@@ -38,7 +38,7 @@ module.exports = {
 			columns: columns,
 		})
 		.then (function (contents) {
-			console.log("Pass along: " + JSON.stringify(contents));
+			// console.log("Pass along: " + JSON.stringify(contents));
 			return res.json(contents);
 			// deferred.resolve(contents);
 		})

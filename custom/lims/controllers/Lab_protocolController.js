@@ -147,7 +147,7 @@ module.exports = {
 		// execute completion of lab protocol step //
 		var data = req.body;
 
-		console.log("COMPLETE in LP controller: " + JSON.stringify(data));
+		console.log("COMPLETE Lab Protocol: " + JSON.stringify(data));
 
 		Lab_protocol.complete(data)
 		.then ( function (result) {

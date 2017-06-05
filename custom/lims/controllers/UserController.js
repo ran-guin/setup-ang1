@@ -26,9 +26,9 @@ module.exports = {
    * match a real user in the database, sign in to Activity Overlord.
    */
 
-
   dashboard: function (req, res) {
-    var id = req.param('id') || req.body.id;
+    var body = req.body || {};
+    var id = req.param('id') || body.id;
     
     console.log('sess: ' + JSON.stringify(req.session));
     console.log('params : ' + JSON.stringify(req.session.params));
@@ -90,6 +90,12 @@ module.exports = {
       // from the database (`user.password`)
       console.log('Grps: ');
       console.log("Confirming password for " + JSON.stringify(user));
+      console.log("compare " + pwd + ' to ' + user.encryptedPassword);
+
+      if (!user.encryptedPassword) {
+        return res.render("customize/public_login", {error: "User has not set up password.  Please see admin." });
+      }
+
       Passwords.checkPassword({
         passwordAttempt: pwd,
         encryptedPassword: user.encryptedPassword
@@ -146,6 +152,10 @@ module.exports = {
 
   },
 
+  changePrinters : function (req, res) {
+    return res.render('customize/changePrinters', req.session.payload);
+  },
+
   lab_admin : function (req, res) {
     return res.render('lims/Lab_Admin', req.session.payload);
 
@@ -185,9 +195,14 @@ module.exports = {
       return res.render('customize/private_home', req.session.payload);
     }
     else {
-      var printers = sails.config.printer_groups || Printer_group.printer_groups;
-      console.log("Load Printer Groups " + JSON.stringify(printers));
-      return res.render('customize/public_home', { printers : printers });
+      Printer_group.printer_groups()
+      .then ( function (printers) {
+        console.log("Loaded Printer Groups " + JSON.stringify(printers));
+        return res.render('customize/public_home', { printers : printers });
+      })
+      .catch ( function (err) {
+        return res.render('customize/public_home');
+      });
     }
   },
 
@@ -195,12 +210,13 @@ module.exports = {
    * Sign up for a user account.
    */
   signup: function(req, res) {
+    var body = req.body || {};
 
-    var user = req.body.user ;
-    var email = req.body.email ;
+    var user = body.user || body.name;
+    var email = body.email ;
 
-    var pwd = req.body.password;
-    var pwd2 = req.body.confirm_password;
+    var pwd = body.password;
+    var pwd2 = body.confirm_password;
 
     console.log('signup...');
     var Passwords = require('machinepack-passwords');
@@ -228,11 +244,13 @@ module.exports = {
           // Create a User with the params sent from
           // the sign-up form --> signup.jade
             console.log("Create user : " + user);
-            var printers = sails.config.printer_groups || Printer_group.printer_groups;
-            console.log("Load Printer groups " + JSON.stringify(printers));
 
             var alDenteID; 
-            var get_ID = "SELECT Employee_ID as alDenteID FROM Employee WHERE Email_Address = '" + email + "'";
+            var get_ID = "SELECT null as alDenteID";
+            if (sails.config.alt_id) {
+              get_ID = "SELECT Employee_ID as alDenteID FROM Employee WHERE Email_Address = '" + email + "'";
+            }
+
             console.log(get_ID);
             Record.query_promise(get_ID)
             .then ( function (result) {
@@ -256,9 +274,15 @@ module.exports = {
                     // send back an easily parseable status code.
                     if (err.invalidAttributes && err.invalidAttributes.email && err.invalidAttributes.email[0]
                       && err.invalidAttributes.email[0].rule === 'unique') {
-                      
-                      return res.render('customize/public_home', { printers : printers, error : "Email address already in use" });                      
-                      // return res.emailAddressInUse();
+                    
+                        Printer_group.printer_groups()
+                        .then (function (printers) {
+                          return res.render('customize/public_home', { printers : printers, error : "Email address already in use" });                      
+                        })
+                        .catch (function (err) {
+                          return res.render('customize/public_home', { error : "Email address already in use" });                      
+                        })
+                        // return res.emailAddressInUse();
                     }
 
                     // Otherwise, send back something reasonable as our error response.
@@ -273,14 +297,21 @@ module.exports = {
                   var payload = { id: newUser.id, access: 'New User', alDenteID: alDenteID, url: sails.config.globals.url };
                   var token = jwToken.issueToken(payload);
                   
-                  sails.config.messages.push("Generated new user... ");
+                  sails.config.messages.push("Generated new user successfully [ name: '" + user + "'; id: " + newUser.id + '; alt_id: ' + alDenteID + ' ]');
 
                   console.log('Generated new user: ' + JSON.stringify(payload));
                   console.log("Token issued: " + token);
                   
                   req.session.token = token;
-              
-                  return res.render('customize/public_home', {  printers : printers, message : "Registered.  Access pending approval by administrator" })
+                        
+                  Printer_group.printer_groups()
+                  .then (function (printers) {
+                    return res.render('customize/public_home', { printers : printers, message: "Registered.  Access pending approval by administrator"  });                      
+                  })
+                  .catch (function (err) {
+                    return res.render('customize/public_home', { error : "Error loading printers" });                      
+                  })              
+                  // return res.render('customize/public_home', {  printers : printers, message : })
                   //return res.json(200, { user: user, token: token });
                 });
               }
@@ -368,11 +399,15 @@ module.exports = {
       // Wipe out the session (log out)
       req.session.User = null;
 
-      var printers = sails.config.printer_groups || Printer_group.printer_groups;
-      console.log("Load printer groups " + JSON.stringify(printers));
+      Printer_group.printer_groups()
+      .then (function (result) {
+        return res.render('customize/public_home', { printers : result } );
+      })
+      .catch ( function (err) {
+        return res.render('customize/public_home' );
+      });
 
       // Either send a 200 OK or redirect to the home page
-      return res.render('customize/public_home', { printers : printers } );
 
     // });
   }

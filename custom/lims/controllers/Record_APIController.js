@@ -35,7 +35,6 @@ module.exports = {
 		var body = req.body || {};
 		console.log("Search API");
 
-		var string = body.search;
 		var scope = body.scope;
 		var condition = body.condition || {};
 		var search    = body.search || '';
@@ -43,55 +42,60 @@ module.exports = {
 		if (! scope ) {
 			// Generic Search 
 			scope = { 
-				'user' : ['email', 'username'] 
+				'user' : ['email', 'name'],
+				'container' : []
 			};
 		}
 
-		console.log("Condition: " + JSON.stringify(condition));
+		Record.search({scope : scope, search : search, condition: condition})
+		.then (function (result) {
+			var keys = Object.keys(result);
+			if (!result || !keys.length) {
+				sails.warning("Nothing found");
+				return res.render('customize/private_home');
+			}
+			else if (keys.length == 1 && result[keys[0]].length == 1) {
+				console.log(JSON.stringify(result));
 
-		var promises = [];
+				// Go to single page if applicable .. 
+				if (keys[0] == 'container') {
+					var ids = _.pluck(list,'Plate_ID');
+					
+					console.log('load view...');
+					Container.loadViewData(ids)
+					.then (function (viewData) {
+						console.log("Found container data");
+						console.log(JSON.stringify(viewData));
+						
+						viewData.messages = [];
+						viewData.warnings = [];
+						viewData.errors = [];
+						viewData.found = 'Container';
 
-		var tables = Object.keys(scope);
-		for (var i=0; i< tables.length; i++) {
-			var fields = scope[tables[i]];
-			var query = "SELECT " + fields.join(',') + " FROM " + tables[i];
-			
-			var search_condition = '';
-			if (search) {
-				var add_condition = [];
-				for (var i=0; i<fields.length; i++) {
-					add_condition.push(fields[i] + " LIKE '%" + search + "%'");
+						// return res.send("render container");
+						return res.render('lims/Container', viewData);
+					})
+			        .catch (function (err) {
+			        	console.log("error loading plate data");
+			        	// return res.send("error loading data");
+						return res.render('customize/private_home');
+			        });
 				}
-				search_condition = '(' + add_condition.join(' OR ') + ')';
+				else {
+					console.log('not recognized type');
+					return res.render('customize/private_home');
+				}
 			}
+			else {
+				console.log("Generate Search Results");
+				console.log(JSON.stringify(result));
 
-			if (condition &&  condition.constructor === Object && condition[tables[i]] )  { query = query + " WHERE " + condition[tables[i]] }
-			else if (condition && condition.constructor === String) { query = query + " WHERE " + condition }
-			else { query = query + " WHERE 1"}
-
-			if (search_condition) { query = query + " AND " + search_condition }
-			console.log("\n** Search: " + query);
-			promises.push( Record.query_promise(query));
-		}
-
-		var returnval = { search: search };
-
-		q.all(promises) 
-		.then ( function ( results ) {
-			for (var i=0; i<results.length; i++) {
-				console.log(i + ': ' + JSON.stringify(results[i]));
+				return res.render('customize/private_home');
 			}
-			if (tables.length === 1) { returnval.results = results[0] }
-			else { returnval.results = results }
-
-			return res.json(returnval);
 		})
 		.catch ( function (err) {
-			Logger.error(err, 'search error', 'remote search');
-			console.log("Error searching tables: " + err);
 			return res.json(err);
 		});
-
 	},
 
 	parseMetaFields : function (req, res) {
@@ -138,20 +142,11 @@ module.exports = {
 	uploadData : function (req, res) {
 		var body = req.body;
 
-		var model   = body.model;
-		var headers = body.headers;
-		var data    = body.data;
-		var reference = body.reference;
-
-		console.log("UPLOAD DATA");
-		console.log("model : " + model);
-		console.log("headers: " + JSON.stringify(headers));
-		console.log("data: " + JSON.stringify(data));
-
-		Record.uploadData(model, headers, data, reference)
+		Record.uploadData(body)
 		.then ( function (result) {
 			sails.config.messages.push("uploaded");
 			console.log("Uploaded");
+			console.log(JSON.stringify(result));
 			return res.json(result);
 		})
 		.catch (function (err) {
@@ -289,6 +284,45 @@ module.exports = {
 			else {
 				return res.json(result);
 			}
+		});
+	},
+
+	validate: function (req, res) {
+		var body = req.body || {};
+
+		var barcode = body.barcode || req.param('barcode');
+
+		var model = body.model || req.param('model');	
+		var select = body.select || req.param('select') || 'id';
+		var value = body.value || req.param('value') || '';
+		var field = body.field || req.param('field') || 'id'; // use name to validate based on name
+		var list = body.list || req.param('list') || '';
+		var prefix = body.prefix || req.param('prefix');   // strip id prefix (optional)
+		var reference = body.reference || req.param('reference');  // validate via attribute identifier
+		var grid = body.grid;
+
+		if (list.constructor === String) {
+			list = list.split(/,\s*/);
+		}
+
+		var specs = {
+			ids: list,
+			grid: grid,
+			field: field,
+			barcode: barcode,
+			attribute: reference
+		};
+
+		console.log("*** Record validation...");
+		console.log(model + ': ' + JSON.stringify(specs));
+		
+		Record.validate(model, specs)
+		.then (function (result) {
+			return res.json(result);
+		})
+		.catch ( function (err) {
+			console.log("encountered validation error");
+			return res.json(err);
 		});
 	},
 

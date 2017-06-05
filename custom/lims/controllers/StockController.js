@@ -33,10 +33,9 @@ module.exports = {
 
 	received : function (req, res) {
 
-		var type = 'Solution';
 		var element = req.param('element') || 'injectedData';
 		var limit = req.param('limit');
-
+		var type = req.param('type');
 
 
 		var fields = ['Stock_Catalog_Name as name', 'Stock_Lot_Number as lot', 'Stock_Received as rcvd', 'Stock_Number_in_Batch as qty', 'Stock_ID as stock_batch'];
@@ -48,13 +47,22 @@ module.exports = {
 		var left_joins = [];
 		var order = ['Stock_ID DESC'];
 
-		if ( type.match(/(Solution|Reagent)/) ) {
+		if ( type && type.match(/(Solution|Reagent)/) ) {
 			fields.push("Group_Concat( DISTINCT Concat(Solution_Quantity,Solution_Quantity_Units) SEPARATOR ', ') as size");
 			fields.push("GROUP_CONCAT(DISTINCT Solution_ID SEPARATOR ', ') as ids");
 			fields.push('Solution_Status as status');
 			fields.push("count(distinct Solution_ID) as active")
 			left_joins.push('Solution ON Solution.FK_Stock__ID=Stock_ID');
 			group.push('Stock_Catalog_ID, Stock_ID, Solution_Status');
+		}
+		else if (type === 'Equipment') {
+			fields.push("GROUP_CONCAT(DISTINCT Equipment_ID SEPARATOR ', ') as ids");
+			fields.push("GROUP_CONCAT(DISTINCT Serial_Number SEPARATOR ', ') as serial");			
+			left_joins.push('Equipment ON Equipment.FK_Stock__ID=Stock_ID');
+			group.push('Stock_Catalog_ID, Stock_ID');
+		}
+		else {
+			console.log('type unidentified: ' + type);	
 		}
 
 		var suffix = '';

@@ -18,126 +18,50 @@ module.exports = {
 		var body = req.body || {};
 
 		var barcode = body.barcode || req.param('barcode');
+		var search  = body.search;
 
 		Record.reset_messages();
 		
 		console.log("Scan: " + JSON.stringify(req.body));
 
-		Barcode.interpret(barcode)
-		.then ( function (Scanned) {
-
-			console.log("Scanned: " + JSON.stringify(Scanned));
-
-			var plate_ids = [];
-			var condition = '';
-			var promises = [];
-			var box_order;
-
-			if ( Scanned['Plate'].length) {
-				plate_ids = Scanned['Plate'];
+		Barcode.custom_scan(barcode)
+		.then (function (result) {
+			console.log('ran custom scan');
+			if (result.found) {
+				console.log("Rendering results for " + view + '=' + result.found);
+				console.log(JSON.stringify(result));
+				var view = 'lims/' + result.found;
+				// return res.send(result);
+				res.render(view, result);
 			}
-			else if ( Scanned['Rack'].length ) {
-				var boxes = Scanned['Rack'].join(',');
-				condition = "Box.Rack_ID IN (" + boxes + ')';
-				console.log("condition: " + condition);
-				box_order = Scanned['Rack'];
+			else {
+				console.log('nothing found...');
+				console.log(JSON.stringify(result));
+				// return res.send(result);
+				res.render('customize/private_home', result);
 			}
-			else if ( Scanned['Set'].length ) {
-				var sets = Scanned['Set'];
-				var query = "Select GROUP_CONCAT(FK_Plate__ID) as ids from Plate_Set WHERE Plate_Set_Number IN (" + sets.join(',') + ")";
-				console.log('query: ' + query);
-				promises.push( Record.query_promise(query) );
-			}
-
-			q.all( promises )
-			.then ( function (result) {
-				
-			    var errors = Scanned['Errors'] || [];
-			    var warnings = [];
-			    var messages = [];
-
-				if (result && result[0] && result[0].length && result[0][0].ids) {
-					var ids = result[0][0].ids;
-					condition = "Plate.Plate_ID IN (" + ids + ")";
-				}
-				else if (result && result[0] && result[0].length ) {
-					errors.push("Nothing found in Set(s) " + sets);
-				}
-		
-				if (plate_ids.length || condition) {
-					console.log("Load: " + plate_ids.join(',') + ' samples from box(es) ' + boxes);
-
-					Container.loadData(plate_ids, condition, { box_order: box_order})
-					.then (function (data) {
-						console.log("loaded data " + JSON.stringify(data));
-						var sampleList = [];
-						if (data.length == 0) {
-							if (plate_ids.length) {
-								warnings.push("expecting ids: " + plate_ids.join(', '));
-								// return res.render('customize/private_home', { warnings : warnings} );
-							}
-							else if (Scanned['Rack'].length) {
-								messages.push("Scanned Loc#s: " + Scanned['Rack'].join(', '));
-								warnings.push("No Box Contents Detected");
-								warnings.push("(Note: Rack / Shelf types are ignored... or Boxes may be full)");
-							} 
-							else {
-								warnings.push("nothing found (?)");
-							}
-							warnings.push("No useable records retrieved");
-							return res.render('customize/private_home', { messages: messages, warnings: warnings });
-						}	
-						else {
-							for (var i=0; i<data.length; i++) {
-								sampleList.push(data[i].id);
-							}
-
-							if (sampleList.length < plate_ids.length) { 
-								warnings.push("Scanned " + plate_ids.length + " records but only found " + sampleList.length);
-							}
-
-							var get_last_step = Protocol_step.parse_last_step(data);	
-
-							var last_step = get_last_step.last_step;
-							if (get_last_step.warning) { warnings.push(get_last_step.warning) }
-
-							messages.push('loaded Matrix Tube(s)');
-
-							return res.render('lims/Container', { 
-								plate_ids: plate_ids.join(','), 
-								last_step : last_step, 
-								Samples: data , 
-								//sampleList : sampleList,
-								messages : messages,
-								warnings : warnings,
-								errors : errors,
-								//target_formats : target_formats 
-							});
-						}
-
-					})
-					.catch (function (err) {
-						Logger.error(err, 'Error loading container data');
-						return res.render('customize/private_home', {messages: messages, warnings: warnings, errors : errors });
-					});			
-				}
-				else {
-					Logger.info('Unrecognized barcode: ' + barcode);
-			    	return res.render("customize/private_home", { errors: errors, warnings: warnings });
-			    }
-			})
-			.catch ( function (err) {
-				errors.push("Error retrieving set");
-				Logger.error(err, 'Error retrieving set');
-				return res.render('customize/private_home', { errors : errors } );
-			})
 		})
 		.catch ( function (err) {
-			errors.push('Error interpretting barcode: ' + barcode);
-			errors.push(err);
-
-			Logger.error(err, 'Error interpretting barcode');
-			res.render('customize/private_home', { errors: errors } );
+			console.log("scan error");
+			console.log(JSON.stringify(err));
+			
+			if (search) {
+				console.log("aborted custom scan... ");
+				// if explicit barcode not entered ... try db search
+				Record.search({scope : scope, search : search, condition: condition})
+				.then (function (result) {
+					console.log('got result ' + JSON.stringify(result));
+					return res.json(result);
+				})
+				.catch ( function (err2) {
+					console.log('result err');
+					return res.json(err2);
+				});				
+			}
+			else {
+				// return res.send('scanning error');
+				return res.render('customize/private_home', err);
+			}
 		});
 
 	},

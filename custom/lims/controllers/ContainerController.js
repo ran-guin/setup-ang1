@@ -5,14 +5,7 @@
  * @help        :: See http://sailsjs.org/#!/documentation/concepts/Controllers
  */
 
-//var bodyParser = require('body-parser');
 var q = require('q');
-
-//var XLSX = require('xlsx');
-//var express = require('express');
-//var app = express();
-//app.use(require('skipper')());
-
 var xlsx = require('node-xlsx');
 
 var Logger = require('../services/logger');
@@ -121,7 +114,7 @@ module.exports = {
 		console.log("BODY" + JSON.stringify(req.body));
 
 		if (req.body) {
-			var samples = req.body['Samples'];
+			var samples = req.body['Samples'] || {};
 			var target  = req.body['Target'] || "{}";
 			var options = req.body['Options'] || "{}";
 
@@ -163,7 +156,6 @@ module.exports = {
 		q.when( Container.execute_transfer(ids, Transfer, Options) )
 		.then ( function (results) {
 			console.log("\n**Executed transfer: " + JSON.stringify(results));
-			// console.log("\n**Relocate using: " + JSON.stringify(Transfer));
 			// already handled within execute_transfer if transfer_type == Move
 			// Container.transfer_Location(results.plate_ids, Transfer);
 			return res.json(results);
@@ -178,22 +170,27 @@ module.exports = {
 	uploadMatrix : function (req, res) {
 
 		var MatrixAttribute_ID = 66;
-
 		var body = req.body || {};
+
 		// Expects 8 rows of 12 columns (A1..H12) //
 	    res.setTimeout(0);
 
 	    var samples = body.Samples;
-	    var ids = body.ids || body.plate_ids || _.pluck(Samples, 'id');
+	    var Samples;
+	    var ids = body.ids || body.plate_ids;
 
-	    if (ids && samples) {
+	    if (!ids && samples) { ids = _.pluck(samples, 'id') }
+
+	    if (ids && ids[0]) {
 		    Samples = JSON.parse(samples);
 		    var force = body.force || 1;
 		    var file = req.file('MatrixFile');
 
-		    Upload.uploadMatrixFile(file, Samples, { force: force })
+		    Upload.uploadMatrixFile(file, { update: 'barcode', samples: Samples, force: force })
 		    .then ( function (result) {
-		    	console.log("uploaded Matrix File");
+		    	console.log("uploaded Matrix File with defined samples");
+		    	console.log("ids = " + JSON.stringify(ids));
+		    	console.log("samples = " + JSON.stringify(samples));
 		    	console.log(JSON.stringify(result));
 		    	return res.render('lims/Container', { 
 								plate_ids: ids, 
@@ -214,11 +211,30 @@ module.exports = {
 			});
 		} 
 		else {
-			return res.render('lims/Container', { 
-				plate_ids: ids, 
-				Samples: Samples, 
-				errors : ["Missing ids or Samples"],
-			}); 
+		    var force = body.force || 1;
+		    var file = req.file('MatrixFile');
+
+		    Upload.uploadMatrixFile(file, { force: force, update: 'position' })
+		    .then ( function (result) {
+		    	console.log("uploaded Matrix File without samples");
+		    	console.log("FINISHED " + JSON.stringify(result));
+
+				return res.render('customize/private_home');
+				// 	'lims/Container', { 
+				// 	plate_ids: ids, 
+				// 	Samples: Samples, 
+				// 	errors : ["Missing ids or Samples"],
+				// });
+			})
+			.catch ( function (err) {
+				console.log("Error loading matrix file");
+				return res.render('customize/private_home');
+					// 'lims/Container', {
+					// plate_ids: ids, 
+					// Samples: Samples, 
+					// errors : ["Missing ids or Samples"],
+				// });
+			}) 
 		}
 
   	},
