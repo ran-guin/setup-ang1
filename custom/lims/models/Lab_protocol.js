@@ -75,21 +75,39 @@ module.exports = {
 				console.log("\nPrep ID: (just inserted) " + last_prep_id );
 				console.log("Transfer: (supplied by POST) " + JSON.stringify(data['Transfer']));
 				console.log("Options: " + JSON.stringify(data['Transfer_Options']));
+				console.log("Plate: " + JSON.stringify(data.Plate));
 				//console.log("Custom: " + JSON.stringify(data['CustomData']));
 
 				var transferred;
 				if (data['Transfer'] && data['Transfer_Options'] && data['Transfer_Options']['transfer_type']) {
 
 					data['Transfer_Options']['Prep'] = last_prep_id;
-					console.log('\n*** call Container.execute_transfer from Lab_protocol Model');
 					promises.push( Container.execute_transfer( ids, data['Transfer'], data['Transfer_Options']) );
 
 					transferred = promises.length; // point to promise index for transfer step (to retrieve appropriate sample ids)
 				}
 				else {
 					console.log("Not a transfer step..." + JSON.stringify(data));
+					
+					var qty = _.pluck(data.Plate,'Solution_Quantity');
+
+					if (qty) {
+						var qty_units = _.pluck(data.Plate,'Solution_Quantity_Units');
+						console.log("update current volume: add " + qty.join(',') + qty_units);
+						Record.adjust_volumes('container', ids, qty, qty_units);						
+					}
 				}
 				
+				// Update Solution quantities if applicable ... 
+				var sol_ids = _.pluck(data.Plate, 'FK_Solution__ID');
+				var sol_qty = _.pluck(data.Plate, 'Solution_Quantity');
+				var sol_qty_units = _.pluck(data.Plate, 'Solution_Quantity_Units');
+
+				if (sol_ids[0]) {
+					console.log("adjust reagent volumes for: " + sol_ids.join(','));
+					promises.push( Record.adjust_volumes('solution', sol_ids, sol_qty, sol_qty_units, { subtract: true }) );
+				}
+
 				console.log("save attributes to plates: " + plate_list + '; prep: ' + first_prep_id);
 
 				promises.push( Attribute.save('Plate', ids, data["Plate_Attribute"]) );

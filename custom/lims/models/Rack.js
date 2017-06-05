@@ -17,7 +17,7 @@ module.exports = {
 	attributes: {
 		Rack_ID : { type : 'integer'},
 		Rack_Name : { type : 'string' },
-		Rack_Alias : { type : 'stirng' },
+		Rack_Alias : { type : 'string' },
 		FK_Equipment__ID : { model : 'equipment'},
 		FKParent_Rack__ID : { model : 'rack'},
     Rack_Type : { 
@@ -28,6 +28,12 @@ module.exports = {
       type : 'string',
       enum : ['1', '9x9','8x12']
     },
+  },
+
+  alias: {
+    'id' : 'Rack_ID',
+    'parent' : 'FKParent_Rack__ID',
+    'name' : 'Rack_Alias',
   },
 
   subtypes : ['Shelf','Rack','Box','Slot'],
@@ -58,7 +64,24 @@ module.exports = {
   },
 
   garbage : function () {
-    return 1; 
+
+    var deferred = q.defer();
+
+    Record.query_promise("Select Rack_ID from Rack where Rack_Name = 'Garbage'" )
+    .then (function (result) {
+      if (result.length == 1) {
+        deferred.resolve(result[0].Rack_ID);
+      }
+      else {
+        deferred.resolve(null);
+      }
+      
+    })
+    .catch ( function (err) {
+      deferred.reject(err);
+    });
+
+    return deferred.promise;
   },
 
   addSlottedBox : function addSlottedBox (parent, name, size) {
@@ -103,7 +126,7 @@ module.exports = {
               var box = boxResult.insertId;
               var slots = slotResult.affectedRows;
               
-              var msg = "Added Box #" + box + " with " + slots + ' Slots'
+              var msg = "Added Box [#" + box + "] with " + slots + ' Slots'
               deferred.resolve({box: boxResult, slots: slotResult, message: msg});
             })
             .catch (function (err) {
@@ -254,7 +277,8 @@ module.exports = {
     if (wells && Mod) {
       if (ids.length == wells.length) {
         var promises = [];
-        var idField = Mod.alias('id') || 'id';
+        var idField = Record.alias(model, 'id');
+        
         for (var i=0; i<wells.length; i++) {
           var update =  "Update " + model + ", Rack SET  FK_Rack__ID = Rack.Rack_ID "
             + " WHERE Rack.FKParent_Rack__ID =" + target_rack + " AND Rack_Name = '" + wells[i] 
@@ -331,6 +355,11 @@ module.exports = {
     else if (rack_id && rack_id.constructor === String && rack_id.match(/[a-zA-Z]/)) {
       var Scanned = Barcode.parse(rack_id);
       console.log("Scanned: " + JSON.stringify(Scanned));
+      
+      if (Scanned.Errors && Scanned.Errors.length) {
+        deferred.reject(Scanned.Errors);
+      }
+
       rack_ids = Scanned['Rack'];
     }
     else if (rack_id && rack_id.constructor === Array) {
@@ -371,6 +400,10 @@ module.exports = {
       fields.push('Parent.Rack_Alias as box_alias');
       conditions.push("Parent.Rack_ID=Rack.FKParent_Rack__ID");
       conditions.push("Parent.Rack_Alias = '" + rack_name + "'");      
+    }
+    else {
+      conditions.push('0');
+      deferred.reject("No rack conditions specified");
     }
 
     if (rows) {

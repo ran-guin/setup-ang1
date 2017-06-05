@@ -27,13 +27,23 @@ module.exports = {
 		FK_Rack__ID: { model: 'rack'},
 		// FK_Pipeline__ID: { model: 'pipeline'},
 		FK_Employee__ID: { model: 'employee'},
+		Plate_Comments: { type: 'string'},
+		Plate_Status: { 
+			type: 'string', 
+			enum: ['Active','Pre-Printed','Reserved','Temporary','Failed','Thrown Out','Exported','Archived','On Hold']
+		}
 
 	},
 
-	alias: function (name) {
-		// enable customization of field names if non-standard //
-		var alias = { 
+    related: {
+            table: 'Tube',
+            fk: 'FK_Plate__ID',
+            custom: {}
+    },
+
+	alias: {
 			'id' : 'Plate_ID',
+			'BCG_id' : 'Plate_ID',
 			'Parent' : 'FKParent_Plate__ID',
 			'qty' : 'Current_Volume',
 			'qty_units' : 'Current_Volume_Units',
@@ -43,10 +53,6 @@ module.exports = {
 			'location' : 'FK_Rack__ID',
 			'target_format' : 'FK_Plate_Format__ID',
 			'target_sample' : 'FK_Sample_Type__ID',
-		}
-
-		var field = alias[name];
-		return field;  // return null if no alias defined... 
 	},
 
 	track_history: [
@@ -69,6 +75,45 @@ module.exports = {
 			});
 
 			return deferred.promise;
+	},
+
+	loadViewData : function (ids, condition, options) {			
+		var deferred = q.defer();
+
+		Container.loadData(ids, condition, options)
+		.then (function (data) {
+			console.log("loaded data " + JSON.stringify(data));
+			
+			var sampleList = [];
+
+			for (var i=0; i<data.length; i++) {
+				sampleList.push(data[i].id);
+			}
+
+			console.log("g1");
+			var get_last_step = {}; // Protocol_step.parse_last_step(data);  
+
+			var last_step = get_last_step.last_step;
+			console.log("g1");
+
+			if (get_last_step.warning) { warnings.push(get_last_step.warning) }
+			console.log("g2");
+
+			var viewData = {
+			    plate_ids: ids.join(','), 
+			    last_step : last_step, 
+			    Samples: data , 
+			};
+
+			// console.log("returned viewData " + JSON.stringify(viewData));
+			deferred.resolve(viewData);
+		})
+		.catch ( function (err) {
+			console.log("error retrieving plate data");
+			deferred.reject();
+		});
+
+		return deferred.promise;
 	},
 
 	loadData : function (ids, condition, options) {
@@ -134,6 +179,7 @@ module.exports = {
 				fields.push("MAX(protocol_step.step_number) as last_step_number");
 				fields.push("Prep.Prep_Name as last_step");
 				fields.push("CASE WHEN Prep.Prep_Name like 'Completed %' THEN 'Completed' WHEN Prep.Prep_Name IS NULL THEN 'N/A' ELSE 'In Process' END as protocol_status");
+				fields.push('GROUP_CONCAT(DISTINCT custom_settings) as transfer_settings');
 			}
 
 			if ( include.match(/position/) ) {
@@ -141,7 +187,7 @@ module.exports = {
 				left_joins.push('Rack AS Box ON Rack.FKParent_Rack__ID=Box.Rack_ID');
 				fields.push ("case WHEN Box.Rack_Type='Box' THEN Box.Rack_ID ELSE NULL END as box_id");
 				fields.push ("case WHEN Box.Rack_Type='Box' THEN Box.Capacity ELSE NULL END as box_size");
-				fields.push ("case WHEN Rack.Rack_Type='Slot' THEN Rack.Rack_Name ELSE NULL END as position");
+				fields.push ("Rack.Rack_Name as position");
 			}
 
 			if ( include.match(/attribute/) ) {
@@ -154,16 +200,27 @@ module.exports = {
 
 		    Record.query(query, function (err, result) {
 		    	if (err) {
+		    		console.log("Error with query ? " + err);
 		    		deferred.reject(err);
 		    	}
 		    	else {
 
 		    		for (var i=0; i<result.length; i++) {
+
+		    			if (result[i].transfer_settings && result[i].transfer_settings.match('transfer_type') ) {
+
+		    				var transfer_settings = JSON.parse(result[i].transfer_settings);
+		    				result[i].last_step_transfer_type = transfer_settings.transfer_type;
+		    				result[i].last_step_was_transfer = true;
+		    				result[i].last_step_transfer_settings = transfer_settings;
+		    			}
+		    			else { result[i].transfer_step = false}
+		    				
 		    			if (
-		    				result[i].protocol_status == 'In Process' 
-		    				&& result[i].last_step && result[i].last_step.constructor === String 
-		    				&&  result[i].last_step.match(/^(Aliquot|Extract|Transfer|Pre-Print) /)
-		    				&& ! result[i].last_step.match(/ out to /) 
+		    				result[i].protocol_status == 'In Process' && result[i].transfer_step
+		    				// && result[i].last_step && result[i].last_step.constructor === String 
+		    				// &&  result[i].last_step.match(/^(Aliquot|Extract|Transfer|Pre-Print) /)
+		    				// && ! result[i].last_step.match(/ out to /) 
 		    				) {
 		    					// differentiate internal transfer steps from later (inapplicable) steps 
 		    					result[i].protocol_status = 'Completed Transfer';
@@ -278,7 +335,6 @@ module.exports = {
 		// 
 		// Returns: create data hash for new Plates.... (need to be able to reset samples attribute within Protocol controller (angular)
 
-		console.log("Executing Container Transfer ... " + Options.transfer_type);
 		var deferred = q.defer();
 
 		if (ids && Transfer && Options.transfer_type === 'Move') {
@@ -361,6 +417,7 @@ module.exports = {
 		
 		var resetSource = {};
 		var resetTarget = {};
+		var resetSolution = {};
 
 		var creation_date = Options.timestamp || '<now>';
 		var resetClone = {
@@ -383,10 +440,11 @@ module.exports = {
 		}
 		else if (Options.transfer_type === 'Transfer' ) {
 			resetSource['Plate_Status'] = 'Thrown Out';
+			// set location to garbage below (since it requires promise)
 		}
 
-		var qtyField = Container.alias('qty');
-		var qtyUnits = Container.alias('qty_units');
+		var qtyField = Container.alias.qty;
+		var qtyUnits = Container.alias.qty_units;
 
 		if ( ! Options.solution_qty ) { Options.solution_qty = 0 }
 
@@ -394,7 +452,7 @@ module.exports = {
 			Options.solution_qty = parseFloat(Options.solution_qty);
 		}
 		
-		if (Transfer[0].qty && Options.transfer_type !== 'Pre-Print') {
+		if (Options.transfer_type !== 'Pre-Print') {              // && Transfer[0].qty &&    ... need to allow for 0 qt... 
 			resetTarget[qtyUnits] = Transfer[0].qty_units || Options.transfer_qty_units;
 			var quantities = [];
 			var adjustments = [];
@@ -402,7 +460,7 @@ module.exports = {
 			for (var i=0; i<Transfer.length; i++) {		
 				
 				var target_qty = Transfer[i].qty;
-				if (target_qty && target_qty.constructor === String) {
+				if (target_qty.constructor === String && target_qty.length) {   // need to allow for 0ml transfer (eg DNA extraction)
 					target_qty = parseFloat(target_qty);
 				}
 				
@@ -421,7 +479,15 @@ module.exports = {
 					adjustments.push(0);
 				}
 				else {	
-					adjustments.push("<" + qtyField + " - " + Transfer[i].qty + ">");		
+					var F = qtyField;
+					var V = Transfer[i].qty;
+
+					var rounded = "<CASE WHEN " + F + ' - ' + V + ' < ' + F + ' /1000 THEN 0 ELSE ' + F + ' - ' + V + " END>";
+					// This prevents volumes reaching extremely low non-zero values due to floating point rouunding errors.
+					adjustments.push(rounded);
+
+					console.log(rounded);
+					console.log(qtyField + ' - ' + Transfer[i].qty);
 				}
 			}
 			resetTarget[qtyField] = quantities;
@@ -429,6 +495,8 @@ module.exports = {
 		}
 		else if (Options.solution_qty) {
 			resetTarget[qtyField] = Options.solution_qty;
+			resetSolution['qty'] = Options.solution_qty;
+			resetSolution['qty_units'] = Transfer[0].qty_units || Options.transfer_qty_units;
 		}
 
 		// Target options 
@@ -445,10 +513,29 @@ module.exports = {
 
 		}
 
-		var reset = { target: resetTarget, clone: resetClone, source: resetSource}
-		deferred.resolve(reset);
+		var reset = { target: resetTarget, clone: resetClone, source: resetSource, solution: resetSolution};
 
-		console.log('Reset:  ' + JSON.stringify(reset));
+		if (Options.transfer_type === 'Transfer' ) {
+			Rack.garbage()
+			.then (function (id) {
+				resetSource['FK_Rack__ID'] = id;
+				reset.source = resetSource;
+
+				console.log('Reset:  ' + JSON.stringify(reset));
+				deferred.resolve(reset);
+			})
+			.catch ( function (err) {
+				console.log('Error retrieving garbage location');
+				console.log('Reset:  ' + JSON.stringify(reset));
+
+				deferred.resolve(reset);			
+			});
+		}
+		else {
+			console.log('Reset:  ' + JSON.stringify(reset));
+			deferred.resolve(reset);
+		}
+
 		return deferred.promise;
 	},
 
@@ -462,6 +549,7 @@ module.exports = {
 			var resetTarget = result.target;
 			var resetSource = result.source;
 			var resetClone  = result.clone;
+			var resetSolution = result.solution;
 
 			console.log("\n*** Reset Values: " + JSON.stringify(result));
 
@@ -501,7 +589,8 @@ module.exports = {
 					// clone new plates 
 					// Add new records to Database //
 					var clone_ids = _.pluck(Transfer,'source_id');
-					Options['id'] = Container.alias('id');
+					Options['id'] = Container.alias.id;
+
 					console.log("Clone Plates: " + clone_ids.join(','));
 					Record.clone('container', clone_ids, _.extend(resetTarget, resetClone), Options)
 					.then ( function (cloneData) {

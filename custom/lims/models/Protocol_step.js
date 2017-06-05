@@ -65,18 +65,20 @@ module.exports = {
 			var names = _.uniq( _.pluck(data, 'last_step') );
 			var numbers = _.uniq( _.pluck(data, 'last_step_number') );
 			var statuses = _.uniq( _.pluck(data, 'protocol_status') );
+			var transfer = _.uniq( _.pluck(data, 'last_step_transfer_type') );
+			var settings   = _.uniq( _.pluck(data, 'transfer_settings') );
 
 			if (protocol_ids.length > 1) {
 				var protocols = _.uniq( _.pluck(data, 'last_protocol') );								
 				sails.config.warnings.push("Samples appear to be at different stages of the pipeline: ['" + protocols.join("' AND '") + "']");
 			}
 			else if (numbers.length > 1) {
-				sails.config.warnings.push("Samples appear to be at different stages of the last protocol: " + steps.join(' AND ') );
+				sails.config.warnings.push("Samples appear to be at different stages of the last protocol: " + names.join(' AND ') );
 				last_step = { protocol_id : protocol_ids[0]}
 			}
 			else {
 				var protocols = _.uniq( _.pluck(data, 'last_protocol') );
-				last_step = { protocol: protocols[0], protocol_id : protocol_ids[0], number: numbers[0], name: names[0], status: statuses[0] }
+				last_step = { protocol: protocols[0], protocol_id : protocol_ids[0], number: numbers[0], name: names[0], status: statuses[0], transfer_type: transfer, transfer_settings: settings};
 			}
 
 			console.log("Last Step: " + JSON.stringify(last_step));
@@ -154,7 +156,10 @@ module.exports = {
 		var list = [];
  		for (i=0; i<query_result.length; i++) {
 			var input = query_result[i]['input_options'];
-			if (input) { 				var stepInput = input.split(':');
+			if (input) { 	
+				var cleaned = input.replace(/\*/g,'');
+				var stepInput = cleaned.split(':');
+
 				list = _.union(list, stepInput);
 			}
 		}

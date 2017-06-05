@@ -11,7 +11,8 @@ var request = require('request');
 module.exports = {
 
   viewFields : ['id','name','createdAt'],
-
+  migrate: 'safe',
+  
   attributes: {
     // The user's full name
     // e.g. Nikola Tesla

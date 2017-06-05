@@ -11,6 +11,7 @@ module.exports = {
 	migrate: 'safe',
 
  	attributes: {
+ 		Shipped_Object_ID : { type : 'number' },
 		FK_Shipment__ID: { type : 'number' },
 		FK_Object_Class__ID: { type: 'number' },
 		Object_ID : { type: 'number' }
