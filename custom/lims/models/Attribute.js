@@ -22,8 +22,10 @@ module.exports = {
 
 	models : [ 'container', 'prep' ],  // models with attributes...
 
-	insertHash : function (model, id, att_id, value) {
+	insertHash : function (model, id, att_id, value, user, timestamp) {
 		var hash = {};
+
+		if (!timestamp) { timestamp = 'CURDATE()' }
 
 		var Mod = sails.models[model];
 
@@ -33,7 +35,9 @@ module.exports = {
 
 		var hash = {
 			FK_Attribute__ID : att_id,
-			Attribute_Value : value
+			Attribute_Value : value,
+			FK_Employee__ID : user,
+			Set_DateTime : timestamp
 		};
 
 		hash[field] = id;
@@ -82,7 +86,7 @@ module.exports = {
 		var Mod = sails.models[model] || {};
 		var table = Mod.tableName || model;
 
-		if ( Attribute.models.indexOf(model) ) {
+		if ( Attribute.models.indexOf(model) >= 0) {
 			console.log('clone attributes for ' + table + ' Record(s): ' + targets.join(',' ));
 
 			var source_list = sources.join(',');
