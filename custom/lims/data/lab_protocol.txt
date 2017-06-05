@@ -16,7 +16,7 @@ EDTA RBC WBC Protocol	1	Archived	Protocol for handling blood cell mixing.	NULL	1
 Weigh Tube	1	Active	Calculate sample volume by weighing tube & subtracting empty weight	NULL	NULL	1	16	NULL	NULL
 Saliva DNA Extraction	1	Active	DNA extraction from Saliva	13	9	1	17	NULL	NULL
 Sucrose Extraction	1	Active	Sucrose DNA extraction from RBC/WBC samples	NULL	NULL	1	18	NULL	NULL
-Gender_Test	41	Active	Track Gender Test Results for Samples	NULL	NULL	2	19	NULL	NULL
+Sex Test	41	Active	Track Gender Test Results for Samples	NULL	NULL	2	19	NULL	NULL
 DNA_Quantification	41	Active	Update DNA Quantification information	NULL	NULL	2	20	NULL	NULL
 Test Protocol	0	Archived	Test input 	NULL	NULL	0	21	NULL	NULL
 DNA Extraction	41	Active	DNA Extraction Protocol	NULL	4	0	22	2016-05-05 00:00:00	2016-05-05 00:00:00
