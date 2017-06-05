@@ -35,7 +35,6 @@ Attribute_ID	Attribute_Name	Attribute_Format	Attribute_Type	FK_Grp__ID	Inherited
 42	CDG_Batch_Identifier		text	23	No	Submission	Editable	NULL
 43	Tube_Weight_in_g	NULL	Decimal	23	No	Plate	Editable	This attribute can be used to calculate accurate volumes. If this attribute is entered and Plate_Format.Wells = 1 and Container Format has defined Empty_Container_Weight_g, the following calculation will be performed: 1. Subtract empty tube weight from entered (measured) weight. 2. convert grams to ml (assuming water density)
 48	Sex_Test_Result		ENUM('M','F','U')	8	Yes	Plate	Editable	NULL
-50	Qiagen_Lot_Number		varchar	3	Yes	Prep	Editable	NULL	NULL
 51	DNA_Wash_Cycles		Int	3	Yes	Plate	Editable	
 52	DNA_230		Decimal	3	Yes	Plate	Editable	
 53	DNA_260		Decimal	3	Yes	Plate	Editable	
@@ -48,10 +47,11 @@ Attribute_ID	Attribute_Name	Attribute_Format	Attribute_Type	FK_Grp__ID	Inherited
 58	DNA_UV_Batch		Text	3	Yes	Plate	Editable	
 59	DNA_Conc_Picogreen		Decimal	3	Yes	Plate	Editable	
 60	DNA_Conc_PG_Batch		Text	3	Yes	Plate	Editable	
-61	DNA_BGLOBIN_Batch		Text	3	Yes	Plate	Editable	
+61	DNA_BGLOBIN_Batch		Text	3	No	Prep	Editable	
 62	DNA_PCR_BGLOBIN		Int	3	Yes	Plate	Editable	
 63	Thaw_Temp		Int	3	Yes	Prep	Editable	
 64	Untracked_Thaw_Count		Int	3	Yes	Source	Editable	
 65	Untracked_Thaw_Count		Int	3	Yes	Plate	Editable	
 66	Matrix_Barcode		Int	3	Yes	Plate	Editable	
 67	Sex_Test_Batch	Int	8	No	Prep	Editable	NULL
+68	Thaw_Method	ENUM('Refrigerator','Ice Bath','Water Bath','Incubator','Heat Block', 'Bench Top')	8	No	Prep	Editable	NULL
