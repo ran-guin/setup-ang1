@@ -86,12 +86,6 @@ module.exports = {
     }
   },
 
-  initData : [
-    { name : 'Admin', email : 'admin@domain.com' },
-    { name : 'DemoUser', email: 'demo@domain.com' },
-    { name : 'Guest', email : 'guest@domain.com' },
-  ],
-
   payload : function (user, options) {
       var deferred = q.defer();
 
@@ -135,6 +129,27 @@ module.exports = {
       deferred.resolve(payload);
       return deferred.promise;
   },
+
+  validate : function  () {
+    // customizable ... 
+    var deferred = q.defer();
+
+// , user.FK_Employee__ID as alDenteID
+   
+    var query = "SELECT user.id, user.name, encryptedPassword, email, user.access FROM user"
+    + " WHERE email ='" + tryuser + "' OR user.name = '" + tryuser + "'" 
+    + " GROUP BY user.id";
+
+    console.log("Q: " + query);
+    Record.query_promise(query)
+    .then (function (result) {
+      deferred.resolve(result);
+    })
+    .catch ( function (err) {
+      deferred.reject(err);
+    })
+    return deferred.promise;
+  }
 
   alDente_verification : function (session) {
     console.log("Validate: " + session);
