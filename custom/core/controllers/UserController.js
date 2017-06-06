@@ -198,7 +198,7 @@ module.exports = {
       }
     }
     else {
-      Printer_group.printer_groups()
+      Config.printer_groups()
       .then ( function (printers) {
         console.log("Loaded Printer Groups " + JSON.stringify(printers));
         return res.render('customize/public_home', { printers : printers });
@@ -207,6 +207,7 @@ module.exports = {
         return res.render('customize/public_home');
       });
     }
+
   },
 
 
@@ -249,7 +250,7 @@ module.exports = {
           // the sign-up form --> signup.jade
             console.log("Create user : " + user);
                     
-            Printer_group.printer_groups()
+            Config.printer_groups()
             .then (function (printers) {
 
               var data = {
@@ -415,7 +416,7 @@ module.exports = {
       // Wipe out the session (log out)
       req.session.User = null;
 
-      Printer_group.printer_groups()
+      Config.printer_groups()
       .then (function (result) {
         return res.render('customize/public_home', { printers : result } );
       })
