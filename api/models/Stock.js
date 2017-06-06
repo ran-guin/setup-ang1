@@ -17,7 +17,8 @@ module.exports = {
 
 	},
 
-	legacy_map : {
+	alias : {
+		'id' : 'Stock_ID',
 		'number_in_batch' : 'Stock_Number_in_Batch',
 		'received' : 'Stock_Received',
 		// 'type' : 'Stock_Type',
