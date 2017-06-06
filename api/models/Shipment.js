@@ -28,7 +28,7 @@ module.exports = _.merge({}, BaseModel, {
     'parent_Shipment' : 'FKOriginal_Shipment__ID',
     'sample_condition' : 'Sample_Condition',
     'Received_by' : 'FKRecipient_Employee__ID',
-    'Sent_by' : 'FKSender_Employee__ID'
+    'Sent_by' : 'FKSender_Employee__ID',
   }
  
 });
