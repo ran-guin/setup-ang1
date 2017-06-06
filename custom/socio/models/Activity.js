@@ -29,10 +29,6 @@ module.exports = {
       type: 'string'
     },
 
-    members: {
-      collection: 'user',
-      via: 'activities'
-    }
   }
 };
 

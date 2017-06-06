@@ -9,7 +9,7 @@ connections: {
     host:     'localhost',
     user:     'tester',
     password: 'testpass',
-    database: 'social',
+    database: 'social_test',
   },
   
   productionDB: {
@@ -18,6 +18,14 @@ connections: {
     user:     'tester',
     password: 'testpass',
     database: 'social',
+  },
+  
+  demoDB: {
+    adapter: 'sails-mysql',
+    host:     'localhost',
+    user:     'tester',
+    password: 'testpass',
+    database: 'social_demo',
   },
 },
 
