@@ -13,7 +13,8 @@ module.exports = {
 
   	},
 
-  	legacy_map : {
+  	alias : {
+  		'id'    : 'Equipment_ID',
   		'name'   : 'Equipment_Name',
   		'number' : 'Equipment_Number',
 		'number_in_batch' : 'Equipment_Number_in_Batch',
@@ -21,7 +22,8 @@ module.exports = {
 		'location'   : 'FK_Location__ID',
 		'comments'  : 'Equipment_Comments',
 		'status'    : 'Equipment_Status',
-		'serial'    : 'Serial_Number'
+		'serial'    : 'Serial_Number',
+		'serial_number'    : 'Serial_Number'
  	}
 };
 
