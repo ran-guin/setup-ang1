@@ -33,6 +33,7 @@ module.exports = {
 		var map = Mod.alias || Mod.legacy_map || {};
 
 		if (map && map[alias]) {
+			console.log("alias : " + map[alias]);
 			return map[alias];
 		}
 		else { return alias }
@@ -481,50 +482,64 @@ module.exports = {
 		var models   = Object.keys(Prefix);
 
 		var promises = [];
+		var check_models = [];
 
 		var models = Object.keys(scope);
 		for (var i=0; i< models.length; i++) {
 			var Mod = sails.models[models[i]] || {};
 			var table = Mod.tableName || models[i];
-			var primaryField = Mod.primaryField || 'id';
+			var primaryField = Record.alias(models[i], 'id') || 'id';
+
 			console.log("primary field for " + models[i] + Mod.primaryField);
 
 			var fields = scope[models[i]];
 			var selectFields = primaryField;
-			if (fields.length) { selectFields = selectFields +  ',' + fields.join(',') }
+
+
+			// if (fields.length) { selectFields = selectFields +  ',' + fields.join(',') }
 			var query = "SELECT " + selectFields + " FROM " + table;
 			
 			var search_condition = '';
-			if (search) {
-				var add_condition = [];
-				for (var j=0; j<fields.length; j++) {
-					add_condition.push(fields[j] + " LIKE '%" + search + "%'");
+			var add_condition = [];
+			for (var j=0; j<fields.length; j++) {
+				var field = Record.alias(models[i], fields[j]);
+				console.log("GET " + field + " for " + fields[j] + ' in ' + models[i]);
+
+				if (field === fields[j]) {
+					selectFields += ', ' + fields[j];
+				}
+				else {
+					selectFields = selectFields + ', ' + field + ' AS ' + fields[j];
 				}
 
-				if (Prefix[table]) {
+				if (search) { add_condition.push(field + " LIKE '%" + search + "%'") }
+			}
 
-					var regex = new RegExp(Prefix[table] + '(\\d+)','ig');
-					var found = search.match(regex);
+			query = "SELECT " + selectFields + " FROM " + table;
 
-					var regex2 = new RegExp(Prefix[table], 'i');					
-					var ids = [];
-					if (found) {
-						ids = found.map( function(x) {
-							foundLength = x.length;
-							return x.replace(regex2,'');
-						});
-					}
+			if (Prefix[table] && search) {
 
-					var barcode_ids = ids.join(',');
+				var regex = new RegExp(Prefix[table] + '(\\d+)','ig');
+				var found = search.match(regex);
 
-					if (barcode_ids) {
-						add_condition.push(primaryField + ' IN (' + barcode_ids + ')' );
-					}
+				var regex2 = new RegExp(Prefix[table], 'i');					
+				var ids = [];
+				if (found) {
+					ids = found.map( function(x) {
+						foundLength = x.length;
+						return x.replace(regex2,'');
+					});
 				}
 
-				if (add_condition.length) {	
-					search_condition = '(' + add_condition.join(' OR ') + ')';
+				var barcode_ids = ids.join(',');
+
+				if (barcode_ids) {
+					add_condition.push(primaryField + ' IN (' + barcode_ids + ')' );
 				}
+			}
+
+			if (add_condition.length) {	
+				search_condition = '(' + add_condition.join(' OR ') + ')';
 			}
 
 			if (condition &&  condition.constructor === Object && condition[table] )  { query = query + " WHERE " + condition[table] }
@@ -536,7 +551,9 @@ module.exports = {
 				query = query + " AND " + search_condition;
 				console.log("\n** Search: " + query);
 				promises.push( Record.query_promise(query));
+				check_models.push(models[i]);
 			}
+
 		}
 			
 		console.log(foundLength + ' vs ' + search.length);
@@ -546,7 +563,7 @@ module.exports = {
 		.then ( function ( results ) {
 			for (var i=0; i<results.length; i++) {
 				if (results[i] && results[i].length) {
-					Found[models[i]] = results[i];
+					Found[check_models[i]] = results[i];
 				}
 			}
 			console.log("Found: " + JSON.stringify(Found));
@@ -554,7 +571,7 @@ module.exports = {
 			deferred.resolve(Found);
 		})
 		.catch ( function (err) {
-			Logger.error(err, 'search error', 'remote search');
+			// Logger.error(err, 'search error', 'remote search');
 			console.log("Error searching tables: " + err);
 			deferred.reject(err);
 		});
