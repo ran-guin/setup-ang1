@@ -471,12 +471,11 @@ module.exports = {
 
 		if (! scope ) {
 			// Generic Search 
-			scope = { 
-				'user' : ['email', 'name'], 
-			};
+			scope = sails.config.searchScope || {}
 		}
 
 		console.log("Condition: " + JSON.stringify(condition));
+		console.log("*** Scope: " + JSON.stringify(scope));
 
 		var Prefix = Barcode.prefix();
 		var models   = Object.keys(Prefix);
