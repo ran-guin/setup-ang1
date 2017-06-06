@@ -53,6 +53,7 @@ module.exports = {
 			'location' : 'FK_Rack__ID',
 			'target_format' : 'FK_Plate_Format__ID',
 			'target_sample' : 'FK_Sample_Type__ID',
+			'comments' : 'Plate_Comments',
 	},
 
 	track_history: [
