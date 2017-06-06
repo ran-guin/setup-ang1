@@ -20,8 +20,6 @@ module.exports = {
       required: true
     },
 
-    FK_Employee__ID : { type : 'int' }, // legacy reference to alDente ID .. 
-
     access: {
       type: 'string',
       enum: ['public', 'lab', 'research', 'lab admin', 'admin'],
@@ -137,7 +135,7 @@ module.exports = {
 
     return deferred.promise;
 
-  }
+  },
 
   remote_session_payload : function (session) {
     // eanble validation based upon a separate UI session (customized session retrieval using 'get_remote_session()' )
@@ -181,7 +179,7 @@ module.exports = {
     })
         
     return deferred.promise;
-  }
+  },
 
   validate : function  (tryuser) {
     // customizable ... 
