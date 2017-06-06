@@ -18,7 +18,7 @@ app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
 */
 
 var bodyParser = require('body-parser');
-var Logger = require('../services/logger');
+// var Logger = require('../services/logger');
 
 module.exports = {
   /**
@@ -128,7 +128,7 @@ module.exports = {
             sails.config.errors   = [];
 
             if (!access || access === 'public') {
-              Logger.info('access denied', 'login');
+              // // Logger.info('access denied', 'login');
               return res.render('customize/public_home', { 'message' : 'Access still pending approval by Administrator'});
             } 
             else {
@@ -375,7 +375,7 @@ module.exports = {
 
           })
           .catch ( function (err) {
-            Logger.warning(err, 'could not reset password', 'resetPassword');
+            // Logger.warning(err, 'could not reset password', 'resetPassword');
             return res.negotiate("Error updating new password");
           });
         }
