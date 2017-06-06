@@ -33,7 +33,7 @@ module.exports = {
     console.log('sess: ' + JSON.stringify(req.session));
     console.log('params : ' + JSON.stringify(req.session.params));
 
-    if (req.session && req.session.params  && req.session.params) {
+    if (req.session && req.session.params  && req.session.params && req.session.params.user) {
       var page = req.session.params.defaultPage || 'homepage';
       res.render('customize/User', req.session.params );
     }
@@ -189,8 +189,13 @@ module.exports = {
 
     console.log("Payload = " + JSON.stringify(req.session.payload));
 
-    if ( req.session.payload) {
-      return res.render('customize/private_home', req.session.payload);
+    if ( req.session.payload && req.session.payload.user) {
+      if (! req.session.payload.access || req.session.payload.access === 'public') {
+        return res.render('customize/public_home', {message: 'No valid user with access privileges'} );
+      }
+      else {
+        return res.render('customize/private_home', req.session.payload);
+      }
     }
     else {
       Printer_group.printer_groups()
