@@ -25,7 +25,7 @@ block content
 		hr
 		each m, model in data
 			- var records = data[model];
-			button.btn.btn-primary(onclick="getElementById('found#{model}').style.display='block'") 
+			button.btn.btn-success(onclick="getElementById('found#{model}').style.display='block'") 
 				b #{model} : #{records.length} Records 
 			span &nbsp; &nbsp;
 			button.btn.btn-danger(onclick="getElementById('found#{model}').style.display='none'") x
@@ -84,5 +84,24 @@ block content
 			b No records found	 
 			p &nbsp;
 			
-		hr
-		b Raw Results: #{ JSON.stringify(data) }
+		if scope
+			button.btn.btn-warning(onclick="getElementById('searchScope').style.display='block'") 
+				b View list of Tables checked:
+			span &nbsp; &nbsp;
+			button.btn.btn-danger(onclick="getElementById('searchScope').style.display='none'") 
+				b x
+			div(id='searchScope' style='display:none; border: 1px solid blac')
+				ul
+					each i, model in scope
+						li 
+							h4 #{model}:
+						ul
+							- var fields = scope[model]
+							ul
+								each field in fields
+									li #{field}
+		
+		if debug || 1
+			hr
+			h3 Raw Results: 
+			b #{ JSON.stringify(data) }
