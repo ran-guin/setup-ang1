@@ -6,7 +6,10 @@ var BaseModel = require("./../../custom/core/models/User.js");
 
 module.exports = _.merge({}, BaseModel, {
 
+  migrate: 'safe',
   attributes: {
+
+    FK_Employee__ID : { type : 'int' }, // legacy reference to alDente ID .. 
 
   },
 
