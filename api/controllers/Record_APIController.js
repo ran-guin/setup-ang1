@@ -46,7 +46,10 @@ module.exports = {
 				'container' : ['comments'],
 				'equipment' : ['name', 'serial_number'],
 				'stock' : [ 'PO_Number', 'notes', 'Requisition_Number', 'lot_number'],
-				'prep'  : [ 'comments']
+				'prep'  : [ 'comments'],
+				'shipment' : ['waybill_number', 'comments'],
+				'lab_protocol' : ['name'],
+				'protocol_step' : ['name', 'message'],
 			};
 		}
 
@@ -93,7 +96,7 @@ module.exports = {
 				console.log("Generate Search Results");
 				console.log(JSON.stringify(result));
 
-				return res.render('customize/searchResults', {data: result, title: "Search Results for '" + search + "'"});
+				return res.render('customize/searchResults', {data: result, title: "Search Results for '" + search + "'", scope: scope});
 			}
 		})
 		.catch ( function (err) {
