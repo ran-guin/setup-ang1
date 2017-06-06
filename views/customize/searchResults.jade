@@ -1,0 +1,88 @@
+// Generic template for injecting simple query data into an html table in an existing page
+//
+// Input:
+//   - title (optional title for heading to table)
+//   - fields (array of data keys used for headings - should match keys in data
+//          Note: may use 'A as B'  for readability where A is data heading and B is column heading)
+//   - data (hash of SQL results - or similarly formatted data 
+//         - eg [ { col1 : v11, col2: v12, ...}, { col1 : val21, col2: v22, ...}])
+//
+//	Options:
+//    - href (hash of optional href links: eg { 'A' : 'http:/data/example?val=<A>'})
+//          actual record value will replace tags matching label
+//    - record (in conjunction with href, record indicates that values to be used for record id) 
+//          eg { 'A' : 'Link to A' } -> this would yield
+//    
+//    - iconify (shrink longer output into icons)
+//          eg { 'A' { title : 'A values', icon: 'question-circle' } - uses fa.fa-question-circle for icon to tooltip... 
+//
+extends privateLayout
+block content
+	- var max = 100
+	.container(id='searchResultsData')
+		- var alias = {};
+		h2 #{title}
+		hr
+		each m, model in data
+			- var records = data[model];
+			button.btn.btn-primary(onclick="getElementById('found#{model}').style.display='block'") 
+				b #{model} : #{records.length} Records 
+			span &nbsp; &nbsp;
+			button.btn.btn-danger(onclick="getElementById('found#{model}').style.display='none'") x
+			
+			br 
+			br
+			table.table.table-bordered(id='found#{model}' style='display:none')
+				tr
+					if records && records.length
+						- var fields = [];
+						thead
+							each i, field  in records[0]
+								- var key = field.match(/ as \w+$/)
+								if key && key.length
+									- label = key[0].replace(' as ','');
+									- alias[field] = label;
+								else 
+									- label = field;
+								th.bg-primary()
+									b #{label}
+								- fields.push(field)
+
+						each record,i in records
+							if i < max
+								tr
+									each field, i in fields
+										- var key = alias[field] || field;
+										td()
+											- var display = record[key]
+											if href && href[key]
+												- ref = href[key].replace('<' + key + '>', record[key])
+												a(href="#{ref}")
+													b !{record[key]}
+											else
+												if iconify && iconify[key] && record[key]
+													- icon = iconify[key] || 'question-circle'
+
+													a(id="Hide#{key}#{i}" href='#' onclick="document.getElementById('Hide#{key}#{i}').style.display='none'; document.getElementById('Show#{key}#{i}').style.display='block';return false;")
+														i(class="fa fa-" + icon)
+
+													a(id="Show#{key}#{i}" style='display:none' href='#' onclick="document.getElementById('Hide#{key}#{i}').style.display='block'; document.getElementById('Show#{key}#{i}').style.display='none'; return false;")
+														i(class="fa fa-close")
+														span() &nbsp; !{record[key]}
+												else
+													b !{record[key]}
+							else 
+								tr
+									td.text-danger(colspan='#{fields.length}') .... 
+								tr
+									td.text-danger(colspan='#{fields.length}') (displayed records currently limited to #{max})
+								- break
+					else 
+						td No records found 
+			hr
+		if ! data
+			b No records found	 
+			p &nbsp;
+			
+		hr
+		b Raw Results: #{ JSON.stringify(data) }
