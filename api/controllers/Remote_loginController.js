@@ -79,10 +79,10 @@ module.exports = {
 		var body = {};
 		if (req.body) { body = req.body }
 
-		var session = body.alDente_session;
+		var session = body.alDente_session;  // change to more generic name .. external_session (in alDente... )
 		console.log("Check session: " + session);
 
-		User.alDente_verification(session)
+		User.remote_session_payload(session)
 		.then ( function (payload) {
 			payload['token'] = jwToken.issueToken(payload); 
 			console.log("\n** alDente Session Info: " + JSON.stringify(payload));
