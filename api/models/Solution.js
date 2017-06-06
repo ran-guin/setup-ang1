@@ -13,7 +13,8 @@
 
 	},
 
-  	legacy_map : {
+	alias : {
+		'id' : 'Solution_ID',
   		'number' : 'Solution_Number',
 		'number_in_batch' : 'Solution_Number_in_Batch',
 		'expiry' : 'Solution_Expiry',
@@ -24,12 +25,6 @@
 		'rack'   : 'FK_Rack__ID',
 		'notes'  : 'Solution_Notes',
  	},
-
-	alias: {
-		'id' : 'Solution_ID',
-		'qty' : 'Solution_Quantity',
-		'qty_units' : 'Solution_Quantity_Units',
-	},
 
 };
 
