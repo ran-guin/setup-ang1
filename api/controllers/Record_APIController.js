@@ -43,7 +43,10 @@ module.exports = {
 			// Generic Search 
 			scope = { 
 				'user' : ['email', 'name'],
-				'container' : []
+				'container' : ['comments'],
+				'equipment' : ['name', 'serial_number'],
+				'stock' : [ 'PO_Number'],
+				'prep'  : [ 'comments']
 			};
 		}
 
@@ -90,11 +93,11 @@ module.exports = {
 				console.log("Generate Search Results");
 				console.log(JSON.stringify(result));
 
-				return res.render('customize/private_home');
+				return res.render('customize/searchResults', {data: result, title: "Search Results for '" + search + "'"});
 			}
 		})
 		.catch ( function (err) {
-			return res.json(err);
+			return res.render('customize/private_home', { error: err})
 		});
 	},
 
