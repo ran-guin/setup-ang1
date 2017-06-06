@@ -11,6 +11,21 @@ module.exports = {
   migrate: 'safe',
   tableName: 'Prep',
 
+ attributes: {
+    Prep_ID : { type : 'number' },
+    Prep_Comments : { type : 'string' },
+    // action : { 
+    //   type : 'string',
+    //   enum : ['Completed','Failed','Skipped'],
+    // },
+    // createdBy : { model : 'employee' },
+    // Lab_protocol : { model : 'lab_protocol' },
+  },
+
+  alias : {
+    'id' : 'Prep_ID',
+    comments : 'Prep_Comments'
+  }
   /** NEW 
   attributes: {
   	name : { type : 'string' },
