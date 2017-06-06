@@ -45,7 +45,7 @@ module.exports = {
 				'user' : ['email', 'name'],
 				'container' : ['comments'],
 				'equipment' : ['name', 'serial_number'],
-				'stock' : [ 'PO_Number'],
+				'stock' : [ 'PO_Number', 'notes', 'Requisition_Number', 'lot_number'],
 				'prep'  : [ 'comments']
 			};
 		}
