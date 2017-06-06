@@ -1,0 +1,14 @@
+id	name	department
+1	Admin	1
+2	Guest Participant	2
+3	Registered Participant	2
+4	Premium Participant	2
+5	Probationary Host	3
+6	Host	3
+7	Premium Host	3
+8	Admin Host	3
+9	Guest Venue	4
+10	Venue	4
+11	Premium Venue	4
+12	Guest	5	
+
