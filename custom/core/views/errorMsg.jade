@@ -1,0 +1,78 @@
+
+if message || messages || ( sails.config.messages && sails.config.messages.length)
+  br
+  div.message-block.alert.alert-success
+    a(href="#" onclick="return false;" class="close" data-dismiss="alert" aria-label="close") &times;
+    ul
+      strong
+        if message
+          li
+            i.fa.fa-check
+            span &nbsp; 
+            span #{message}
+        if messages
+          each msg in messages
+            li
+              i.fa.fa-check
+              span &nbsp; 
+              b #{msg}
+        if sails.config.messages
+          each msg in sails.config.messages
+            li
+              i.fa.fa-check
+              span &nbsp; 
+              b #{msg}
+
+if warning || warnings || warningMsg || (sails.config.warnings && sails.config.warnings.length)
+  br
+  div.message-block.alert.alert-warning
+    // div.alert.alert-warning
+    a(href="#" class="close" data-dismiss="alert" aria-label="close") &times;
+    ul
+      strong
+        if warning || warningMsg
+          li 
+            i.fa.fa-question 
+            span.text-danger &nbsp; Warning:
+            span &nbsp;
+            span #{warningMsg}
+            span #{warning}
+        if warnings
+          each warn in warnings
+            li
+              i.fa.fa-question
+              span &nbsp;
+              b #{warn}
+        if sails.config.warnings
+          each warn in sails.config.warnings
+            li
+              i.fa.fa-question
+              span &nbsp;
+              b #{warn}
+
+if error || errors || errorMsg || (sails.config.errors && sails.config.errors.length)
+  div.message-block.alert.alert-danger
+    // div.alert.alert-danger
+    a(href="#" class="close" data-dismiss="alert" aria-label="close") &times;
+    ul
+      strong
+        if warning || warningMsg
+          li
+            i.fa.fa-question 
+            span.text-danger &nbsp; Warning:
+            span &nbsp;
+            span #{errorMsg}
+            span #{error}
+        if errors
+          each err in errors
+            li
+              i.fa.fa-warning
+              span &nbsp;
+              b #{err}   
+               
+        if sails.config.errors
+          each err in sails.config.errors
+            li
+              i.fa.fa-warning
+              span &nbsp;
+              b #{err}

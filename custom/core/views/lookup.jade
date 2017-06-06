@@ -1,0 +1,19 @@
+if ! identifier 
+	- identifier = table
+if !defaultTo
+	- defaultTo = 'ul'
+if !prompt
+	- prompt = '-- Select --'
+
+span.dropdown.lookupMenu(id='#{identifier}')
+	div.btn-group
+		input.fill-id(type='hidden' id='#{identifier}-id' name='#{identifier}-id' value='0') 
+		input.fill-label(type='hidden' id='#{identifier}-label' name='#{identifier}-label' value='?') 
+
+		button.btn.btn-default.btn-lg.dropdown-toggle(type='button' data-toggle='dropdown' id='#{identifier}-lookup' ng-init="initLookup('#{table}')") #{prompt} &nbsp;
+			span.caret
+		ul.dropdown-menu
+			each option in data
+				li(class="#{activeClass}")
+					a(href='#' onclick="return false;" value='#{option.id}' default='#{defaultTo}' label='#{option.label}') #{option.label} 
+		

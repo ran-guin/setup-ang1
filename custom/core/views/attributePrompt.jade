@@ -1,0 +1,17 @@
+
+if type == 'lookup'
+	span.dropdown
+		input.fill-id(type='hidden' id='#{model}-#{attribute}-id' name='#{model}-#{attribute}-id' value='0') 
+		input.fill-label(type='hidden' id='#{model}-#{attribute}-label' name='#{model}-#{attribute}-label' value='?') 
+
+		button.btn.btn-default.dropdown-toggle(type='button' data-toggle='dropdown' id='#{model}-#{attribute}-prompt' value="unset") - Select - &nbsp;
+			span.caret
+		ul.dropdown-menu
+			each option in data
+				li 
+					a(href='#' onclick="return false;" value='#{option.id}') #{option.label} 
+else if type == 'Int'
+		//div.col-xs-1
+		input(style='size:10px' type='number' id='#{model}-#{attribute}' value='#{defaultsTo}' force=1)
+else	
+	h3 Unrecognized type: #{type}
