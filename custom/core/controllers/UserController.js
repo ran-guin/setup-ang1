@@ -26,9 +26,9 @@ module.exports = {
    * match a real user in the database, sign in to Activity Overlord.
    */
 
-
   dashboard: function (req, res) {
-    var id = req.param('id') || req.body.id;
+    var body = req.body || {};
+    var id = req.param('id') || body.id;
     
     console.log('sess: ' + JSON.stringify(req.session));
     console.log('params : ' + JSON.stringify(req.session.params));
@@ -67,17 +67,12 @@ module.exports = {
     // Try to look up user using the provided email address
     // User.findOne({
 
-      var query = "SELECT user.id, user.name, encryptedPassword, email, user.access FROM user"
-      + " WHERE email ='" + tryuser + "' OR user.name = '" + tryuser + "'" 
-      + " GROUP BY user.id";
-
-      console.log("Q: " + query);
-      Record.query(query, function (err, results) {
     //email: tryuser
     //})
     //.exec (function (err, results) { 
 
-      if (err) return res.negotiate(err);
+    User.validate(tryuser)
+    .then (function (results) {
 
       if (!results || (results == 'undefined') ) { 
         return res.render("customize/public_login", {error: "Unrecognized user: '" + tryuser + "'", email: tryuser });
@@ -90,6 +85,12 @@ module.exports = {
       // from the database (`user.password`)
       console.log('Grps: ');
       console.log("Confirming password for " + JSON.stringify(user));
+      console.log("compare " + pwd + ' to ' + user.encryptedPassword);
+
+      if (!user.encryptedPassword) {
+        return res.render("customize/public_login", {error: "User has not set up password.  Please see admin." });
+      }
+
       Passwords.checkPassword({
         passwordAttempt: pwd,
         encryptedPassword: user.encryptedPassword
@@ -127,28 +128,30 @@ module.exports = {
             sails.config.errors   = [];
 
             if (!access || access === 'public') {
-              if (payload.userid) {
-                return res.render('customize/private_home', { 'message' : 'Registration pending.  Some features may not be available....' });
-              }
-              else {
-                Logger.info('access denied', 'login');
-                return res.render('customize/public_login', { 'message' : 'Private access still pending approval by Administrator'});
-              }
+              Logger.info('access denied', 'login');
+              return res.render('customize/public_home', { 'message' : 'Access still pending approval by Administrator'});
             } 
             else {
               return res.render('customize/private_home', payload);     
             }
           })
           .catch ( function (err) {
-            Logger.error(err, 'access problem', 'login');
-            return res.render('customize/public_login', { error: 'Error generating payload ' + err});
+            console.log('access problem');
+            return res.render('customize/public_home', { error: 'Error generating payload ' + err});
           });
 
 
         }
       });
+    })
+    .catch ( function (err) {
+      return res.negotiate(err);      
     });
 
+  },
+
+  changePrinters : function (req, res) {
+    return res.render('customize/changePrinters', req.session.payload);
   },
 
   lab_admin : function (req, res) {
@@ -174,7 +177,7 @@ module.exports = {
       return res.json({ id: userid, status : status, access : access});
     })
     .catch (function (err) {
-      Logger.error(err, 'could not activate user', 'activate');
+      console.log('could not activate user');
       return res.json(err);
     });
     
@@ -190,22 +193,29 @@ module.exports = {
       return res.render('customize/private_home', req.session.payload);
     }
     else {
-      var printers = sails.config.printer_groups || Printer_group.printer_groups;
-      console.log("Load Printer Groups " + JSON.stringify(printers));
-      return res.render('customize/public_home', { printers : printers });
+      Printer_group.printer_groups()
+      .then ( function (printers) {
+        console.log("Loaded Printer Groups " + JSON.stringify(printers));
+        return res.render('customize/public_home', { printers : printers });
+      })
+      .catch ( function (err) {
+        return res.render('customize/public_home');
+      });
     }
   },
 
+
   /**
-   * Sign up for a user account.
-   */
+  * Sign up for a user account. ... may customized via 'User.validate_registratio' to require link to external D ...
+  */
   signup: function(req, res) {
+    var body = req.body || {};
 
-    var user = req.body.user ;
-    var email = req.body.email ;
+    var user = body.user || body.name;
+    var email = body.email ;
 
-    var pwd = req.body.password;
-    var pwd2 = req.body.confirm_password;
+    var pwd = body.password;
+    var pwd2 = body.confirm_password;
 
     console.log('signup...');
     var Passwords = require('machinepack-passwords');
@@ -233,51 +243,101 @@ module.exports = {
           // Create a User with the params sent from
           // the sign-up form --> signup.jade
             console.log("Create user : " + user);
-            var printers = sails.config.printer_groups || Printer_group.printer_groups;
-            console.log("Load Printer groups " + JSON.stringify(printers));
+                    
+            Printer_group.printer_groups()
+            .then (function (printers) {
 
-            User.create({
-              name: user,
-              email: email,
-              encryptedPassword: encryptedPassword,
-              lastLoggedIn: new Date(),
-              gravatarUrl: gravatarUrl,
-              access: 'public',
-            }, function userCreated(err, newUser) {
-              if (err) {
+              var data = {
+                name: user,
+                email: email,
+                encryptedPassword: encryptedPassword,
+                lastLoggedIn: new Date(),
+                gravatarUrl: gravatarUrl,
+                access: 'public',
+              };
 
-                console.log("err.invalidAttributes: ", err.invalidAttributes)
+              User.validate_registration(data)
+              .then ( function (result) {
 
-                // If this is a uniqueness error about the email attribute,
-                // send back an easily parseable status code.
-                if (err.invalidAttributes && err.invalidAttributes.email && err.invalidAttributes.email[0]
-                  && err.invalidAttributes.email[0].rule === 'unique') {
+                if (result.length === 1) {
                   
-                  return res.render('customize/public_home', { printers : printers, error : "Email address already in use" });                      
-                  // return res.emailAddressInUse();
+                  var custom_keys = Object.keys(result);
+
+                  var payload = { access: 'New User', url: sails.config.globals.url };
+
+                  for (var i=0; i<custom_keys.length; i++) {
+                      var key = custom_keys[i];
+                      var val = result[0][key];
+
+                      data[key] = val;
+                      payload[key] = val;
+                  }
+
+                  User.create(data, function userCreated(err, newUser) {
+                    if (err) {
+
+                      console.log("err.invalidAttributes: " + err.invalidAttributes)
+
+                      // If this is a uniqueness error about the email attribute,
+                      // send back an easily parseable status code.
+                      if (err.invalidAttributes && err.invalidAttributes.email && err.invalidAttributes.email[0]
+                        && err.invalidAttributes.email[0].rule === 'unique') {
+                      
+                          return res.render('customize/public_home', { printers : printers, error : "Email address already in use" });                      
+                      }
+
+                      // Otherwise, send back something reasonable as our error response.
+                      return res.negotiate(err);
+                    }
+                    else {
+                      // Log user in
+                      req.session.User = newUser.id;
+                      
+                      console.log("URL: " + sails.config.globals.url);
+
+                      payload.id = newUser.id;
+
+                      var token = jwToken.issueToken(payload);
+                      
+                      sails.config.messages.push("Generated new user successfully [ name: '" + user + "'; id: " + newUser.id + ' ]');
+
+                      console.log('Generated new user: ' + JSON.stringify(payload));
+                      
+                      req.session.token = token;
+
+                      return res.render('customize/public_home', { 
+                        printers : printers, 
+                        message: "Registered.  Access pending approval by administrator" ,
+                      });                      
+                    }
+                  })
+                }
+                else if (result.length === 0) {
+
+
+
+
+                  return res.render('customize/public_home', {  printers : printers, error : "no valid reference user - please see administrator" })
+                }
+                else if (result.length > 1) {
+                  return res.render('customize/public_home', {  printers : printers, 
+                    error : "multiple reference users - please see administrator" });                
                 }
 
-                // Otherwise, send back something reasonable as our error response.
-                return res.negotiate(err);
-              }
+              })
+              .catch (function (err) {
+                console.log("Error validating user");
+                console.log('could not retrieve external refefrence ID');
+                return res.render('customize/public_home', {  
 
-              // Log user in
-              req.session.User = newUser.id;
-              
-              console.log("URL: " + sails.config.globals.url);
-
-              var payload = { id: newUser.id, access: 'New User', url: sails.config.globals.url };
-              var token = jwToken.issueToken(payload);
-              
-              sails.config.messages.push("Generated new user... ");
-
-              console.log('Generated new user: ' + JSON.stringify(payload));
-              console.log("Token issued: " + token);
-              
-              req.session.token = token;
-          
-              return res.render('customize/public_home', {  printers : printers, message : "Registered.  Access pending approval by administrator" })
-              //return res.json(200, { user: user, token: token });
+                  printers : printers, 
+                  error : "could not retrieve external reference ID to create user"
+                }); 
+              });
+            })
+            .catch( function (err) {
+              console.log("Error presetting printer groups - set to empty if not being used");
+              return res.render('customize/public_home', { error : "Please have administrator reset or clear printer groups (undefined)"} ); 
             });
           }
         });
@@ -350,11 +410,15 @@ module.exports = {
       // Wipe out the session (log out)
       req.session.User = null;
 
-      var printers = sails.config.printer_groups || Printer_group.printer_groups;
-      console.log("Load printer groups " + JSON.stringify(printers));
+      Printer_group.printer_groups()
+      .then (function (result) {
+        return res.render('customize/public_home', { printers : result } );
+      })
+      .catch ( function (err) {
+        return res.render('customize/public_home' );
+      });
 
       // Either send a 200 OK or redirect to the home page
-      return res.render('customize/public_home', { printers : printers } );
 
     // });
   }
