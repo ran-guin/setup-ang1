@@ -131,12 +131,16 @@ module.exports = {
 			Sources = JSON.parse(req.body.Samples);
 			var target_size = req.body['Capacity-label'] || 1;
 
-			var sizes = Object.keys(Rack.wells);
-				
+			var backfill_date = req.body['backfill_date'];
+
+			var sizes = Object.keys(Rack.wells);				
 			console.log("target_size: " + target_size);
+			console.log("backfill_date: " + backfill_date);
+
+			console.log("*****. RENDER Well MAP ****** ");
 			return res.render(
 					'lims/WellMap', 
-					{ Samples: Sources, plate_ids: ids, options : { split : split }, target_size: target_size, sizes: sizes, wells: Rack.wells }
+					{ Samples: Sources, plate_ids: ids, options : { split : split, backfill_date: backfill_date }, target_size: target_size, sizes: sizes, wells: Rack.wells}
 			);
 		}
 		else {
