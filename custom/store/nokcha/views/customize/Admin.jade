@@ -1,0 +1,49 @@
+extends privateLayout
+block content
+
+  - var config = { payload: sails.config.payload };
+  - var init = "initialize(" + JSON.stringify(config) + ")";
+
+  - lookups = ['Plate_Format', 'Sample_Type'];
+
+  div.container
+    h2 System Admin Page
+      div.navbar-right
+            a(href="/lab_admin")
+              button.btn.btn-danger(type='button') Lab Admin
+    hr
+
+    div(ng-app='myApp')
+      div(ng-controller="SharedController")
+        div(ng-controller="FancyFormController")
+          div(ng-controller='LIMSController')
+           div(ng-controller="AdminController" ng-init="#{init}")
+              
+            include ./../core/errorMsg.jade
+
+            include ./../core/angularMessages.jade
+
+            div(ng-show="MenuList['limsuser'].length")
+              div.alert.alert-warning
+                b {{ MenuList['limsuser'].length }} User(s) Pending activation 
+            form.form-horizontal#adminForm(role='form' name='adminForm' enctype='form-data')
+              div.form-group
+                label.input-lg.col-sm-2(for='lps') Lab Protocols:
+                div.col-sm-4#lps        
+                  a(href='/Lab_protocol/list')
+                    button.btn.btn-primary(type='button') Manage Protocols 
+                div.col-sm-6 &nbsp;
+
+              div.form-group(ng-show="MenuList['limsuser'].length")
+                  label.input-lg.col-sm-2(for='user') Activate Users:
+                  div.col-sm-4#user
+                    my-dropdown(placeholder='Select User' list="MenuList['limsuser']" selected='limsuser' ng-init="setup_Menu('limsuser', 'FK(user)', \"status='pending'\")" property='name') 
+                  div.col-sm-2
+                    button.btn-lg.btn-primary(type='button' ng-click="activate_user()") Activate User
+                  div.col-sm-4
+                    input.input-lg#admin(type='checkbox' ng-model='make_admin')
+                    label.input-lg(for='admin') make admin
+              div(ng-show="! MenuList['limsuser'].length")
+                div.col-sm-offset-2
+                  b (no pending users to activate)  
+

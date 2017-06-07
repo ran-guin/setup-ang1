@@ -1,0 +1,18 @@
+doctype html
+html
+	include ./../core/header.jade
+
+	body
+	.red-header
+		h1#main-title.container Nokcha Tea
+		// .main.container 
+		div.mini-red-header(style="color:#ddd")
+			// Note:  transition colour in header set in custom.js 
+			div.container
+				div.col-md-9
+					h3 Black Tea
+					p Black Tea description ... 
+
+				div.col-md-3
+					include ./../customize/Links
+	include ./../core/footer.jade

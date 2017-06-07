@@ -1,0 +1,7 @@
+id	name
+1	Admin
+2	Participant
+3	Host
+4	Venue
+5	Public
+

@@ -1,0 +1,30 @@
+div.header, div.black-header, div.green-header, div.red-header, div.mini-header, div.mini-black-header, div.mini-green-header, div.mini-red-header {
+    -webkit-transition: 16s;
+    -moz-transition: 16s;
+    -o-transition: 16s;
+    transition: 16s;
+    background: rgba(255, 255, 255, 0.89) url("/images/teapot_transparent.png") no-repeat 42% bottom; padding: 100px 0 65px;
+}
+.header h1#main-title {
+    color: #fff;
+    font-weight: 300;
+    font-size: 2.5em;
+}
+.header h3{
+    color: #222 // #b1eef7;
+    font-style: italic;
+    font-weight: 300;
+}
+.header h3 code{
+    font-style: normal!important; background-color: rgba(255,255,255,0.5);
+    font-weight: 300; color:#0e6471;
+    margin: 0px 5px;
+}
+
+div.mini-header, div.mini-black-header {
+    -webkit-transition: 16s;
+    -moz-transition: 16s;
+    -o-transition: 16s;
+    transition: 16s;
+    background: rgba(255, 255, 255, 0.89) url("/images/teapot_transparent.png") no-repeat 42% bottom; padding: 100px 0 65px;
+}

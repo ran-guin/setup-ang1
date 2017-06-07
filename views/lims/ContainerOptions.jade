@@ -49,10 +49,16 @@ form(role='form' method = 'post' action= "/transfer" ng-if="!errors || !errors.l
     tr
       td(style='width:30%')
         h2 Relocate Samples: 
+        span.input-lg
+          input(type='checkbox' ng-model='backfill')
+          b &nbsp; Backfill
       td(style='width:40%; vertical-align:middle')
           //span.lookup(id='Lookup-container_format' ng-init="loadLookup('container_format','', 'Select Target Format')") 
           span.lookup(id='Lookup-Capacity' ng-init="loadLookup('rack:Capacity','', 'Select Target Size')") 
 
+          div(ng-if="backfill")
+            br
+            input-lg.form-control.my-datepicker#backfill(type="text" name='backfill_date' ng-model="backfill_date" placeholder="Backfill Date")
           // b &nbsp; Split X: 
           // input(name='split' type='text' size='5px')
       td(style='width:30%; vertical-align:middle')

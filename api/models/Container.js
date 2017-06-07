@@ -266,7 +266,7 @@ module.exports = {
 
 	},
 
-	transfer_Location : function (ids, Transfer) {
+	transfer_Location : function (ids, Transfer, Options) {
 		// relocate using WellMapper information (from Transfer hash)
 		// Transfer = [{ batch: 0, target_position: "A2", target_box: '' }, { }]
 
@@ -279,8 +279,10 @@ module.exports = {
 		console.log("\n** NEW IDS: " + ids);
 		console.log("\n** Target slots: " + target_slots.join(','));
 
+		var update_options = {};
+
 		if (target_slots && ids && target_slots.length === ids.length) {
-			Record.update('container', ids, { 'FK_Rack__ID' : target_slots })
+			Record.update('container', ids, { 'FK_Rack__ID' : target_slots }, Options)
 			.then ( function (result) {
 				deferred.resolve(result);
 			})
@@ -341,7 +343,7 @@ module.exports = {
 		if (ids && Transfer && Options.transfer_type === 'Move') {
 			console.log("only relocating samples");
 
-			Container.transfer_Location(ids, Transfer)
+			Container.transfer_Location(ids, Transfer, Options)
 			.then (function (result) {
 				console.log("Transferred : " + ids.join(','));
 				deferred.resolve( { plate_ids: ids });
@@ -372,7 +374,7 @@ module.exports = {
 				.then (function (finalResponse) {
 					console.log("completed transfer");
 
-					Container.transfer_Location(target_ids, Transfer)
+					Container.transfer_Location(target_ids, Transfer, Options)
 					.then (function (result) {
 						deferred.resolve( finalResponse );
 					})
@@ -421,6 +423,7 @@ module.exports = {
 		var resetSolution = {};
 
 		var creation_date = Options.timestamp || '<now>';
+
 		var resetClone = {
 			'Plate_ID' : null,
 			'Plate_Status' : 'Active',
@@ -568,10 +571,10 @@ module.exports = {
 					
 					var updates = [];
 					
-					updates.push( Record.update('container', current_ids, resetTarget ) );
+					updates.push( Record.update('container', current_ids, resetTarget, Options) );
 
 					if (resetSource && Object.keys(resetSource).length) {
-						updates.push(Record.update('container', parents, resetSource));
+						updates.push(Record.update('container', parents, resetSource, Options));
 					}
 
 					console.log("run updates for retrieved samples");
@@ -601,7 +604,7 @@ module.exports = {
 
 						if (resetSource && Object.keys(resetSource).length) {
 							console.log("Update Source: " + JSON.stringify(resetSource));
-							updates.push( Record.update('container', clone_ids, resetSource) );
+							updates.push( Record.update('container', clone_ids, resetSource, Options) );
 						}
 
 						if (cloneData.data) {

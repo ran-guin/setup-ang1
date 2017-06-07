@@ -85,6 +85,10 @@ function wellMapperController ($scope, $rootScope, $http, $q ) {
                 $scope.redistribute('reset');
                 console.log("reset split to 1... ");
             }
+            $scope.mandatory_list = [];
+        }
+        else {
+            $scope.mandatory_list = ['target_format'];
         }
 
         // if (!$scope.map.target_format) { $scope.validation_error('target_format','Still require format info'); }
@@ -107,7 +111,6 @@ function wellMapperController ($scope, $rootScope, $http, $q ) {
             $scope.clear_validations('transfer_qty','error');
         }
 
-        $scope.mandatory_list = ['target_format'];
 
         options.form = $scope.map;
         options.required = $scope.mandatory_list;
