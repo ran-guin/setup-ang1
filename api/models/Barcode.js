@@ -13,6 +13,8 @@ var Logger = require('../services/logger');
 
 module.exports = {
 
+  tableName: 'Barcode_Label',
+  migrate: 'safe',
   attributes: {
 
   },
