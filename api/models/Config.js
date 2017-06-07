@@ -15,12 +15,12 @@ module.exports = {
 
   printer_groups : function() {
 
-  	// or return Printer_group.printer_groups() 
+  	return Printer_group.printer_groups() 
   	
-  	var deferred = q.defer();
-  	deferred.resolve();
+  	// var deferred = q.defer();
+  	// deferred.resolve(pg);
 
-  	return deferred.promise;
+  	// return deferred.promise;
   }
 
 
