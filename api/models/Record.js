@@ -1207,6 +1207,8 @@ module.exports = {
 		console.log(JSON.stringify(data));
 		console.log(JSON.stringify(options));
 
+		if (!options) { options = {} }
+
 		// setup History Tracking if applicable
     	var Mod = sails.models[model] || {};
     	var track = [];
@@ -1305,7 +1307,7 @@ module.exports = {
 			}
 			console.log('update history .. ');
 
-			Record.update_History(model, ids, data, track)
+			Record.update_History(model, ids, data, track, null, options.timestamp)
 			.then ( function (History) {
 				// console.log("History: " + JSON.stringify(History));
 				var promises = [];
@@ -1356,7 +1358,7 @@ module.exports = {
 						console.log(JSON.stringify(data));
 						console.log(JSON.stringify(History));
 
-						Record.update_History(model, ids, data, track, History)
+						Record.update_History(model, ids, data, track, History, options.timestamp)
 						.then (function (finalHistory) {
 							console.log("Saved History after update...");
 							console.log(JSON.stringify(finalHistory));
@@ -2219,9 +2221,11 @@ module.exports = {
         return errors;
     },
 
-    update_History : function (model, ids, data, track, History) {
+    update_History : function (model, ids, data, track, History, timestamp) {
     	// retrieve values before record is updated  ... run in conjunction with similar call with History set.. 
     	var deferred = q.defer();
+
+    	if (!timestamp) { timestamp = '<NOW>' }
 
     	ids = Record.cast_to(ids, 'array');
 
@@ -2292,7 +2296,7 @@ module.exports = {
 							if (key === 'New_Value') {
 								History[table][id][f]['Record_ID'] = id;
 								History[table][id][f]['FK_DBField__ID'] = fk;
-								History[table][id][f]['Modified_Date'] = '<NOW>';
+								History[table][id][f]['Modified_Date'] = timestamp;
 								
 								if (sails && sails.config && sails.config.payload) {
 									History[table][id][f]['FK_Employee__ID'] = sails.config.payload.alDenteID;
@@ -2305,7 +2309,7 @@ module.exports = {
 									// relocate['field'] = f;
 									relocate['Moved_from'] = History[table][id][f]['Old_Value'];
 									relocate['Moved_to'] = result[i][f];
-									relocate['moved'] = '<NOW>';
+									relocate['moved'] = timestamp;
 									relocate['Moved_by'] = '<user>';
 									Relocate.push(relocate);
 								}
