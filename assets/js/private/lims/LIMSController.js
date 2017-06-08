@@ -199,37 +199,51 @@ function limsController ($scope, $rootScope, $http, $q) {
    	$scope.reload_active_Samples = function (Samples) {
 
         var deferred = $q.defer();
-        var ids = _.pluck(Samples,'id');
-        
-        $http.get('Container/summary?ids=' + ids.join(','))         
-        .then (function (result) {
-            console.log("done reloading summary for " + result.data.length + ' samples');
-            console.log(JSON.stringify(result.data));
 
-            if (result.data && result.data.length) {
-                $scope.load_active_Samples(result.data);
-                $scope.active.valid_plate_sets = [];
-                var parent;
-                
-                console.log(JSON.stringify($scope.active.plate_set));
-
-                if ($scope.active.plate_set && $scope.active.plate_set.constructor === 'Number') { parent = $scope.active.plate_set }
-                $scope.load_plate_set({ Samples: result.data, parent : parent } );
-
-                console.log("Reloaded: " + JSON.stringify($scope.active_Samples));
-                deferred.resolve();
+        var ids = [];
+        if (Samples.constructor === Array) {
+            if (Samples[0].constructor === Number || Samples[0].constructor === String) {
+                ids = Samples
             }
             else {
-                console.log("No Samples found");
-                var e = new Error('no samples loaded');
-                deferred.reject(e);
+                ids = _.pluck(Samples,'id');
             }
-        })
-        .catch ( function (err) {
-            console.log("Error: " + err);
-            $scope.error("Error loading sample data: " + err);
-            deferred.reject(err);
-        });
+
+        
+            $http.get('Container/summary?ids=' + ids.join(','))         
+            .then (function (result) {
+                console.log("done reloading summary for " + result.data.length + ' samples');
+                console.log(JSON.stringify(result.data));
+
+                if (result.data && result.data.length) {
+                    $scope.load_active_Samples(result.data);
+                    $scope.active.valid_plate_sets = [];
+                    var parent;
+                    
+                    console.log(JSON.stringify($scope.active.plate_set));
+
+                    if ($scope.active.plate_set && $scope.active.plate_set.constructor === 'Number') { parent = $scope.active.plate_set }
+                    $scope.load_plate_set({ Samples: result.data, parent : parent } );
+
+                    console.log("Reloaded: " + JSON.stringify($scope.active_Samples));
+                    deferred.resolve();
+                }
+                else {
+                    console.log("No Samples found");
+                    var e = new Error('no samples loaded');
+                    deferred.reject(e);
+                }
+            })
+            .catch ( function (err) {
+                console.log("Error: " + err);
+                $scope.error("Error loading sample data: " + err);
+                deferred.reject(err);
+            });
+        }
+        else {
+            console.log("Ids not supplied as array");
+            deferred.reject('No array of ids to reload');
+        }
 
         return deferred.promise;
 
