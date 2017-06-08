@@ -62,7 +62,7 @@ module.exports = {
 		var element = req.param('element') || 'injectedData';   // match default in CommonController
 		var render = req.param('render') || 0;
 
-		var flds = ['id', 'Parent', 'box_id', 'box_size', 'position', 'container_format', 'sample_type', 'qty', 'qty_units', 'attributes'];
+		var flds = ['id', 'Parent', 'created', 'box_id', 'box_size', 'position', 'container_format', 'sample_type', 'qty', 'qty_units', 'attributes'];
 
 		Container.loadData(ids)
 		.then (function (result) {
