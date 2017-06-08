@@ -38,6 +38,7 @@ function wellController ($scope, $rootScope, $http, $q ) {
 
         $scope.Max_Row = $scope.Max_Row || 'A';
         $scope.Max_Col = $scope.Max_Col || 1;
+        $scope.new_Samples = [];
 
         $scope.backfill_date = $scope.options.backfill_date;  // optional backfill date for redistribution... 
         if ($scope.backfill_date) {
@@ -226,7 +227,12 @@ function wellController ($scope, $rootScope, $http, $q ) {
             console.log("xfer data: " + JSON.stringify(returnData));
 
             if ( returnData.data && returnData.data.plate_ids) {
-                $scope.message("Transferred " + returnData.data.plate_ids.length + " Samples");
+
+                $scope.new_Samples = returnData.data.plate_ids;
+                console.log("** NEW 1 : " + $scope.new_Samples.join(','));
+                var firstId = $scope.new_Samples[0];
+
+                $scope.message("Transferred " + returnData.data.plate_ids.length + " Samples [#" + firstId + '...]');
                 
                 $scope.completed = 1;
                 $scope.distributionStatus = 'Complete';
@@ -248,6 +254,18 @@ function wellController ($scope, $rootScope, $http, $q ) {
             $scope.feedback = 'error detected...';
             $scope.errorMsg = "Error detected during Transfer !";
         });        
+    }
+
+    $scope.reload_new_samples = function (samples) {
+        
+        if (!samples) { samples = $scope.new_Samples }
+
+        if (samples && samples.length) { 
+            $scope.reload_active_Samples(samples);
+        }
+        else {
+            $scope.warning("No new samples detected");
+        }
     }
 
 }]);
