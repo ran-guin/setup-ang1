@@ -144,6 +144,7 @@ module.exports = {
 			'Current_Volume as qty',
 			'Current_Volume_Units as qty_units',
 			'FKParent_Plate__ID as Parent',
+			'Plate_Created as created'
 		];
 
 		var left_joins = [
@@ -362,7 +363,7 @@ module.exports = {
 
 			console.log("\n*** Container.execute_transfer: ***")
 			console.log("input IDS:" + JSON.stringify(ids));
-			console.log("input Target: " + JSON.stringify(Transfer));
+			console.log("input Transfer: " + JSON.stringify(Transfer));
 			console.log("input Options: " + JSON.stringify(Options));
 			// if (CustomData) { console.log("input CustomData: " + JSON.stringify(CustomData[0]) + '...') }
 
@@ -615,6 +616,33 @@ module.exports = {
 						console.log("Print labels for " + JSON.stringify(newIds) );
 
 						console.log("run updates for target samples");
+						
+
+						/** add Prep record for transfer **/
+
+						var standard_lp = 1;
+						var timestamp = Options.timestamp || '<NOW>';
+						var prep_data = {
+							Prep_Name: 'Relocate Sample',
+							Prep_Action: 'Completed',
+							Prep_DateTime: timestamp,
+							FK_Employee__ID: '<USER>',
+							FK_Lab_Protocol__ID: standard_lp,
+						}
+
+						var plate_data = [];
+						var qtyField = Container.alias.qty;
+						var qtyUnits = Container.alias.qty_units;
+
+						for (var i=0; i<clone_ids.length; i++) {
+							plate_data.push({
+								FK_Plate__ID : clone_ids[i],
+								Transfer_Quantity : resetTarget[qtyField][i],
+								Transfer_Quantity_Units :  resetTarget[qtyUnits]
+							});
+						}
+						updates.push(Prep.save_Prep(prep_data, plate_data));
+
 						q.all(updates)
 						.then (function (results) {
 
