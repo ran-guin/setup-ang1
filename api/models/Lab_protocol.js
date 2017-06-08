@@ -176,64 +176,27 @@ module.exports = {
 		
 		else if (data && data['Prep']) {
 			var promises = [];
-			promises.push( Record.createNew('prep', data['Prep'] ) );
 
+			promises.push(Prep.save_Prep(data['Prep']));
 			if (data['status'] && data['status'].match(/complete/i)) {
-				// Add update record to Prep table indicating that the protocol has been completed ... 
-				var lab_protocol_id = data['Prep']['FK_Lab_Protocol__ID'];
-				promises.push( 
-					Record.createNew('prep',{ 
+				var completion_data = { 	
 						Prep_Name : 'Completed Protocol', 
 						Prep_Action: 'Completed', 
 						FK_Lab_Protocol__ID: lab_protocol_id, 
 						Prep_DateTime : '<now>', 
 						FK_Employee__ID : '<user>'
-					}) 
-				);
+					};
+
+				promises.push(Prep.save_Prep(completion_data));
 			}
 
-			//Record.createNew('Prep', data['Prep'] )
 			q.all(promises)
 			.then (function (result) {
-				for (var i=0; i< result.length; i++) {
-					console.log("Added Prep(s): " + JSON.stringify(result));
-
-					var PrepResult = result[0];
-					var ids = [];
-					var prepId = PrepResult.insertId;  // Legacy
-					var added = PrepResult.affectedRows;
-
-					// sails.config.messages.push('added Prep: ' + prepId);
-
-					for (var i=0; i<data['Plate'].length; i++) {
-						data['Plate'][i]['FK_Prep__ID'] = prepId;
-					}
-				
-					var promises2 = [];
-					promises2.push( Record.createNew('plate_prep', data['Plate'] ) )
-
-				}
-				
-				console.log("Added Plate: " + JSON.stringify(data['Plate'][0] + '...'));
-
-				q.all(promises2)
-				//Record.createNew('Plate_Prep', data['Plate'] )
-				.then (function (result2) {
-					console.log("Added Plate_Prep: " + JSON.stringify(result2[0] + '...'));
-					deferred.resolve({ Prep: result, Plate_Prep: result2});
-				})
-				.catch (function (err) {
-					// sails.config.errors.push('Error creating Plate record ' + err);
-					err.context = 'creating container record';
-					deferred.reject(err);
-					//return res.send("ERROR creating Plate record: " + err)
-				});
-
+				deferred.resolve(result);				
 			})
 			.catch ( function (err) {
 				err.context = 'creating prep record';
 				deferred.reject(err);
-				//return res.send("ERROR creating Prep record: " + err);				
 			});
 		}
 		else {
