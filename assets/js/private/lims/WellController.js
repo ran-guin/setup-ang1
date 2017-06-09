@@ -228,12 +228,17 @@ function wellController ($scope, $rootScope, $http, $q ) {
 
             if ( returnData.data && returnData.data.plate_ids) {
 
-                $scope.new_Samples = returnData.data.plate_ids;
-                console.log("** NEW 1 : " + $scope.new_Samples.join(','));
-                var firstId = $scope.new_Samples[0];
+                if ($scope.map.transfer_type === 'Move') {
+                    $scope.message("Moved " + returnData.data.plate_ids.length + ' Samples');
+                    $scope.new_Samples = [];
+                }
+                else {
+                    $scope.new_Samples = returnData.data.plate_ids;
+                    var firstId = $scope.new_Samples[0];
 
-                $scope.message("Transferred " + returnData.data.plate_ids.length + " Samples [#" + firstId + '...]');
-                
+                    $scope.message("Transferred " + returnData.data.plate_ids.length + " Samples [#" + firstId + '...]');
+                }
+
                 $scope.completed = 1;
                 $scope.distributionStatus = 'Complete';
             }
