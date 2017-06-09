@@ -64,13 +64,12 @@ module.exports = {
 				var promises = [];
 				console.log("Added Single Prep: " + JSON.stringify(result));
 
-				var preps_added = result.Prep.length;  // may be 2 if "Completed Protocol" Update record is added ... 
-				
-				var lastPrepResult = result.Prep[preps_added - 1];
-				var last_prep_id = [ lastPrepResult.insertId ];
-				
-				var firstPrepResult = result.Prep[0];
-				var first_prep_id = [ firstPrepResult.insertId ];
+				var preps_added = result.length;  // may be 2 if "Completed Protocol" Update record is added ... 
+				var lastIndex = preps_added - 1;
+				var lastPrepResult = result[lastIndex].Prep;
+
+				var first_prep_id = [ result[0].Prep.insertId ];           
+				var last_prep_id = [ result[lastIndex].Prep.insertId ];		// may be the same as last prep unless 'Completed Protocol'.		
 
 				console.log("\nPrep ID: (just inserted) " + last_prep_id );
 				console.log("Transfer: (supplied by POST) " + JSON.stringify(data['Transfer']));
@@ -177,7 +176,8 @@ module.exports = {
 		else if (data && data['Prep']) {
 			var promises = [];
 
-			promises.push(Prep.save_Prep(data['Prep']));
+			promises.push(Prep.save_Prep(data['Prep'], data['Plate']));
+
 			if (data['status'] && data['status'].match(/complete/i)) {
 				var completion_data = { 	
 						Prep_Name : 'Completed Protocol', 
@@ -187,7 +187,7 @@ module.exports = {
 						FK_Employee__ID : '<user>'
 					};
 
-				promises.push(Prep.save_Prep(completion_data));
+				promises.push(Prep.save_Prep(completion_data, data['Plate']));
 			}
 
 			q.all(promises)
