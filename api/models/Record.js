@@ -2089,10 +2089,15 @@ module.exports = {
 		
 		if (value == null) { }			
 		else if (value.constructor === String) {
-			if (value.match(/^<user>$/i)) {
+			if (value.match(/^<userid>$/i)) {
 				// change this to access user id and phase out alDente_ID ... 
-				if (sails.config.payload) { value = sails.config.payload.alDenteID || 0 }
+				if (sails.config.payload) { value = sails.config.payload.userid || 0 }
 				if (debug) console.log("replacing <user> with " + value);
+			}
+			else if (value.match(/^<user>$/i)) {
+				console.log("PHASE OUT - use userid or alDente_ID");
+				if (sails.config.payload) { value = sails.config.payload.alDenteID || 0 }
+				if (debug) console.log("replacing <alDente_ID> with " + value);				
 			}
 			else if (value.match(/^<alDente_id>$/i)) {
 				if (sails.config.payload) { value = sails.config.payload.alDenteID || 0 }
@@ -2310,7 +2315,7 @@ module.exports = {
 									relocate['Moved_from'] = History[table][id][f]['Old_Value'];
 									relocate['Moved_to'] = result[i][f];
 									relocate['moved'] = timestamp;
-									relocate['Moved_by'] = '<user>';
+									relocate['Moved_by'] = '<userid>';
 									Relocate.push(relocate);
 								}
 
