@@ -179,10 +179,13 @@ module.exports = {
 			promises.push(Prep.save_Prep(data['Prep'], data['Plate']));
 
 			if (data['status'] && data['status'].match(/complete/i)) {
+				
+				var std_lab_protocol_id = 1;  // Standard Lab Protocol //
+
 				var completion_data = { 	
 						Prep_Name : 'Completed Protocol', 
 						Prep_Action: 'Completed', 
-						FK_Lab_Protocol__ID: lab_protocol_id, 
+						FK_Lab_Protocol__ID: std_lab_protocol_id, 
 						Prep_DateTime : '<now>', 
 						FK_Employee__ID : '<user>'
 					};
