@@ -170,6 +170,7 @@ module.exports.routes = {
 
   'POST /Rack/newBox'  : 'RackController.createBox',
   'POST /Rack/boxData' : 'RackController.boxData',
+  'POST /Rack/home'    : 'RackController.home',
 
   'POST /Stock/receive' : 'StockController.receive',
   'GET /Stock/receive' : 'StockController.receiveForm',
