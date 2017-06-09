@@ -40,9 +40,9 @@ function wellController ($scope, $rootScope, $http, $q ) {
         $scope.Max_Col = $scope.Max_Col || 1;
         $scope.new_Samples = [];
 
-        $scope.backfill_date = $scope.options.backfill_date;  // optional backfill date for redistribution... 
-        if ($scope.backfill_date) {
-            console.log("*** Backfill : " + $scope.backfill_date );
+        $scope.backfill_relocate_date = $scope.options.backfill_relocate_date;  // optional backfill date for redistribution... 
+        if ($scope.backfill_relocate_date) {
+            console.log("*** Backfill : " + $scope.backfill_relocate_date );
         }
 
         // $scope.set_to_default();
@@ -212,7 +212,7 @@ function wellController ($scope, $rootScope, $http, $q ) {
             Transfer: $scope.Map.Transfer,
             Options : {
                 transfer_type: $scope.map.transfer_type,
-                timestamp: $scope.backfill_date,
+                timestamp: $scope.backfill_relocate_date,
                 // prep not necessary, but could be optionally added here ...
                 //
                 // Target_sample and Target_format qty should already be included in Transfer specs...
