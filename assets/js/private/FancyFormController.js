@@ -1211,6 +1211,7 @@ app.controller('FancyFormController',
                                                 }
                                         }
                                     }
+                                    N = list[list.length-1];
                                 }
                                 else if (list.length) {
                                     N = list[list.length-1] + 1;
@@ -1228,6 +1229,7 @@ app.controller('FancyFormController',
                                 msg = "Using first available (missing) " + counter + ": '" + prefix + N + "'"; 
                             }
                             else { msg = "Next Available " + name + ": '" + prefix + N + "'"}
+
 
                             for (var i=return_list.length; i<repeat; i++) {
                                 N++;
