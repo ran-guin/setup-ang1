@@ -14,7 +14,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
 
     $scope.step.stepNumber = 1;
     $scope.SplitFields = {};
-    $scope.backfill_date = null;
+    $scope.backfill_prep_date = null;
  
     $scope.form = {};
     $scope.sample_count = 0;
@@ -23,8 +23,8 @@ function protocolController ($scope, $rootScope, $http, $q) {
         console.log("initialize protocol");
         $scope.initialize_payload(config);
 
-        if (config && config['backfill_date']) {
-            $scope.backfill_date = config['backfill_date'];
+        if (config && config['backfill_prep_date']) {
+            $scope.backfill_prep_date = config['backfill_prep_date'];
         }
  
         if (config && config['Samples']) {
@@ -312,7 +312,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
         // complete step (if validated)
         $scope.action = action;
 
-        var timestamp = $scope.backfill_date || $scope.timestamp;
+        var timestamp = $scope.backfill_prep_date || $scope.timestamp;
 	console.log("Payload: " + JSON.stringify($scope.payload));
 
         // Legacy fields 
@@ -445,8 +445,8 @@ function protocolController ($scope, $rootScope, $http, $q) {
                 data['Transfer_Options'] = $scope.map.Options;
 
                 // use backfill data for Plate creation date 
-                if ($scope.backfill_date) {
-                    data['Transfer_Options'].timestamp = $scope.backfill_date;
+                if ($scope.backfill_prep_date) {
+                    data['Transfer_Options'].timestamp = $scope.backfill_prep_date;
                 }
 
                 console.log($scope.map.Options);
@@ -924,8 +924,8 @@ function protocolController ($scope, $rootScope, $http, $q) {
 
             if (transfer_options.transfer_type) { $scope.initiate_transfer(1) }
            
-            if ($scope.backfill_date) {
-                $scope.warning("Using Backfill Date: " + $scope.backfill_date);
+            if ($scope.backfill_prep_date) {
+                $scope.warning("Using Backfill Date: " + $scope.backfill_prep_date);
             }
             
             var name = $scope.Step['name'];
