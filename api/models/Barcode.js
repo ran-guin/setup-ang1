@@ -278,11 +278,13 @@ module.exports = {
             }
             else {
               console.log("update viewData");
+              viewData.Scanned = Scanned;
               viewData.found = 'Container';
               viewData.messages = messages;
               viewData.warnings = warnings;
               viewData.errors = errors;
 
+              console.log("ViewData: " + JSON.stringify(viewData));
               deferred.resolve(viewData);
             }
           })
