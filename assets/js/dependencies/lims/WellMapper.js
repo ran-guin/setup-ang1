@@ -831,6 +831,7 @@ function wellMapper() {
         // Generate warnings for insuffienct sample quantities ... 
         if (this.empty && this.empty.length) {
             var msg = this.empty.length + " wells are empty (no sample can be transferred)";
+            console.log("empty wells detected...");
             this.warnings.push(msg);
         }
         if (this.unfilled && this.unfilled.length) {
