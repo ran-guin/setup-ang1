@@ -153,6 +153,7 @@ module.exports = {
 			conditions.push("FK_" + table + '__ID = ' + idField);
 			conditions.push('Attribute_ID=FK_Attribute__ID');
 			conditions.push(field + " IN ('" + ids.join("','") + "')");
+			conditions.push("Attribute_Name='" + attribute + "'");
 
 			table = table + ', Attribute, ' + table + '_Attribute';
 		}
