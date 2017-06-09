@@ -1,0 +1,55 @@
+extends ./../customize/privateLayout
+block content
+
+  // standard input variables: 
+  //    - id  ( rack id(s) ) 
+  //    - Samples   (array of hashes)
+
+  - var config = { rack_ids: id, Samples: Samples, payload: sails.config.payload};
+  - var init = "initialize(" + JSON.stringify(config) + ")";
+  - var rackList = [];
+  if id 
+    - rackList = id.split(/\s*,\s*/);
+  
+  -rackList = [3,4];
+
+  p &nbsp;
+  div.container
+     div(ng-app='myApp' ng-cloak=1)
+      div(ng-controller="SharedController")       
+       div(ng-controller="LIMSController")
+        div(ng-controller="FancyFormController")
+          div(ng-controller="RackController" ng-init="#{init}")
+
+            h3 Move Box(es) From: #{JSON.stringify(id)}
+            br
+            h3 To: 
+            br
+            input.input-lg.form-control.mandatory#parent(type='text' name = 'parent' ng-model='parent' ng-blur="set_default_name('Box', 'target', #{rackList.length})" required placeholder ='-- Scan Parent Rack --')
+            span.input-lg
+              input(type='checkbox' ng-model='fill_missing_numbers' ng-click="set_default_name('Box', 'target', #{rackList.length})" checked=false)
+              span &nbsp; Re-use missing numbers
+
+            h3 Transferring into new Box(es) : {{ target }}
+            span.input-lg
+              input(type='checkbox' ng-model='fill_missing_numbers' ng-click="set_default_name('Box', 'target', #{rackList.length})" checked=false)
+              span &nbsp; Print new barcodes            
+            p &nbsp;
+            button.btn.btn-primary.btn-lg(-type='button') Move Box(es) to New Location
+
+
+            if ! debug
+              p &nbsp;
+              p &nbsp;
+              p &nbsp;
+              
+            if debug || 1
+              hr
+              h2.alert.alert-warning Debugging Information:  (hidden in production)
+              b session: #{JSON.stringify(session)} 
+              BR
+              b Samples: #{JSON.stringify(Samples)}
+              BR
+              b IDs: #{JSON.stringify(id)}
+              BR
+            
