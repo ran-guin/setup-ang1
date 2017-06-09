@@ -12,6 +12,16 @@ var Logger = require('../services/logger');
 
 module.exports = {
 	
+	home : function (req, res) {
+		var body = req.body || {};
+
+		var Rack = body.Rack;
+		var Samples = body.Samples;
+
+		return res.render('lims/Rack', { id: Rack, Samples: Samples})
+
+	},
+
 	boxData: function (req, res) {
 
 		var body = req.body || {};
