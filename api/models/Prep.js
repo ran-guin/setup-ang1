@@ -50,6 +50,7 @@ module.exports = {
         console.log("Added Prep(s): " + JSON.stringify(result));
 
         var PrepResult = result;
+
         var ids = [];
         var prepId = PrepResult.insertId;  // Legacy
         var added = PrepResult.affectedRows;
@@ -61,7 +62,7 @@ module.exports = {
         
         Record.createNew('plate_prep', plateData )
         .then (function (result2) {
-          console.log("Added Plate_Prep: " + JSON.stringify(result2[0] + '...'));
+          console.log("Added Plate_Prep: " + JSON.stringify(result2) + '...');
           deferred.resolve({ Prep: result, Plate_Prep: result2})
         })
         .catch ( function (err2) {
