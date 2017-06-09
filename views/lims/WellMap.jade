@@ -27,7 +27,7 @@ block content
             div(ng-show='completed')
               button.btn.btn-success(type='button' ng-click="completed=0") Transfer / Relocate Again
            
-            span(ng-show='completed && new_Samples')
+            span(ng-show='completed && new_Samples && new_Samples.length')
               p &nbsp;
               button.btn.btn-success(type='button' ng-click="reload_new_samples(); completed=0") Switch to New Samples
 
