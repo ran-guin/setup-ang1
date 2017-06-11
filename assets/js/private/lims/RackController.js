@@ -34,6 +34,58 @@ function rackController ($scope, $rootScope, $http, $q) {
         console.log("initialization complete...");
     }
 
+    $scope.move_boxes = function () {
+
+        $scope.rack_ids = [85, 86];
+        $scope.parent_id = 7;
+        $scope.targets = ['B7','B8'];
+
+        $scope.reprint_barcodes = false;
+
+        // test only
+        if ($scope.rack_ids && $scope.parent_id && $scope.targets) {
+
+            if ($scope.rack_ids.length === $scope.targets.length) {
+                console.log("** Move " + $scope.rack_ids + " To " + $scope.parent_id + " : " + $scope.target);
+
+                var url = '/Rack/move';
+                var data = {
+                    ids: $scope.rack_ids,
+                    parent: $scope.parent_id,
+                    names : $scope.targets,
+                    reprint : $scope.reprint_barcodes,
+                };
+
+                console.log("** POST MOVE : " + JSON.stringify(data));
+                $http.post(url, data)
+                .then ( function (result) {
+
+                    if (result.data && result.data.set ) {
+                        $scope.message(result.data.set.affectedRows + " boxes moved successfully");
+                    }
+                    else if (result.data && result.data.length) {
+                        $scope.warning(result.data[0]);
+                    }
+                    else {
+                        $scope.warning("no move response ?");
+                        console.log(JSON.stringify(result));
+                    }
+                })
+                .catch ( function (err) {
+                    console.log("error moving boxes: " + err);
+                    $scope.error(err);
+                });
+            }
+            else {
+                $scope.warning('Number of boxes [' + $scope.rack_ids.length 
+                    + ' does not match retrieved target names [' + $scope.targets.length + '] ... try again');
+            }
+        }
+        else {
+            $scope.warning("Missing information required to move boxes");
+        }
+    }
+
     $scope.newSlottedBox = function () {
 
         $scope.reset_messages();
