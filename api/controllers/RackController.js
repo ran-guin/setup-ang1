@@ -22,6 +22,24 @@ module.exports = {
 
 	},
 
+	move : function ( req, res) {
+		var body = req.body || {};
+
+		var ids = body.ids;
+		var parent = body.parent;
+		var names = body.names;
+	
+		var reprint = body.reprint_barcodes;
+
+		Rack.move(ids, parent, body)
+		.then ( function (result) {
+			return res.json(result);
+		})
+		.catch ( function (err) {
+			return res.json(err);
+		});
+	},
+
 	boxData: function (req, res) {
 
 		var body = req.body || {};
