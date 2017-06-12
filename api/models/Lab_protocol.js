@@ -181,12 +181,13 @@ module.exports = {
 			if (data['status'] && data['status'].match(/complete/i)) {
 				
 				var std_lab_protocol_id = 1;  // Standard Lab Protocol //
+				var timestamp = data['Prep'].Prep_DateTime || '<now>';
 
 				var completion_data = { 	
 						Prep_Name : 'Completed Protocol', 
 						Prep_Action: 'Completed', 
 						FK_Lab_Protocol__ID: std_lab_protocol_id, 
-						Prep_DateTime : '<now>', 
+						Prep_DateTime : timestamp, 
 						FK_Employee__ID : '<user>'
 					};
 

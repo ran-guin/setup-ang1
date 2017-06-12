@@ -28,6 +28,10 @@ block content
               br 
 
               include ContainerOptions.jade 
+  
+              if (Scanned && Scanned.Rack && Scanned.Rack.length)
+                br
+                include RackOptions
 
               div(ng-if="!errors || !errors.length")
                 include uploadMatrix.jade

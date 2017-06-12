@@ -73,6 +73,7 @@ block content
                         h4(style="color:red") &nbsp; &nbsp; #{ Step.message } 
 
                         hr
+                        b.text-warning(ng-show="backfill_prep_date") Note:  Backfilling timestamp to: {{ backfill_prep_date }}
 
                         div(ng-if='errMsg')
                           div.alert.alert-danger(style='opacity:1')

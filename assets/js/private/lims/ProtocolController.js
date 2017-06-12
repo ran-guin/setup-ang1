@@ -23,8 +23,8 @@ function protocolController ($scope, $rootScope, $http, $q) {
         console.log("initialize protocol");
         $scope.initialize_payload(config);
 
-        if (config && config['backfill_prep_date']) {
-            $scope.backfill_prep_date = config['backfill_prep_date'];
+        if (config && config['backfill_date']) {
+            $scope.backfill_prep_date = config['backfill_date'];
         }
  
         if (config && config['Samples']) {

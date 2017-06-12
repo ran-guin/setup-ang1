@@ -256,7 +256,7 @@ module.exports = {
 
           Container.loadViewData(plate_ids, condition, { box_order: box_order})
           .then (function (viewData) {
-            console.log("got view data " + JSON.stringify(viewData));
+            // console.log("got view data " + JSON.stringify(viewData));
 
             if (viewData.Samples.length == 0) {
               if (plate_ids.length) {

@@ -347,7 +347,42 @@ module.exports = {
 			Container.transfer_Location(ids, Transfer, Options)
 			.then (function (result) {
 				console.log("Transferred : " + ids.join(','));
-				deferred.resolve( { plate_ids: ids });
+
+
+				/** add Prep record for transfer (in get_target_ids for transfer/aliquot **/
+
+				var standard_lp = 1;
+				var timestamp = Options.timestamp || '<NOW>';
+				var transfer_type = Options.transfer_type || 'Relocate';
+
+				var prep_data = {
+					Prep_Name: transfer_type + ' Sample(s)',
+					Prep_Action: 'Completed',
+					Prep_DateTime: timestamp,
+					FK_Employee__ID: '<USER>',
+					FK_Lab_Protocol__ID: standard_lp,
+				}
+
+				var plate_data = [];
+				var qtyField = Container.alias.qty;
+				var qtyUnits = Container.alias.qty_units;
+				var plate_set = Options.plate_set;
+
+				for (var i=0; i<ids.length; i++) {
+					plate_data.push({
+						FK_Plate__ID : ids[i],
+						FK_Plate_Set__Number : plate_set,
+					});
+				}
+				Prep.save_Prep(prep_data, plate_data)
+				.then ( function (r) {
+					deferred.resolve( { plate_ids: ids });
+				})
+				.catch ( function (err) {
+					console.log("Error saving relocation prep");
+					deferred.resolve( { plate_ids: ids }); // non fatal;
+				})
+
 			})
 			.catch (function (err) {
 				console.log("Error relocating samples");
@@ -622,8 +657,10 @@ module.exports = {
 
 						var standard_lp = 1;
 						var timestamp = Options.timestamp || '<NOW>';
+						var transfer_type = Options.transfer_type || 'Relocate';
+
 						var prep_data = {
-							Prep_Name: 'Relocate Sample',
+							Prep_Name: transfer_type + ' Sample(s)',
 							Prep_Action: 'Completed',
 							Prep_DateTime: timestamp,
 							FK_Employee__ID: '<USER>',
@@ -633,12 +670,14 @@ module.exports = {
 						var plate_data = [];
 						var qtyField = Container.alias.qty;
 						var qtyUnits = Container.alias.qty_units;
+						var plate_set = Options.plate_set;
 
 						for (var i=0; i<clone_ids.length; i++) {
 							plate_data.push({
 								FK_Plate__ID : clone_ids[i],
 								Transfer_Quantity : resetTarget[qtyField][i],
-								Transfer_Quantity_Units :  resetTarget[qtyUnits]
+								Transfer_Quantity_Units :  resetTarget[qtyUnits],
+								FK_Plate_Set__Number : plate_set,
 							});
 						}
 						updates.push(Prep.save_Prep(prep_data, plate_data));

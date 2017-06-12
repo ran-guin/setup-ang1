@@ -240,7 +240,7 @@ module.exports = {
 			if (err) {
 				return res.send("ERROR: " + err);
 			}
-			console.log("View Data: " + JSON.stringify(result));
+			// console.log("View Data: " + JSON.stringify(result));
 
 			if (result.length) {
 				if (!fields) { fields = Object.keys(result[0]) }

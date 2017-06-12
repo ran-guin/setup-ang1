@@ -35,7 +35,7 @@ div.section-block.bg-info
 
         br
         br
-        div(ng-show="active.Samples && active.Samples[0] && active.Samples[0].last_step")
+        div(ng-show="active.Samples && active.Samples[0] && active.Samples[0].last_step && active.last_step.protocol")
           u Progress: 
           b {{ active.last_step.protocol }} [ {{ active.last_step.status }} ] &nbsp; &nbsp;
           br 

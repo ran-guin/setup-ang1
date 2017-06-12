@@ -40,7 +40,7 @@ function wellController ($scope, $rootScope, $http, $q ) {
         $scope.Max_Col = $scope.Max_Col || 1;
         $scope.new_Samples = [];
 
-        $scope.backfill_relocate_date = $scope.options.backfill_relocate_date;  // optional backfill date for redistribution... 
+        $scope.backfill_relocate_date = $scope.options.backfill_date;  // optional backfill date for redistribution... 
         if ($scope.backfill_relocate_date) {
             console.log("*** Backfill : " + $scope.backfill_relocate_date );
         }
@@ -207,12 +207,20 @@ function wellController ($scope, $rootScope, $http, $q ) {
         console.log("Found format: " + format + '=' + $scope['Plate_Format-id']);
 
         console.log('execute ' + $scope.map.transfer_type);
+        
+        var plate_set;
+        if ($scope.active.plate_set && 
+            ($scope.active.plate_set.constructor === Number || $scope.active.plate_set.match(/\d+/)) ) {
+            plate_set = $scope.active.plate_set;
+        }
+
         var data = { 
             ids: $scope.active.plate_ids,
             Transfer: $scope.Map.Transfer,
             Options : {
                 transfer_type: $scope.map.transfer_type,
                 timestamp: $scope.backfill_relocate_date,
+                plate_set: plate_set,
                 // prep not necessary, but could be optionally added here ...
                 //
                 // Target_sample and Target_format qty should already be included in Transfer specs...

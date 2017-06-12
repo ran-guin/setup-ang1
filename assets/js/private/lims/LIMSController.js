@@ -25,6 +25,24 @@ function limsController ($scope, $rootScope, $http, $q) {
         $scope.active[attr] = val;
     }
 
+    $scope.parseSQL = function parseSQL (hash) {
+        // designed to parse SQL return hash
+
+        var parsed = {
+            message: hash.message,
+            affected: hash.affectedRows,
+            insertId: hash.insertId,
+            warningCount: hash.warningCount
+        }
+
+        if (hash.message) {
+            var changed = hash.message.match(/Changed: (\d+)/);
+            parsed.changed = changed[1];
+        }
+
+        return parsed;
+    }
+    
     // Custom methods ... 
     $scope.Prefix = function Prefix (model) {
         var P = {

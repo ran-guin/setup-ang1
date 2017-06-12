@@ -157,7 +157,7 @@ block content
                   div
                     input.input-lg#target_rack(type='text' required name='map.target_rack' size='24' ng-blur="validate_target(); redistribute('reset');" ng-model="map.target_rack" placeholder='-- Scan Target Box(es) --')
                 div.col-sm-4 &nbsp;
-                  span(ng-show='backfill_date') Assignment date: {{backfill_date}}
+                  span(ng-show='backfill_relocate_date') Assignment date: {{backfill_relocate_date}}
                   br
                   button.btn.btn-lg.btn-primary(type='button' ng-click="redistribute('reset','execute');" ng-disabled="!form_validated || (map.transfer_type !== 'Move' && !map.target_format) || !map.target_rack") Relocate Samples
                   span &nbsp;       

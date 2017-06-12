@@ -194,6 +194,44 @@ module.exports = {
     return deferred.promise;
   },
 
+  move : function move (ids, parent, options) {
+    if (!options) { options = {} }
+    var names = options.names;
+    var reprint = options.reprint;
+
+    var deferred = q.defer();
+
+    var aliases = names.map( function (name) {
+      return 'Parent ' + name;
+    });
+
+    Record.update('rack', ids, { FKParent_Rack__ID: parent, Rack_Name: names, Rack_Alias: aliases })
+    .then ( function (result) {
+      console.log("MOVED: " + JSON.stringify(result));
+
+      deferred.resolve(result);
+
+      // Refactor save history ... 
+
+      
+      // Record.update_History('rack', ids, { FKParent_Rack__ID: parent, Rack_Name: names})
+      // .then (function (ok) {
+      //   deferred.resolve(result);
+      // })
+      // .catch ( function (err) {
+      //   console.log("Error logging history for rack movement");
+      //   deferred.resolve(result);
+      // });
+
+    })
+    .catch ( function (err) {
+      console.log("Err: " + err);
+      deferred.reject(err);
+    });
+
+    return deferred.promise;
+  },
+
   transferLocation : function transferLocation (model, ids, target_rack, options) {
     // Transfer samples to a new box... similar to moveSamples but with some extra optoions like 'create' flag or target 'wells' array
     var deferred = q.defer();

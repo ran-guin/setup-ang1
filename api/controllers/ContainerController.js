@@ -41,7 +41,7 @@ module.exports = {
 
 		query = query + " AND " + relevant_list;
 
-		query = query + " GROUP BY Prep_ID DESC";
+		query = query + " GROUP BY Prep_ID ORDER BY Prep_DateTime, Prep_ID";
 
 		console.log("Q: " + query);
 		Record.query_promise(query)
