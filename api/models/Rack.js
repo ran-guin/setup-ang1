@@ -195,38 +195,49 @@ module.exports = {
   },
 
   move : function move (ids, parent, options) {
+    
     if (!options) { options = {} }
     var names = options.names;
     var reprint = options.reprint;
+    var timestamp = options.backfill_data || options.timestamp;
 
     var deferred = q.defer();
 
-    var aliases = names.map( function (name) {
-      return 'Parent ' + name;
-    });
-
-    Record.update('rack', ids, { FKParent_Rack__ID: parent, Rack_Name: names, Rack_Alias: aliases })
+    Record.query_promise("Select Rack_Alias as alias from Rack where Rack_ID = " + parent)
     .then ( function (result) {
-      console.log("MOVED: " + JSON.stringify(result));
+      var parent_alias = result[0].alias;
 
-      deferred.resolve(result);
+      var aliases = names.map( function (name) {
+        return parent_alias + ' ' + name;
+      });
 
-      // Refactor save history ... 
+      Record.update('rack', ids, { FKParent_Rack__ID: parent, Rack_Name: names, Rack_Alias: aliases })
+      .then ( function (result) {
+        console.log("MOVED: " + JSON.stringify(result));
 
-      
-      // Record.update_History('rack', ids, { FKParent_Rack__ID: parent, Rack_Name: names})
-      // .then (function (ok) {
-      //   deferred.resolve(result);
-      // })
-      // .catch ( function (err) {
-      //   console.log("Error logging history for rack movement");
-      //   deferred.resolve(result);
-      // });
+        deferred.resolve(result);
 
+        // Refactor save history ... 
+
+        
+        // Record.update_History('rack', ids, { FKParent_Rack__ID: parent, Rack_Name: names})
+        // .then (function (ok) {
+        //   deferred.resolve(result);
+        // })
+        // .catch ( function (err) {
+        //   console.log("Error logging history for rack movement");
+        //   deferred.resolve(result);
+        // });
+
+      })
+      .catch ( function (err) {
+        console.log("Err: " + err);
+        deferred.reject(err);
+      });
     })
-    .catch ( function (err) {
-      console.log("Err: " + err);
-      deferred.reject(err);
+    .catch ( function (err2) {
+      console.log("Error retrieving parent alias");
+      deferred.reject(err2);
     });
 
     return deferred.promise;
