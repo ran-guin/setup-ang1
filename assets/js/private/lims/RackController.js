@@ -6,7 +6,7 @@ function rackController ($scope, $rootScope, $http, $q) {
 
     // $scope.debug = 1;   
 
-    console.log('loaded protocol controller');        
+    console.log('loaded Rack controller');        
     $scope.context = 'Rack';
  
     $scope.form = {};
@@ -19,8 +19,9 @@ function rackController ($scope, $rootScope, $http, $q) {
         
         if (config && config['backfill_date']) {
             $scope.backfill_move_date = config['backfill_date'];
+            console.log('Backfilling to ' + $scope.backfill_move_date);
         }
- 
+
         if (config && config['Samples']) {
             // both protocol tracking and standard Container page 
 
@@ -67,6 +68,8 @@ function rackController ($scope, $rootScope, $http, $q) {
 
     $scope.move_boxes = function () {
 
+        $scope.reset_messages();
+        
         $scope.reprint_barcodes = false;
         var ids = $scope.rack_ids || [];
         console.log("Ids: " + ids + ' from ' + $scope.parent_id + " -> " + JSON.stringify($scope.target_names));
