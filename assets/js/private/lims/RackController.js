@@ -17,8 +17,8 @@ function rackController ($scope, $rootScope, $http, $q) {
        
         console.log("initialize protocol");
         
-        if (config && config['backfill_move_date']) {
-            $scope.backfill_move_date = config['backfill_move_date'];
+        if (config && config['backfill_date']) {
+            $scope.backfill_move_date = config['backfill_date'];
         }
  
         if (config && config['Samples']) {
@@ -32,28 +32,56 @@ function rackController ($scope, $rootScope, $http, $q) {
             $scope.load_active_Samples(Samples);
         }
 
+        $scope.rack_ids = [];
+        if (config && config['rack_ids']) {
+            console.log("load aliases");
+
+            $scope.rack_ids = config['rack_ids'].split(/\s*,\s*/);
+            $scope.load_alias($scope.rack_ids);
+            console.log("RACK IDS :" + JSON.stringify($scope.rack_ids));
+        }
+
         console.log("initialization complete...");
+    }
+
+    $scope.validate_parent = function (count) {
+        
+        if (!count) { count = 1 }
+
+        $scope.load_alias($scope.parent);
+        var parent_id = $scope.parent.replace(/Loc/ig,'');
+        $scope.parent_id = parent_id;
+
+        var target_element = 'target_names';
+
+        $scope.set_default_name('Box', target_element, count)
+        .then ( function (result) {
+            $scope.target_aliases = [];
+            for (var i=0; i<count; i++) {
+                $scope.target_aliases.push($scope.AliasMap[parent_id] + $scope[target_element][i] );
+            } 
+        })
+
+
     }
 
     $scope.move_boxes = function () {
 
-        $scope.rack_ids = [85, 86];
-        $scope.parent_id = 7;
-        $scope.targets = ['B7','B8'];
-
         $scope.reprint_barcodes = false;
+        var ids = $scope.rack_ids || [];
+        console.log("Ids: " + ids + ' from ' + $scope.parent_id + " -> " + JSON.stringify($scope.target_names));
 
         // test only
-        if ($scope.rack_ids && $scope.parent_id && $scope.targets) {
+        if (ids && ids.length && $scope.parent_id && $scope.target_names) {
 
-            if ($scope.rack_ids.length === $scope.targets.length) {
-                console.log("** Move " + $scope.rack_ids + " To " + $scope.parent_id + " : " + $scope.target);
+            if ($scope.rack_ids.length === $scope.target_names.length) {
+                console.log("** Move " + $scope.rack_ids + " To " + $scope.parent_id + " : " + $scope.target_names.join(',')) ;
 
                 var url = '/Rack/move';
                 var data = {
                     ids: $scope.rack_ids,
                     parent: $scope.parent_id,
-                    names : $scope.targets,
+                    names : $scope.target_names,
                     reprint : $scope.reprint_barcodes,
                 };
 
@@ -61,8 +89,24 @@ function rackController ($scope, $rootScope, $http, $q) {
                 $http.post(url, data)
                 .then ( function (result) {
 
+                    $scope.load_alias($scope.rack_ids);
+                    $scope.parent = '';
+                    $scope.target_names = [];
+                    $scope.target_aliases = [];
+
                     if (result.data && result.data.set ) {
-                        $scope.message(result.data.set.affectedRows + " boxes moved successfully");
+
+                        var sql = $scope.parseSQL(result.data.set);
+
+                        $scope.message(sql.affected + " boxes moved successfully");
+                        
+                        if (sql.changed != sql.affected) {
+                            $scope.warning("Not: only " + sql.changed + ' record(s) actually changed - may have been set already (?)');
+                        }
+
+                        if ($scope.reprint_barcodes) {
+                            $scope.api_print('rack', $scope.rack_ids);
+                        }
                     }
                     else if (result.data && result.data.length) {
                         $scope.warning(result.data[0]);
@@ -78,9 +122,10 @@ function rackController ($scope, $rootScope, $http, $q) {
                 });
             }
             else {
-                $scope.warning('Number of boxes [' + $scope.rack_ids.length 
-                    + ' does not match retrieved target names [' + $scope.targets.length + '] ... try again');
+                $scope.warning('Number of boxes [' + $scope.rack_ids.length
+                    + ' does not match retrieved target names [' + $scope.target_names.length + '] ... try again');
             }
+            
         }
         else {
             $scope.warning("Missing information required to move boxes");
@@ -91,6 +136,7 @@ function rackController ($scope, $rootScope, $http, $q) {
 
         if (!label) { label = 'AliasMap'}
         if (! $scope[label] ) { $scope[label] = {} }
+        
         var list = ids;
         if (ids.constructor === Array) {
             list = ids.join(',');
@@ -197,6 +243,8 @@ function rackController ($scope, $rootScope, $http, $q) {
 
     $scope.set_default_name = function (type, name, repeat) {
         
+        var deferred = $q.defer();
+
         $scope.reset_messages();
 
         if (!type) { type = 'Box' }
@@ -239,13 +287,23 @@ function rackController ($scope, $rootScope, $http, $q) {
                 $scope.next_in_line({ query: query, counter: 'Bnum', fill: fill, prefix: prefix, require: require, repeat: repeat} )
                 .then ( function (result) {
                     $scope[name] = result;
+                    deferred.resolve(result);
                 })
                 .catch ( function (err) {
+                    deferred.reject(err);
                     console.log("Problem retrieving next in line");
                 })
             }
+            else {
+                deferred.reject('no prefix');
+            }
         }
-        else { console.log("no parent or name ... skipping autoset") }
+        else { 
+            console.log("no parent or name ... skipping autoset");
+            deferred.reject('no parent');
+        }
+
+        return deferred.promise;
     }
 
  
