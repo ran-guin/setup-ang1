@@ -12,6 +12,7 @@ block content
     - rackList = id.split(/\s*,\s*/);
   
   -rackList = [3,4];
+  - var list = rackList.join(',');
 
   p &nbsp;
   div.container
@@ -20,23 +21,46 @@ block content
        div(ng-controller="LIMSController")
         div(ng-controller="FancyFormController")
           div(ng-controller="RackController" ng-init="#{init}")
+             
+            include ActiveSamples.jade
 
-            h3 Move Box(es) From: #{JSON.stringify(id)}
-            br
-            h3 To: 
-            br
-            input.input-lg.form-control.mandatory#parent(type='text' name = 'parent' ng-model='parent' ng-blur="set_default_name('Box', 'target', #{rackList.length})" required placeholder ='-- Scan Parent Rack --')
-            span.input-lg
-              input(type='checkbox' ng-model='fill_missing_numbers' ng-click="set_default_name('Box', 'target', #{rackList.length})" checked=false)
-              span &nbsp; Re-use missing numbers
+            h3 Move Box(es) to: &nbsp; &nbsp;
+              input.input-lg.mandatory#parent(type='text' name = 'parent' ng-model='parent' ng-blur="set_default_name('Box', 'target', #{rackList.length}); load_alias(parent,'Alias'); targetId=parent" required placeholder ='-- Scan Parent Rack --')
+              span.input-lg
+                input(type='checkbox' ng-model='fill_missing_numbers' ng-click="set_default_name('Box', 'target', #{rackList.length})" checked=false)
+                span &nbsp; Re-use missing numbers
 
-            h3 Transferring into new Box(es) : {{ target }}
-            span.input-lg
-              input(type='checkbox' ng-model='fill_missing_numbers' ng-click="set_default_name('Box', 'target', #{rackList.length})" checked=false)
-              span &nbsp; Print new barcodes            
-            p &nbsp;
+            
+            button(ng-click="load_alias('#{list}','Alias')") load alias
+            hr
+            table
+              tr
+                td
+                  h4 Initial Location(s):                  
+                td &nbsp;
+                td
+                  h4 Pending Target Location(s):
+              each box, i in rackList
+                tr
+                  td
+                    b Loc#{box} : &nbsp; &nbsp;
+                    b.text-danger {{Alias[ #{box} ]}}
+                  td(style='text-align: center') 
+                    b &nbsp; -> &nbsp;
+                  td(style='text-align: left') 
+                    span(ng-show="Alias && target && target[#{i}] ")
+                      //- b {{ target }}
+                      - var targetId = 
+                      span.text-success {{ Alias[targetId.substring(3,10)] }} 
+                        b {{ target[#{i}] }} 
+            hr
+            b Map {{ Alias }}
+            hr
             button.btn.btn-primary.btn-lg(-type='button') Move Box(es) to New Location
-
+            span.input-lg
+              input(type='checkbox' ng-model='print_new_barcodes' ng-click="set_default_name('Box', 'target', #{rackList.length})" checked=false)
+              span &nbsp; Print new barcodes         
+  
 
             if ! debug
               p &nbsp;
