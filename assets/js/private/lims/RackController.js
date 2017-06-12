@@ -101,7 +101,7 @@ function rackController ($scope, $rootScope, $http, $q) {
                         $scope.message(sql.affected + " boxes moved successfully");
                         
                         if (sql.changed != sql.affected) {
-                            $scope.warning("Not: only " + sql.changed + ' record(s) actually changed - may have been set already (?)');
+                            $scope.warning("Note: only " + sql.changed + ' record(s) actually changed - may have been set already (?)');
                         }
 
                         if ($scope.reprint_barcodes) {
