@@ -29,6 +29,7 @@ function rackController ($scope, $rootScope, $http, $q) {
                Samples = JSON.parse(config['Samples'])
             }
 
+            $scope.load_active_Samples(Samples);
         }
 
         console.log("initialization complete...");
@@ -84,6 +85,43 @@ function rackController ($scope, $rootScope, $http, $q) {
         else {
             $scope.warning("Missing information required to move boxes");
         }
+    }
+
+    $scope.load_alias = function (ids, label) {
+
+        if (!label) { label = 'AliasMap'}
+        if (! $scope[label] ) { $scope[label] = {} }
+        var list = ids;
+        if (ids.constructor === Array) {
+            list = ids.join(',');
+        }
+
+        list = list.replace(/Loc/ig,'');
+
+        var q = "SELECT Rack_Alias as alias, Rack_ID as id FROM Rack WHERE RAck_ID IN (" + list + ")";
+        
+        var url = "/remoteQuery";
+        console.log(q);
+        $http.post(url, { query : q })
+        .then ( function (result) {
+            if (result.data && result.data.length) {
+ 
+                for (var i=0; i<result.data.length; i++) {
+                    var hash = result.data[i];
+                    console.log('map ' + JSON.stringify(hash));
+                    $scope[label][hash.id] = hash.alias;
+                }
+                // $scope[label] = Map;
+                console.log(label + " Mapped to : " + JSON.stringify($scope[label]));
+            }
+            else {
+                $scope[label] = {};
+            }
+        })
+        .catch (function (err) {
+            $scope.warning("Error checking for alias: " + err);
+        }); 
+ 
     }
 
     $scope.newSlottedBox = function () {
