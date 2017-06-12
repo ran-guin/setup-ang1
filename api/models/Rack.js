@@ -208,7 +208,21 @@ module.exports = {
     Record.update('rack', ids, { FKParent_Rack__ID: parent, Rack_Name: names, Rack_Alias: aliases })
     .then ( function (result) {
       console.log("MOVED: " + JSON.stringify(result));
+
       deferred.resolve(result);
+
+      // Refactor save history ... 
+
+      
+      // Record.update_History('rack', ids, { FKParent_Rack__ID: parent, Rack_Name: names})
+      // .then (function (ok) {
+      //   deferred.resolve(result);
+      // })
+      // .catch ( function (err) {
+      //   console.log("Error logging history for rack movement");
+      //   deferred.resolve(result);
+      // });
+
     })
     .catch ( function (err) {
       console.log("Err: " + err);
