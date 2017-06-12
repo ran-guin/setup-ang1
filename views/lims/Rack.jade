@@ -25,7 +25,7 @@ block content
 
             include ./../core/errorAngularMsg.jade
 
-            h4.text-warning(ng-show="backfill_date") [Backfilling Move to: #{backfill_date}]
+            h4.text-warning(ng-show="backfill_move_date") [Backfilling Move to: {{ backfill_move_date }}]
             h3 Move Box(es) to: &nbsp; &nbsp;
               input.input-lg.mandatory#parent(type='text' name = 'parent' ng-model='parent' ng-blur="validate_parent(#{rackList.length})" required placeholder ='-- Scan Parent Rack --')
               span.input-lg
