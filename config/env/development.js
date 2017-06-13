@@ -18,7 +18,8 @@ module.exports = {
    ***************************************************************************/
 
   models: {
-     connection: 'testDB'
+     connection: 'testDB',
+     migrate: 'alter'
   },
 
   hookTimeout: 60000
