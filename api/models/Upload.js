@@ -37,7 +37,7 @@ module.exports = {
 
 		file
 	    .upload({
-	    	maxBytes: 500000
+	    	maxBytes: 40000000
 	    }, function (err, uploadedFiles) {                                   
 			if (err) deferred.reject(err); // res.serverError(err);
 			else if (uploadedFiles.length == 0) { 
