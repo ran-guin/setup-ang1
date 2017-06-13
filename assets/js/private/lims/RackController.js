@@ -49,21 +49,22 @@ function rackController ($scope, $rootScope, $http, $q) {
         
         if (!count) { count = 1 }
 
-        $scope.load_alias($scope.parent);
-        var parent_id = $scope.parent.replace(/Loc/ig,'');
-        $scope.parent_id = parent_id;
+        $scope.target_aliases = [];
 
-        var target_element = 'target_names';
+        if ($scope.parent) {
+            $scope.load_alias($scope.parent);
+            var parent_id = $scope.parent.replace(/Loc/ig,'');
+            $scope.parent_id = parent_id;
 
-        $scope.set_default_name('Box', target_element, count)
-        .then ( function (result) {
-            $scope.target_aliases = [];
-            for (var i=0; i<count; i++) {
-                $scope.target_aliases.push($scope.AliasMap[parent_id] + $scope[target_element][i] );
-            } 
-        })
+            var target_element = 'target_names';
 
-
+            $scope.set_default_name('Box', target_element, count)
+            .then ( function (result) {
+                for (var i=0; i<count; i++) {
+                    $scope.target_aliases.push($scope.AliasMap[parent_id] + $scope[target_element][i] );
+                } 
+            })
+        }
     }
 
     $scope.move_boxes = function () {
