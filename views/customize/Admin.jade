@@ -51,7 +51,7 @@ block content
                     div(ng-show="MenuList['limsuser'].length")
                       my-dropdown(placeholder='Select User' list="MenuList['limsuser']" selected='limsuser' ng-init="setup_Menu('limsuser', 'FK(user)', \"status='pending'\")" property='name') 
                   div.col-sm-2(ng-show="MenuList['limsuser'].length")
-                    button.btn-lg.btn-primary(type='button' ng-click="activate_user()") Update Access
+                    button.btn-lg.btn-primary(type='button' ng-click="activate_user(limsuser)") Update Access
                   div.col-sm-4(ng-show="MenuList['limsuser'].length")
                     input#admin(type='radio' name='status' value='lab' checked=1 ng-model='access')
                     label(for='admin') &nbsp; Lab
