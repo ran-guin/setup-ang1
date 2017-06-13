@@ -84,7 +84,10 @@ module.exports = {
 						var subData = data[type];
 						subData['Stock'] = stock_id;
 
-						subData = Record.to_Legacy(subData, subType.legacy_map);
+						var subType_aliases = subType.alias;
+						console.log(subType + ' aliases: ' + JSON.stringify(''));
+
+						subData = Record.to_Legacy(subData, subType_aliases);
 						console.log(type + ' Data: ' + JSON.stringify(subData));
 
 						// convert arrays after fields are mapped
