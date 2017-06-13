@@ -49,7 +49,7 @@ module.exports = {
 			// var type = StockData.type;
 			var N    = StockData.number_in_batch;
 
-			StockData = Record.to_Legacy(StockData, Stock.legacy_map);
+			StockData = Record.to_Legacy(StockData, Stock.alias);
 			console.log("Stock Data: " + JSON.stringify(StockData));
 
 			var subModel = '';
