@@ -18,8 +18,6 @@ module.exports = {
 		var Rack = body.Rack;
 		var Samples = body.Samples;
 		var backfill_date = body.backfill_date;
-
-		console.log("BodY: " + JSON.stringify(body));
 		 
 		return res.render('lims/Rack', { id: Rack, Samples: Samples, backfill_date: backfill_date })
 
