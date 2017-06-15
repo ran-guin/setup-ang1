@@ -49,7 +49,7 @@ module.exports = {
 			// var type = StockData.type;
 			var N    = StockData.number_in_batch;
 
-			StockData = Record.to_Legacy(StockData, Stock.legacy_map);
+			StockData = Record.to_Legacy(StockData, Stock.alias);
 			console.log("Stock Data: " + JSON.stringify(StockData));
 
 			var subModel = '';
@@ -84,7 +84,10 @@ module.exports = {
 						var subData = data[type];
 						subData['Stock'] = stock_id;
 
-						subData = Record.to_Legacy(subData, subType.legacy_map);
+						var subType_aliases = subType.alias;
+						console.log(subType + ' aliases: ' + JSON.stringify(''));
+
+						subData = Record.to_Legacy(subData, subType_aliases);
 						console.log(type + ' Data: ' + JSON.stringify(subData));
 
 						// convert arrays after fields are mapped

@@ -17,10 +17,9 @@ module.exports = {
    * environment (see config/connections.js and config/models.js )           *
    ***************************************************************************/
 
-  migrate: 'safe',
   models: {
-     connection: 'testDB',
-     migrate: 'safe'
+     connection: 'productionDB',
+     migrate: 'safe',
   },
 
   hookTimeout: 60000

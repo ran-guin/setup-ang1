@@ -690,23 +690,30 @@ module.exports = {
 	},
 
 	to_Legacy : function (data, map) {
+
 		// gets data in legacy format from new data format ... 
-		var mapped_keys = Object.keys(map);
-		var input_keys  = Object.keys(data);
-
 		var mapped = {};
-		for (var i=0; i<input_keys.length; i++) {
-			var new_field = input_keys[i];
-			var legacy_field = map[new_field];
 
-			if (map[new_field]) {
-				mapped[legacy_field] = data[new_field];
-			}
-			else {
-				mapped[new_field] = data[new_field];
+		if (map && data) {
+			var input_keys  = Object.keys(data);
+			var mapped_keys = Object.keys(map);
+
+			for (var i=0; i<input_keys.length; i++) {
+				var new_field = input_keys[i];
+				var legacy_field = map[new_field];
+
+				if (map[new_field]) {
+					mapped[legacy_field] = data[new_field];
+				}
+				else {
+					mapped[new_field] = data[new_field];
+				}
 			}
 		}
-
+		else {
+			mapped = data;
+		}
+		
 		return mapped;
 	},
 

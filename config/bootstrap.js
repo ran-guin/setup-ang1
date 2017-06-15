@@ -36,6 +36,7 @@ module.exports.bootstrap = function(cb) {
 		console.log("Host: \t" + conn.host);
 		console.log("DB: \t" + conn.database);
 		console.log("User: \t" + conn.user + "\n");
+		console.log("\nMigrate:\t" + sails.config.models.migrate);
 	}
 	else {
 		console.log("Connection parameters undefined");
@@ -48,11 +49,13 @@ module.exports.bootstrap = function(cb) {
 	var added_enum = 0;
 
 	var promises = [];
-	for (var i=0; i< models.length; i++) {
+	if (sails.config.models.migrate && sails.config.models.migrate !== 'safe') {
+		for (var i=0; i< models.length; i++) {
 
-  		var Model = sails.models[models[i]];
-		promises.push( fix_enums(Model) );
-		promises.push( initialize_table(Model) );
+	  		var Model = sails.models[models[i]];
+			promises.push( fix_enums(Model) );
+			promises.push( initialize_table(Model) );
+		}
 	}
 	
 	q.all(promises)
