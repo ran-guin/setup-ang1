@@ -127,11 +127,12 @@ module.exports = {
 								var att = attributeData[i];
 								var target = Map[att.reference_id][j];
 											
-								var insertion = '(' + target + ',' + att.id + ",'" + att.value + "')"; 
+								var insertion = '(' + target + ',' + att.id + ',"' + att.value + '")'; 
 								insert.push(insertion);	
 							}
 						}
 						var sqlInsert = insertPrefix + insert.join(',');
+						console.log("* SQL * " + sqlInsert);
 
 						Record.query(sqlInsert, function (insertError, attUpdate){
 							if (insertError) { 
