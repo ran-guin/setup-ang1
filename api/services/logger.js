@@ -43,6 +43,12 @@ module.exports = {
 		var data = options || {};
 		data.level = level || 'error';
 
+		if (e && e.constructor === String) {
+			console.log("Convert string message to error");
+
+			e = new Error(e);
+		}
+
 		if (sails && sails.config && sails.config.payload) {
 			var payload = sails.config.payload;
 			data.user = payload.user;
