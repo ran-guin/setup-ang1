@@ -88,7 +88,7 @@ function wellMapperController ($scope, $rootScope, $http, $q ) {
             $scope.mandatory_list = [];
         }
         else {
-            $scope.mandatory_list = ['target_format'];
+            $scope.mandatory_list = ['target_format', 'transfer_qty'];
         }
 
         // if (!$scope.map.target_format) { $scope.validation_error('target_format','Still require format info'); }
@@ -102,14 +102,14 @@ function wellMapperController ($scope, $rootScope, $http, $q ) {
         }
 
         console.log("Validate " + $scope.map.transfer_type);
-        if (! $scope.map.transfer_qty && $scope.map.transfer_type==='Aliquot') { 
+        // if (! $scope.map.transfer_qty && $scope.map.transfer_type==='Aliquot') { 
 
-            $scope.annotate_element('transfer_qty','missing qty for aliquot', 'error');
-        }
+        //     $scope.annotate_element('transfer_qty','missing qty for aliquot', 'error');
+        // }
  
-        else {
-            $scope.clear_validations('transfer_qty','error');
-        }
+        // else {
+        //     $scope.clear_validations('transfer_qty','error');
+        // }
 
 
         options.form = $scope.map;
