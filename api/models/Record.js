@@ -1461,22 +1461,34 @@ module.exports = {
 
 
 		var fields = [];
-		if (data.length) { fields = Object.keys(data[0]) || [] }
+		if (data.length) { fields = Object.keys(data[0]) }
+
+		var valid_fields = [];
+		fields.map( function (f) {
+			if (f && f !== '0') {
+				console.log('yes: ' + f);
+				valid_fields.push(f);
+			}
+			else {
+				console.log("Warning: zero value found as key in data hash (?)");
+			}
+		});
+		// WTF !!! - fields seems to have a phantom "0" as the first element (WTF !! ) - added this to clear it out..
 
 		var Values = [];
 
 		console.log(model + ' : ' + Mod + ' -> ' + Mod.tableName + '=' + table);
 		console.log("insertion data: " + JSON.stringify(data[0]) + '...');
-		
+
 		for (var index=0; index<data.length; index++) {
 			var Vi = [];
-			for (var f=0; f<fields.length; f++) {
-				var input_value = data[index][fields[f]];
+			for (var f=0; f<valid_fields.length; f++) {
+				var input_value = data[index][valid_fields[f]];
 
-				var value = Record.parseValue(input_value, { model: model, field: fields[f] });
+				var value = Record.parseValue(input_value, { model: model, field: valid_fields[f] });
 
-				if (resetData && resetData[fields[f]]) {
-					var resetValue = Record.parseValue( resetData[fields[f]], { model: model, field: fields[f], defaultTo : value });
+				if (resetData && resetData[valid_fields[f]]) {
+					var resetValue = Record.parseValue( resetData[valid_fields[f]], { model: model, field: valid_fields[f], defaultTo : value });
 					Vi.push(resetValue);
 				}
 				else {
@@ -1488,7 +1500,7 @@ module.exports = {
 		}
 		// if (table === model) { fields.push('createdAt') }
 
-		var createString = action + " INTO " + table + " (" + fields.join(',') + ") VALUES " + Values.join(', ') + onDuplicate;
+		var createString = action + " INTO " + table + " (" + valid_fields.join(',') + ") VALUES " + Values.join(', ') + onDuplicate;
 		console.log("\n** Insert SQL: \n" + createString); 
 
 		Record.query_promise(createString)
