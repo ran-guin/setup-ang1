@@ -248,7 +248,7 @@ module.exports = {
           success: function(gravatarUrl) {
           // Create a User with the params sent from
           // the sign-up form --> signup.jade
-            console.log("Create user : " + user);
+            console.log("Create new user : " + user);
                     
             Config.printer_groups()
             .then (function (printers) {
@@ -262,6 +262,7 @@ module.exports = {
                 access: 'public',
               };
 
+              console.log('.. validate registration');
               User.validate_registration(data)
               .then ( function (result) {
 
@@ -269,43 +270,36 @@ module.exports = {
                   
                   var custom_keys = Object.keys(result);
 
-                  var payload = { access: 'New User', url: sails.config.globals.url };
+                  var url;
+                  if (sails.config && sails.config.globals) {
+                    url = sails.config.globals.url;
+                    console.log("URL: " + sails.config.globals.url);
+                  }
+
+                  var payload = { access: 'New User', url: url };
 
                   for (var i=0; i<custom_keys.length; i++) {
                       var key = custom_keys[i];
                       var val = result[0][key];
 
-                      data[key] = val;
-                      payload[key] = val;
+                      if (key) {
+                        data[key] = val;
+                        payload[key] = val;
+                      }
                   }
 
-                  User.create(data, function userCreated(err, newUser) {
-                    if (err) {
+                  console.log('add user record...');
+                  console.log(JSON.stringify(data));
 
-                      console.log("err.invalidAttributes: " + err.invalidAttributes)
+                  Record.createNew('user', data)
+                  .then (function (result) {
 
-                      // If this is a uniqueness error about the email attribute,
-                      // send back an easily parseable status code.
-                      if (err.invalidAttributes && err.invalidAttributes.email && err.invalidAttributes.email[0]
-                        && err.invalidAttributes.email[0].rule === 'unique') {
+                      if (req.session) { req.session.User = result.insertId }
                       
-                          return res.render('customize/public_home', { printers : printers, error : "Email address already in use" });                      
-                      }
-
-                      // Otherwise, send back something reasonable as our error response.
-                      return res.negotiate(err);
-                    }
-                    else {
-                      // Log user in
-                      req.session.User = newUser.id;
-                      
-                      console.log("URL: " + sails.config.globals.url);
-
-                      payload.id = newUser.id;
-
+                      payload.id =  result.insertId;
                       var token = jwToken.issueToken(payload);
                       
-                      sails.config.messages.push("Generated new user successfully [ name: '" + user + "'; id: " + newUser.id + ' ]');
+                      sails.config.messages.push("Generated new user successfully [ name: '" + user + "'; id: " +  result.insertId + ' ]');
 
                       console.log('Generated new user: ' + JSON.stringify(payload));
                       
@@ -314,15 +308,13 @@ module.exports = {
                       return res.render('customize/public_home', { 
                         printers : printers, 
                         message: "Registered.  Access pending approval by administrator" ,
-                      });                      
-                    }
+                      });                                          
                   })
+                  .catch ( function (err) {
+                     return res.render('customize/public_home', { printers : printers, error : "Problem adding user..." }); 
+                  });
                 }
                 else if (result.length === 0) {
-
-
-
-
                   return res.render('customize/public_home', {  printers : printers, error : "no valid reference user - please see administrator" })
                 }
                 else if (result.length > 1) {
