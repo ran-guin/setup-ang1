@@ -227,7 +227,7 @@ module.exports = {
 
 				// map[posn] = obj[f].data[i][j-1];
 
-				if ( map[posn].match(/(EMPTY|No Tube)/i) ) { empty++ }
+				if (map && map[posn] && map[posn].match(/(EMPTY|No Tube)/i) ) { empty++ }
 				// console.log("MAP " + map[posn]);
 
 				applied = applied + 1;
