@@ -298,7 +298,7 @@ app.controller('FancyFormController',
                 console.log(result.length + ' validated promises [errors, warnings, messages, required, db, validate, units, list :]');
                 var valid = true;
                 for (var i=0; i<result.length; i++) {
-                    console.log(i + ': ' + JSON.stringify(result[i]));
+                    // console.log(i + ': ' + JSON.stringify(result[i]));
                     if (! result[i].valid) { valid = false }
                 }
 

@@ -72,7 +72,7 @@ function wellController ($scope, $rootScope, $http, $q ) {
 
     $scope.redistribute = function (reset, execute) {
 
-        $scope.reset_messages();
+        $scope.reset_messages('redistribute');
         
         console.log("Redistribute wells");
         if (execute) {

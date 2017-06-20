@@ -5,20 +5,42 @@ app.controller('SharedController',
     function ($scope, $q, $rootScope, $http, $location) {
 
         console.log('loaded Shared Controller');
-        
-        $scope.reset_messages = function () {
+        $scope.messages = [];
+        $scope.warnings = [];
+        $scope.errors   = [];
+        $scope.persistent = { messages: [], warnings: [], errors: [] };
+
+        $scope.reset_messages = function (tag) {
             $scope.messages = [];
             $scope.warnings = [];
             $scope.errors   = [];
+
+            console.log('Reset messages ' + tag);
+
+            var persistent_types = Object.keys($scope.persistent);
+
+            // retain persistent messages for one more cycle ...
+            for (var i=0; i<persistent_types.length; i++) {
+                var type = persistent_types[i];
+
+                if ($scope.persistent[type].length) {
+                    $scope[type] = $scope.persistent[type];
+                    $scope.persistent[type] = [];
+                    console.log("retained persistent " + type);
+                    console.log(JSON.stringify($scope[type]));
+                }
+                else {
+                    console.log("no persistent " + type);
+                }
+            }
 
             $scope.repeat_warnings = {};
             $scope.repeat_errors = {};
             $scope.repeat_messages = {};
 
-            console.log('Reset messages');
         }
 
-        $scope.reset_messages();
+        $scope.reset_messages('init');
 
         $scope.remoteLog = function log(err, level) {
             var msg;
@@ -79,7 +101,7 @@ app.controller('SharedController',
         $scope.nextMonth = new Date(start.getTime() + 30 * 24 * 60 * 60 * 1000 ).toISOString();
 
         /** timer with date + hours + minutes - automatically updates  **/
-        var update_seconds = 1;
+        var update_seconds = 1;           
         setInterval (function() {
             var now = new Date();
             $scope.now = now;
@@ -103,6 +125,24 @@ app.controller('SharedController',
                 $scope.messages.push(msg);
             }
             console.log("Angular Message: " + msg);
+        }
+
+       $scope.set_persistent = function (type, msg) {
+            type = type + 's';
+
+            if (Object.keys($scope.persistent).indexOf(type) > -1) {
+                $scope[type].push(msg);
+
+                var repeat = $scope.persistent[type].indexOf(msg);
+                if ( repeat === -1 ) {
+                    $scope.persistent[type].push(msg);
+                }
+                console.log("Persistent Angular message: " + msg);
+            }
+            else {
+                console.log("invalid persistent type: " + type);
+                console.log("Valid types :" + JSON.stringify($scope.persistent));
+            }
         }
 
         $scope.warning = function (msg) {

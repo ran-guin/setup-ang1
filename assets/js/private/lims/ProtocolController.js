@@ -305,7 +305,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
     $scope.complete = function complete (action) {
 
         console.log("reset message before complete execution");
-        $scope.reset_messages();
+        $scope.reset_messages('complete');
 
         $scope.uninjectData();
 
@@ -313,7 +313,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
         $scope.action = action;
 
         var timestamp = $scope.backfill_prep_date || $scope.timestamp;
-	console.log("Payload: " + JSON.stringify($scope.payload));
+        console.log("Payload: " + JSON.stringify($scope.payload));
 
         // Legacy fields 
         var PrepData = { 
@@ -504,7 +504,12 @@ function protocolController ($scope, $rootScope, $http, $q) {
                     }
 
                     if ($scope.step.stepNumber < $scope.protocol.steps) {
-                        console.log('completed... go to next step');
+                        $scope.set_persistent('message', $scope.payload.user + " completed '" + $scope.Step.name + "' : " + timestamp);
+                        console.log($scope.payload.user + " completed " + $scope.Step.name + " : " + timestamp);
+
+                        console.log(JSON.stringify($scope.messages));
+
+                        console.log('Completed... go to next step');
                         $scope.forward(action);
                         $scope.active.last_step.status = 'In Progress';
                     }
@@ -779,7 +784,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
 
         console.log("Distribute samples...");
         // console.log('reset messages before redistribution');
-        $scope.reset_messages();
+        // $scope.reset_messages('initiate transfer');
 
         var deferred = $q.defer(); 
 

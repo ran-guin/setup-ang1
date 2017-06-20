@@ -302,7 +302,7 @@ function wellMapperController ($scope, $rootScope, $http, $q ) {
         if (!Options) { Options = {} }
         var target_element = Options.target_element || 'target_rack';
 
-        $scope.reset_messages();
+        $scope.reset_messages('redistribute samples');
         $scope.clear_validations(target_element);
         $scope.reset_form_validation();
 
