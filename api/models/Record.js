@@ -155,6 +155,7 @@ module.exports = {
 			conditions.push(field + " IN ('" + ids.join("','") + "')");
 			conditions.push("Attribute_Name='" + attribute + "'");
 
+			select = select + ', Attribute_Value as reference';
 			table = table + ', Attribute, ' + table + '_Attribute';
 		}
 		else if (ids && ids.length) {
@@ -183,7 +184,18 @@ module.exports = {
 	 		.then ( function (result) {
 	 			console.log('validated: ' + JSON.stringify(result));
 	 			var excluded = [];
-	 			var validated = _.pluck(result,'id') || [];
+
+	 			var validated = [];
+	 			if (result.length && result[0].reference) {
+	 				// revert order of ids to order of reference list supplied
+	 				var restored_order = Record.restore_order(result, ids, 'reference');
+	 				console.log('restored order : ' + JSON.stringify(validated));
+	 				validated = _.pluck(restored_order, 'id') || [];
+	 			}
+	 			else {
+		 			validated = _.pluck(result,'id') || [];
+
+	 			}
 
 	 			if (ids.length !== result.length) {
 	 				excluded = _.difference( ids , validated);
