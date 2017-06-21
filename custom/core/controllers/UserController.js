@@ -62,6 +62,20 @@ module.exports = {
 
     console.log('attempt login by ' + tryuser);
 
+    var warning = null;
+    if (req.session && req.session.payload) {
+      if (req.session.payload.userid) {
+        if (req.session.payload.user ==== tryuser) {
+          warning = req.session.payload.user + " is still logged on in another window (okay)";
+        }
+        else {
+          warning = req.session.payload.user + " was still signed in !  Please ensure users log out when finished with session.";
+        }
+        console.log(warning)
+      }
+    }
+    console.log("Session: ?" + JSON.stringify(req.session));
+
     var Passwords = require('machinepack-passwords');
 
     // Try to look up user using the provided email address
@@ -75,11 +89,13 @@ module.exports = {
     .then (function (results) {
 
       if (!results || (results == 'undefined') ) { 
-        return res.render("customize/public_login", {error: "Unrecognized user: '" + tryuser + "'", email: tryuser });
+        return res.render("customize/public_login", {error: "Unrecognized user: '" + tryuser + "'", warning: warning, email: tryuser });
       }
       var user = results[0];
 
-      if (user == undefined) { return res.render("customize/public_login", { error: "User not found.  Try again or Register for an account"} ) }
+      if (user == undefined) { 
+        return res.render("customize/public_login", { error: "User not found.  Try again or Register for an account", warning: warning});
+      }
 
       // Compare password attempt from the form params to the encrypted password
       // from the database (`user.password`)
@@ -88,7 +104,7 @@ module.exports = {
       console.log("compare " + pwd + ' to ' + user.encryptedPassword);
 
       if (!user.encryptedPassword) {
-        return res.render("customize/public_login", {error: "User has not set up password.  Please see admin." });
+        return res.render("customize/public_login", {error: "User has not set up password.  Please see admin.", warning: warning});
       }
 
       Passwords.checkPassword({
@@ -104,7 +120,7 @@ module.exports = {
         // password from the database...
         incorrect: function () {
           console.log("incorrect password");
-          return res.render("customize/public_login", {error: "Incorrect user/password... try again..." });
+          return res.render("customize/public_login", {error: "Incorrect user/password... try again...", warning: warning});
         },
 
         success: function (){
@@ -132,6 +148,7 @@ module.exports = {
               return res.render('customize/public_home', { 'message' : 'Access still pending approval by Administrator'});
             } 
             else {
+              payload['warning'] = warning;
               return res.render('customize/private_home', payload);     
             }
           })
