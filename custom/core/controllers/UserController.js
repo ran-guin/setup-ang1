@@ -65,7 +65,7 @@ module.exports = {
     var warning = null;
     if (req.session && req.session.payload) {
       if (req.session.payload.userid) {
-        if (req.session.payload.user ==== tryuser) {
+        if (req.session.payload.user === tryuser) {
           warning = req.session.payload.user + " is still logged on in another window (okay)";
         }
         else {
