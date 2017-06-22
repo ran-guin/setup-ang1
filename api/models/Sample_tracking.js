@@ -14,6 +14,10 @@ module.exports = {
   	Moved_to  : { model : 'rack' },
   	moved : { type : 'datetime' },
   	Moved_by : { model : 'user' }
-  }
+  },
+
+  
+
+
 };
 
