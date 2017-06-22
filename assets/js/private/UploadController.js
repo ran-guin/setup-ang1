@@ -13,7 +13,8 @@ function uploadController ($scope, $rootScope, $http, $q) {
 		if (config) {
 			$scope.data = config['data'];
 		}
-        
+        console.log('initialize upload controller');
+
         $scope.initialize_payload(config);
  
 		$scope.page = 1;
@@ -104,6 +105,9 @@ function uploadController ($scope, $rootScope, $http, $q) {
 				$scope.get_block({ retain_messages : true });
 			}
 			else { $scope.warnings.push("Could not auto-set starting row & column length") }
+		}
+		else {
+			$scope.warning("Could not find first page...");
 		}
 	}
 
