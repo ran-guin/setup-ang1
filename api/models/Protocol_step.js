@@ -78,7 +78,7 @@ module.exports = {
 			}
 			else {
 				var protocols = _.uniq( _.pluck(data, 'last_protocol') );
-				last_step = { protocol: protocols[0], protocol_id : protocol_ids[0], number: numbers[0], name: names[0], status: statuses[0], transfer_type: transfer, transfer_settings: settings};
+				last_step = { protocol: protocols[0], protocol_id : protocol_ids[0], number: numbers[0], name: names[0], status: statuses[0], transfer_type: transfer[0], transfer_settings: settings[0]};
 			}
 
 			console.log("Last Step: " + JSON.stringify(last_step));
