@@ -149,6 +149,8 @@ module.exports = {
 
 		console.log("COMPLETE Lab Protocol: " + JSON.stringify(data));
 
+		var warning = User.monitor(req.session);
+
 		Lab_protocol.complete(data)
 		.then ( function (result) {
 			console.log("returned from Lab_protocol.complete method...");
@@ -156,6 +158,12 @@ module.exports = {
 			// console.log('Merged messages: ' + JSON.stringify(merged_Messages));
 
 			var returnVal = Record.wrap_result(result);
+
+			// remove this warning section after testing... 
+			if (warning) { 
+				returnVal.testWarning = warning;
+				console.log('User conflict warning = ' + warning);
+			}
 
 			console.log("\n* MSG: " + sails.config.messages.join(',') );
 			return res.json( returnVal );  
