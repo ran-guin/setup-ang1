@@ -3,8 +3,9 @@ block content
   div.container(style='width:90%')
     h3 File Upload
 
-    - private_config.data = data;
-    - var init = "initialize(" + JSON.stringify(private_config) + ")";
+    - var config = private_config || {};
+    - config.ata;
+    - var init = "initialize(" + JSON.stringify(config) + ")";
 
     div(ng-app='myApp')
       div(ng-controller="SharedController")

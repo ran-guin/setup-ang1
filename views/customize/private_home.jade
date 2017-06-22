@@ -1,7 +1,8 @@
 extends privateLayout
 block content
 
-  - var init = "initialize_payload(" + JSON.stringify(private_config) + ")";
+  - var config = private_config || {};
+  - var init = "initialize_payload(" + JSON.stringify(config) + ")";
 
   div.main.container
      div(ng-app='myApp' ng-cloak=1)

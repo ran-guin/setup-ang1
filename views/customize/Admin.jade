@@ -1,7 +1,8 @@
 extends privateLayout
 block content
 
-  - var init = "initialize(" + JSON.stringify(private_config) + ")";
+  - var config = private_config || {};
+  - var init = "initialize(" + JSON.stringify(config) + ")";
 
   - lookups = ['Plate_Format', 'Sample_Type'];
 
