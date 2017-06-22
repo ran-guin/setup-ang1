@@ -467,7 +467,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
             $http.post(url, data)
             .then ( function (returnVal) {
                 // console.log("Returned: " + JSON.stringify(returnVal));
-
+ 
                 var completeResult = $scope.parse_messages(returnVal.data);
 
                 console.log("\n **** Step Posted Successfully ***");
@@ -518,8 +518,15 @@ function protocolController ($scope, $rootScope, $http, $q) {
                         $scope.protocol.status = 'Completed';
                         $scope.active.last_step.status = 'Completed';
                         $scope.active.last_step.name = 'Completed Protocol';
-                        $scope.messages.push("Completed '" + $scope.active.protocol.name + "'' Protocol...")
+                        $scope.messages.push("Completed '" + $scope.active.protocol.name + "' Protocol...")
                     }
+
+                    // Testing message only ... 
+                    if (returnVal.data.testWarning) { 
+                        console.log("GOT TEST WARNING : " + returnVal.data.testWarning);
+                        $scope.warnings.push(returnVal.data.testWarning);
+                    } 
+
                 }
 
                 if (action == 'Debug') {
