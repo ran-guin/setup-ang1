@@ -13,6 +13,20 @@ module.exports = _.merge({}, BaseModel, {
 
   },
 
+  monitor: function (session) {
+    if (sails.config && sails.config.payload && session && session.payload) {
+      if (sails.config.payload.user === session.payload.user) {
+        return '';
+      }
+      else {
+        return "POTENTIAL USER CONFLICT";
+      }
+    }
+    else {
+      return "No payload found in session";
+    }
+  },
+
   validate : function  (tryuser) {
     // customizable ... 
     var deferred = q.defer();
