@@ -1,8 +1,7 @@
 extends privateLayout
 block content
 
-  - var config = { payload: sails.config.payload };
-  - var init = "initialize(" + JSON.stringify(config) + ")";
+  - var init = "initialize(" + JSON.stringify(private_config) + ")";
 
   - lookups = ['Plate_Format', 'Sample_Type'];
 

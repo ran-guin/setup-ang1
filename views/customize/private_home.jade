@@ -1,7 +1,7 @@
 extends privateLayout
 block content
-  - var config = { payload: sails.config.payload };
-  - var init = "initialize_payload(" + JSON.stringify(config) + ")";
+
+  - var init = "initialize_payload(" + JSON.stringify(private_config) + ")";
 
   div.main.container
      div(ng-app='myApp' ng-cloak=1)

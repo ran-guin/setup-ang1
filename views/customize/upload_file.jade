@@ -3,16 +3,12 @@ block content
   div.container(style='width:90%')
     h3 File Upload
 
-    - var config = { data: data };
-    - var init = "initialize(" + JSON.stringify(config) + ")";
-    - var access;
-
-    if session && session.payload
-      - access = session.payload.access
+    - private_config.data = data;
+    - var init = "initialize(" + JSON.stringify(private_config) + ")";
 
     div(ng-app='myApp')
-      div(ng-controller="SharedController", ng-init="#{init}")
-       div(ng-controller="LIMSController", ng-init="#{init}")
+      div(ng-controller="SharedController")
+       div(ng-controller="LIMSController")
         div(ng-controller="UploadController", ng-init="#{init}")
 
           br 

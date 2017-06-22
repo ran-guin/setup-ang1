@@ -1,7 +1,7 @@
 extends privateLayout
 block content
-  - var config = { payload: sails.config.payload };
-  - var init = "initialize_payload(" + JSON.stringify(config) + ")";
+
+  - var init = "initialize_payload(" + JSON.stringify(private_config) + ")";
 
   if !found found = [];
 
