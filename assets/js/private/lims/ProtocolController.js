@@ -56,7 +56,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
         }
 
         console.log("Steps: " + JSON.stringify(config['Steps']));
-        console.log('Protoco: ' + JSON.stringify(config['protocol']));
+        console.log('Protocol: ' + JSON.stringify(config['protocol']));
 
         if (config && config['Steps'] && config['protocol']) { 
 
@@ -93,20 +93,21 @@ function protocolController ($scope, $rootScope, $http, $q) {
                             else if ( $scope.active.last_step.name === 'Completed Protocol') {
                                 $scope.messages.push("Completed '" + $scope.active.last_step.protocol + "' protocol");
                             }
-                            else if ( $scope.active.last_step.status === 'Completed Transfer') {
+                            else if ( $scope.active.last_step.transfer_type) {
                                 var format = $scope.active.Samples[0].container_format;
 
-                                if ($scope.active.last_step.name.match(format) ) {
-                                    console.log("Target plates found");
-                                    $scope.active.stepNumber = i+2;
-                                    $scope.messages.push("Continuing protocol after '" + $scope.active.last_step.name + "' ...");
+                                // if ($scope.active.last_step.name.match(format) ) {
+                                //     console.log("Target plates found");
+                                //     $scope.active.stepNumber = i+2;
+                                //     $scope.messages.push("Continuing protocol after '" + $scope.active.last_step.name + "' ...");
 
-                                }
-                                else {
-                                    console.log($scope.active.last_step.name + ' not ' + format);
+                                // }
+                                // else {
+                                    // console.log($scope.active.last_step.name + ' not ' + format);
+                                    console.log("Stop continuation at transfer step.");
                                     $scope.active.stepNumber = i+1;
-                                    $scope.messages.push("already completed '" + $scope.active.last_step.name + "' ... repeat if required or fetch target samples to continue protocol");
-                                }
+                                    $scope.set_persistent('message', "already completed '" + $scope.active.last_step.name + "' ... repeat if required or fetch target samples to continue protocol");
+                                // }
                             }
                             else {
                                 $scope.active.stepNumber = i+2;
