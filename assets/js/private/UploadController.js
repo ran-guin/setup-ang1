@@ -13,7 +13,9 @@ function uploadController ($scope, $rootScope, $http, $q) {
 		if (config) {
 			$scope.data = config['data'];
 		}
-
+        
+        $scope.initialize_payload(config);
+ 
 		$scope.page = 1;
 		$scope.skip = 0;
 		$scope.starting_row = 2;
