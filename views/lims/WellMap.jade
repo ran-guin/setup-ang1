@@ -1,12 +1,24 @@
 extends ./../customize/privateLayout
 block content
 
-  - targets = [];
-  - config1 = { plate_ids : plate_ids, Samples : Samples, target_size: target_size, Target : target, Options : options, sizes : sizes};
+  - var targets = [];
+  
+  - var config1 = private_config || {};
+  - config1.plate_ids = plate_ids
+  - config1.Samples = Samples;
+  - config1.target_size = target_size;
+  - config1.Target = target
+  - config1.Options = options
+  - config1.sizes = sizes;
 
-  - var init_options = { distribute : 1 };
+  - config1.distribute = 1;
+
   - var init1 = "initialize(" + JSON.stringify(config1) + ',' + JSON.stringify(init_options) + ")";
-  - config2 = { plate_ids : plate_ids, Samples : Samples};
+
+  - config2 = private_config || {};
+  - config2.plate_ids = plate_ids
+  - config2.Samples = Samples;
+
   - var init2 = "initialize(" + JSON.stringify(config2) + ")";
   
   div.container

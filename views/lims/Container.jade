@@ -5,8 +5,11 @@ block content
   //    - plate_ids (array); 
   //    - Samples   (array of hashes)
 
-  - var config = { plate_ids: plate_ids, Samples: Samples, payload: sails.config.payload};
+  - var config = private_config || {};
+  - config.plate_ids = plate_ids;
+  - config.Samples = Samples;
   - var init = "initialize(" + JSON.stringify(config) + ")";
+
   - var sampleList
   if plate_ids 
     - sampleList = plate_ids.split(/\s*,\s*/);

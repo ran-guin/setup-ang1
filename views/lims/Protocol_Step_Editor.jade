@@ -9,8 +9,6 @@ block content
     //    - Steps      (array of hashes)
     //    - attributes (array of hashes)
 
-    //- flds = fields || []; 
-    //- units = { 'solution_qty' : 'solution_qty_units', 'transfer_qty' : 'transfer_qty_units'};
     - aliases = { 'equipment' : 'Equip', 'solution' : 'Sol' }
     - var input_options2 = ['transfer_qty', 'split', 'solution_qty', 'solution', 'equipment'];
 
@@ -38,10 +36,13 @@ block content
     - var xfer_options = ['transfer_qty', 'Split', 'reset_focus', 'location', 'fill_by', 'load_by'];
     - var xfer_input_options = ['transfer_qty', 'Split', 'location'];
 
-    - var configParams = { record: record, payload: session.payload, input_options: input_options, custom_options: xfer_options};
-    - var init = "initialize(" + JSON.stringify(configParams) + ")";
-
-
+    - var config = private_config || {};
+    - config.record = record;
+    - config.input_options = input_options;
+    - config.custom_options = xfer_options;
+    
+    - var init = "initialize(" + JSON.stringify(config) + ")";
+    
     div(ng-app='myApp' ng-cloak=1)
      div(ng-controller="SharedController")
       div(ng-controller="FancyFormController")
@@ -448,5 +449,4 @@ block content
 
               h3 Angular
               b Record: {{ JSON.stringify(record) }}
-              b sails.config.payload: #{ JSON.stringify(sails.config.payload) }
-              b session.payload #{ JSON.stringify(session.payload) }
+              b payload: #{ JSON.stringify(config.payload) }

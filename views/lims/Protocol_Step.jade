@@ -10,18 +10,21 @@ block content
     //    - Steps      (array of hashes)
     //    - attributes (array of hashes)
 
-    - var payload;
-    if (sails && sails.config)
-        - payload = sails.config.payload;
+    - var config = private_config || {};
+    - config.protocol = protocol;
+    - config.plate_ids = plate_ids;
+    - config.plate_set = plate_set;
+    - config.Samples = Samples;
+    - config.Steps = Steps;
+    - config.Attributes = attributes;
+    - config.last_step  = last_step;
+    - config.backfill_date = backfill_date;
 
-    - var configParams = { payload: payload, protocol: protocol, plate_ids: plate_ids, plate_set: plate_set, Samples: Samples, Steps : Steps, Attributes: attributes, last_step: last_step, backfill_date: backfill_date};
-  
-    - var init_options = { distribute : 1 };
-    - var initP = "initialize(" + JSON.stringify(configParams) + ")";    
-    - var initW = "initialize(" + JSON.stringify(configParams) + ',' + JSON.stringify(init_options) + ")";    
+    - var initP = "initialize(" + JSON.stringify(config) + ")";   
 
-    //- flds = fields || []; 
-    //- units = { 'solution_qty' : 'solution_qty_units', 'transfer_qty' : 'transfer_qty_units'};
+    - config.distribute = 1; 
+    - var initW = "initialize(" + JSON.stringify(config) + ")";    
+
     - aliases = { 'equipment' : 'Equip', 'solution' : 'Sol' }
     - attributes = attributes || {}; // {'Thaw_Time' : 'integer' }
 
@@ -232,8 +235,7 @@ block content
                 h5 Attributes: #{JSON.stringify(attributes)}
 
                 hr
-                b #{sails.config.payload}
-                b #{ JSON.stringify(sails.config.payload) }
+                b Payload: #{config.payload}
 
                 hr
                 b Config Messages:

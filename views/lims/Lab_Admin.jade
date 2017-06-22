@@ -1,6 +1,7 @@
 extends ./../customize/privateLayout
 block content
-  - var config = { payload: sails.config.payload };
+  
+  - var config = private_config || {};
   - var init = "initialize(" + JSON.stringify(config) + ")";
 
   - lookups = ['Plate_Format', 'Sample_Type'];
@@ -8,10 +9,9 @@ block content
   div.container
     h2  Lab Admin Page
       div.navbar-right
-        if sails.config.payload && sails.config.payload.access === 'admin'
+        if access === 'admin'
             a(href="/admin")
               button.btn.btn-danger(type='button') Admin
-
     hr
 
     div(ng-app='myApp' ng-cloak=1)

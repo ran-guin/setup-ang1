@@ -3,9 +3,8 @@ block content
 
   // standard input variables: 
 
-  - var config = { payload : sails.config.payload };
+  - var config = private_config || {};
   - var init = "initialize_payload(" + JSON.stringify(config) + ")";
-  
   
   p &nbsp;
   div.container

@@ -4,9 +4,14 @@ block content
   // standard input variables: 
   //    - id  ( rack id(s) ) 
   //    - Samples   (array of hashes)
+  
+  - var config = private_config || {};
+  - config.rack_ids = id
+  - config.Samples = Samples
+  - config.backfill_date = backfill_date;
 
-  - var config = { rack_ids: id, Samples: Samples, backfill_date: backfill_date, payload: sails.config.payload};
   - var init = "initialize(" + JSON.stringify(config) + ")";
+
   - var rackList = [];
   if id 
     - rackList = id.split(/\s*,\s*/);

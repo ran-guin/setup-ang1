@@ -1,6 +1,8 @@
 extends ./../customize/privateLayout
 block content
-  - var config = { Steps: Steps, payload: sails.config.payload };
+
+  - var config = private_config || {};
+  - config.Steps = Steps;
   - var init = "initialize(" + JSON.stringify(config) + ")"; 
 
     div(ng-app='myApp' ng-cloak=1)
