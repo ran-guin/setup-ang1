@@ -12,14 +12,14 @@ block content
             h2 Dashboard
               div.navbar-right
 
-                  if sails.config.payload && sails.config.payload.access === 'admin'
+                  if config.access === 'admin'
                       a(href="/admin")
                         button.btn.btn-danger(type='button') Admin
                       span &nbsp; &nbsp;
                       a(href="/lab_admin")
                         button.btn.btn-danger(type='button') Lab Admin
 
-                  if sails.config.payload && sails.config.payload.access === 'lab admin'
+                  if config.access === 'lab admin'
                       a(href="/lab_admin")
                         button.btn.btn-danger(type='button') Lab Admin
 

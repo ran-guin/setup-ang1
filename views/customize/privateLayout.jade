@@ -12,10 +12,6 @@ else if (sails && sails.config)
 - var private_config = { payload: payload, payload_source: source};
 - var access = payload.access
 
-if sails && sails.config && sails.config.payload && session && session.payload
-	if sails.config.payload.user !== session.payload.user
-		- warning = "Caught user conflict (okay)"
-
 html
 	include ./../core/private_header.jade
 	
