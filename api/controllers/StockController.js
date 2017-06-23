@@ -18,10 +18,12 @@ module.exports = {
 	receive : function (req, res) {
 		var body = req.body;
 
+		var payload= req.session.payload || {};
+
 		console.log("Store received stock...");
 		console.log(JSON.stringify(body));
 
-		Stock.receive(body)
+		Stock.receive(body, payload)
 		.then (function (result) {
 			return res.send(result);
 		})

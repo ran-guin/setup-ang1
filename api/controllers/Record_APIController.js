@@ -132,10 +132,12 @@ module.exports = {
 		var model = body.model || req.param('model');
 		var data  = body.data;
 
+		var payload= req.session.payload || {};
+
 		console.log("Remote create " + model);
 		console.log(JSON.stringify(data));
 
-		Record.createNew(model, data)
+		Record.createNew(model, data, null, payload)
 		.then ( function (result ) {
 			return res.json(result);
 		})
@@ -148,7 +150,9 @@ module.exports = {
 	uploadData : function (req, res) {
 		var body = req.body;
 
-		Record.uploadData(body)
+		var payload= req.session.payload || {};
+
+		Record.uploadData(body, payload)
 		.then ( function (result) {
 			sails.config.messages.push("uploaded");
 			console.log("Uploaded");

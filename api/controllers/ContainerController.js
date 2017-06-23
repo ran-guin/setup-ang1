@@ -157,7 +157,9 @@ module.exports = {
 		var Options = req.body['Options'] || {};
 		var Transfer = req.body['Transfer'] || {};
 
-		q.when( Container.execute_transfer(ids, Transfer, Options) )
+		var payload = req.session.payload || {};
+
+		q.when( Container.execute_transfer(ids, Transfer, Options, payload) )
 		.then ( function (results) {
 			console.log("\n**Executed transfer: " + JSON.stringify(results));
 			// already handled within execute_transfer if transfer_type == Move
@@ -176,6 +178,8 @@ module.exports = {
 		var MatrixAttribute_ID = 66;
 		var body = req.body || {};
 
+		var payload = req.session.payload || {};
+
 		// Expects 8 rows of 12 columns (A1..H12) //
 	    res.setTimeout(0);
 
@@ -190,7 +194,7 @@ module.exports = {
 		    var force = body.force || 1;
 		    var file = req.file('MatrixFile');
 
-		    Upload.uploadMatrixFile(file, { update: 'barcode', samples: Samples, force: force })
+		    Upload.uploadMatrixFile(file, { update: 'barcode', samples: Samples, force: force }, payload)
 		    .then ( function (result) {
 		    	console.log("uploaded Matrix File with defined samples");
 		    	console.log("ids = " + JSON.stringify(ids));
@@ -218,7 +222,7 @@ module.exports = {
 		    var force = body.force || 1;
 		    var file = req.file('MatrixFile');
 
-		    Upload.uploadMatrixFile(file, { force: force, update: 'position' })
+		    Upload.uploadMatrixFile(file, { force: force, update: 'position' }, payload)
 		    .then ( function (result) {
 		    	console.log("uploaded Matrix File without samples");
 		    	console.log("FINISHED " + JSON.stringify(result));

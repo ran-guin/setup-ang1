@@ -57,11 +57,6 @@ module.exports = {
 	          payload['token'] = jwToken.issueToken(payload); 
 	          req.headers.authorization = "Bearer [" + payload['token'] + ']';
 
-	          sails.config.payload = payload;
-	          sails.config.messages = [];
-	          sails.config.warnings = [];
-	          sails.config.errors   = [];
-
 	          return res.render('customize/private_home', payload);
           })
           .catch (function (err) {

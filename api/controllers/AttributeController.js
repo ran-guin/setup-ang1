@@ -51,6 +51,8 @@ module.exports = {
 
 		var body = req.body;
 
+		var payload = req.session.payload || {};
+	
 		var skip = body['skip'] || 0;
 		var page = body['page'] || 1;
 
@@ -64,18 +66,17 @@ module.exports = {
 		else { console.log("No file supplied ") }
 
 		// querying for headers only 
-		Upload.uploadFile(file, options)
+		Upload.uploadFile(file, options, payload)
 		.then ( function (results) {
 			var grid = results.grid;
 			console.log("Updated custom");
-			return res.render('customize/upload_file', { data : grid });
+			return res.render('customize/upload_file', { data : grid});
 		})
 		.catch ( function (err) {
 			var msg = "Error uploading file: " + err;
+			console.log(msg);
 			Logger.error(err, 'Could not upload file');
-			return res.render('customize/private_home', { errorMsg: msg });
+			return res.render('customize/private_home', { errorMsg: msg});
 		});
-
-
 	}
 } 

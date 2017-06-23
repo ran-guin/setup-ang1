@@ -14,6 +14,8 @@ module.exports = {
 
 	add_step: function (req, res) {
 
+		var payload = req.session.payload || {};
+
 		console.log("Add Step to protocol");
 		var protocol = req.param('id');
 		var step = req.param('step') || 0;
@@ -32,7 +34,7 @@ module.exports = {
 			};
 
 			console.log('create new record: ' + JSON.stringify(data));
-			Record.createNew('protocol_step', data) 
+			Record.createNew('protocol_step', data, null, payload) 
 			.then ( function (result) {
 				console.log("retrieved: " + JSON.stringify(result));
 

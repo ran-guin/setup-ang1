@@ -73,10 +73,12 @@ module.exports = {
 		var printer = body.printer;
 		var code = body.code;
 
+		var payload = req.session.payload || {};
+
 		var returnVal = body;
 		console.log("Print Labels for " + JSON.stringify(body));
 		
-		Barcode.print_Labels(model, ids, printer)
+		Barcode.print_Labels(model, ids, printer, payload)
 		.then ( function (response) {
 			console.log("Printed barcodes");
 

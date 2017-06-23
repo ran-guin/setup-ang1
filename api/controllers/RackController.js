@@ -29,10 +29,14 @@ module.exports = {
 		var ids = body.ids;
 		var parent = body.parent;
 		var names = body.names;
-	
 		var reprint = body.reprint_barcodes;
+		var options = body.options;
 
-		Rack.move(ids, parent, body)
+		if (reprint) { options.reprint_barcodes = true }
+			
+		var payload= req.session.payload || {};
+
+		Rack.move(ids, parent, body, options, payload)
 		.then ( function (result) {
 			return res.json(result);
 		})
@@ -95,8 +99,10 @@ module.exports = {
 			parent = Scanned['Rack'][0];
 		}
 
+		var payload= req.session.payload || {};
+
 		console.log("Add daughter to " + parent + ': ' + name + ' = ' + size);
-		Rack.addSlottedBox(parent, name, size)
+		Rack.addSlottedBox(parent, name, size, payload)
 		.then ( function (result) {
 			console.log("Added Slotted Box " + JSON.stringify(result));
 			

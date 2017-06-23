@@ -147,11 +147,13 @@ module.exports = {
 		// execute completion of lab protocol step //
 		var data = req.body;
 
+		var payload = req.session.payload || {};
+
 		console.log("COMPLETE Lab Protocol: " + JSON.stringify(data));
 
 		var warning = User.monitor(req.session);
 
-		Lab_protocol.complete(data)
+		Lab_protocol.complete(data, payload)
 		.then ( function (result) {
 			console.log("returned from Lab_protocol.complete method...");
 			//var merged_Messages = Record.merge_Messages([result);
@@ -263,7 +265,9 @@ module.exports = {
 		var id = data.id;
 		delete data.id;
 
-		Record.update('lab_protocol', id, data)
+		var payload= req.session.payload || {};
+
+		Record.update('lab_protocol', id, data, null, payload)
 		.then ( function (result) {
 			console.log('response: ' + JSON.stringify(result));
 			res.send({ result : result} );
@@ -282,6 +286,8 @@ module.exports = {
 
 		console.log("UPDATE " + JSON.stringify(data));
 
+		var payload= req.session.payload || {};
+
 		var id = data.id;
 
 		delete data.id;
@@ -292,7 +298,7 @@ module.exports = {
 
 		data.custom_settings = json;
 
-		Record.update('protocol_step', id, data)
+		Record.update('protocol_step', id, data, null, payload)
 		.then ( function (result) {
 			console.log('response: ' + JSON.stringify(result));
 			res.send({ result : result} );

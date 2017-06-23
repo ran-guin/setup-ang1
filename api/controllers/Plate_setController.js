@@ -19,7 +19,9 @@ module.exports = {
 		var ids = body.ids || [];
 		var parent = body.parent;
 
-		Record.createNew('plate_set', { FK_Employee__ID : '<user>', Plate_Set_Defined : '<NOW>'}, { table: 'Defined_Plate_Set'})
+		var payload= req.session.payload || {};
+
+		Record.createNew('plate_set', { FK_Employee__ID : '<user>', Plate_Set_Defined : '<NOW>'}, { table: 'Defined_Plate_Set'}, payload)
 		.then ( function (response) {
 			var ps = response.insertId;
 	
@@ -33,7 +35,7 @@ module.exports = {
 				});
 			}
 
-			Record.createNew('plate_set_member', data)
+			Record.createNew('plate_set_member', data, null, payload)
 			.then ( function (psm) {
 				var affected = psm.affectedRows;
 				return res.json( { plate_set: ps, count: ids.length, added : affected });
