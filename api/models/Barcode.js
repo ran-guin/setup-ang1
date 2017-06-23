@@ -52,7 +52,7 @@ module.exports = {
   },
 
 
-  print_Labels : function (model, ids, type ) {
+  print_Labels : function (model, ids, type, payload) {
 
     var deferred = q.defer();
 
@@ -69,9 +69,7 @@ module.exports = {
     }
 
     var group;
-    if (sails && sails.config && sails.config.payload) {
-      group = sails.config.payload.printer_group;
-    }
+    group = payload.printer_group;
 
     if (! type) {
         console.log("nothing printed");
@@ -84,7 +82,6 @@ module.exports = {
     }
     else {
       console.log("generate print url for " + type);
-      var payload = sails.config.payload;
 
       var params = "database=" + payload.db + '&';
       params = params + 'host=' + payload.host + '&';

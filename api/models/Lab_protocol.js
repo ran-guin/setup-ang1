@@ -43,12 +43,12 @@ module.exports = {
 		}
 	},
 
-	'complete' : function ( data ) {
+	'complete' : function ( data, payload ) {
 
 		var deferred = q.defer();
 
 		console.log("\n*** COMPLETE Lab Protocol ***");
-		// console.log(JSON.stringify(data));
+		console.log(JSON.stringify(payload));
 		
 		var ids = data['ids'] || data['plate_ids'];  // array version of same list ...
 		console.log("\n* IDS: " + JSON.stringify(ids));
@@ -58,7 +58,7 @@ module.exports = {
 
 		if (ids.length > 0) {
 
-			Lab_protocol.savePrep(data)
+			Lab_protocol.savePrep(data, payload)
 			.then ( function (result) {
 
 				var promises = [];
@@ -81,7 +81,7 @@ module.exports = {
 				if (data['Transfer'] && data['Transfer_Options'] && data['Transfer_Options']['transfer_type']) {
 
 					data['Transfer_Options']['Prep'] = last_prep_id;
-					promises.push( Container.execute_transfer( ids, data['Transfer'], data['Transfer_Options']) );
+					promises.push( Container.execute_transfer( ids, data['Transfer'], data['Transfer_Options'], payload) );
 
 					transferred = promises.length; // point to promise index for transfer step (to retrieve appropriate sample ids)
 				}
@@ -109,10 +109,10 @@ module.exports = {
 
 				console.log("save attributes to plates: " + plate_list + '; prep: ' + first_prep_id);
 
-				promises.push( Attribute.save('Plate', ids, data["Plate_Attribute"]) );
-				promises.push( Attribute.save('Prep', first_prep_id, data["Prep_Attribute"]) );
+				promises.push( Attribute.save('Plate', ids, data["Plate_Attribute"], null, payload) );
+				promises.push( Attribute.save('Prep', first_prep_id, data["Prep_Attribute"], null, payload) );
 				
-				promises.push( Record.update('Plate:Plate_ID', ids, {'FKLast_Prep__ID' : last_prep_id } ) );
+				promises.push( Record.update('Plate:Plate_ID', ids, {'FKLast_Prep__ID' : last_prep_id }, null, payload) );
 
 				q.all( promises )
 				.then ( function (Qdata) {
@@ -154,13 +154,15 @@ module.exports = {
 	},
 
 	/** return data on success **/
-	'savePrep' : function (data) {
+	'savePrep' : function (data, payload) {
 		console.log("savePrep");
 
 		var action = '';
 		if (data && data['Prep'] && data['Prep']['Prep_Action']) {
 			action = data['Prep']['Prep_Action'];
 		} 
+
+    	if (!payload) { return Record.rejected_promise("payload required for update methods") }
 
 		var deferred = q.defer();
 
@@ -176,7 +178,7 @@ module.exports = {
 		else if (data && data['Prep']) {
 			var promises = [];
 
-			promises.push(Prep.save_Prep(data['Prep'], data['Plate']));
+			promises.push(Prep.save_Prep(data['Prep'], data['Plate'], payload));
 
 			if (data['status'] && data['status'].match(/complete/i)) {
 				
@@ -191,7 +193,7 @@ module.exports = {
 						FK_Employee__ID : '<user>'
 					};
 
-				promises.push(Prep.save_Prep(completion_data, data['Plate']));
+				promises.push(Prep.save_Prep(completion_data, data['Plate'], payload));
 			}
 
 			q.all(promises)

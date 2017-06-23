@@ -19,7 +19,7 @@ module.exports = _.merge({}, BaseModel, {
         return '';
       }
       else {
-        return "POTENTIAL USER CONFLICT";
+        return "POTENTIAL USER CONFLICT - Using " + session.payload.user + ' rather than ' + sails.config.payload.user;
       }
     }
     else {

@@ -60,12 +60,12 @@ module.exports = {
 		'FK_Rack__ID',
 	],
 
-	saveLastPrep : function (plates, prep_id) {
+	saveLastPrep : function (plates, prep_id, payload) {
 			var deferred = q.defer();
 			
 			var list = plates.join(',');
 				
-			Record.update('container', plates, {'FKLast_Prep__ID' : prep_id } )
+			Record.update('container', plates, {'FKLast_Prep__ID' : prep_id }, null, payload)
 			.then (function (result) {
 					console.log("set last prep id to " + prep_id + ' for ' + list);
 					deferred.resolve(result);
@@ -203,6 +203,7 @@ module.exports = {
 		    Record.query(query, function (err, result) {
 		    	if (err) {
 		    		console.log("Error with query ? " + err);
+		    		console.log(query);
 		    		deferred.reject(err);
 		    	}
 		    	else {
@@ -250,12 +251,12 @@ module.exports = {
 		
 	},
 
-	target_specs: function (format_id, prep_id) {
+	target_specs: function (format_id, prep_id, payload) {
 		// fields to be reset when item is cloned from an existing container (eg standard transfer)
 		var fields = {
 			FK_Plate_Format__ID : format_id,
 			Plate_Created       : now(),
-			FK_Employee__ID     : sails.config.payload.alDenteID,
+			FK_Employee__ID     : payload.alDenteID,
 			FKLast_Prep__ID     : prep_id,	
 		}
 
@@ -267,7 +268,7 @@ module.exports = {
 
 	},
 
-	transfer_Location : function (ids, Transfer, Options) {
+	transfer_Location : function (ids, Transfer, Options, payload) {
 		// relocate using WellMapper information (from Transfer hash)
 		// Transfer = [{ batch: 0, target_position: "A2", target_box: '' }, { }]
 
@@ -283,7 +284,7 @@ module.exports = {
 		var update_options = {};
 
 		if (target_slots && ids && target_slots.length === ids.length) {
-			Record.update('container', ids, { 'FK_Rack__ID' : target_slots }, Options)
+			Record.update('container', ids, { 'FK_Rack__ID' : target_slots }, Options, payload)
 			.then ( function (result) {
 				deferred.resolve(result);
 			})
@@ -298,7 +299,7 @@ module.exports = {
 		return deferred.promise;
 	},
 
-	execute_transfer : function (ids, Transfer, Options) {
+	execute_transfer : function (ids, Transfer, Options, payload) {
 		//
 		// Input: 
 		//
@@ -344,7 +345,7 @@ module.exports = {
 		if (ids && Transfer && Options.transfer_type === 'Move') {
 			console.log("only relocating samples");
 
-			Container.transfer_Location(ids, Transfer, Options)
+			Container.transfer_Location(ids, Transfer, Options, payload)
 			.then (function (result) {
 				console.log("Transferred : " + ids.join(','));
 
@@ -374,7 +375,7 @@ module.exports = {
 						FK_Plate_Set__Number : plate_set,
 					});
 				}
-				Prep.save_Prep(prep_data, plate_data)
+				Prep.save_Prep(prep_data, plate_data, payload)
 				.then ( function (r) {
 					deferred.resolve( { plate_ids: ids });
 				})
@@ -402,7 +403,7 @@ module.exports = {
 			console.log("input Options: " + JSON.stringify(Options));
 			// if (CustomData) { console.log("input CustomData: " + JSON.stringify(CustomData[0]) + '...') }
 
-			Container.get_target_ids(ids, Transfer, Options)
+			Container.get_target_ids(ids, Transfer, Options, payload)
 			.then (function (target_ids) {
 
 				console.log("post transfer updates to " + JSON.stringify(target_ids));
@@ -410,7 +411,7 @@ module.exports = {
 				.then (function (finalResponse) {
 					console.log("completed transfer");
 
-					Container.transfer_Location(target_ids, Transfer, Options)
+					Container.transfer_Location(target_ids, Transfer, Options, payload)
 					.then (function (result) {
 						deferred.resolve( finalResponse );
 					})
@@ -579,7 +580,7 @@ module.exports = {
 		return deferred.promise;
 	},
 
-	get_target_ids: function (ids, Transfer, Options) {
+	get_target_ids: function (ids, Transfer, Options, payload) {
 
 		var deferred = q.defer();
 		console.log("get target ids from " + JSON.stringify(ids));
@@ -607,10 +608,10 @@ module.exports = {
 					
 					var updates = [];
 					
-					updates.push( Record.update('container', current_ids, resetTarget, Options) );
+					updates.push( Record.update('container', current_ids, resetTarget, Options, payload) );
 
 					if (resetSource && Object.keys(resetSource).length) {
-						updates.push(Record.update('container', parents, resetSource, Options));
+						updates.push(Record.update('container', parents, resetSource, Options, payload));
 					}
 
 					console.log("run updates for retrieved samples");
@@ -632,7 +633,7 @@ module.exports = {
 					Options['id'] = Container.alias.id;
 
 					console.log("Clone Plates: " + clone_ids.join(','));
-					Record.clone('container', clone_ids, _.extend(resetTarget, resetClone), Options)
+					Record.clone('container', clone_ids, _.extend(resetTarget, resetClone), Options, payload)
 					.then ( function (cloneData) {
 						console.log("Cloned Plates.");
 
@@ -640,7 +641,7 @@ module.exports = {
 
 						if (resetSource && Object.keys(resetSource).length) {
 							console.log("Update Source: " + JSON.stringify(resetSource));
-							updates.push( Record.update('container', clone_ids, resetSource, Options) );
+							updates.push( Record.update('container', clone_ids, resetSource, Options, payload) );
 						}
 
 						if (cloneData.data) {
@@ -680,7 +681,7 @@ module.exports = {
 								FK_Plate_Set__Number : plate_set,
 							});
 						}
-						updates.push(Prep.save_Prep(prep_data, plate_data));
+						updates.push(Prep.save_Prep(prep_data, plate_data, payload));
 
 						q.all(updates)
 						.then (function (results) {
@@ -691,7 +692,7 @@ module.exports = {
 						.catch (function (err) {
 							console.log("Error updating or printing labels: ");
 							console.log(err);
-							deferred.resolve(err);
+							deferred.resolve(newIds);
 						});
 						
 					})
@@ -813,17 +814,17 @@ module.exports = {
 		return ;
 	},
 
-	create_daughter : function (id, target_format_id, prep_id) {
-		Record.clone( id, Container.target_specs(target_format_id));
+	create_daughter : function (id, target_format_id, prep_id, payload) {
+		Record.clone('container', id, Container.target_specs(target_format_id), null, payload);
 		return;
 	},
 
-	relocate : function (ids, target) {
+	relocate : function (ids, target, payload) {
 		
 		var deferred = q.defer();
 
 		if (ids.length && ( target.length == 1 || target.length == ids.length) ) {
-			Record.update('container', ids, { 'FK_Rack__ID' : target })
+			Record.update('container', ids, { 'FK_Rack__ID' : target }, null, payload)
 			.then (function (ok) {
 				deferred.resolve(ok);
 			})

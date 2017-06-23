@@ -23,7 +23,7 @@ module.exports = {
 		Comment : { type : 'text'}
 	},
 
-    update_History : function (model, ids, data, track, History, timestamp) {
+    update_History : function (model, ids, data, track, History, timestamp, payload) {
     	// retrieve values before record is updated  ... run in conjunction with similar call with History set.. 
     	var deferred = q.defer();
 
@@ -80,6 +80,7 @@ module.exports = {
 				console.log("FKT: " + JSON.stringify(FKT));
 
 				console.log(JSON.stringify(result));
+				var changed_records = 0;
 				for (var i=0; i<result.length; i++) {
 					for (var j=0; j<track.length; j++) {
 						var f = track[j];
@@ -101,11 +102,10 @@ module.exports = {
 							if (key === 'New_Value') {
 								History[table][id][f]['Record_ID'] = id;
 								History[table][id][f]['FK_DBField__ID'] = fk;
-								History[table][id][f]['Modified_Date'] = timestamp;
-								
-								if (sails && sails.config && sails.config.payload) {
-									History[table][id][f]['FK_Employee__ID'] = sails.config.payload.alDenteID;
-								}
+								History[table][id][f]['Modified_Date'] = timestamp;								
+								History[table][id][f]['FK_Employee__ID'] = payload.alDenteID;
+
+								changed_records++;
 
 								if (f === 'FK_Rack__ID') {
 									var relocate = {};
@@ -124,8 +124,8 @@ module.exports = {
 					}
 				}
 
-				if (save) {
-					Change_history.saveHistory(History, Relocate)
+				if (save && changed_records) {
+					Change_history.saveHistory(History, Relocate, payload)
 					.then ( function (response) {
 						console.log("Saved History: " + JSON.stringify(response));
 						deferred.resolve(History);
@@ -152,7 +152,7 @@ module.exports = {
     	return deferred.promise;
     },
 
-    saveHistory : function (History, Relocate) {
+    saveHistory : function (History, Relocate, payload) {
     	var deferred = q.defer();
 
     	History = History || {};
@@ -169,7 +169,7 @@ module.exports = {
     			var fields = Object.keys(update);
     			for (var k=0; k<fields.length; k++) {
     				var data = update[fields[k]];
-	    			// data.FK_Employee__ID = sails.config.payload.alDenteID;
+	    			// data.FK_Employee__ID = payload.alDenteID;
     				// data.FK_DBField__ID  = FK[tables[i]][fields[k]];
     				// data.Modified_Date   = 'NOW()';
     				if (data.FK_DBField__ID) {
@@ -185,11 +185,11 @@ module.exports = {
     	console.log("Relocate: " + JSON.stringify(Relocate));
     	deferred.resolve(Data);
     	
-    	Record.createNew('Change_History', Data)
+    	Record.createNew('Change_History', Data, null, payload)
     	.then ( function (result) {
     		console.log("tracked Change History");
 	    	console.log("Relocate: " + JSON.stringify(Relocate));
-	    	Record.createNew('sample_tracking', Relocate)
+	    	Record.createNew('sample_tracking', Relocate, null, payload)
 	    	.then ( function (relocated) {
 	    		deferred.resolve(relocated);
 	    	})
@@ -202,7 +202,7 @@ module.exports = {
     		console.log("Error tracking Change History");
 	    	
 	    	// perform sample tracking regardless ... if possible... 
-	    	Record.createNew('sample_tracking', Relocate)
+	    	Record.createNew('sample_tracking', Relocate, null, payload)
 	    	.then ( function (relocated) {
 	    		console.log("Tracked sample movement (update Change History)");
 	    		deferred.resolve(relocated);

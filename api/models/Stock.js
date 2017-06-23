@@ -35,7 +35,7 @@ module.exports = {
 		'Equipment' : { model: 'equipment' }
 	},
 		
-	receive : function (data) {
+	receive : function (data, payload) {
 
 		var deferred = q.defer();
 
@@ -55,7 +55,7 @@ module.exports = {
 			var subModel = '';
 			var subType = {};
 
-			Record.createNew('stock', StockData)
+			Record.createNew('stock', StockData, null, payload)
 			.then ( function (stock) {
 			
 				console.log(JSON.stringify(stock));
@@ -138,7 +138,7 @@ module.exports = {
 
 						console.log('ADD : ' + JSON.stringify(subObjects));
 
-						Record.createNew(subModel, subObjects)
+						Record.createNew(subModel, subObjects, null, payload)
 						.then ( function (result) {
 							if (barcode) {
 								/*

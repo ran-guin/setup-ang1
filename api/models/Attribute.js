@@ -168,7 +168,7 @@ module.exports = {
 
 	},
 
-	'save' : function ( model, ids, data, options) {
+	'save' : function ( model, ids, data, options, payload) {
 		var deferred = q.defer();
 
         if (! options) { options = {} }
@@ -204,7 +204,7 @@ module.exports = {
 
 					insertData['FK_' + model + '__ID'] = ids[j];
 					insertData['Set_DateTime'] = "<now>";
-					insertData['FK_Employee__ID'] = sails.config.payload.alDenteID;
+					insertData['FK_Employee__ID'] = payload.alDenteID;
 
 					if (val.match(/<increment>/)) {
 						if (! increments[atts[i]]) { increments[atts[i]] = [] }
@@ -221,7 +221,7 @@ module.exports = {
             var promises = [];
 			if (add.length) { 
                 var options = { onDuplicate : 'REPLACE' };
-                promises.push( Record.createNew(attModel, add, options) );
+                promises.push( Record.createNew(attModel, add, options, payload) );
                 console.log(model + " Att data: " + JSON.stringify(add[0]) + '...');
             }
 
@@ -229,7 +229,7 @@ module.exports = {
 			for (var i=0; i<extras.length; i++) {
                 var datai =  increments[extras[i]];
                 var options = { onDuplicate : "UPDATE Attribute_Value=Attribute_Value+1" }
-				promises.push( Record.createNew(attModel, datai, options) );
+				promises.push( Record.createNew(attModel, datai, options, payload) );
                 console.log("Separately add: " + JSON.stringify(datai));
 			}
 
@@ -247,7 +247,7 @@ module.exports = {
 		return deferred.promise;
 	},
 
-	uploadAttributes : function (model, attribute, data) {
+	uploadAttributes : function (model, attribute, data, payload) {
 		/*
 		var ids = data['ids'];
 		var map = data['map'];
@@ -266,13 +266,13 @@ module.exports = {
 			upload[i]['FK_' + model + '__ID'] = data[i][0];
 			upload[i]['Attribute_Value'] = data[i][1];
 			upload[i]['FK_Attribute__ID'] = attribute;
-			upload[i]['FK_Employee__ID'] = sails.config.payload.alDenteID;
+			upload[i]['FK_Employee__ID'] = payload.alDenteID;
 			upload[i]['Set_DateTime'] = '<now>';
 		}
 
 		console.log("upload: " + JSON.stringify(upload[0]) + '...');
 
-		Record.createNew( table, upload )
+		Record.createNew( table, upload, null, payload)
 		.then ( function (result) {
 			console.log("\nuploaded attributes: " + JSON.stringify(result));
 			deferred.resolve(result);			

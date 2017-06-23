@@ -24,7 +24,7 @@ module.exports = {
 	},
 
 
-  	uploadFile : function (file, options) {
+  	uploadFile : function (file, options, payload) {
 
 		var deferred = q.defer();
 
@@ -122,7 +122,7 @@ module.exports = {
 		return deferred.promise;
 	},
 
-	uploadMatrixFile : function (file, options) {
+	uploadMatrixFile : function (file, options, payload) {
 		var deferred = q.defer();
 
 		if (!options) { options = {} }
@@ -143,7 +143,7 @@ module.exports = {
 			deferred.reject();
 		}
 
-		Upload.uploadFile(file, { inverse_matrix: true, reverse_map : reverse_map })
+		Upload.uploadFile(file, { inverse_matrix: true, reverse_map : reverse_map }, payload)
 		.then ( function (result) {
 			var grid_map = result.map;
 
@@ -154,7 +154,7 @@ module.exports = {
 					var MatrixAttribute_ID = result[0].att_Id;
 					if (Samples && update.match('barcode')) {
 						console.log("updating matrix barcode for localized samples");
-						Upload.uploadMatrixAttributes(Samples, grid_map, {attribute:MatrixAttribute_ID, force: force})
+						Upload.uploadMatrixAttributes(Samples, grid_map, {attribute:MatrixAttribute_ID, force: force}, payload)
 						.then ( function (ok) {
 							deferred.resolve(ok);
 						})
@@ -194,7 +194,7 @@ module.exports = {
 		return deferred.promise;
 	},
 
-	uploadMatrixAttributes : function (Samples, map, options) {
+	uploadMatrixAttributes : function (Samples, map, options, payload) {
 		console.log("uploading matrix attributes...");
 		console.log(JSON.stringify(map));
 
@@ -338,7 +338,7 @@ module.exports = {
 					console.log(JSON.stringify(attribute));
 					console.log(JSON.stringify(data));
 
-					Attribute.uploadAttributes('Plate', attribute, data)
+					Attribute.uploadAttributes('Plate', attribute, data, payload)
 					.then ( function (result) {
 						console.log("Response: " + JSON.stringify(result));
 						if (result.affectedRows) {
@@ -427,7 +427,7 @@ module.exports = {
 		return deferred.promise;
 	},
 
-	uploadMatrixFileOld : function (file, Samples, options) {
+	uploadMatrixFileOld : function (file, Samples, options, payload) {
 
 		var deferred = q.defer();
 
@@ -609,7 +609,7 @@ module.exports = {
 									console.log(JSON.stringify(attribute));
 									console.log(JSON.stringify(data));
 
-									Attribute.uploadAttributes('Plate', attribute, data)
+									Attribute.uploadAttributes('Plate', attribute, data, payload)
 									.then ( function (result) {
 										console.log("Response: " + JSON.stringify(result));
 										if (result.affectedRows) {

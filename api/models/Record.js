@@ -40,6 +40,12 @@ module.exports = {
 		return found;
 	},
 	
+	rejected_promise : function (msg) {
+		var deferred = q.defer();
+		deferred.reject(msg);
+		return deferred.promise;
+	},
+
 	validate : function (model, options) {
 		if ( !options ) { options = {} }
 		var deferred = q.defer();
@@ -275,7 +281,7 @@ module.exports = {
 					}
 
 					data[qtyField] = adjust;
-					promises.push( Record.update(model, ids[i], data) );
+					promises.push( Record.update(model, ids[i], data, null, payload) );
 				}
 			})
 			.catch (function (err) {
@@ -995,7 +1001,7 @@ module.exports = {
 			})
 			console.log("* Added " + data.length + " custom records in " + table);
 			// console.log("\nHeaders: " + headers);
-			Record.createNew(table, data, {}, { reset: { NULL : "\\N" }} )
+			Record.createNew(table, data, { reset: { NULL : "\\N" }}, payload)
 			.then ( function (added) {
 				sails.config.messages('added ' + table + ' record(s)');
 
@@ -1049,7 +1055,7 @@ module.exports = {
 	    return data;
 	},
 
-	clone : function (model, ids, resetData, options) {
+	clone : function (model, ids, resetData, options, payload) {
 		// ids = Record.cast_to(ids, 'array', 'id');
 
 		var deferred = q.defer();
@@ -1154,7 +1160,7 @@ module.exports = {
 				}
 
 				console.log("create clones..." + JSON.stringify(newData));
-				Record.createNew(model, newData)
+				Record.createNew(model, newData, null, payload)
 				.then (function (newResponse) {
 					console.log('created clone records for ' + model);
 					var target_id = newResponse.insertId;
@@ -1199,7 +1205,7 @@ module.exports = {
 
 	},
 
-	update : function (model, ids, data, options) {
+	update : function (model, ids, data, options, payload) {
 		// Wrapper for updating records in database
 		// This also add change history records in database if change_history specified in model attributes.
 		// eg:
@@ -1298,7 +1304,7 @@ module.exports = {
 						}
 					}
 					else if (setval.length == 1) {
-						var setVal = Record.parseValue(setval[0], { model : model });
+						var setVal = Record.parseValue(setval[0], { model : model }, payload);
 						Set1.push(fields[i] + " = " + setVal );						
 					}
 					else {
@@ -1307,17 +1313,18 @@ module.exports = {
 					}
 				}
 				else {
-					var setVal = Record.parseValue(setval, { model : model });
+					var setVal = Record.parseValue(setval, { model : model }, payload);
 					Set1.push(fields[i] + " = " + setVal );
 				}
 			}
 			console.log('update history .. ');
 
-			Change_history.update_History(model, ids, data, track, null, options.timestamp)
+			Change_history.update_History(model, ids, data, track, null, options.timestamp, payload)
 			.then ( function (History) {
 				// console.log("History: " + JSON.stringify(History));
 				var promises = [];
 
+				console.log("saved Change History... ");
 				if (Set1.length) {
 					query = query + " SET " + Set1.join(',');
 					query = query + " WHERE " + condition;
@@ -1332,7 +1339,7 @@ module.exports = {
 						var subSet = [];
 						var setFields = Object.keys(SetEach[j]); 
 						for (var i=0; i<setFields.length; i++) {
-							var setVal = Record.parseValue(SetEach[j][setFields[i]], { model: model});
+							var setVal = Record.parseValue(SetEach[j][setFields[i]], { model: model}, payload);
 							subSet.push(setFields[i] + ' = ' + setVal);
 						}
 						
@@ -1342,6 +1349,7 @@ module.exports = {
 							if (j === 0 || j === SetEach.length-1) { 
 								console.log("subquery: " + subquery + '...') 
 							}
+							console.log(j + " : " + subquery + '...') 
 							promises.push(Record.query_promise(subquery));
 						}
 					}
@@ -1364,7 +1372,7 @@ module.exports = {
 						console.log(JSON.stringify(data));
 						console.log(JSON.stringify(History));
 
-						Change_history.update_History(model, ids, data, track, History, options.timestamp)
+						Change_history.update_History(model, ids, data, track, History, options.timestamp, payload)
 						.then (function (finalHistory) {
 							console.log("Saved History after update...");
 							console.log(JSON.stringify(finalHistory));
@@ -1402,8 +1410,14 @@ module.exports = {
 		return deferred.promise;
 	},	
 
-	createNew : function (model, Tdata, options) {
+	createNew : function (model, Tdata, options, payload) {
 		// Bypass waterline create method to enable insertion into models in non-standard format //
+	    
+	    if (!payload) { 
+	        console.log("*** missing payload in createNew");
+	        return Record.rejected_promise("payload required for update methods");
+	    }
+
 		var debug = 0;
 		var deferred = q.defer();
 		//console.log("\ncreate new record(s) in " + table);
@@ -1482,10 +1496,10 @@ module.exports = {
 			for (var f=0; f<valid_fields.length; f++) {
 				var input_value = data[index][valid_fields[f]];
 
-				var value = Record.parseValue(input_value, { model: model, field: valid_fields[f] });
+				var value = Record.parseValue(input_value, { model: model, field: valid_fields[f] }, payload);
 
 				if (resetData && resetData[valid_fields[f]]) {
-					var resetValue = Record.parseValue( resetData[valid_fields[f]], { model: model, field: valid_fields[f], defaultTo : value });
+					var resetValue = Record.parseValue( resetData[valid_fields[f]], { model: model, field: valid_fields[f], defaultTo : value }, payload);
 					Vi.push(resetValue);
 				}
 				else {
@@ -1508,7 +1522,7 @@ module.exports = {
 			var duplicates = Record.insert_Duplicates(result, options);
 
 			var msg = added + ' ' + table + ' record(s) added: id(s) from ' + insertId;
-			// console.log(msg);
+			console.log(msg);
 
 			if (Mod.tableType && Mod.tableType.match(/lookup/i) ) { }
 			// else { sails.config.messages.push(msg) }
@@ -1520,11 +1534,13 @@ module.exports = {
 			result['table'] = table;
 			result['ids'] = ids;
 
+			console.log(JSON.stringify(payload));
 			if (ids && ids.length) {
-				Barcode.print_Labels(model, ids);
+				Barcode.print_Labels(model, ids, null, payload);
 			}
 
-			Record.add_meta_records(model, ids)
+			console.log("add meta..");
+			Record.add_meta_records(model, ids, payload)
 			.then ( function (meta) {
 				console.log("checked for meta records for " + model);
 				deferred.resolve(result);
@@ -1543,7 +1559,7 @@ module.exports = {
 		return deferred.promise;
 	},
 
-	add_meta_records : function (model, ids) {
+	add_meta_records : function (model, ids, payload) {
 	// add meta records if appliable (records with 1-1 relationship with <model> records)  
 	// Usage (model should have attribute: 'metaRecord' of format:
 	//          metaRecord: { 'relatedTableName' : { refField: '<ID>'} }
@@ -1584,7 +1600,7 @@ module.exports = {
 				}
 				console.log("metadata table appended: " + metaTable);
 				console.log(JSON.stringify(data));
-				promises.push( Record.createNew(metaTable, data) );
+				promises.push( Record.createNew(metaTable, data, null, payload) );
 			}
 
 			q.all(promises)
@@ -1606,7 +1622,7 @@ module.exports = {
 
 	},
 
-	uploadData : function (options) {
+	uploadData : function (options, payload) {
 
 		var deferred = q.defer();
 		
@@ -1731,7 +1747,7 @@ module.exports = {
 						conditions : conditions,
 						onDuplicate: onDuplicate,
 					}
-					promises.push(Record.uploadRecord(options));
+					promises.push(Record.uploadRecord(options, payload));
 				}
 
 				q.all(promises)
@@ -1776,7 +1792,7 @@ module.exports = {
 						var models = Object.keys(bulk_insert);
 						for (var i=0; i<models.length; i++) {
 							if ( bulk_insert[models[i]] && bulk_insert[models[i]].length ) {
-								bulk_inserts.push( Record.createNew(models[i], bulk_insert[models[i]], { onDuplicate: onDuplicate}));
+								bulk_inserts.push( Record.createNew(models[i], bulk_insert[models[i]], { onDuplicate: onDuplicate}, payload));
 							}
 						}
 					}
@@ -1864,7 +1880,7 @@ module.exports = {
 		return deferred.promise;
 	},
 
-	uploadRecord : function (options) {
+	uploadRecord : function (options, payload) {
 		// upload single record ... may include attribute updates (appends)
 		var deferred = q.defer();
 		if (!options) { options = {} }
@@ -1883,12 +1899,11 @@ module.exports = {
 
 		var bulk_insert = {};
 
-		if (! sails || !sails.config || !sails.config.payload) {
+		if (! payload) {
 			console.log("no payload ?");
 			deferred.reject('user credentials unavailable... please see LIMS admin');
 		}
 		else {
-			var payload = sails.config.payload;
 			var user = payload.userid;
 			var timestamp = '<now>';
 
@@ -1921,7 +1936,7 @@ module.exports = {
 					// updates only 
 					if (Object.keys(fieldData).length) {
 						console.log("\n** will Update Fields: " + JSON.stringify(fieldData));
-						promises.push( Record.update(model, id, fieldData, { conditions: conditions, include_tables: include_tables }) );							
+						promises.push( Record.update(model, id, fieldData, { conditions: conditions, include_tables: include_tables }, payload) );							
 						update_index = 1;
 					}
 				}
@@ -2074,7 +2089,7 @@ module.exports = {
 		return deferred.promise;
 	},
 
-	parseValue : function (value, options) {
+	parseValue : function (value, options, payload) {
 		// parses values that may be formatted for specific purposes (eg '<today>, '<id>','<SQL_statement>' ...)
 
 		if (! options ) { options = {} }
@@ -2085,6 +2100,8 @@ module.exports = {
 		var debug = options.debug;
 		var index = options.index;
 		var action  = options.action;  // action eg insert or update (eg affects <increment>) 
+
+		if (!payload) { payload = {} }
 
 		var Mod = {};
 		if (sails && sails.models && sails.models[model]) { Mod = sails.models[model] }
@@ -2108,16 +2125,16 @@ module.exports = {
 		else if (value.constructor === String) {
 			if (value.match(/^<userid>$/i)) {
 				// change this to access user id and phase out alDente_ID ... 
-				if (sails.config.payload) { value = sails.config.payload.userid || 0 }
+				value = payload.userid || 0;
 				if (debug) console.log("replacing <user> with " + value);
 			}
 			else if (value.match(/^<user>$/i)) {
 				console.log("PHASE OUT - use userid or alDente_ID");
-				if (sails.config.payload) { value = sails.config.payload.alDenteID || 0 }
+				value = payload.alDenteID || 0;
 				if (debug) console.log("replacing <alDente_ID> with " + value);				
 			}
 			else if (value.match(/^<alDente_id>$/i)) {
-				if (sails.config.payload) { value = sails.config.payload.alDenteID || 0 }
+				value = payload.alDenteID || 0;
 				if (debug) console.log("replacing <alDente_ID> with " + value);				
 			}
 			else if (value.match(/^<increment>$/i) ) {

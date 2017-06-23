@@ -84,7 +84,7 @@ module.exports = {
     return deferred.promise;
   },
 
-  addSlottedBox : function addSlottedBox (parent, name, size) {
+  addSlottedBox : function addSlottedBox (parent, name, size, payload) {
 
     var deferred = q.defer();
 
@@ -103,7 +103,7 @@ module.exports = {
 
           var boxData = [ { Rack_Name: name, Rack_Alias: alias + ' ' + name, FKParent_Rack__ID : parent, Rack_Type: 'Box', FK_Equipment__ID: equip, Movable: 'Y', Rack_Full: 'N', Capacity: size }]
           
-          Record.createNew('Rack', boxData)
+          Record.createNew('Rack', boxData, null, payload)
           .then ( function (boxResult) {
             var parent = boxResult.insertId;  
             console.log("Created box " + parent);
@@ -121,7 +121,7 @@ module.exports = {
             }
 
             // console.log("Insert slot data: " + JSON.stringify(slotData));
-            Record.createNew('Rack', slotData)
+            Record.createNew('Rack', slotData, payload)
             .then ( function (slotResult) {
               var box = boxResult.insertId;
               var slots = slotResult.affectedRows;
@@ -155,7 +155,7 @@ module.exports = {
     return deferred.promise;
   },
 
-  add : function add (options) {
+  add : function add (options, payload) {
     if (!options) { options = {} }
 
     var deferred = q.defer();
@@ -181,7 +181,7 @@ module.exports = {
       ids.push(parent);
     }
       
-    Record.clone('rack', ids, reset, { id: 'Rack_ID' })
+    Record.clone('rack', ids, reset, { id: 'Rack_ID' }, payload)
     .then (function (result) {
       console.log("Cloned rack:  " + JSON.stringify(result));
       deferred.resolve(result);
@@ -194,7 +194,7 @@ module.exports = {
     return deferred.promise;
   },
 
-  move : function move (ids, parent, options) {
+  move : function move (ids, parent, options, payload) {
     
     if (!options) { options = {} }
     var names = options.names;
@@ -211,7 +211,7 @@ module.exports = {
         return parent_alias + ' ' + name;
       });
 
-      Record.update('rack', ids, { FKParent_Rack__ID: parent, Rack_Name: names, Rack_Alias: aliases })
+      Record.update('rack', ids, { FKParent_Rack__ID: parent, Rack_Name: names, Rack_Alias: aliases }, null, payload)
       .then ( function (result) {
         console.log("MOVED: " + JSON.stringify(result));
 
@@ -220,7 +220,7 @@ module.exports = {
         // Refactor save history ... 
 
         
-        // Record.update_History('rack', ids, { FKParent_Rack__ID: parent, Rack_Name: names})
+        // Change_history.update_History('rack', ids, { FKParent_Rack__ID: parent, Rack_Name: names})
         // .then (function (ok) {
         //   deferred.resolve(result);
         // })
@@ -243,7 +243,7 @@ module.exports = {
     return deferred.promise;
   },
 
-  transferLocation : function transferLocation (model, ids, target_rack, options) {
+  transferLocation : function transferLocation (model, ids, target_rack, options, payload) {
     // Transfer samples to a new box... similar to moveSamples but with some extra optoions like 'create' flag or target 'wells' array
     var deferred = q.defer();
 
@@ -268,7 +268,7 @@ module.exports = {
             Rack.add({size: create, type: 'Box'})
             .then ( function (added) {
               var target = added.target; // test
-              Rack.moveSamples(model, ids, target, options)
+              Rack.moveSamples(model, ids, target, options,payload)
               .then ( function (res) {
                 deferred.resolve(res);
               })
@@ -283,7 +283,7 @@ module.exports = {
           else {
             // Move to existing target rack 
             var target = target_rack;
-            Rack.moveSamples(model, ids, target, options)
+            Rack.moveSamples(model, ids, target, options, payload)
             .then ( function (res) {
               deferred.resolve(res);
             })
@@ -312,7 +312,7 @@ module.exports = {
     return deferred.promise;
   },
 
-  moveSamples : function moveSamples (model, ids, target_rack, options) {
+  moveSamples : function moveSamples (model, ids, target_rack, options, payload) {
 
     var deferred = q.defer();
 

@@ -41,11 +41,17 @@ module.exports = {
   },
   **/
 
-  save_Prep : function (data, plateData) {
+  save_Prep : function (data, plateData, payload) {
+      
+    if (!payload) { 
+        console.log("*** missing payload in save_Prep");
+        return Record.rejected_promise("payload required for update methods");
+    }
+    console.log("save_Prep");
 
     var deferred = q.defer();
 
-    Record.createNew('prep', data)
+    Record.createNew('prep', data, null, payload)
     .then (function (result) {
         console.log("Added Prep(s): " + JSON.stringify(result));
 
@@ -60,7 +66,7 @@ module.exports = {
           plateData[i]['FK_Prep__ID'] = prepId;
         }
         
-        Record.createNew('plate_prep', plateData )
+        Record.createNew('plate_prep', plateData, null, payload)
         .then (function (result2) {
           console.log("Added Plate_Prep: " + JSON.stringify(result2) + '...');
           deferred.resolve({ Prep: result, Plate_Prep: result2})
