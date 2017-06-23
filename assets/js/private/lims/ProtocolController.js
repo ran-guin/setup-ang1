@@ -106,7 +106,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
                                     // console.log($scope.active.last_step.name + ' not ' + format);
                                     console.log("Stop continuation at transfer step.");
                                     $scope.active.stepNumber = i+1;
-                                    $scope.set_persistent('message', "already completed '" + $scope.active.last_step.name + "' ... repeat if required or fetch target samples to continue protocol");
+                                    $scope.set_persistent('warning', "already completed '" + $scope.active.last_step.name + "' ... repeat if required or fetch target samples to continue protocol");
                                 // }
                             }
                             else {
