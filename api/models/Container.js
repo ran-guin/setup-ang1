@@ -501,7 +501,7 @@ module.exports = {
 			for (var i=0; i<Transfer.length; i++) {		
 				
 				var target_qty = Transfer[i].qty;
-				if (target_qty.constructor === String && target_qty.length) {   // need to allow for 0ml transfer (eg DNA extraction)
+				if (target_qty && target_qty.constructor === String && target_qty.length) {   // need to allow for 0ml transfer (eg DNA extraction)
 					target_qty = parseFloat(target_qty);
 				}
 				
