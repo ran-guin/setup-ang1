@@ -19,6 +19,7 @@ module.exports = {
 
 		var fields = ['Count(DISTINCT Plate.Plate_ID) as Samples', 'Group_Concat(distinct Plate_Prep.FK_Plate_Set__Number) as Sets', 'Prep_Name as Step', 'lab_protocol.name as Protocol', 'Prep_DateTime as Completed', 'Group_Concat(DISTINCT Employee_Name) as Completed_By'];
 		fields.push("CASE WHEN Max(Attribute_ID) IS NULL THEN '' ELSE GROUP_CONCAT( DISTINCT CONCAT(Attribute_Name,'=',Attribute_Value) SEPARATOR ';<BR>') END as attributes");
+		fields.push("Group_Concat(Distinct FK_Solution__ID) as Reagent_ID")
 
 		fields.push('Prep_Comments as Comments');
 
