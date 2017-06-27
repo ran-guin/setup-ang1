@@ -9,8 +9,8 @@ else if (sails && sails.config)
 	- payload = sails.config.payload
 	- source = 'config';
 
-- var private_config = { payload: payload, payload_source: source};
 - var access = payload.access
+- var private_config = { payload: payload, payload_source: source, access: access};
 
 html
 	include ./../core/private_header.jade
