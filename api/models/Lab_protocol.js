@@ -93,7 +93,7 @@ module.exports = {
 					if (qty) {
 						var qty_units = _.pluck(data.Plate,'Solution_Quantity_Units');
 						console.log("update current volume: add " + qty.join(',') + qty_units);
-						Record.adjust_volumes('container', ids, qty, qty_units);						
+						promises.push( Record.adjust_volumes('container', ids, qty, qty_units, {}, payload) );						
 					}
 				}
 				
@@ -104,7 +104,7 @@ module.exports = {
 
 				if (sol_ids[0]) {
 					console.log("adjust reagent volumes for: " + sol_ids.join(','));
-					promises.push( Record.adjust_volumes('solution', sol_ids, sol_qty, sol_qty_units, { subtract: true }) );
+					promises.push( Record.adjust_volumes('solution', sol_ids, sol_qty, sol_qty_units, { subtract: true }, payload) );
 				}
 
 				console.log("save attributes to plates: " + plate_list + '; prep: ' + first_prep_id);
@@ -114,10 +114,11 @@ module.exports = {
 				
 				promises.push( Record.update('Plate:Plate_ID', ids, {'FKLast_Prep__ID' : last_prep_id }, null, payload) );
 
+				console.log("Execute " + promises.length + ' promises....');
 				q.all( promises )
 				.then ( function (Qdata) {
 					// sails.config.messages.push('Saved step...');
-
+					console.log("*** Completed protocol step updates");
 					if (transferred) { 
 						returnData = Qdata[transferred-1];  // return data from execute_transfer promise
 					}
