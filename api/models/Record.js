@@ -241,72 +241,79 @@ module.exports = {
 			qty_units = qty_units[0];
 		}
 
-		if (subtract) {
-			console.log("Subtract " + JSON.stringify(qty) + qty_units + ' from ' + model + ' ids: ' + JSON.stringify(ids));
-		}
-		else {
-			console.log("Add " + JSON.stringify(qty) + qty_units + ' to ' + model + ' ids: ' + JSON.stringify(ids));
-		}
+		if (qty_units) {
+			if (subtract) {
+				console.log("Subtract " + JSON.stringify(qty) + qty_units + ' from ' + model + ' ids: ' + JSON.stringify(ids));
+			}
+			else {
+				console.log("Add " + JSON.stringify(qty) + qty_units + ' to ' + model + ' ids: ' + JSON.stringify(ids));
+			}
 
-		var qtyField = Record.alias(model, 'qty');
-		var unitsField = Record.alias(model, 'qty_units');
 
-		var data= {};
-		data[qtyField] = qtyField + ' + ' + parseFloat(qty);
+			var qtyField = Record.alias(model, 'qty');
+			var unitsField = Record.alias(model, 'qty_units');
 
-		var Mod = sails.models[model] || {};
-		var table = Mod.tableName || model;
-		var id_field = Record.alias(model, 'id');
+			var data= {};
+			data[qtyField] = qtyField + ' + ' + parseFloat(qty);
 
-		var promises = [];
-		for (var index=0; index< ids.length; index++) {
-			var data = {}
+			var Mod = sails.models[model] || {};
+			var table = Mod.tableName || model;
+			var id_field = Record.alias(model, 'id');
 
-			var query = "SELECT " + index + ' as i, ' + unitsField + " as units FROM " + table + " WHERE " + id_field + " = '" + ids[index] + "'";
-			Record.query_promise(query)
-			.then (function (result) {
+			var promises = [];
+			for (var index=0; index< ids.length; index++) {
+				var data = {}
 
-				var units = result[0].units;
-				var i = result[0].i;
+				var query = "SELECT " + index + ' as i, ' + unitsField + " as units FROM " + table + " WHERE " + id_field + " = '" + ids[index] + "'";
+				Record.query_promise(query)
+				.then (function (result) {
 
-				if (qty[i]) {
-					if (subtract) { qty[i] = 0 - parseFloat(qty[i]) }
-					else { qty[i] = parseFloat(qty[i]) }
-					
-					var F = qtyField;
-					var V = qty[i];
+					var units = result[0].units;
+					var i = result[0].i;
 
-					if (qty_units !== units) { V = Record.convert_units(V, qty_units, units) }
+					if (qty[i]) {
+						if (subtract) { qty[i] = 0 - parseFloat(qty[i]) }
+						else { qty[i] = parseFloat(qty[i]) }
+						
+						var F = qtyField;
+						var V = qty[i];
 
-					var adjust = '<' + qtyField + ' + ' + V + '>';			
-					if (V < 0) {
-						adjust = "<CASE WHEN " + F + ' + ' + V + ' < ' + F + ' /1000 THEN 0 ELSE ' + F + ' + ' + V + " END>";
+						if (qty_units !== units) { V = Record.convert_units(V, qty_units, units) }
+
+						var adjust = '<' + qtyField + ' + ' + V + '>';			
+						if (V < 0) {
+							adjust = "<CASE WHEN " + F + ' + ' + V + ' < ' + F + ' /1000 THEN 0 ELSE ' + F + ' + ' + V + " END>";
+						}
+
+						data[qtyField] = adjust;
+
+						promises.push( Record.update(model, ids[i], data, {}, payload) );
 					}
+					else {
+						console.log("Error retrieving qty ?" + i + ' of ' + JSON.stringify(qty));
+					}
+				})
+				.catch (function (err) {
+					console.log("Error retrieving units field for " + model + ': ' + ids[i]);
+					console.log(index + ': ' + JSON.stringify(ids));
+					console.log(query);
+				});
+			}	
 
-					data[qtyField] = adjust;
-
-					promises.push( Record.update(model, ids[i], data, {}, payload) );
-				}
-				else {
-					console.log("Error retrieving qty ?" + i + ' of ' + JSON.stringify(qty));
-				}
+			q.all(promises)
+			.then (function (okay) {
+				console.log('updated volume(s) for ' + promises.length + ' objects');
+				deferred.resolve(okay);
 			})
 			.catch (function (err) {
-				console.log("Error retrieving units field for " + model + ': ' + ids[i]);
-				console.log(index + ': ' + JSON.stringify(ids));
-				console.log(query);
+				console.log('Error updating volume(s): ' + err);
+				deferred.reject(err);
 			});
-		}	
-
-		q.all(promises)
-		.then (function (okay) {
-			console.log('updated volume(s) for ' + promises.length + ' objects');
-			deferred.resolve(okay);
-		})
-		.catch (function (err) {
-			console.log('Error updating volume(s): ' + err);
-			deferred.reject(err);
-		});
+		}
+		else {
+			console.log('no units supplied');
+			deferred.resolve();
+		}
 
 		return deferred.promise;
 	},
@@ -987,7 +994,7 @@ module.exports = {
 		return deferred.promise;
 	}, 
 
-	upload_SQL_File: function (table, file) {
+	upload_SQL_File: function (table, file, payload) {
 
 		var deferred = q.defer();
 		try {
