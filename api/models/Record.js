@@ -224,12 +224,14 @@ module.exports = {
 		}
 	},
 
-	adjust_volumes : function (model, ids, qty, qty_units, options) {
+	adjust_volumes : function (model, ids, qty, qty_units, options, payload) {
 		// For now assume qty_units are the same (TEMPORARY)
 		//
 		// ... should account for this by converting units if required or generating error if no units supplied.
 		// TEMPORARY
 		//
+
+		var deferred = q.defer();
 
 		if (!options) { options = {} }
 		var subtract = options.subtract || false;
@@ -240,10 +242,10 @@ module.exports = {
 		}
 
 		if (subtract) {
-			console.log("Subtract " + qty + qty_units + ' from ' + model + ' ids: ' + ids.join(','));
+			console.log("Subtract " + JSON.stringify(qty) + qty_units + ' from ' + model + ' ids: ' + JSON.stringify(ids));
 		}
 		else {
-			console.log("Add " + qty + qty_units + ' to ' + model + ' ids: ' + ids.join(','));
+			console.log("Add " + JSON.stringify(qty) + qty_units + ' to ' + model + ' ids: ' + JSON.stringify(ids));
 		}
 
 		var qtyField = Record.alias(model, 'qty');
@@ -263,6 +265,7 @@ module.exports = {
 			var query = "SELECT " + index + ' as i, ' + unitsField + " as units FROM " + table + " WHERE " + id_field + " = '" + ids[index] + "'";
 			Record.query_promise(query)
 			.then (function (result) {
+
 				var units = result[0].units;
 				var i = result[0].i;
 
@@ -281,23 +284,31 @@ module.exports = {
 					}
 
 					data[qtyField] = adjust;
-					promises.push( Record.update(model, ids[i], data, null, payload) );
+
+					promises.push( Record.update(model, ids[i], data, {}, payload) );
+				}
+				else {
+					console.log("Error retrieving qty ?" + i + ' of ' + JSON.stringify(qty));
 				}
 			})
 			.catch (function (err) {
-				console.log("Error retrieving units field for " + model + ': ' + ids[index]);
+				console.log("Error retrieving units field for " + model + ': ' + ids[i]);
+				console.log(index + ': ' + JSON.stringify(ids));
+				console.log(query);
 			});
 		}	
 
 		q.all(promises)
 		.then (function (okay) {
-			console.log('updated volume(s)');
+			console.log('updated volume(s) for ' + promises.length + ' objects');
+			deferred.resolve(okay);
 		})
 		.catch (function (err) {
 			console.log('Error updating volume(s): ' + err);
+			deferred.reject(err);
 		});
 
-		return;
+		return deferred.promise;
 	},
 
 	convert_units : function (qty, from, to) {
@@ -1214,10 +1225,11 @@ module.exports = {
 		//   Record.update('user', [1,2,3], { name : [ 'Adam','Boris','Clyde'] });
 		//  
 
-		var ids = Record.cast_to(ids,'array')
-		console.log("*** Update *** " + model + ": " + ids.join(','));
+		console.log("*** Update *** " + model + ": " + JSON.stringify(ids));
 		console.log(JSON.stringify(data));
 		console.log(JSON.stringify(options));
+
+		var ids = Record.cast_to(ids,'array')
 
 		if (!options) { options = {} }
 
@@ -1355,7 +1367,7 @@ module.exports = {
 					}
 				}
 
-				// console.log('run updates...');
+				console.log('run updates...');
 				q.all( promises )
 				.then (function (results) {
 					var setValues = {};
