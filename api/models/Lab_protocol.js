@@ -90,7 +90,7 @@ module.exports = {
 					
 					var qty = _.pluck(data.Plate,'Solution_Quantity');
 
-					if (qty && qty_units) {
+					if (qty) {
 						var qty_units = _.pluck(data.Plate,'Solution_Quantity_Units');
 						console.log("update current volume: add " + qty.join(',') + qty_units);
 						promises.push( Record.adjust_volumes('container', ids, qty, qty_units, {}, payload) );						
