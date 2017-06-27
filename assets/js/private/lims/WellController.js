@@ -52,7 +52,7 @@ function wellController ($scope, $rootScope, $http, $q ) {
 
         // $scope.map.transfer_qty_units = 'ml';  // custom default
 
-        if (options && options.distribute) {
+        if (Config && Config.distribute) {
             $scope.redistribute(1);
         }
     }
