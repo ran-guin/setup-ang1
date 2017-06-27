@@ -182,9 +182,12 @@ function load_custom_data (Model) {
 	var table = Model.tableName;
 	var deferred = q.defer();
 
+
 	var file = __dirname + "/data/" + table + '.txt';
 
-	Record.upload_SQL_File(table, file )
+	var payload = sails.config.payload || {};
+
+	Record.upload_SQL_File(table, file, payload)
 	.then ( function (add) {
 		if (add) {
 			var id = add.insertId;
