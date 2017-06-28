@@ -48,7 +48,6 @@ function rackController ($scope, $rootScope, $http, $q) {
     $scope.validate_parent = function (count) {
         
         if (!count) { count = 1 }
-
         $scope.target_aliases = [];
 
         if ($scope.parent) {
@@ -87,6 +86,7 @@ function rackController ($scope, $rootScope, $http, $q) {
                     parent: $scope.parent_id,
                     names : $scope.target_names,
                     reprint : $scope.reprint_barcodes,
+                    payload : $scope.payload,
                 };
 
                 console.log("** POST MOVE : " + JSON.stringify(data));
@@ -183,6 +183,7 @@ function rackController ($scope, $rootScope, $http, $q) {
             name : $scope.name,
             parent : $scope.parent,
             size   : $scope.size,
+            payload : $scope.payload,
         }
 
         $http.post(url, data)
@@ -287,11 +288,16 @@ function rackController ($scope, $rootScope, $http, $q) {
                     + " WHERE Rack.Rack_ID = " + parent + " ORDER BY " + Bnum;    
 
                 var require = { 'Rack_Type' : parent_type }
-                
+
                 $scope.next_in_line({ query: query, counter: 'Bnum', fill: fill, prefix: prefix, require: require, repeat: repeat} )
                 .then ( function (result) {
-                    $scope[name] = result;
-                    deferred.resolve(result);
+                    if (result.constructor === String) {
+                        $scope[name] = [result];
+                    }
+                    else {
+                        $scope[name] = result;
+                    }
+                    deferred.resolve($scope[name]);
                 })
                 .catch ( function (err) {
                     deferred.reject(err);
