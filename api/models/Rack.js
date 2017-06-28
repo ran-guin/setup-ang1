@@ -103,7 +103,7 @@ module.exports = {
 
           var boxData = [ { Rack_Name: name, Rack_Alias: alias + ' ' + name, FKParent_Rack__ID : parent, Rack_Type: 'Box', FK_Equipment__ID: equip, Movable: 'Y', Rack_Full: 'N', Capacity: size }]
           
-          Record.createNew('Rack', boxData, null, payload)
+          Record.createNew('Rack', boxData, {}, payload)
           .then ( function (boxResult) {
             var parent = boxResult.insertId;  
             console.log("Created box " + parent);
@@ -121,7 +121,7 @@ module.exports = {
             }
 
             // console.log("Insert slot data: " + JSON.stringify(slotData));
-            Record.createNew('Rack', slotData, payload)
+            Record.createNew('Rack', slotData, {}, payload)
             .then ( function (slotResult) {
               var box = boxResult.insertId;
               var slots = slotResult.affectedRows;
