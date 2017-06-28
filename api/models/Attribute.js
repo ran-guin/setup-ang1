@@ -79,22 +79,23 @@ module.exports = {
 
 	},
 
-	clone : function (model, sources, targets, resetData, options) {
+	clone : function (model, sources, targets, resetData, options, payload) {
 		var split = options.split || 1;
 		var deferred = q.defer();
 
 		var Mod = sails.models[model] || {};
 		var table = Mod.tableName || model;
-
+		var att_table = table + '_Attribute';
+		
 		if ( Attribute.models.indexOf(model) >= 0) {
 			console.log('clone attributes for ' + table + ' Record(s): ' + targets.join(',' ));
 
 			var source_list = sources.join(',');
 			var fields = 'FK_' + table + '__ID as reference_id, FK_Attribute__ID as id, Attribute_Name name, Attribute_Type type, Attribute_Value as value';
-			var query = "SELECT " + fields + " FROM " + table + '_Attribute, Attribute'
+			var query = "SELECT " + fields + " FROM " + att_table + ', Attribute'
 				+ " WHERE FK_Attribute__ID=Attribute_ID AND Inherited='Yes' AND FK_" + table + '__ID IN (' + source_list + ')';
 
-			var insertPrefix = "INSERT INTO " + table + '_Attribute (FK_' + table + '__ID, FK_Attribute__ID, Attribute_Value) VALUES ';
+			// var insertPrefix = "INSERT INTO " + att_table + ' (FK_' + table + '__ID, FK_Attribute__ID, Attribute_Value) VALUES ';
 
 			var Map = {};
 			var split_index = {};
@@ -112,43 +113,49 @@ module.exports = {
 
 			console.log("Map: " + JSON.stringify(Map));
 
-			Record.query(query, function (err, attributeData){
-				
-				if (err) { 
-					err.context = 'clone';
-					deferred.reject(err);
+			Record.query_promise(query)
+			.then ( function (attributeData) {
+				if (attributeData.length) {
+					var addAttributes = [];
+					console.log("Attribute Data: " + JSON.stringify(attributeData) + '...');
+					// var insert = [];
+					for (var i=0; i<attributeData.length; i++) {
+						var att = attributeData[i];
+						for (j=0; j<Map[att.reference_id].length; j++) {
+							var target = Map[att.reference_id][j];
+									
+							// var insertion = '(' + target + ',' + att.id + ',"' + att.value + '")'; 
+							// insert.push(insertion);	
+
+							var newAttData = {};
+							newAttData['FK_' + table + '__ID'] = target;
+							newAttData['FK_Attribute__ID'] = att.id;
+							newAttData['Attribute_Value'] = att.value;
+
+							addAttributes.push(newAttData);
+						}
+					}
+
+					// var sqlInsert = insertPrefix + insert.join(',');
+					console.log("* NEW ATT " + JSON.stringify(addAttributes));
+
+					Record.createNew(att_table, addAttributes, {}, payload)
+					.then (function (result) {
+						console.log("created new attribute records");
+						deferred.resolve({attributes: result});
+					})
+					.catch (function (err){
+						console.log("Error creating attribute clones");
+						deferred.reject(err);
+					});
 				}
 				else {
-					if (attributeData.length) {
-						console.log("Attribute Data: " + JSON.stringify(attributeData[0]) + '...');
-						var insert = [];
-						for (j=0; j< split; j++) {
-							for (var i=0; i<attributeData.length; i++) {
-								var att = attributeData[i];
-								var target = Map[att.reference_id][j];
-											
-								var insertion = '(' + target + ',' + att.id + ',"' + att.value + '")'; 
-								insert.push(insertion);	
-							}
-						}
-						var sqlInsert = insertPrefix + insert.join(',');
-						console.log("* SQL * " + sqlInsert);
-
-						Record.query(sqlInsert, function (insertError, attUpdate){
-							if (insertError) { 
-								var parsed_error = Record.parse_standard_error(insertError);
-								deferred.reject(insertError); 
-							}
-							else {
-								deferred.resolve({attributes: attUpdate});
-							}
-						});
-					}
-					else {
-						console.log("no attributes to transfer");
-						deferred.resolve({attributes: {} });
-					}
-				}
+					console.log("no attributes to transfer");
+					deferred.resolve({attributes: {} });
+				}				
+			})
+			.catch ( function (err) {
+				deferred.reject("Error retrieving attributes from originals: " + err);
 			});
 		}
 		else {
