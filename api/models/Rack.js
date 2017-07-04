@@ -195,6 +195,8 @@ module.exports = {
   },
 
   move : function move (ids, parent, options, payload) {
+    // currently only moving boxes ... 
+    // if extended to move Racks and/or shelvse, progeny must be updated for more than one generation below (separate into separate method to execute recursively)
     
     if (!options) { options = {} }
     var names = options.names;
@@ -215,7 +217,23 @@ module.exports = {
       .then ( function (result) {
         console.log("MOVED: " + JSON.stringify(result));
 
-        deferred.resolve(result);
+        var promises = [];
+        for (var i=0; i<ids.length; i++) {
+          var name = " CASE WHEN Rack_Type != 'Slot' THEN CONCAT( Concat('" + aliases[i] + "',' '), Rack_Name) ";
+          name += " ELSE CONCAT( Concat('" + aliases[i] + "',' '), LOWER(Rack_Name)) END";
+
+          promises.push( Record.query_promise("UPDATE Rack SET Rack_Alias = " + name + " WHERE FKParent_Rack__ID = " + ids[0]) );
+        }
+
+        q.all(promises)
+        .then( function (ok) {
+          console.log("Updated progeny names as well");
+          deferred.resolve(result);
+        })
+        .catch ( function (err) {
+          console.log("Error updateing progeny");
+          deferred.reject(err);
+        });
 
         // Refactor save history ... 
 
