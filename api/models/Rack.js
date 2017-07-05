@@ -39,6 +39,7 @@ module.exports = {
 	track_history: [
 		'FK_Equipment__ID',
 		'FKParent_Rack__ID',
+    'Rack_Alias',
 	],
 
   subtypes : ['Shelf','Rack','Box','Slot'],
@@ -227,6 +228,9 @@ module.exports = {
         for (var i=0; i<ids.length; i++) {
           var name = " CASE WHEN Rack_Type != 'Slot' THEN CONCAT( Concat('" + aliases[i] + "',' '), Rack_Name) ";
           name += " ELSE CONCAT( Concat('" + aliases[i] + "',' '), LOWER(Rack_Name)) END";
+
+          // var condition =  'FKParent_Rack__ID = ' + ids[0];
+          // promises.push( Record.update('rack',[], { Rack_Alias : name }, { conditions: [condition] } ) );
 
           promises.push( Record.query_promise("UPDATE Rack SET Rack_Alias = " + name + " WHERE FKParent_Rack__ID = " + ids[0]) );
         }
