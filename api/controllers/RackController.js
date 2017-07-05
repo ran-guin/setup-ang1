@@ -36,7 +36,7 @@ module.exports = {
 			
 		var payload= req.session.payload || {};
 
-		Rack.move(ids, parent, body, options, payload)
+		Rack.move(ids, parent, body, payload)
 		.then ( function (result) {
 			return res.json(result);
 		})
