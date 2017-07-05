@@ -45,7 +45,7 @@ module.exports = {
  
     	var save = false;
 
-    	if (model && ids && data && track && track.length && Mod) {
+    	if (model && ids && ids.length && data && track && track.length && Mod) {
 	    	if (History) { 
 	    		key = 'New_Value'
 	    		save = true;
@@ -107,7 +107,8 @@ module.exports = {
 
 								changed_records++;
 
-								if (f === 'FK_Rack__ID' || f === 'FKParent_Rack__ID') {
+								if (f === 'FK_Rack__ID' || f === 'FKParent_Rack__ID' ) {
+									// make more generic !
 									var relocate = {};
 									relocate['Moved_from'] = History[table][id][f]['Old_Value'];
 									relocate['Moved_to'] = result[i][f];
@@ -116,10 +117,10 @@ module.exports = {
 									Relocate.push(relocate);
 
 								    if (f === 'FK_Rack__ID') {
-									relocate['Container'] = id;
+										relocate['Container'] = id;
 								    }
-								    else if (f  === 'FKParent_Rack__ID') {
-									relocate['Rack'] = id;
+								    else {
+										relocate['Rack'] = id;
 								    }
 								}
 
@@ -150,6 +151,7 @@ module.exports = {
 			});
     	}
     	else { 
+    		console.log("no history to save... ");
     		deferred.resolve();
     	}
 
@@ -186,7 +188,7 @@ module.exports = {
     		}
     	}
     	console.log("History Data: " + JSON.stringify(Data));
-    	console.log("Relocate: " + JSON.stringify(Relocate));
+    	console.log("Relocating: " + JSON.stringify(Relocate));
     	deferred.resolve(Data);
     	
     	Record.createNew('Change_History', Data, null, payload)
