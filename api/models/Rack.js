@@ -211,16 +211,18 @@ module.exports = {
 
     var deferred = q.defer();
 
-    Record.query_promise("Select Rack_Alias as alias from Rack where Rack_ID = " + parent)
+    Record.query_promise("Select FK_Equipment__ID as freezer, Rack_Alias as alias from Rack where Rack_ID = " + parent)
     .then ( function (result) {
       var parent_alias = result[0].alias;
+      var freezer = result[0].freezer;
+
       var aliases = names.map( function (name) {
         return parent_alias + ' ' + name;
       });
 
       console.log("update rack alias to point to " + parent_alias);
 
-      Record.update('rack', ids, { FKParent_Rack__ID: parent, Rack_Name: names, Rack_Alias: aliases }, null, payload)
+      Record.update('rack', ids, { FK_Equipment__ID: freezer, FKParent_Rack__ID: parent, Rack_Name: names, Rack_Alias: aliases }, null, payload)
       .then ( function (result) {
         console.log("MOVED: " + JSON.stringify(result));
 
