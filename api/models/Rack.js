@@ -36,6 +36,11 @@ module.exports = {
     'name' : 'Rack_Alias',
   },
 
+	track_history: [
+		'FK_Equipment__ID',
+		'FKParent_Rack__ID',
+	],
+
   subtypes : ['Shelf','Rack','Box','Slot'],
 
   wells : {
@@ -199,7 +204,7 @@ module.exports = {
     // if extended to move Racks and/or shelvse, progeny must be updated for more than one generation below (separate into separate method to execute recursively)
     
     if (!options) { options = {} }
-    var names = options.names;
+    var names = options.names || [];
     var reprint = options.reprint;
     var timestamp = options.backfill_data || options.timestamp;
 
@@ -208,10 +213,11 @@ module.exports = {
     Record.query_promise("Select Rack_Alias as alias from Rack where Rack_ID = " + parent)
     .then ( function (result) {
       var parent_alias = result[0].alias;
-
       var aliases = names.map( function (name) {
         return parent_alias + ' ' + name;
       });
+
+      console.log("update rack alias to point to " + parent_alias);
 
       Record.update('rack', ids, { FKParent_Rack__ID: parent, Rack_Name: names, Rack_Alias: aliases }, null, payload)
       .then ( function (result) {
