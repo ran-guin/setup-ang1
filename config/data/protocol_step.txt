@@ -66,7 +66,7 @@ Transfer supernatant	17	12	Transfer supernatant containing DNA to new tube. Add 
 Centrifuge again	17	13	Centrifuge at 15,000 x g for 2 minutes at RT	Spin 15000 2 min RT	NULL	NULL	NULL				NULL	1	NULL	1	NULL	85	NULL	NULL
 Decant	17	14	Discard supernatant. Wash DNA pellet with 70% ethanol, centrifuge (15,000 x g, 2 minutes, RT), discard ethanol, air-dry DNA pellet		NULL	NULL	NULL				NULL	1	NULL	1	NULL	86	NULL	NULL
 Transfer  to 1.8 ml eppendorf	17	1	Transfer 0.5mL saliva sample to 1.5mL microfuge tube(s)	Transfer 0.5mL to ufuge tube(s)	23	NULL	NULL	transfer_qty*:Split:location*	:	0.5ml:2:	{\"transfer_type\" : \"Transfer\", \"target_format\" : 23, \"fill_by\" : \"position\" }	1	Transfer	1	NULL	87	NULL	NULL
-Update Gender Test Results	19	1	Indicate results of Gender Test		NULL	NULL	NULL	Sex_Test_Batch			NULL	1	NULL	41	2	88	NULL	NULL
+Perform Sex Test	19	1	Indicate Sex Test Batch		NULL	NULL	NULL	Sex_Test_Batch			NULL	1	NULL	41	2	88	NULL	NULL
 DNA Quantification	20	1	Indicate results of DNA Quantification	Enter DNA UV Batch for DNA Quantification	NULL	11	NULL	DNA_UV_Batch*			NULL	1	NULL	41	2	89	NULL	NULL
 test step 1	21	1	general instructions	basic message	NULL	NULL	NULL	solution:solution_qty:equipment*:location*:Waybill_Number*			NULL	1	NULL	0	0	90	NULL	NULL
 Transfer Buffy Coat to Falcon Tubes	22	1	Transfer 1.0 ml of buffy coat to 15 ml Falcon tube	Transfer as indicated	26	7	0	transfer_qty*:location*		1ml:	{\"transfer_type\" : \"Transfer\", \"target_format\" : 26, \"target_sample\" : 7, \"fill_by\" : \"position\" }	1	Transfer	41	0	91	2016-04-18 07:00:00	2016-04-18 07:00:00
