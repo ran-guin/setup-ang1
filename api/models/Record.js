@@ -1249,8 +1249,11 @@ module.exports = {
     	if (model && ids && data && Mod && Mod.track_history) {
     		data_fields = Object.keys(data);
     		console.log("Data Fields: " + data_fields.join(','));
-    		var track_fields = Mod.track_history || ['FK_Rack__ID', 'FKParent_Rack__ID']; // always track location ... 
+    		var track_fields = Mod.track_history || ['FK_Rack__ID', 'FKParent_Rack__ID', 'Rack_Alias']; // always track location ... (default should be redundant if track_history set in model correctly)
     		track = _.intersection(track_fields, data_fields);
+    		console.log("F: " + JSON.stringify(track_fields));
+    		console.log("D: " + JSON.stringify(data_fields));
+    		console.log("Track: " + JSON.stringify(track));
     		History = {};  // define...
     	}
     	else {
@@ -1281,7 +1284,6 @@ module.exports = {
 		}		
 
 		var query = "UPDATE " + table;
-		var list = ids.join(',');
 		
 		var conditions = options.conditions || [];
 
@@ -1296,14 +1298,25 @@ module.exports = {
 
 			query = query + ", " + tables.join(',');
 		}
-		else {
+		else if (ids && ids.length) {
+			var list = ids.join(',');
 			conditions.push(idField + " IN (" + list + ")");
 		}
-		
+		else {
+			if (conditions.length == 0 ) {
+				conditions.push(0);
+				console.log("MUST specify list of IDS or condition");
+			}
+			else {
+				// populate ids for change history... 
+				
+			}
+		}
+
 		var condition = conditions.join(' AND ');
 		
 		var SetEach = [];
-		console.log("set values...");
+		console.log("set values... WHERE " + condition);
 		if (data && table && idField) {
 			var fields = Object.keys(data);
 			var Set1 = [];
@@ -1385,7 +1398,7 @@ module.exports = {
 					if (SetEach.length) { updateValues = results[results.length - 1] }
 
 
-					if (History) {
+					if (History && ids && ids.length) {
 						console.log("update History for " + model);
 						console.log(JSON.stringify(ids));
 						console.log(JSON.stringify(data));
