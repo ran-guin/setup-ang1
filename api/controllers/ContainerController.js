@@ -63,9 +63,20 @@ module.exports = {
 		var element = req.param('element') || 'injectedData';   // match default in CommonController
 		var render = req.param('render') || 0;
 
-		var flds = ['id', 'Parent', 'created', 'box_id', 'box_size', 'position', 'container_format', 'sample_type', 'qty', 'qty_units', 'attributes'];
+		var flds = ['id','sample_type', 'created', 'box_id', 'box_size', 'position', 'container_format', 'qty', 'qty_units', 'attributes','Parent','Grandparent'];
 
-		Container.loadData(ids)
+		var add_fields = [];
+		add_fields.push("CASE WHEN Parent.Plate_ID IS NULL THEN 'n/a' ELSE CONCAT('bcg', Parent.Plate_ID, '<BR>[', PS.Sample_Type,']') END as parent");
+		add_fields.push("CASE WHEN Parent.Plate_ID IS NULL THEN 'n/a' ELSE CONCAT('bcg', GP.Plate_ID, '<BR>[', GPS.Sample_Type,']') END as grandparent");
+
+		var left_joins = [];
+		left_joins.push("Plate as Parent ON Parent.Plate_ID=Plate.FKParent_Plate__ID");
+		left_joins.push("Plate as GP ON GP.Plate_ID=Parent.FKParent_Plate__ID");
+
+		left_joins.push("Sample_Type as PS ON PS.Sample_Type_ID=Parent.FK_Sample_Type__ID");
+		left_joins.push("Sample_Type as GPS ON GPS.Sample_Type_ID=GP.FK_Sample_Type__ID");
+		
+		Container.loadData(ids, null, { add_fields: add_fields, add_left_joins: left_joins })
 		.then (function (result) {
 			if (render) {
 				return res.render('customize/injectedData', { fields : flds, data : result, title: 'Sample Info', element: element});
