@@ -13,6 +13,10 @@ module.exports = _.merge({}, BaseModel, {
 
   },
 
+  alias: {
+    external_id: 'FK_Employee__ID'
+  },
+
   monitor: function (session) {
     if (sails.config && sails.config.payload && session && session.payload) {
       if (sails.config.payload.user === session.payload.user) {
@@ -52,7 +56,7 @@ module.exports = _.merge({}, BaseModel, {
 
     var deferred = q.defer();
 
-    var get_ID = "SELECT Employee_ID as external_ID FROM Employee WHERE Email_Address = '" + email + "'";
+    var get_ID = "SELECT Employee_ID as FK_Employee__ID FROM Employee WHERE Email_Address = '" + email + "'";
 
     console.log(get_ID);
     Record.query_promise(get_ID)
