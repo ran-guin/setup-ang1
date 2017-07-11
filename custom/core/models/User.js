@@ -96,7 +96,7 @@ module.exports = {
       var payload = { 
         user: user.name, 
         userid: user.id, 
-        alDenteID: user.alDenteID, 
+        external_ID: user.external_ID, 
         access: user.access, 
         url: url,
       };
