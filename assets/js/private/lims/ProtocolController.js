@@ -141,7 +141,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
             // eg SplitFields, split_mode, distribution_mode, target_format etc.
             
             $scope.user = $scope.payload.user;  // TEMP - use payload ... 
-            $scope.FK_Employee__ID = $scope.payload.alDenteID;  // test datac
+            $scope.FK_Employee__ID = $scope.payload.external_ID;  // test datac
 
             console.log("Steps: " + JSON.stringify($scope.Steps) );
             $scope.reload();
@@ -320,7 +320,7 @@ function protocolController ($scope, $rootScope, $http, $q) {
         var PrepData = { 
             'Prep_Name' : $scope.Step.name ,
             'FK_Lab_Protocol__ID' : $scope.Step['Lab_protocol'],
-            'FK_Employee__ID' : $scope.payload.alDenteID, 
+            'FK_Employee__ID' : $scope.payload.external_ID, 
             'Prep_Action' : action,
             'Prep_Comments' : $scope.form['comments' + $scope.step.stepNumber],
             'Prep_DateTime' : timestamp,
