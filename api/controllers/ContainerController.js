@@ -168,6 +168,7 @@ module.exports = {
 			return res.json(results);
 		})
 		.catch ( function (err) {
+			console.log("Problem executing transfer");
 			Logger.error(err, "Problem executing transfer", 'completeTransfer')
 			return res.json(err);
 		})

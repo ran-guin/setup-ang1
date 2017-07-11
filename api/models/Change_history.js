@@ -45,7 +45,7 @@ module.exports = {
  
     	var save = false;
 
-    	if (model && ids && data && track && track.length && Mod) {
+    	if (model && ids && ids.length && data && track && track.length && Mod) {
 	    	if (History) { 
 	    		key = 'New_Value'
 	    		save = true;
@@ -107,20 +107,22 @@ module.exports = {
 
 								changed_records++;
 
-								if (f === 'FK_Rack__ID' || f === 'FKParent_Rack__ID') {
-									var relocate = {};
-									relocate['Moved_from'] = History[table][id][f]['Old_Value'];
-									relocate['Moved_to'] = result[i][f];
-									relocate['moved'] = timestamp;
-									relocate['Moved_by'] = '<userid>';
-									Relocate.push(relocate);
+								if (f === 'FK_Rack__ID' || f === 'FKParent_Rack__ID' ) {
+									// make more generic !
+								    var relocate = {};
+								    relocate['Moved_from'] = History[table][id][f]['Old_Value'];
+								    relocate['Moved_to'] = result[i][f];
+								    relocate['moved'] = timestamp;
+								    relocate['Moved_by'] = '<userid>';
 
 								    if (f === 'FK_Rack__ID') {
 									relocate['Container'] = id;
 								    }
-								    else if (f  === 'FKParent_Rack__ID') {
+								    else {
 									relocate['Rack'] = id;
 								    }
+
+								    Relocate.push(relocate);
 								}
 
 							}
@@ -150,6 +152,7 @@ module.exports = {
 			});
     	}
     	else { 
+    		console.log("no history to save... ");
     		deferred.resolve();
     	}
 
@@ -186,21 +189,27 @@ module.exports = {
     		}
     	}
     	console.log("History Data: " + JSON.stringify(Data));
-    	console.log("Relocate: " + JSON.stringify(Relocate));
+    	console.log("Relocating: " + JSON.stringify(Relocate));
     	deferred.resolve(Data);
     	
     	Record.createNew('Change_History', Data, null, payload)
     	.then ( function (result) {
     		console.log("tracked Change History");
 	    	console.log("Relocate: " + JSON.stringify(Relocate));
-	    	Record.createNew('sample_tracking', Relocate, null, payload)
-	    	.then ( function (relocated) {
-	    		deferred.resolve(relocated);
-	    	})
+
+		if (Relocate && Relocate.length) {
+	    		Record.createNew('sample_tracking', Relocate, null, payload)
+	    		.then ( function (relocated) {
+	    			deferred.resolve(relocated);
+	    		})
 	 		.catch ( function (err) {
 	 			console.log("Error tracking sample history: " + err);
 	 			deferred.reject(err);
-	 		});   	    		
+	 		});   	    	
+		}
+		else {
+			deferred.resolve(result);
+		}	
     	})
     	.catch ( function (err) {
     		console.log("Error tracking Change History");
