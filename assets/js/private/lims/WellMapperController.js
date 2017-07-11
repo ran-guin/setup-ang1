@@ -141,9 +141,9 @@ function wellMapperController ($scope, $rootScope, $http, $q ) {
         if (! Options) { Options = {} }
 
         var rack_id = Options.target_rack;
-        var size    = Options.target_size;
-        var fill_by = Options.fill_by;
-        var load_by = Options.load_by;
+        var size    = Options.target_size ||  $scope.map.target_size;
+        var fill_by = Options.fill_by || $scope.map.fill_by;
+        var load_by = Options.load_by || $scope.map.load_by;
 
         var rows    = Options.load_rows || $scope.map.use_rows;
         var cols    = Options.load_columns || $scope.map.use_cols;
