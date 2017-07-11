@@ -103,7 +103,7 @@ module.exports = {
 								History[table][id][f]['Record_ID'] = id;
 								History[table][id][f]['FK_DBField__ID'] = fk;
 								History[table][id][f]['Modified_Date'] = timestamp;								
-								History[table][id][f]['FK_Employee__ID'] = payload.alDenteID;
+								History[table][id][f]['FK_Employee__ID'] = payload.external_ID;
 
 								changed_records++;
 
@@ -173,7 +173,7 @@ module.exports = {
     			var fields = Object.keys(update);
     			for (var k=0; k<fields.length; k++) {
     				var data = update[fields[k]];
-	    			// data.FK_Employee__ID = payload.alDenteID;
+	    			// data.FK_Employee__ID = payload.external_ID;
     				// data.FK_DBField__ID  = FK[tables[i]][fields[k]];
     				// data.Modified_Date   = 'NOW()';
     				if (data.FK_DBField__ID) {
