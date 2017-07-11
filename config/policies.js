@@ -87,6 +87,7 @@ module.exports.policies = {
 	     'dashboard'	: "sessionAuth",
        'getNewPassword' : 'reset',	
 //      '*' : "sessionAuth"
+      'activate' : 'tokenAuthorized',
   },
   
   'rack' : {
