@@ -102,6 +102,7 @@ function wellController ($scope, $rootScope, $http, $q ) {
             'pack_size'    : $scope.map.pack_size,
             'distribution_mode' : $scope.map.distribution_mode,
             'fill_by'  :    $scope.map.fill_by,
+            'load_by'  :    $scope.map.load_by,
             'target_size' : $scope.map.target_size,
             'target_boxes' : target_boxes,
             'pack_size'    : $scope.map.pack_size,
