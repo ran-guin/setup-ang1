@@ -211,7 +211,7 @@ module.exports = {
 
 					insertData['FK_' + model + '__ID'] = ids[j];
 					insertData['Set_DateTime'] = "<now>";
-					insertData['FK_Employee__ID'] = payload.alDenteID;
+					insertData['FK_Employee__ID'] = payload.external_ID;
 
 					if (val.match(/<increment>/)) {
 						if (! increments[atts[i]]) { increments[atts[i]] = [] }
@@ -273,7 +273,7 @@ module.exports = {
 			upload[i]['FK_' + model + '__ID'] = data[i][0];
 			upload[i]['Attribute_Value'] = data[i][1];
 			upload[i]['FK_Attribute__ID'] = attribute;
-			upload[i]['FK_Employee__ID'] = payload.alDenteID;
+			upload[i]['FK_Employee__ID'] = payload.external_ID;
 			upload[i]['Set_DateTime'] = '<now>';
 		}
 

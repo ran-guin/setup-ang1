@@ -276,7 +276,7 @@ module.exports = {
 		var fields = {
 			FK_Plate_Format__ID : format_id,
 			Plate_Created       : now(),
-			FK_Employee__ID     : payload.alDenteID,
+			FK_Employee__ID     : payload.external_ID,
 			FKLast_Prep__ID     : prep_id,	
 		}
 

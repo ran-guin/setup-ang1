@@ -274,7 +274,7 @@ module.exports = {
                 name: user,
                 email: email,
                 encryptedPassword: encryptedPassword,
-                lastLoggedIn: new Date(),
+                lastLoggedIn: null,
                 gravatarUrl: gravatarUrl,
                 access: 'public',
               };
@@ -284,8 +284,8 @@ module.exports = {
               .then ( function (result) {
 
                 if (result.length === 1) {
-                  
-                  var custom_keys = Object.keys(result);
+
+                  var custom_keys = Object.keys(result[0]);
 
                   var url;
                   if (sails.config && sails.config.globals) {
@@ -308,7 +308,7 @@ module.exports = {
                   console.log('add user record...');
                   console.log(JSON.stringify(data));
 
-                  Record.createNew('user', data)
+                  Record.createNew('user', data, {}, payload)
                   .then (function (result) {
 
                       if (req.session) { req.session.User = result.insertId }
@@ -423,7 +423,8 @@ module.exports = {
     */
 
       // Wipe out the session (log out)
-      req.session.User = null;
+      req.session.destroy();
+      // req.session.User = null;
 
       Config.printer_groups()
       .then (function (result) {

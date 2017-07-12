@@ -2161,13 +2161,13 @@ module.exports = {
 				if (debug) console.log("replacing <user> with " + value);
 			}
 			else if (value.match(/^<user>$/i)) {
-				console.log("PHASE OUT - use userid or alDente_ID");
-				value = payload.alDenteID || 0;
-				if (debug) console.log("replacing <alDente_ID> with " + value);				
+				console.log("PHASE OUT - use userid or external_ID");
+				value = payload.external_ID || 0;
+				if (debug) console.log("replacing <external_ID> with " + value);				
 			}
-			else if (value.match(/^<alDente_id>$/i)) {
-				value = payload.alDenteID || 0;
-				if (debug) console.log("replacing <alDente_ID> with " + value);				
+			else if (value.match(/^<external_id>$/i)) {
+				value = payload.external_ID || 0;
+				if (debug) console.log("replacing <external_ID> with " + value);				
 			}
 			else if (value.match(/^<increment>$/i) ) {
 				if (action === 'insert') {  }  // leave onDuplicate set in createNew function

@@ -211,28 +211,34 @@ module.exports = {
 
     var deferred = q.defer();
 
-    Record.query_promise("Select Rack_Alias as alias from Rack where Rack_ID = " + parent)
+    Record.query_promise("Select FK_Equipment__ID as freezer, Rack_Alias as alias from Rack where Rack_ID = " + parent)
     .then ( function (result) {
       var parent_alias = result[0].alias;
+      var freezer = result[0].freezer;
+
       var aliases = names.map( function (name) {
         return parent_alias + ' ' + name;
       });
 
       console.log("update rack alias to point to " + parent_alias);
 
-      Record.update('rack', ids, { FKParent_Rack__ID: parent, Rack_Name: names, Rack_Alias: aliases }, null, payload)
+      Record.update('rack', ids, { FK_Equipment__ID: freezer, FKParent_Rack__ID: parent, Rack_Name: names, Rack_Alias: aliases }, null, payload)
       .then ( function (result) {
         console.log("MOVED: " + JSON.stringify(result));
 
         var promises = [];
         for (var i=0; i<ids.length; i++) {
-          var name = " CASE WHEN Rack_Type != 'Slot' THEN CONCAT( Concat('" + aliases[i] + "',' '), Rack_Name) ";
-          name += " ELSE CONCAT( Concat('" + aliases[i] + "',' '), LOWER(Rack_Name)) END";
+	  var name = "<CASE WHEN Rack_Type != 'Slot' THEN CONCAT( Concat('" + aliases[i] + "',' '), Rack_Name) ";
+          name += " ELSE CONCAT( Concat('" + aliases[i] + "',' '), LOWER(Rack_Name)) END>";
 
-          // var condition =  'FKParent_Rack__ID = ' + ids[0];
-          // promises.push( Record.update('rack',[], { Rack_Alias : name }, { conditions: [condition] } ) );
-
-          promises.push( Record.query_promise("UPDATE Rack SET Rack_Alias = " + name + " WHERE FKParent_Rack__ID = " + ids[0]) );
+          var condition =  'FKParent_Rack__ID = ' + ids[i];
+          promises.push( Record.update('rack',[], { Rack_Alias : name }, { conditions: [condition] } ) );
+	  console.log("update progeny: " + "UPDATE Rack SET Rack_Alias = " + name + " WHERE FKParent_Rack__ID = " + ids[0] );
+          
+          // var name = "CASE WHEN Rack_Type != 'Slot' THEN CONCAT( Concat('" + aliases[i] + "',' '), Rack_Name) ";
+          // name += " ELSE CONCAT( Concat('" + aliases[i] + "',' '), LOWER(Rack_Name)) END";
+          
+          // promises.push( Record.query_promise("UPDATE Rack SET Rack_Alias = " + name + " WHERE FKParent_Rack__ID = " + ids[0]) );
         }
 
         q.all(promises)

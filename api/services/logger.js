@@ -55,7 +55,7 @@ module.exports = {
 			data.userid = payload.userid;
 			data.host   = payload.host;
 			data.db     = payload.db;
-			data.alDenteID = payload.alDenteID;
+			data.external_ID = payload.external_ID;
 			data.mode      = payload.mode;
 
 			var messages = [];

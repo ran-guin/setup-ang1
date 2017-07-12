@@ -13,6 +13,10 @@ module.exports = _.merge({}, BaseModel, {
 
   },
 
+  alias: {
+    external_id: 'FK_Employee__ID'
+  },
+
   monitor: function (session) {
     if (sails.config && sails.config.payload && session && session.payload) {
       if (sails.config.payload.user === session.payload.user) {
@@ -30,10 +34,8 @@ module.exports = _.merge({}, BaseModel, {
   validate : function  (tryuser) {
     // customizable ... 
     var deferred = q.defer();
-
-  //  Add custom reference to alDente ID :  user.FK_Employee__ID as alDenteID
    
-    var query = "SELECT user.id, user.name, encryptedPassword, email, user.access, user.FK_Employee__ID as alDenteID FROM user"
+    var query = "SELECT user.id, user.name, encryptedPassword, email, user.access, user.FK_Employee__ID as external_ID FROM user"
     + " WHERE email ='" + tryuser + "' OR user.name = '" + tryuser + "'" 
     + " GROUP BY user.id";
 
@@ -54,7 +56,7 @@ module.exports = _.merge({}, BaseModel, {
 
     var deferred = q.defer();
 
-    var get_ID = "SELECT Employee_ID as alDenteID FROM Employee WHERE Email_Address = '" + email + "'";
+    var get_ID = "SELECT Employee_ID as FK_Employee__ID FROM Employee WHERE Email_Address = '" + email + "'";
 
     console.log(get_ID);
     Record.query_promise(get_ID)
