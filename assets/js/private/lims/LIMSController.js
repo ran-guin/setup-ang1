@@ -227,7 +227,6 @@ function limsController ($scope, $rootScope, $http, $q) {
                 ids = _.pluck(Samples,'id');
             }
 
-        
             $http.get('Container/summary?ids=' + ids.join(','))         
             .then (function (result) {
                 console.log("done reloading summary for " + result.data.length + ' samples');
@@ -243,7 +242,8 @@ function limsController ($scope, $rootScope, $http, $q) {
                     if ($scope.active.plate_set && $scope.active.plate_set.constructor === 'Number') { parent = $scope.active.plate_set }
                     $scope.load_plate_set({ Samples: result.data, parent : parent } );
 
-                    console.log("Reloaded: " + JSON.stringify($scope.active_Samples));
+                    console.log("Reloaded: " + JSON.stringify($scope.active));
+                    console.log("Reloaded IDs: " + JSON.stringify($scope.active.plate_ids));
                     deferred.resolve();
                 }
                 else {
