@@ -14,9 +14,16 @@ function limsController ($scope, $rootScope, $http, $q) {
 
     $scope.active.plate_set = 'new';  // set default ..  
     $scope.payload = {};
+    $scope.http_headers = null;
 
     $scope.initialize_payload = function (config) {
-        if (config && config['payload']) { $scope.payload = config['payload'] }
+        if (config && config['payload']) { 
+            $scope.payload = config['payload']
+
+            if ($scope.payload.token) {
+                $scope.http_headers = { 'x-access-token' : $scope.payload.token };
+            }
+        }
         console.log("Payload: " + JSON.stringify($scope.payload));
     }
 
