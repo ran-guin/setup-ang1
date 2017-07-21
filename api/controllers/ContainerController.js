@@ -63,11 +63,11 @@ module.exports = {
 		var element = req.param('element') || 'injectedData';   // match default in CommonController
 		var render = req.param('render') || 0;
 
-		var flds = ['id','sample_type', 'created', 'box_id', 'box_size', 'position', 'container_format', 'qty', 'qty_units', 'attributes','Parent','Grandparent'];
+		var flds = ['id','sample_type', 'created', 'box_id', 'box_size', 'position', 'container_format', 'qty', 'qty_units', 'attributes','parent','grandparent'];
 
 		var add_fields = [];
-		add_fields.push("CASE WHEN Parent.Plate_ID IS NULL THEN 'n/a' ELSE CONCAT('bcg', Parent.Plate_ID, '<BR>[', PS.Sample_Type,']') END as parent");
-		add_fields.push("CASE WHEN Parent.Plate_ID IS NULL THEN 'n/a' ELSE CONCAT('bcg', GP.Plate_ID, '<BR>[', GPS.Sample_Type,']') END as grandparent");
+		add_fields.push("CASE WHEN Parent.Plate_ID IS NULL THEN 'n/a' ELSE CONCAT( Parent.Plate_ID, '<BR>[', PS.Sample_Type,']') END as parent");
+		add_fields.push("CASE WHEN Parent.Plate_ID IS NULL THEN 'n/a' ELSE CONCAT( GP.Plate_ID, '<BR>[', GPS.Sample_Type,']') END as grandparent");
 
 		var left_joins = [];
 		left_joins.push("Plate as Parent ON Parent.Plate_ID=Plate.FKParent_Plate__ID");
