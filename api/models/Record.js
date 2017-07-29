@@ -19,7 +19,7 @@ module.exports = {
 		var map = Mod.alias || Mod.legacy_map || {};
 
 		if (map && map[alias]) {
-			console.log("alias : " + map[alias]);
+			// console.log("alias : " + map[alias]);
 			return map[alias];
 		}
 		else { return alias }
@@ -498,7 +498,7 @@ module.exports = {
 			scope = sails.config.searchScope || {}
 		}
 
-		console.log("Condition: " + JSON.stringify(condition));
+		console.log("*** Condition: " + JSON.stringify(condition));
 		console.log("*** Scope: " + JSON.stringify(scope));
 
 		var Prefix = Barcode.prefix();
@@ -513,7 +513,7 @@ module.exports = {
 			var table = Mod.tableName || models[i];
 			var primaryField = Record.alias(models[i], 'id') || 'id';
 
-			console.log("primary field for " + models[i] + Mod.primaryField);
+			// console.log("primary field for " + models[i] ' = ' + primaryField);
 
 			var fields = scope[models[i]];
 			var selectFields = primaryField;
@@ -522,11 +522,11 @@ module.exports = {
 			// if (fields.length) { selectFields = selectFields +  ',' + fields.join(',') }
 			var query = "SELECT " + selectFields + " FROM " + table;
 			
-			var search_condition = '';
+			var search_condition = condition || 1;
 			var add_condition = [];
 			for (var j=0; j<fields.length; j++) {
 				var field = Record.alias(models[i], fields[j]);
-				console.log("GET " + field + " for " + fields[j] + ' in ' + models[i]);
+				// console.log("GET " + field + " for " + fields[j] + ' in ' + models[i]);
 
 				if (field === fields[j]) {
 					selectFields += ', ' + fields[j];
@@ -562,7 +562,7 @@ module.exports = {
 			}
 
 			if (add_condition.length) {	
-				search_condition = '(' + add_condition.join(' OR ') + ')';
+				search_condition = ' AND (' + add_condition.join(' OR ') + ')';
 			}
 
 			if (condition &&  condition.constructor === Object && condition[table] )  { query = query + " WHERE " + condition[table] }
@@ -576,10 +576,14 @@ module.exports = {
 				promises.push( Record.query_promise(query));
 				check_models.push(models[i]);
 			}
+			else {
+				console.log("No Search condition (?)");
+			}
 
 		}
 			
 		console.log(foundLength + ' vs ' + search.length);
+		console.log(promises.length + ' promises found');
 
 		var Found = {};
 		q.all(promises) 
@@ -589,7 +593,7 @@ module.exports = {
 					Found[check_models[i]] = results[i];
 				}
 			}
-			console.log("Found: " + JSON.stringify(Found));
+			console.log(" Found: " + JSON.stringify(Found));
 
 			deferred.resolve(Found);
 		})
