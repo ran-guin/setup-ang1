@@ -126,8 +126,8 @@ module.exports.routes = {
   'POST /Record_API/search' : 'Record_APIController.search',
   'GET /Record_API/search' : 'Record_APIController.search',
 
-  'POST /Record/search' : 'Record_APIController.search',
-  'GET /Record/search' : 'Record_APIController.search',
+  'POST /Record/search' : 'RecordController.search',
+  'GET /Record/search' : 'RecordController.search',
 
   'POST /record/add/:model': 'Record_APIController.save',
   'POST /record/save' : 'Record_APIController.save',
