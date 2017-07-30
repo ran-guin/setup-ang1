@@ -524,7 +524,15 @@ module.exports = {
 			// if (fields.length) { selectFields = selectFields +  ',' + fields.join(',') }
 			var query = "SELECT " + selectFields + " FROM " + table;
 			
-			var search_condition = condition || 1;
+			var search_conditions = [];
+
+			if (condition &&  condition.constructor === Object && condition[table] )  { 
+				search_conditions.push( condition[table] );
+			}
+			else if (condition && condition.constructor === String) { 
+				search_conditions.push(condition)
+			}
+
 			var add_condition = [];
 			for (var j=0; j<fields.length; j++) {
 				var field = Record.alias(models[i], fields[j]);
@@ -564,16 +572,14 @@ module.exports = {
 			}
 
 			if (add_condition.length) {	
-				search_condition = ' AND (' + add_condition.join(' OR ') + ')';
+				var add = add_condition.join(' OR ');
+				search_conditions.push('(' + add + ')');
 			}
 
-			if (condition &&  condition.constructor === Object && condition[table] )  { query = query + " WHERE " + condition[table] }
-			else if (condition && condition.constructor === String) { query = query + " WHERE " + condition }
-			else { query = query + " WHERE 1"}
 
-			if (search_condition) { 
+			if (search_conditions) { 
 				// only perform search if there is an applicable condition found.. 
-				query = query + " AND " + search_condition;
+				query = query + " WHERE " + search_conditions.join(' AND ');
 
 				if (group) { query = query + ' GROUP BY ' + group }
 
