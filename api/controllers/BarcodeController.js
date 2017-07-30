@@ -28,9 +28,9 @@ module.exports = {
 		.then (function (result) {
 			console.log('ran custom scan');
 			if (result.found) {
+				var view = 'lims/' + result.found;
 				console.log("Rendering results for " + view + '=' + result.found);
 				console.log(JSON.stringify(result));
-				var view = 'lims/' + result.found;
 				// return res.send(result);
 				res.render(view, result);
 			}
