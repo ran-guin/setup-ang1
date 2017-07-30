@@ -127,7 +127,8 @@ module.exports = {
 
 		console.log("ordering options: " + JSON.stringify(options));
 		console.log("box order " + JSON.stringify(box_order));
-		
+		console.log('ids: ' + ids);
+
 		ids = Record.cast_to(ids, 'array');
 
 		//var fields = 'Plate_ID as id, Sample_Type as sample_type, Plate_Format_Type as container_format';
@@ -217,7 +218,7 @@ module.exports = {
 				left_joins.push('Attribute ON Plate_Attribute.FK_Attribute__ID=Attribute_ID');
 			}
 
-			var query = Record.build_query({tables: tables, fields: fields, left_joins: left_joins, conditions: conditions, group: ['Plate.Plate_ID'], debug: true })
+			var query = Record.build_query({tables: tables, fields: fields, left_joins: left_joins, conditions: conditions, group: ['Plate.Plate_ID'] })
 
 			console.log("* Q: " + query);
 		    Record.query(query, function (err, result) {
@@ -256,8 +257,8 @@ module.exports = {
 		    			sorted_results = Record.restore_order(result,box_order,'box_id');
 		    		}
 		    		else {
-		    			console.log("restore scanned order");
 		    			sorted_results = Record.restore_order(result, ids, 'id');
+		    			console.log("restore scanned order to id order: " + JSON.stringify(ids));
 		    		}
 
 		    		// console.log("Loaded DATA: " + JSON.stringify(result));
