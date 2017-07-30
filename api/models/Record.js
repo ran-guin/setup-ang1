@@ -489,7 +489,9 @@ module.exports = {
 		if (!options) { options = {} }
 		var scope = options.scope;
 		var condition = options.condition || {};
+		var group     = options.group;
 		var search    = options.search || '';
+		var idField   = options.idField;
 
 		var foundLength = 0;
 
@@ -511,9 +513,9 @@ module.exports = {
 		for (var i=0; i< models.length; i++) {
 			var Mod = sails.models[models[i]] || {};
 			var table = Mod.tableName || models[i];
-			var primaryField = Record.alias(models[i], 'id') || 'id';
+			var primaryField = idField || Record.alias(models[i], 'id') || 'id';
 
-			// console.log("primary field for " + models[i] ' = ' + primaryField);
+			console.log("primary field for " + models[i] + ' = ' + primaryField);
 
 			var fields = scope[models[i]];
 			var selectFields = primaryField;
@@ -572,6 +574,9 @@ module.exports = {
 			if (search_condition) { 
 				// only perform search if there is an applicable condition found.. 
 				query = query + " AND " + search_condition;
+
+				if (group) { query = query + ' GROUP BY ' + group }
+
 				console.log("\n** Search: " + query);
 				promises.push( Record.query_promise(query));
 				check_models.push(models[i]);
@@ -800,28 +805,27 @@ module.exports = {
 		var sorted_results;
 
 		if (list[0].constructor === String && data[0][ref] && data[0][ref].constructor === Number) {
-			// In case list is passed in as string but data value is number ... 
-			list = list.map( function (x) {
-				return parseInt(x);
-			})
-		}
+           // In case list is passed in as string but data value is number ... 
+           list = list.map( function (x) {
+                   return parseInt(x);
+           })
+       	}
 
 		if (data.constructor === Array && data.length) {
 			if (ref) {
-				console.log("restore order of hash by " + ref + " : " + list.join(';'));
+				console.log("restore order of hash " + data[0].constructor);
 				sorted_results = _.sortBy(data, function(record) {
-				    var ix = list.indexOf(record[ref]);
-				    return ix;
+				    var i = list.indexOf(record[ref]);
+				    return i;
 				});
 			}
 			else {
-				console.log("restore order of array " + list.join(','));
+				console.log("restore order of array " + data[0].constructor);
 				sorted_results = [];
 
 				for (var i=0; i<list.length; i++) {
 					var refList = data;
 
-					var index = i;
 					if (list[i].constructor === String && data[0].constructor === Number) {
 						index = refList.indexOf(parseInt(list[i]));
 					} 
@@ -837,14 +841,13 @@ module.exports = {
 						sorted_results.push(data[index])
 					}
 				}
+				console.log("Sorted: " + sorted_results.join(','));
 			}
 		}
 		else {
 			console.log("no array to resort...");
 			sorted_results = data;
 		}
-		
-		// console.log("Sorted: " + JSON.stringify(sorted_results));
 
 		return sorted_results;
 	},
