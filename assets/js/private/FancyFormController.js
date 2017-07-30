@@ -1525,7 +1525,7 @@ app.controller('FancyFormController',
         element.autocomplete({
             minLength:3,
             source:function (request, response) {
-                var url = "/Record/search";
+                var url = "/Record_API/search";
 
                 if (attrs.search) {                    
                     var table = attrs.search;
