@@ -123,6 +123,9 @@ module.exports.routes = {
 
   'POST /remoteQuery': 'Record_APIController.remoteQuery',
 
+  'POST /Record_API/search' : 'Record_APIController.search',
+  'GET /Record_API/search' : 'Record_APIController.search',
+
   'POST /Record/search' : 'Record_APIController.search',
   'GET /Record/search' : 'Record_APIController.search',
 
