@@ -291,6 +291,80 @@ module.exports = {
 			console.log("Error building FK");
 			res.json(err);
 		});
+	},
+
+	search : function (req, res) {
+
+		var body = req.body || {};
+		console.log("Search API");
+
+		var scope = body.scope;
+		var condition = body.condition || {};
+		var search    = body.search || '';
+
+		if (! scope ) {
+			// Generic Search 
+			scope = { 
+				'user' : ['email', 'name'],
+				'container' : ['comments'],
+				'equipment' : ['name', 'serial_number'],
+				'stock' : [ 'PO_Number', 'notes', 'Requisition_Number', 'lot_number'],
+				'prep'  : [ 'comments'],
+				'shipment' : ['waybill_number', 'comments'],
+				'lab_protocol' : ['name'],
+				'protocol_step' : ['name', 'message'],
+			};
+		}
+
+		Record.search({scope : scope, search : search, condition: condition})
+		.then (function (result) {
+			var keys = Object.keys(result);
+			if (!result || !keys.length) {
+				sails.warning("Nothing found");
+				return res.render('customize/private_home');
+			}
+			else if (keys.length == 1 && result[keys[0]].length == 1) {
+				console.log(JSON.stringify(result));
+
+				// Go to single page if applicable .. 
+				if (keys[0] == 'container') {
+					var ids = _.pluck(list,'Plate_ID');
+					
+					console.log('load view...');
+					Container.loadViewData(ids)
+					.then (function (viewData) {
+						console.log("Found container data");
+						console.log(JSON.stringify(viewData));
+						
+						viewData.messages = [];
+						viewData.warnings = [];
+						viewData.errors = [];
+						viewData.found = 'Container';
+
+						// return res.send("render container");
+						return res.render('lims/Container', viewData);
+					})
+			        .catch (function (err) {
+			        	console.log("error loading plate data");
+			        	// return res.send("error loading data");
+						return res.render('customize/private_home');
+			        });
+				}
+				else {
+					console.log('not recognized type');
+					return res.render('customize/private_home');
+				}
+			}
+			else {
+				console.log("Generate Search Results");
+				console.log(JSON.stringify(result));
+
+				return res.render('customize/searchResults', {data: result, title: "Search Results for '" + search + "'", scope: scope});
+			}
+		})
+		.catch ( function (err) {
+			return res.render('customize/private_home', { error: err})
+		});
 	}
 
 };
