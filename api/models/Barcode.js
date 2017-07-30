@@ -285,7 +285,7 @@ module.exports = {
               viewData.warnings = warnings;
               viewData.errors = errors;
 
-              console.log("ViewData: " + JSON.stringify(viewData));
+              // console.log("ViewData: " + JSON.stringify(viewData));
               deferred.resolve(viewData);
             }
           })

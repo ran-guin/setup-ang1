@@ -215,8 +215,14 @@ function wellController ($scope, $rootScope, $http, $q ) {
             plate_set = $scope.active.plate_set;
         }
 
+        var ids = $scope.active.plate_ids;
+        if ($scope.Map && $scope.Map.Transfer && $scope.Map.Transfer[0].source_id) {
+            ids = _.pluck($scope.Map.Transfer, 'source_id');
+            console.log("** IDS: " + ids.join(',') + ' vs ' + $scope.active.plate_ids.join(','));
+        } 
+
         var data = { 
-            ids: $scope.active.plate_ids,
+            ids: ids,
             Transfer: $scope.Map.Transfer,
             Options : {
                 transfer_type: $scope.map.transfer_type,
@@ -228,7 +234,7 @@ function wellController ($scope, $rootScope, $http, $q ) {
             },
         };
 
-        console.log("POSTING DATA: " + JSON.stringify(data));
+        console.log("** POSTING DATA: " + JSON.stringify(data));
 
         $scope.feedback = "..."
         $http.post("/xfer", data)

@@ -125,20 +125,30 @@ module.exports = {
 
         success: function (){
           console.log("access granted");
+          if (! req.session) { req.session = {} }
+          req.session.authenticated = true;
+          
           User.payload(user, { printer_group : printer_group })
           .then ( function (payload) {
+
             if ( req.param('Debug') ) { payload['Debug'] = true; }
 
-            // session authorization
-            req.session.authenticated = true;
-            req.session.payload = payload;
-
-            var access = payload.access;
+            var access = 'public';  
             // token authorization 
-            payload['token'] = jwToken.issueToken(payload); 
-            req.headers.authorization = "Bearer [" + payload['token'] + ']';
+            
+            if (payload) {
+              req.session.payload = payload;
+              
+              access = payload.access;
+              payload['token'] = jwToken.issueToken(payload); 
+              
+              req.headers.authorization = "Bearer [" + payload['token'] + ']';
+              sails.config.payload = payload;
+            }
+            else {
+              payload = {};
+            }
 
-            sails.config.payload = payload;
             sails.config.messages = [];
             sails.config.warnings = [];
             sails.config.errors   = [];

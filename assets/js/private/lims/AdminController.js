@@ -31,7 +31,7 @@ function adminController ($scope, $rootScope, $http, $q ) {
 
 			console.log('Set access for ' + user.name + ' [' + user.id + '] to ' + status + ' ' + access + ' = ' + $scope.access);
 
-			$http.post('/User/activate', data)
+			$http.post('/User/activate', data, { headers: $scope.http_headers })
 			.then ( function (response) {
 				var msg = "Activated  " + user.name;
 				if (response.data && response.data.access) {
