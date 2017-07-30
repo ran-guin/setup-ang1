@@ -14,6 +14,7 @@ function limsController ($scope, $rootScope, $http, $q) {
 
     $scope.active.plate_set = 'new';  // set default ..  
     $scope.payload = {};
+
     $scope.http_headers = null;
 
     $scope.initialize_payload = function (config) {
@@ -166,6 +167,8 @@ function limsController ($scope, $rootScope, $http, $q) {
     // Methods to set 'active' scope attributes (eg active.Samples, active.plate_set ... )
     $scope.load_active_Samples = function (Samples) {
 
+        var deferred = $q.defer();
+
             $scope.active.Samples = Samples;
             console.log("loaded...");
       
@@ -214,10 +217,16 @@ function limsController ($scope, $rootScope, $http, $q) {
 
             $scope.active.N = $scope.active.plate_ids.length;
             
+            console.log('ids: ' + $scope.active.plate_list);
             console.log(Samples.length + ' samples loaded... from #' + ids[0]);
             console.log("ACTIVE Loaded " + $scope.active.Samples.length + ' active Samples');
+
+            console.log(JSON.stringify($scope.active.Samples));
             $scope.reset_home_barcode('barcode');
             
+        deferred.resolve($scope.active);
+        return deferred.promise;
+
     }
 
     // Methods to set 'active' scope attributes (eg active.Samples, active.plate_set ... )
@@ -234,24 +243,33 @@ function limsController ($scope, $rootScope, $http, $q) {
                 ids = _.pluck(Samples,'id');
             }
 
+        
             $http.get('Container/summary?ids=' + ids.join(','))         
             .then (function (result) {
                 console.log("done reloading summary for " + result.data.length + ' samples');
                 console.log(JSON.stringify(result.data));
 
                 if (result.data && result.data.length) {
-                    $scope.load_active_Samples(result.data);
-                    $scope.active.valid_plate_sets = [];
-                    var parent;
-                    
-                    console.log(JSON.stringify($scope.active.plate_set));
+                    $scope.load_active_Samples(result.data)
+                    .then ( function (active) {
 
-                    if ($scope.active.plate_set && $scope.active.plate_set.constructor === 'Number') { parent = $scope.active.plate_set }
-                    $scope.load_plate_set({ Samples: result.data, parent : parent } );
+                        // $scope.active = active;
 
-                    console.log("Reloaded: " + JSON.stringify($scope.active));
-                    console.log("Reloaded IDs: " + JSON.stringify($scope.active.plate_ids));
-                    deferred.resolve();
+                        $scope.active.valid_plate_sets = [];
+                        var parent;
+                        
+                        console.log(JSON.stringify($scope.active.plate_set));
+
+                        if ($scope.active.plate_set && $scope.active.plate_set.constructor === 'Number') { parent = $scope.active.plate_set }
+                        $scope.load_plate_set({ Samples: result.data, parent : parent } );
+
+                        console.log("Reloaded: " + JSON.stringify($scope.active_Samples));
+                        deferred.resolve();
+                    })
+                    .catch ( function (err) {
+                        console.log("Error resetting active samples");
+                        deferred.reject(err);
+                    })
                 }
                 else {
                     console.log("No Samples found");
@@ -278,49 +296,25 @@ function limsController ($scope, $rootScope, $http, $q) {
         var count = $scope.active.plate_ids.length;
         console.log("using " + count + ' ids');
 
-        var condition = " FK_Plate__ID IN (" + $scope.active.plate_ids.join(',') + ") GROUP BY Plate_Set_Number HAVING COUNT(*) = " + count;
+        var condition = "FK_Plate__ID IN (" + $scope.active.plate_ids.join(',') + ')';
         
         var searchData = {
-            scope: { 'Plate_Set' : [ 'DISTINCT Plate_Set_Number as PS'] },
+            scope: { 'Plate_Set' : [ 'Plate_Set_Number as PS'] },
             condition : condition,
+            group: 'Plate_Set_Number HAVING COUNT(*) = ' + count,
+            idField: 'Plate_Set_Number'
         };
 
         $http.post('/Record/search', searchData)
         .then ( function (result) {
             console.log("RESULT: " + JSON.stringify(result));
             $scope.active.valid_plate_sets = [];
-            if (result.data && result.data.results && result.data.results.length) {
-                for (var i=0; i<result.data.results.length; i++) {
-                    $scope.active.valid_plate_sets.push(result.data.results[i].PS);
+            if (result.data && result.data.Plate_Set && result.data.Plate_Set.length) {
+                for (var i=0; i<result.data.Plate_Set.length; i++) {
+                    $scope.active.valid_plate_sets.push(result.data.Plate_Set[i].PS);
                 }
             }
             console.log("Retrieved SET(s): " + JSON.stringify($scope.active.valid_plate_sets));
-        })
-        .catch ( function (err) { 
-            console.log("Error getting sets: " + err);
-        }); 
-    }
-
-    $scope.get_plate_sets = function () {
-        var count = $scope.active.plate_ids.length;
-        console.log("using " + count + ' ids');
-
-        var condition = " FK_Plate__ID IN (" + $scope.active.plate_ids.join(',') + ") GROUP BY Plate_Set_Number HAVING COUNT(*) = " + count;
-        
-        var searchData = {
-            scope: { 'Plate_Set' : [ 'DISTINCT Plate_Set_Number as PS'] },
-            condition : condition,
-        };
-
-        $http.post('/Record/search', searchData)
-        .then ( function (result) {
-            $scope.active.valid_plate_sets = [];
-            if (result.data && result.data.results && result.data.results[0]) {
-                for (var i=0; i<result.data.results.length; i++) {
-                    $scope.active.valid_plate_sets.push(result.data.results[i].PS);
-                }
-            }
-            console.log("Retrieved valid sets: " + JSON.stringify($scope.active.valid_plate_sets));
         })
         .catch ( function (err) { 
             console.log("Error getting sets: " + err);
