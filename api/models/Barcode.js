@@ -178,7 +178,6 @@ module.exports = {
   		}
   	}
 
-    if (barcode != '') { errors.push("Unrecognized string in barcode: '" + barcode + "'") }
   	Scanned['Unformatted'] = barcode;
 
   	if (errors.length) { console.log("Errors: " + JSON.stringify(errors)) }
@@ -236,6 +235,10 @@ module.exports = {
         console.log("Scanned equipment");
         warnings.push("Equipment home page has not yet been set up");        
         objects.push('Equipment');
+      }
+
+      if ( Scanned['Unformatted'] ) {
+        errors.push("Unrecognized string in barcode: '" + Scanned['Unformatted'] + "'") 
       }
 
       console.log('run ' + promises.length + ' promises');
@@ -335,14 +338,15 @@ module.exports = {
     if (barcode) { 
       Scanned = Barcode.parse(barcode);
 
-      if (Scanned['Unformatted'] && Scanned['Unformatted'].length && ! Scanned['Unformatted'].match(/a-zA-Z/) ) {
-        console.log("** Matrix Barcode Detected ** " + Scanned['Unformatted']);
+      if (Scanned['Unformatted'] && Scanned['Unformatted'].match(/\d{10}/) ) {
 
-        var Mbarcodes = Scanned['Unformatted'].match(/.{10}/g);
+        console.log("checking for matrix barcode(s) in unformatted string: " + Scanned['Unformatted']);
+
+        var Mbarcodes = Scanned['Unformatted'].match(/\d{10}/g);
         if (Mbarcodes) {
           console.log("List: " + JSON.stringify(Mbarcodes));
           
-          var query = "Select FK_Plate__ID from Plate_Attribute,Attribute WHERE FK_Attribute__ID = Attribute_ID "
+          var query = "Select FK_Plate__ID as id, Attribute_Value as alt_scan from Plate_Attribute,Attribute WHERE FK_Attribute__ID = Attribute_ID "
             + " AND Attribute_Name='Matrix_Barcode'"
             + " AND Attribute_Value IN ('" + Mbarcodes.join("','") + "')"; 
           console.log(query);
@@ -350,8 +354,16 @@ module.exports = {
           Record.query_promise(query)
           .then ( function (result) {
             if (result.length) {
-              console.log("R: " + JSON.stringify(result));
-              Scanned['Plate'] = _.pluck(result,'FK_Plate__ID');   // need to adjust slightly to accept multiple scanned barcodes ... 
+              var resorted = Record.restore_order(result, Mbarcodes, 'alt_scan');
+              Scanned['Plate'] = _.pluck(resorted,'id');   // need to adjust slightly to accept multiple scanned barcodes ... 
+
+              console.log("** Matrix Barcode(s) Detected and order restored ** " + JSON.stringify(resorted));
+
+              for (var i=0; i<result.length; i++) {
+                var alt_id = result[i].alt_scan;
+                Scanned['Unformatted'] = Scanned['Unformatted'].replace(alt_id, '');
+              }
+
               deferred.resolve(Scanned);
             }
             else {
