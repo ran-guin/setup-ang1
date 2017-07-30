@@ -9,6 +9,15 @@ div.section-block.bg-info
             i.fa.fa-home(style='color:#eee; background-color:transparent')
         span &nbsp; &nbsp;
 
+    form.form-inline(role='form' method='post' action="load-parents" ng-show='0 && barcode' style='display: inline')
+      span(ng-show='barcode')
+        input(type='hidden' ng-model='plate_ids' name='plate_ids' value="{{active.plate_ids.join(',')}}")
+        button.btn.btn-default(type='submit')
+          a(href='#' data-toggle='tooltip' title='Load Parent Samples')
+            i.fa.fa-arrow-up(style='color:#fc6; background-color:transparent')
+        span &nbsp; &nbsp;
+
+
     b Active Samples: &nbsp; 
       button.btn.btn-primary.btn-sm(type='button' ng-show="!injectedAlready()" ng-click="injectData('/Container/summary?render=1','', active.plate_ids)") 
         a(href='#' data-toggle='tooltip' onclick='return false;' title='View Current Sample Information') 
