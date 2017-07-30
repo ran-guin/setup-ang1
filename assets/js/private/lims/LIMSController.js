@@ -305,7 +305,7 @@ function limsController ($scope, $rootScope, $http, $q) {
             idField: 'Plate_Set_Number'
         };
 
-        $http.post('/Record/search', searchData)
+        $http.post('/Record_API/search', searchData)
         .then ( function (result) {
             console.log("RESULT: " + JSON.stringify(result));
             $scope.active.valid_plate_sets = [];
