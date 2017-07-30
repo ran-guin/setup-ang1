@@ -296,7 +296,7 @@ module.exports = {
 	search : function (req, res) {
 
 		var body = req.body || {};
-		console.log("Search API");
+		console.log("Internal Search");
 
 		var scope = body.scope;
 		var condition = body.condition || {};
