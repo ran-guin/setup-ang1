@@ -121,7 +121,9 @@ module.exports.policies = {
     'history' : true,
     'summary' : true,
     'storage_history' : true,
-  }
+  },
+
+  view: { '*' : true }
 
   /***************************************************************************
   *                                                                          *
