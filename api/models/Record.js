@@ -492,6 +492,7 @@ module.exports = {
 		var group     = options.group;
 		var search    = options.search || '';
 		var idField   = options.idField;
+		var link      = options.link;
 
 		var foundLength = 0;
 
@@ -502,6 +503,7 @@ module.exports = {
 
 		console.log("*** Condition: " + JSON.stringify(condition));
 		console.log("*** Scope: " + JSON.stringify(scope));
+		console.log("*** Link: " + link);
 
 		var Prefix = Barcode.prefix();
 		var models   = Object.keys(Prefix);
@@ -515,14 +517,12 @@ module.exports = {
 			var table = Mod.tableName || models[i];
 			var primaryField = idField || Record.alias(models[i], 'id') || 'id';
 
-			console.log("primary field for " + models[i] + ' = ' + primaryField);
+			console.log("primary field for " + models[i] + ' = ' + table + '.' + primaryField);
 
 			var fields = scope[models[i]];
-			var selectFields = primaryField;
-
+			var selectFields = table + '.' + primaryField;
 
 			// if (fields.length) { selectFields = selectFields +  ',' + fields.join(',') }
-			var query = "SELECT " + selectFields + " FROM " + table;
 			
 			var search_conditions = [];
 
@@ -532,6 +532,10 @@ module.exports = {
 			else if (condition && condition.constructor === String) { 
 				search_conditions.push(condition)
 			}
+			else if (condition && condition.constructor === Number) {
+				search_conditions.push(condition);
+			}
+			else { search_conditions.push(2) }
 
 			var add_condition = [];
 			for (var j=0; j<fields.length; j++) {
@@ -548,7 +552,13 @@ module.exports = {
 				if (search) { add_condition.push(field + " LIKE '%" + search + "%'") }
 			}
 
-			query = "SELECT " + selectFields + " FROM " + table;
+			var query = "SELECT " + selectFields + " FROM " + table;
+			if (link) { 
+				query += ', ' + link;
+				var moreFields = scope[link];
+				if (moreFields) { selectFields += moreFields.join(', ') }
+			}
+
 
 			if (Prefix[table] && search) {
 
