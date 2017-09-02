@@ -30,21 +30,44 @@ module.exports = {
 		});
 	},
 
+	fields: function (req, res) {
+		var body = req.body || {};
+
+		var table = body.table || req.param('table');
+
+		if (table) {
+			Record.query_promise("SELECT Field_Name as name, Field_Type as type from DBField where Field_Table='" + table + "'")
+			.then (function (result) {
+				return res.json(result);
+			})
+			.catch ( function (err) {
+				console.log("Error in search: " + err);
+				return res.json(err);
+			});
+		}
+		else {
+			return res.json();
+		}
+	},
+
 	search : function (req, res) {
 
 		var body = req.body || {};
 		console.log("Search API");
 
 		var scope = body.scope;
-		var condition = body.condition || {};
+		var condition = body.condition || req.param('condition') || 1;  // may be string or object with scope table as keys 
 		var group     = body.group;
-		var search    = body.search || '';
+		var search    = body.search || req.param('search');
 		var idField   = body.idField || '';
+		var table = body.table || req.param('table');
+		var link = body.link || req.param('link');
 
 		if (! scope ) {
 			// Generic Search 
 			scope = { 
 				'user' : ['email', 'name'],
+				'staff' : ['alias', 'role'],
 				'container' : ['comments'],
 				'equipment' : ['name', 'serial_number'],
 				'stock' : [ 'PO_Number', 'notes', 'Requisition_Number', 'lot_number'],
@@ -55,7 +78,24 @@ module.exports = {
 			};
 		}
 
-		Record.search({scope : scope, search : search, condition: condition, group: group, idField: idField})
+		if (table && scope[table]) {
+			var newscope = {};
+			newscope[table] = scope[table];
+			
+			if (link && scope[link]) {
+				for (var i=0; i<scope[link].length; i++) {
+					newscope[table].push(scope[link][i]);
+				}
+			}
+
+			scope = newscope;
+			console.log("SCOPE IS" + JSON.stringify(scope));
+			console.log('and ' + link + ' and ' + JSON.stringify(newscope))
+
+		}
+		console.log("C: " + condition);
+
+		Record.search({scope : scope, link: link, search : search, condition: condition, group: group, idField: idField})
 		.then (function (result) {
 			return res.json(result);
 		})
