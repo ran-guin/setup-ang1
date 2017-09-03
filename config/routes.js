@@ -141,6 +141,8 @@ module.exports.routes = {
 
   'GET /view' : 'ViewController.build',
   'POST /view' : 'ViewController.build',
+  'GET /views' : 'ViewController.views',
+  'POST /views' : 'ViewController.views',
 
   'GET /help/:string' : 'HelpController.find',
   'POST /help' : 'HelpController.find',
