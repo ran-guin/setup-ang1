@@ -16,37 +16,55 @@
 //    - iconify (shrink longer output into icons)
 //          eg { 'A' { title : 'A values', icon: 'question-circle' } - uses fa.fa-question-circle for icon to tooltip... 
 //
+
 extends privateLayout
 block content
+	- fields_supplied = false;
+	if fields && fields.length 
+		- fields_supplied = true;
+	else 
+		- fields = []
 	- var max = 100
+	
+	- var split = false
+	if data.constructor === Object
+		- split = true
+		- show = 'display:none'
+	else
+		- data = { Data: data }
+		- show = 'display:block'
+
 	.container(id='searchResultsData')
 		- var alias = {};
-		h2 #{title}
-		hr
+		h2 #{title} : #{split}
 		each m, model in data
 			- var records = data[model];
-			button.btn.btn-success(onclick="getElementById('found#{model}').style.display='block'") 
-				b #{model} : #{records.length} Records 
-			span &nbsp; &nbsp;
-			button.btn.btn-danger(onclick="getElementById('found#{model}').style.display='none'") x
-			
+			if records && records.length && split
+				button.btn.btn-success(onclick="getElementById('found#{model}').style.display='block'") 
+					b #{model} : #{records.length} Records 
+				span &nbsp; &nbsp;
+				button.btn.btn-danger(onclick="getElementById('found#{model}').style.display='none'") x
 			br 
 			br
-			table.table.table-bordered(id='found#{model}' style='display:none')
+			table.table.table-bordered(id='found#{model}' style='#{show}')
 				tr
 					if records && records.length
-						- var fields = [];
 						thead
-							each i, field  in records[0]
-								- var key = field.match(/ as \w+$/)
-								if key && key.length
-									- label = key[0].replace(' as ','');
-									- alias[field] = label;
-								else 
-									- label = field;
-								th.bg-primary()
-									b #{label}
-								- fields.push(field)
+							if (fields_supplied)
+								each field in fields
+									th.bg-primary()
+										b #{field} 
+							else
+								each i, field  in records[0]
+									- var key = field.match(/ as \w+$/)
+									if key && key.length
+										- label = key[0].replace(' as ','');
+										- alias[field] = label;
+									else 
+										- label = field;
+									th.bg-primary()
+										b #{label}
+									- fields.push(field)
 
 						each record,i in records
 							if i < max
