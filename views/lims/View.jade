@@ -1,0 +1,42 @@
+extends ./../customize/privateLayout
+block content
+
+
+  div.container
+    p &nbsp;
+    a(href="/View/edit/#{view_id}" ) 
+        button.btn.btn-primary(type='button') Edit View
+
+    span &nbsp; &nbsp;
+  
+    a(href="/View/list" ) 
+        button.btn.btn-danger(type='button') Return to List of Views
+
+    hr 
+
+    form.form-horizontal(role='form' width='100%')
+    div(ng-app='myApp' ng-cloak=1)
+        div(ng-controller="SharedController" ng-init="include_all=1")
+            input(type='checkbox' name='include_all' checked=1 ng-model="include_all")
+            b &nbsp; Include unprompted fields a = {{include_all}}
+            
+            h3 
+                u View Fields:  
+                span.small # Title [ Message ]
+            ul
+              each field,i in fields
+                - name = field.name;
+                - id   = field.id;
+                - order = field.field_order
+                - prompt = field.prompt;
+
+                - colour = 'blue'
+                if ! field.prompt
+                    - colour = 'red'
+
+    hr
+
+    div(data-toggle='tooltip' title="Add An Additional field") 
+        button.btn.btn-sm.btn-primary Add field
+
+      
