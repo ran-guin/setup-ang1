@@ -1,0 +1,296 @@
+; CREATE TABLE Barcode_Label (
+  Barcode_Label_ID SERIAL,
+  PRIMARY KEY (Barcode_Label_ID)
+)
+
+CREATE TYPE yn as ENUM('Yes','No');
+CREATE TYPE Access AS ENUM('Editable','NonEditable','ReadOnly');
+
+CREATE TABLE Attribute (
+  Attribute_ID SERIAL,
+  Attribute_Name varchar(40) DEFAULT NULL,
+  Attribute_Description text,
+  Attribute_Format text,
+  Attribute_Type varchar(255) DEFAULT NULL,
+  FK_Grp__ID int NOT NULL DEFAULT '0',
+  Inherited yn DEFAULT 'No',
+  Attribute_Class varchar(40) DEFAULT NULL,
+  Attribute_Access Access DEFAULT 'Editable'
+);
+
+CREATE TYPE Stock_Type AS ENUM('Box','Buffer','Equipment','Kit','Matrix','Microarray','Primer','Reagent','Solution','Service_Contract','Computer_Equip','Misc_Item','Untracked');
+CREATE TYPE Stock_Source AS ENUM('Box','Order','Sample','Made in House');
+CREATE TYPE Active_Status AS ENUM('Active','Inactive');
+CREATE TYPE Stock_Units AS ENUM('mL','uL','litres','mg','grams','kg','pcs','boxes','tubes','rxns','nmoles','nL','n/a');
+
+CREATE TABLE Stock_Catalog (
+  Stock_Catalog_ID SERIAL,
+  Stock_Catalog_Name varchar(80) NOT NULL DEFAULT '',
+  Stock_Catalog_Description text,
+  Stock_Catalog_Number varchar(80) DEFAULT NULL,
+  Stock_Type Stock_Type DEFAULT NULL,
+  Stock_Source Stock_Source DEFAULT NULL,
+  Stock_Status Active_Status DEFAULT 'Active',
+  Stock_Size float DEFAULT NULL,
+  Stock_Size_Units Stock_Units DEFAULT NULL,
+  FK_Organization__ID int DEFAULT NULL,
+  FKVendor_Organization__ID int DEFAULT NULL,
+  Model varchar(20) DEFAULT NULL,
+  FK_Equipment_Category__ID int DEFAULT '0',
+  PRIMARY KEY (Stock_Catalog_ID)
+);
+
+CREATE TYPE Plate_Size AS ENUM('1-well','8-well','16-well','32-well','48-well','64-well','80-well','96-well','384-well','1.5 ml','50 ml','15 ml','5 ml','2 ml','0.5 ml','0.2 ml');
+CREATE TYPE Plate_Status AS ENUM('Active','Pre-Printed','Reserved','Temporary','Failed','Thrown Out','Exported','Archived','On Hold');
+CREATE TYPE Test_Status AS ENUM('Test','Production');
+CREATE TYPE Plate_Type AS ENUM('Library_Plate','Tube','Array');
+CREATE TYPE Std_Units AS ENUM('pl','nl','ul','ml','l','g','mg','ug','ng','pg','n/a');
+CREATE TYPE Parent_Quadrant AS ENUM('','a','b','c','d');
+CREATE TYPE QC_Status AS ENUM('N/A','Pending','Failed','Re-Test','Passed');
+CREATE TYPE Plate_Class AS ENUM('Standard','Extraction','ReArray','Oligo');
+
+CREATE TABLE Plate (
+  Plate_ID SERIAL,
+  Plate_Size Plate_Size DEFAULT NULL,
+  Plate_Created timestamp DEFAULT '1000-01-01 00:00:00',
+  FK_Library__Name varchar(40) DEFAULT NULL,
+  FK_Rack__ID int DEFAULT NULL,
+  Plate_Number smallint NOT NULL DEFAULT '0',
+  FK_Employee__ID int DEFAULT NULL,
+  FKParent_Plate__ID int DEFAULT NULL,
+  Plate_Comments text NOT NULL,
+  Plate_Status Plate_Status DEFAULT NULL,
+  Plate_Test_Status Test_Status DEFAULT 'Production',
+  FK_Plate_Format__ID int DEFAULT NULL,
+  Plate_Type Plate_Type DEFAULT NULL,
+  FKOriginal_Plate__ID integer DEFAULT NULL,
+  Current_Volume float DEFAULT NULL,
+  Current_Volume_Units Std_Units NOT NULL DEFAULT 'ul',
+  Parent_Quadrant Parent_Quadrant NOT NULL DEFAULT '',
+  Plate_Parent_Well char(3) NOT NULL DEFAULT '',
+  QC_Status QC_Status DEFAULT 'N/A',
+  FK_Branch__Code varchar(5) NOT NULL DEFAULT '',
+  FK_Pipeline__ID int NOT NULL DEFAULT '0',
+  Plate_Label varchar(40) DEFAULT NULL,
+  FKLast_Prep__ID int DEFAULT NULL,
+  FK_Sample_Type__ID int NOT NULL DEFAULT '0',
+  FK_Work_Request__ID int DEFAULT NULL,
+  Plate_Class Plate_Class DEFAULT 'Standard'
+);
+
+CREATE TYPE Plate_Format_Style AS ENUM('Plate','Tube','Array','Gel');
+CREATE TYPE Well_Lookup_Key AS ENUM('Plate_384','Plate_96','Gel_121_Standard','Gel_121_Custom','Tube');
+CREATE TABLE Plate_Format (
+  Plate_Format_ID SERIAL,
+  Plate_Format_Type char(40) DEFAULT NULL,
+  Plate_Format_Status Active_Status DEFAULT NULL,
+  FK_Barcode_Label__ID int DEFAULT NULL,
+  Max_Row char(2) DEFAULT NULL,
+  Max_Col smallint DEFAULT NULL,
+  Plate_Format_Style Plate_Format_Style DEFAULT NULL,
+  Well_Capacity_mL float DEFAULT NULL,
+  Capacity_Units char(4) DEFAULT NULL,
+  Wells smallint NOT NULL DEFAULT '1',
+  Well_Lookup_Key Well_Lookup_Key DEFAULT NULL,
+  Empty_Container_Weight_in_g decimal(10,0) DEFAULT NULL,
+  Transferrable yn NOT NULL DEFAULT 'Yes'
+); 
+
+CREATE TYPE Permissions as ENUM('R','W','U','D','S','P','A');
+CREATE TYPE Employee_Status AS ENUM('Active','Inactive','Old');
+CREATE TABLE Employee (
+  Employee_ID SERIAL,
+  Employee_Name varchar(80) DEFAULT NULL,
+  Employee_Start_Date date DEFAULT NULL,
+  Initials varchar(4) DEFAULT NULL,
+  Email_Address varchar(80) DEFAULT NULL,
+  Employee_FullName varchar(80) DEFAULT NULL,
+  Position text,
+  Employee_Status Employee_Status DEFAULT NULL,
+  Permissions Permissions[] DEFAULT NULL,
+  IP_Address text,
+  Password varchar(80) DEFAULT '78a302dd267f6044',
+  Machine_Name varchar(20) DEFAULT NULL,
+  FK_Department__ID int DEFAULT NULL,
+  PRIMARY KEY (Employee_ID)
+);
+
+CREATE TYPE Equipment_Status AS ENUM('In Use','Inactive - Removed','Inactive - In Repair','Inactive - Hold','Sold','Unknown','Returned to Vendor (RTV)','In Transit');
+CREATE TABLE Equipment (
+  Equipment_ID SERIAL,
+  Equipment_Name varchar(40) DEFAULT NULL,
+  Equipment_Comments text,
+  Serial_Number varchar(80) DEFAULT NULL,
+  Equipment_Number int DEFAULT NULL,
+  Equipment_Number_in_Batch int DEFAULT NULL,
+  FK_Stock__ID int DEFAULT NULL,
+  Equipment_Status Equipment_Status DEFAULT NULL,
+  FK_Location__ID int NOT NULL DEFAULT '0',
+  Old_Equipment_Name varchar(40) DEFAULT NULL,
+  PRIMARY KEY (Equipment_ID)
+); 
+
+CREATE TABLE Defined_Plate_Set (
+  Defined_Plate_Set_ID SERIAL,
+  Plate_Set_Defined timestamp DEFAULT NULL,
+  FK_Employee__ID int DEFAULT NULL,
+  PRIMARY KEY (Defined_Plate_Set_ID)
+);
+
+CREATE TABLE Plate_Set (
+  Plate_Set_ID SERIAL,
+  FK_Plate__ID int DEFAULT NULL,
+  Plate_Set_Number int DEFAULT NULL,
+  FKParent_Plate_Set__Number int DEFAULT NULL,
+  PRIMARY KEY (Plate_Set_ID)
+);
+
+CREATE TABLE Plate_Prep (
+  Plate_Prep_ID SERIAL,
+  FK_Plate__ID int DEFAULT NULL,
+  FK_Prep__ID int DEFAULT NULL,
+  FK_Plate_Set__Number int DEFAULT NULL,
+  FK_Equipment__ID int DEFAULT NULL,
+  FK_Solution__ID int DEFAULT NULL,
+  Solution_Quantity float DEFAULT NULL,
+  Solution_Quantity_Units Std_Units DEFAULT NULL,
+  Transfer_Quantity float DEFAULT NULL,
+  Transfer_Quantity_Units Std_Units DEFAULT NULL,
+  PRIMARY KEY (Plate_Prep_ID)
+);
+
+CREATE TYPE Prep_Action AS ENUM('Completed','Failed','Skipped');
+CREATE TABLE Prep (
+  Prep_Name varchar(80) DEFAULT NULL,
+  FK_Employee__ID int DEFAULT NULL,
+  Prep_DateTime timestamp NOT NULL DEFAULT '1000-01-01 00:00:00',
+  Prep_Time text,
+  Prep_Conditions text,
+  Prep_Comments text,
+  Prep_Failure_Date timestamp NOT NULL DEFAULT '1000-01-01 00:00:00',
+  Prep_Action Prep_Action DEFAULT NULL,
+  FK_Lab_Protocol__ID int DEFAULT NULL,
+  Prep_ID SERIAL,
+  FK_FailureReason__ID int DEFAULT NULL,
+  Attr_temp text,
+  PRIMARY KEY (Prep_ID)
+); 
+
+CREATE TABLE Printer_Group (
+  Printer_Group_ID SERIAL,
+  Printer_Group_Name varchar(40) NOT NULL DEFAULT '',
+  FK_Site__ID int NOT NULL DEFAULT '0',
+  Printer_Group_Status Active_Status DEFAULT 'Active',
+  PRIMARY KEY (Printer_Group_ID)
+);
+
+CREATE TYPE Rack_Type AS ENUM('Shelf','Rack','Box','Slot');
+CREATE TYPE Capacity AS ENUM('1','9x9','8x12');
+
+CREATE TABLE Rack (
+  Rack_ID SERIAL,
+  FK_Equipment__ID int DEFAULT NULL,
+  Rack_Type Rack_Type DEFAULT NULL,
+  Rack_Name varchar(80) DEFAULT NULL,
+  Movable yn NOT NULL DEFAULT 'Yes',
+  Rack_Alias varchar(80) DEFAULT NULL,
+  FKParent_Rack__ID int DEFAULT NULL,
+  Capacity Capacity DEFAULT NULL,
+  Rack_Full yn NOT NULL DEFAULT 'No',
+  PRIMARY KEY (Rack_ID)
+);
+
+CREATE TABLE Sample_Type (
+  Sample_Type_ID SERIAL,
+  Sample_Type varchar(40) DEFAULT NULL,
+  FKParent_Sample_Type__ID int DEFAULT NULL,
+  Sample_Type_Alias varchar(255) NOT NULL,
+  PRIMARY KEY (Sample_Type_ID)
+)
+
+CREATE TYPE Shipping_Container AS ENUM('Bag','Cryoport','Styrofoam Box');
+CREATE TYPE Shipping_Conditions AS ENUM('Ambient Temperature','Cooled','Frozen');
+CREATE TYPE Package_Conditions AS ENUM('refrigerated - on ice','refrigerated - wet ice','refrigerated - cold water','refrigerated - warm water','room temp - cool','room temp - ok','room temp - warm','frozen - sufficient dry ice','frozen - cryoport temp ok','frozen - little dry ice','frozen - no dry ice');
+CREATE TYPE Container_Status AS ENUM('Locked','Unlocked');
+CREATE TYPE Shipment_Status AS ENUM('Sent','Received','Lost','Exported');
+CREATE TYPE Shipment_Type AS ENUM('Internal','Import','Export','Roundtrip');
+
+CREATE TABLE Shipment (
+  Shipment_ID SERIAL,
+  Shipment_Sent timestamp NOT NULL DEFAULT '2000-01-01 00:00:00',
+  Shipment_Received timestamp NOT NULL DEFAULT '2000-01-01 00:00:00',
+  FKSupplier_Organization__ID int NOT NULL DEFAULT '0',
+  Shipping_Container Shipping_Container DEFAULT NULL,
+  FKRecipient_Employee__ID int NOT NULL DEFAULT '0',
+  Waybill_Number varchar(255) DEFAULT NULL,
+  Shipping_Conditions Shipping_Conditions DEFAULT NULL,
+  Package_Conditions Package_Conditions DEFAULT NULL,
+  Shipment_Comments text,
+  Sent_at_Temp int DEFAULT NULL,
+  Received_at_Temp int DEFAULT NULL,
+  Container_Status Container_Status DEFAULT NULL,
+  Shipment_Reference varchar(255) NOT NULL DEFAULT '',
+  Shipment_Status Shipment_Status DEFAULT NULL,
+  Shipment_Type Shipment_Type DEFAULT NULL,
+  FKFrom_Grp__ID int DEFAULT NULL,
+  FKTarget_Grp__ID int DEFAULT NULL,
+  FKSender_Employee__ID int DEFAULT NULL,
+  FK_Contact__ID int DEFAULT NULL,
+  FKTransport_Rack__ID int DEFAULT NULL,
+  FKFrom_Site__ID int DEFAULT NULL,
+  FKTarget_Site__ID int DEFAULT NULL,
+  Addressee varchar(255) DEFAULT NULL,
+  PRIMARY KEY (Shipment_ID)
+);
+
+CREATE TABLE Shipped_Object (
+  Shipped_Object_ID SERIAL,
+  FK_Shipment__ID int NOT NULL DEFAULT '0',
+  FK_Object_Class__ID int NOT NULL DEFAULT '0',
+  Object_ID int NOT NULL DEFAULT '0',
+  PRIMARY KEY (Shipped_Object_ID)
+); 
+
+CREATE TYPE Solution_Type AS ENUM('Reagent','Solution','Primer','Buffer','Matrix');
+CREATE TYPE Solution_Status AS ENUM('Unopened','Open','Finished','Temporary','Expired');
+CREATE TABLE Solution (
+  Solution_ID SERIAL,
+  Solution_Started timestamp DEFAULT NULL,
+  Solution_Quantity float DEFAULT NULL,
+  Solution_Expiry date DEFAULT NULL,
+  Quantity_Used float DEFAULT '0',
+  FK_Rack__ID int DEFAULT NULL,
+  Solution_Finished date DEFAULT NULL,
+  Solution_Type Solution_Type DEFAULT NULL,
+  Solution_Status Solution_Status DEFAULT 'Unopened',
+  FK_Stock__ID int DEFAULT NULL,
+  FK_Solution_Info__ID int DEFAULT NULL,
+  Solution_Number int DEFAULT NULL,
+  Solution_Number_in_Batch int DEFAULT NULL,
+  Solution_Notes text,
+  QC_Status QC_Status DEFAULT 'N/A',
+  Solution_Label varchar(40) DEFAULT NULL,
+  Solution_Quantity_Units Std_Units DEFAULT NULL,
+  PRIMARY KEY (Solution_ID)
+);
+
+
+CREATE TYPE User_Access AS ENUM('public','lab','research','lab admin','admin');
+CREATE TYPE status AS ENUM('inactive','pending','active');
+
+CREATE TABLE User_Account (
+  name varchar(255) DEFAULT NULL,
+  FK_Employee__ID varchar(255) DEFAULT NULL,
+  access User_Access DEFAULT 'lab',
+  email varchar(255) DEFAULT NULL,
+  encryptedPassword varchar(255) DEFAULT NULL,
+  status status DEFAULT 'pending',
+  lastLoggedIn date DEFAULT NULL,
+  gravatarUrl varchar(255) DEFAULT NULL,
+  id SERIAL,
+  createdAt timestamp DEFAULT NULL,
+  updatedAt timestamp DEFAULT NULL,
+  PRIMARY KEY (id)
+); 
+
+
