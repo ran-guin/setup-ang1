@@ -1,6 +1,22 @@
 extends ./../customize/privateLayout
 block content
 
+  if !fields
+    - fields = [];
+  if !view
+    - view = data
+  if !data
+    b Nothing in View ?
+    - data = [];
+
+  - var config = {};
+  - config.view = view || {};
+  - config.data = data || [];
+  - config.id  = id;
+  - config.file = file || '';
+  - config.excel = excel || {};
+
+  - var init = "initialize(" + JSON.stringify(config) + ")";
 
   div.container
     p &nbsp;
@@ -9,34 +25,79 @@ block content
 
     span &nbsp; &nbsp;
   
-    a(href="/View/list" ) 
+    a(href="/views" ) 
         button.btn.btn-danger(type='button') Return to List of Views
 
     hr 
 
     form.form-horizontal(role='form' width='100%')
     div(ng-app='myApp' ng-cloak=1)
-        div(ng-controller="SharedController" ng-init="include_all=1")
-            input(type='checkbox' name='include_all' checked=1 ng-model="include_all")
-            b &nbsp; Include unprompted fields a = {{include_all}}
-            
-            h3 
-                u View Fields:  
-                span.small # Title [ Message ]
-            ul
-              each field,i in fields
-                - name = field.name;
-                - id   = field.id;
-                - order = field.field_order
-                - prompt = field.prompt;
+      div(ng-controller="SharedController" ng-init="include_all=1")
+        div(ng-controller="LIMSController")
+          div(ng-controller='ViewController' ng-init="#{init}")
+            form(role='form' method='post' action="/view/generate" enctype='form-data')
+                input(type='hidden' name='view_id' value="#{config.id}")
+                input(type='checkbox' name='include_all' checked=1 ng-model="include_all")
+                input(type='hidden' name='generate' value='1')
 
-                - colour = 'blue'
-                if ! field.prompt
-                    - colour = 'red'
+                b &nbsp; Include unprompted fields a = {{include_all}}
+                
+                if message
+                    div.container.alert.alert-info #{message}
+                        if message
+                            br
+                        if excel && excel.file
+                            a(href="/download?file=" + excel.file)
+                                button.btn.btn-success(type='button') Save Results as Excel File
+                                b &nbsp; &nbsp; [#{Math.round(excel.stats.size /100)/10} kB];
+                if title
+                    h3 #{title}
+                p
+                    - name = view.name;
+                    - id   = view.id;
+                    - tables = view.tables
+                    - fields = view.fields
+                    - desc  = view.description
+                h4 #{name}
+                b From Tables: #{tables}
+                p #{desc}
+          
+                if data
+                    div#data(ng-show='showData')
+                        button(ng-click="showData=false" onclick='return false;') X
+                        table.table
+                            tr
+                                each i,field in data[0]
+                                    td(style='background-color:#ccc') #{field}
+                            each record in data
+                                tr
+                                    each j, field in record
+                                        td #{record[field]}
+                    hr
+                    span &nbsp; &nbsp;
+
+                    div(ng-show="!#{data.length} || showOptions")
+                       if fields
+                            each field in fields.split(/,\s*/)
+                                br 
+                                input(type='checkbox' name='fields' value="#{field}")
+                                b &nbsp;#{field}
+                            p &nbsp;
+                        
+                        button.btn.btn-primary(type='submit') Regenerate Results
+                        span &nbsp; &nbsp;
+                        button.btn.btn-danger(ng-click="showOptions=false;" onclick='return false;') Hide Search Criteria
+     
+                    div(ng-show="#{data.length} && !showOptions")
+                        button.btn.btn-warning(ng-click="showOptions=true;" onclick='return false;') Revise Search Criteria
+
+                    div(ng-show='!showData')
+                        hr
+                        h3 Results:
+                        button.btn.btn-success(ng-click="showData=true;" onclick='return false;') Found #{data.length} record(s)
+                else
+                    button.btn.btn-danger(type='submit') Generate Results
 
     hr
-
-    div(data-toggle='tooltip' title="Add An Additional field") 
-        button.btn.btn-sm.btn-primary Add field
-
+    b #{JSON.stringify(view)}
       
