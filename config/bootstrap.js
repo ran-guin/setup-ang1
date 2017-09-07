@@ -109,7 +109,8 @@ function fix_enums (Model, adapter) {
 					console.log(adapter + " * ENUM created: " + command); 
 
 				  	enumPromises.push( Record.query_promise(command) );
-				} else if (adapter.match(/postgres/)) {
+				} 
+				else if (adapter.match(/postgres/)) {
 
 				}
 
