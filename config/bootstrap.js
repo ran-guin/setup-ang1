@@ -33,6 +33,7 @@ module.exports.bootstrap = function(cb) {
 	if (conn) {
 		console.log("Connecting to " + sails.config.models.connection + ':');
 		console.log("\n***************************\n");
+		console.log("Adapter: \t" + conn.adapter);
 		console.log("Host: \t" + conn.host);
 		console.log("DB: \t" + conn.database);
 		console.log("User: \t" + conn.user + "\n");
@@ -53,7 +54,7 @@ module.exports.bootstrap = function(cb) {
 		for (var i=0; i< models.length; i++) {
 
 	  		var Model = sails.models[models[i]];
-			promises.push( fix_enums(Model) );
+			promises.push( fix_enums(Model, conn.adapter) );
 			promises.push( initialize_table(Model) );
 		}
 	}
@@ -75,36 +76,46 @@ module.exports.bootstrap = function(cb) {
 	});
 }
 
-function fix_enums (Model) {
+function fix_enums (Model, adapter) {
 	var deferred = q.defer();
 
 	var table = Model.tableName;
-		var attributes = Object.keys(Model.attributes);
+	var migrate = Model.migrate;
 
-		var added_enum = 0;
-		var errors = [];
+	var attributes = Object.keys(Model.attributes);
 
-		// Convert to ENUM Fields in Database if applicable //
+	var added_enum = 0;
+	var errors = [];
 
-		var enumPromises = [];
+	// Convert to ENUM Fields in Database if applicable //
+
+	var enumPromises = [];
+	if (migrate !== 'safe') {
 		for (var j=0; j<attributes.length; j++) {
-		var att = attributes[j];
+			var att = attributes[j];
 
-		var Atype = Model.attributes[att].type;
-		var Aenum =  Model.attributes[att].enum;
-	        var defaultsTo = Model.attributes[att].defaultsTo;
-		
-		if (defaultsTo) { defaultsTo = ' DEFAULT \'' + defaultsTo + '\'' }
-		else { defaultsTo = '' }
+			var Atype = Model.attributes[att].type;
+			var Aenum =  Model.attributes[att].enum;
+		    var defaultsTo = Model.attributes[att].defaultsTo;
+			
+			if (defaultsTo) { defaultsTo = ' DEFAULT \'' + defaultsTo + '\'' }
+			else { defaultsTo = '' }
 
-		// console.log(att + " : " + Atype + " " + Aenum);
-		if (Aenum && Aenum != 'undefined') {
-			var command = " ALTER TABLE " + table + " MODIFY " + att + " ENUM('" + Aenum.join("','") + "') " + defaultsTo;
-			console.log("* ENUM created: " + command); 
+			// console.log(att + " : " + Atype + " " + Aenum);
+			if (Aenum && Aenum != 'undefined') {
+				
+				if (adapter.match(/mysql/)) {
+					var command = " ALTER TABLE " + table + " MODIFY " + att + " ENUM('" + Aenum.join("','") + "') " + defaultsTo;
+					console.log(adapter + " * ENUM created: " + command); 
 
-		  	enumPromises.push( Record.query_promise(command) );
-	  		added_enum++;
-	  	}
+				  	enumPromises.push( Record.query_promise(command) );
+				} else if (adapter.match(/postgres/)) {
+
+				}
+
+		  		added_enum++;
+		  	}
+		}
 	}
 
 	if (enumPromises.length > 0) {
@@ -168,10 +179,9 @@ function initialize_table (Model) {
 			}
 		}
 	})
-	.catch ( function (err) {
-		
-		var msg = 'Could not count ' + table + ' records (run once with migrate = alter if table not yet created)'
-		deferred.reject(msg);
+	.catch ( function (err) {		
+		var msg = '** NOTE: ** Could not count ' + table + ' records (run once with migrate = alter if table not yet created)'
+		deferred.resolve(msg);
 	});
 
 	return deferred.promise;

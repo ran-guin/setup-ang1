@@ -1,12 +1,15 @@
 extends ./../customize/privateLayout
 block content
 
+  if !views
+    - views = [];
+
   div.container
     p &nbsp;
     a(href="/Views/new")
       button.btn.btn-primary(type='button') Add New View   
 
-    h3 List of Current Views:
+    h3 List of Current Views: #{id}
 
     div.container
        div(ng-app='myApp' ng-cloak=1)
@@ -15,20 +18,31 @@ block content
           b &nbsp; Include inactive views
           p &nbsp;
 
-          each view,i in views
-            - id = view.id;
-            - name = view.name;
-            - desc = view.description;
+          table.table
+            tr
+              th Name
+              th Tables
+              th Fields
+            each view in views
+              - id   = view.id || id;
+              - name = view.name;
+              - table = view.tables;
+              - fields = view.fields;
+              - desc = view.description
 
-            - colour = 'red'
-            if status === 'Active'
-              - colour = 'blue'
+              - colour = 'red'
+              if status === 'Active'
+                - colour = 'blue'
 
-            li(ng-show="include_all || '#{status}' == 'Active'") 
-              a(href="/Views/view/#{id}")
-                b(style='color: #{colour}') #{name}
-              span &nbsp; &nbsp; [ for &nbsp;
-              b #{desc} 
+              tr(ng-show="include_all || '#{status}' == 'Active'") 
+                td  
+                  a(href="/view/#{id}")
+                    b(style='color: #{colour}') #{name}
+                td
+                  span #{table}
+                td
+                  span #{fields}
+    b #{JSON.stringify(views)} 
 
 
 
