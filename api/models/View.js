@@ -190,11 +190,9 @@ module.exports = {
 			// add data
 			for (var row=1; row<=data.length; row++) {
 				for (var col=1; col<=keys.length; col++) {
-					var cellR = row+1;
-					var cellC = col+1;
 					var string = String(data[row-1][keys[col-1]]);
-					console.log(cellR + ', ' + cellC + ":" + keys[col-1] + ' = ' + string);
-					ws.cell(cellR, cellC).string(string).style(myStyle);
+					console.log(row+1 + ', ' + col + ":" + keys[col-1] + ' = ' + string);
+					ws.cell(row+1, col).string(string).style(myStyle);
 					console.log('next...');
 				}
 			}
