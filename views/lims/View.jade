@@ -37,10 +37,7 @@ block content
           div(ng-controller='ViewController' ng-init="#{init}")
             form(role='form' method='post' action="/view/generate" enctype='form-data')
                 input(type='hidden' name='view_id' value="#{config.id}")
-                input(type='checkbox' name='include_all' checked=1 ng-model="include_all")
                 input(type='hidden' name='generate' value='1')
-
-                b &nbsp; Include unprompted fields a = {{include_all}}
                 
                 if message
                     div.container.alert.alert-info #{message}
@@ -50,53 +47,56 @@ block content
                             a(href="/download?file=" + excel.file)
                                 button.btn.btn-success(type='button') Save Results as Excel File
                                 b &nbsp; &nbsp; [#{Math.round(excel.stats.size /100)/10} kB];
-                if title
-                    h3 #{title}
-                p
-                    - name = view.name;
-                    - id   = view.id;
-                    - tables = view.tables
-                    - fields = view.fields
-                    - desc  = view.description
-                h4 #{name}
-                b From Tables: #{tables}
-                p #{desc}
-          
-                if data
+  
+                div.navbar-right(ng-show="#{data.length} && !showOptions")
+                    button.btn.btn-warning(ng-click="showOptions=true;" onclick='return false;') Revise Search Criteria
+                div.navbar-right(ng-show="!#{data.length} || showOptions")
+                    button.btn.btn-danger(ng-show="#{data.length}" ng-click="showOptions=false;" onclick='return false;') Hide Search Criteria
+
+                div.view-section
+                    if title
+                        h3 #{title}
+                    p
+                        - name = view.name;
+                        - id   = view.id;
+                        - tables = view.tables
+                        - fields = view.fields
+                        - desc  = view.description
+                    h4 #{name}
+                    b From Tables: #{tables}
+                    p #{desc}
+
                     div#data(ng-show='showData')
                         button(ng-click="showData=false" onclick='return false;') X
-                        table.table
-                            tr
-                                each i,field in data[0]
-                                    td(style='background-color:#ccc') #{field}
-                            each record in data
-                                tr
-                                    each j, field in record
-                                        td #{record[field]}
-                    hr
-                    span &nbsp; &nbsp;
 
-                    div(ng-show="!#{data.length} || showOptions")
-                       if fields
+                        if data.length
+                            table.table
+                                tr
+                                    each i,field in data[0]
+                                        td(style='background-color:#ccc') #{field}
+                                
+                                each record in data
+                                    tr
+                                        each j, field in record
+                                            td #{record[field]}
+
+                    div.search-section(ng-show="!#{data.length} || showOptions")
+                        h3 Search Options:
+
+                        if fields
                             each field in fields.split(/,\s*/)
                                 br 
                                 input(type='checkbox' name='fields' value="#{field}")
                                 b &nbsp;#{field}
                             p &nbsp;
                         
-                        button.btn.btn-primary(type='submit') Regenerate Results
-                        span &nbsp; &nbsp;
-                        button.btn.btn-danger(ng-click="showOptions=false;" onclick='return false;') Hide Search Criteria
-     
-                    div(ng-show="#{data.length} && !showOptions")
-                        button.btn.btn-warning(ng-click="showOptions=true;" onclick='return false;') Revise Search Criteria
+                        button.btn.btn-primary(type='submit') Generate Results
+                        span &nbsp; &nbsp;     
 
-                    div(ng-show='!showData')
+                    div.results-section(ng-show='!showData')
                         hr
                         h3 Results:
                         button.btn.btn-success(ng-click="showData=true;" onclick='return false;') Found #{data.length} record(s)
-                else
-                    button.btn.btn-danger(type='submit') Generate Results
 
     hr
     b #{JSON.stringify(view)}
