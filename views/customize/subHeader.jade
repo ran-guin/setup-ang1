@@ -1,0 +1,30 @@
+
+
+- var config = private_config || {};
+- var init = "initialize_payload(" + JSON.stringify(config) + ")";
+
+div.container
+  div.col-md-4
+    div.input.input-lg.navbar-left
+      a(href="/home") Dashboard
+      span &nbsp; &nbsp; | &nbsp; &nbsp;
+      a(href="/views") Views
+      span &nbsp; &nbsp; | &nbsp; &nbsp;
+      a(href='#' onclick="return false;" data-toggle='modal' data-target='#UploadFileModal') Upload        
+        i.fa.fa-upload
+      span &nbsp; &nbsp; &nbsp; &nbsp;
+ 
+  div.col-md-4 
+
+
+  div.col-md-4
+    div.input.input-lg.navbar-right
+      if config.access === 'admin'
+        a(href="/lab_admin") Lab Admin
+        span &nbsp; &nbsp; | &nbsp; &nbsp;
+        a(href="/admin") Admin
+      if config.access === 'lab_admin'
+        a(href="/lab_admin") Lab Admin    
+
+  hr  
+  include uploadFileModal.jade
