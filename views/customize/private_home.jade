@@ -3,26 +3,13 @@ block content
 
   - var config = private_config || {};
   - var init = "initialize_payload(" + JSON.stringify(config) + ")";
-
+  
   div.main.container
      div(ng-app='myApp' ng-cloak=1)
       div(ng-controller="SharedController")       
        div(ng-controller="LIMSController" ng-init="#{init}")
         div(ng-controller="FancyFormController") 
             h2 Dashboard
-              div.navbar-right
-
-                  if config.access === 'admin'
-                      a(href="/admin")
-                        button.btn.btn-danger(type='button') Admin
-                      span &nbsp; &nbsp;
-                      a(href="/lab_admin")
-                        button.btn.btn-danger(type='button') Lab Admin
-
-                  if config.access === 'lab admin'
-                      a(href="/lab_admin")
-                        button.btn.btn-danger(type='button') Lab Admin
-
             hr 
 
             include ./../core/errorAngularMsg.jade
@@ -49,20 +36,4 @@ block content
               span &nbsp;
               button.btn.btn-primary.btn-lg(type='submit') Search
 
-            p &nbsp;
-            p &nbsp;
-            p &nbsp; 
-
-            p
-              a(href='#' onclick="return false;" data-toggle='modal' data-target='#UploadFileModal')
-                button.btn.btn-danger(type='button') 
-                  i.fa.fa-4x.fa-upload
-                  span &nbsp; Upload Data
-
-            hr
-            p &nbsp;
-            p &nbsp;
-            p &nbsp;
-
-            include uploadFileModal.jade
             include helpModal.jade
