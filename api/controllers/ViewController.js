@@ -11,7 +11,7 @@ module.exports = {
 		var body = req.body || {};
 		var file = body.file || req.param('file');
 
-		console.log("F: " + file);
+		console.log("download: " + file);
 		if (file) {
 			console.log("download " + file);
 			return res.download(file);
@@ -22,6 +22,7 @@ module.exports = {
 	},
 
 	build: function (req, res) {
+		console.log('build view...');
 		var body = req.body || {};
 		var view_id = body.view_id  || body.id || req.param('id');
 		var generate = body.generate || req.param('generate');
@@ -132,6 +133,7 @@ module.exports = {
 	},
 
 	views: function (req, res) {
+		console.log('show views...');
 
 		View.specs()
 		.then ( function (result) {
