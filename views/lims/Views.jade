@@ -6,8 +6,8 @@ block content
 
   div.container
     p &nbsp;
-    a(href="/Views/new")
-      button.btn.btn-primary(type='button') Add New View   
+    a(href="/reports/new")
+      button.btn.btn-primary(type='button') Add New View Report  
 
     h3 List of Current Views: #{id}
 
@@ -36,7 +36,7 @@ block content
 
               tr(ng-show="include_all || '#{status}' == 'Active'") 
                 td  
-                  a(href="/view/#{id}")
+                  a(href="/getReport/#{id}")
                     b(style='color: #{colour}') #{name}
                 td
                   span #{table}
