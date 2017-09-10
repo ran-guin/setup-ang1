@@ -16,8 +16,7 @@ module.exports = {
   	description: { type: 'text'}
   },
 
-  specs : function (view_id) {
-
+  list : function (view_id) {
   	var deferred = q.defer();
 
 	var query = "Select view.id, view.description as description, Group_Concat(distinct view_table.table_name SEPARATOR ', ') as tables, view.name as name, GROUP_CONCAT(distinct view_field.field SEPARATOR ', ') as fields"
@@ -36,91 +35,130 @@ module.exports = {
 	});
 
 	return deferred.promise;
-
   },
 
-  build : function (view_id, options) {
+  setup : function (view_id, options) {
+ 	var deferred = q.defer();
 
   	if (!options) { optios = {} }
+  	
   	var fields = options.fields || [];
-  	var generate = options.generate || false;
+  	var group  = options.group  || [];
+  	var layer  = options.layer  || [];
+  	var search = options.search || {};
+  	var condition = options.condition || ''; 
+  	var limit = options.limit; 	
 
-  	var deferred = q.defer();
+  	var conditions = [];
+
+  	if (condition) { conditions.push(condition) }
 
   	var query = "Select * from view_field, view_table where view_field.table=view_table.table_name AND view_table.view_id = view_field.view_id";
   	if (view_id) { query +=  " AND view_field.view_id = " + view_id }
 
-  	console.log("** VIEW QUERY *** " + query);
-  	Record.query_promise(query)
-	.then ( function (F) {
-  		console.log("QF: " + JSON.stringify(F));
+  	View.list(view_id)
+  	.then (function (views) {
+	 	Record.query_promise(query)
+		.then ( function (F) {
+	  		console.log("QF: " + JSON.stringify(F));
 
-  		if (fields && fields.length) {
-  			// ensure mandatory fields included...
-  		}
-  		else {
-  			fields = _.pluck(F, 'field');
-  		}
+	  		if (fields && fields.length) {
+	  			// ensure mandatory fields included...
+	  		}
+	  		else {
+	  			fields = _.pluck(F, 'field');
+	  		}
 
-  		console.log('fields: ' + JSON.stringify(fields));
-  		var f = [];
-  		var reqd = [];
-  		var  tables = [];
-  		var conditions = [];
-  		var lj = [];
+	  		console.log('fields: ' + JSON.stringify(fields));
+	  		var f = [];
+	  		var reqd = [];
+	  		var  tables = [];
+	  		var lj = [];
 
-  		for (var i=0; i<fields.length; i++) {
-  			var lastcheck = fields.length - 1;
-	  		for (var j=0; j<F.length; j++) {
-	  			var prompt = F[j].prompt || F[j].field;
-	  			console.log(F[j].field + ' vs ' + fields[i]);
-	  			if (F[j].field === fields[i] || fields[i] === F[j].prompt || fields[i] === F[j].table + '.' + F[j].field) {
-		  			console.log(fields[i] + ' : ' + JSON.stringify(F[j]));
-	  				if (F[j].type === 'attribute') {
-	  					var primary = F[j].table + '_ID';
+	 		for (var i=0; i<fields.length; i++) {
+	  			var lastcheck = fields.length - 1;
+		  		for (var j=0; j<F.length; j++) {
+		  			var prompt = F[j].prompt || F[j].field;
+		  			console.log(F[j].field + ' vs ' + fields[i]);
+		  			if (F[j].field === fields[i] || fields[i] === F[j].prompt || fields[i] === F[j].table + '.' + F[j].field) {
+			  			console.log(fields[i] + ' : ' + JSON.stringify(F[j]));
+		  				if (F[j].type === 'attribute') {
+		  					var primary = F[j].table + '_ID';
 
-	  					var attTable = F[j].table + '_Attribute';
-	  					lj.push('Attribute as ' + F[j].field + "_Att ON Attribute_Name = '" + F[j].field + "' AND Attribute_Class = '" + F[j].table + "'");
-	  					lj.push(attTable + " AS " + F[j].field + " ON " + F[j].field + ".FK_Attribute__ID=" + F[j].field + '_Att.Attribute_ID AND FK_' + F[j].table + '__ID=' + F[j].table + '.' + primary );
-	  					f.push(F[j].field + '.Attribute_Value AS ' + F[j].prompt);
-	  					console.log("ADD " + F[j].field + '.Attribute_Value AS ' + F[j].prompt);
-	  				}
-	  				else {
-	  					f.push(F[j].table + '.' + F[j].field + ' AS ' + F[j].prompt);
-	  					console.log("normal add: " + F[j].table + '.' + F[j].field + ' AS ' + F[j].prompt);
-	  				}
-	  					
-	  				if (tables.indexOf(F[j].table) === -1) {
-	  					tables.push(F[j].table)
-	  					if (F[j].join_condition !== '1') { conditions.push(F[j].join_condition) }
-	  				}
-	  				
-	  				j=F.length;
+		  					var attTable = F[j].table + '_Attribute';
+		  					lj.push('Attribute as ' + F[j].field + "_Att ON Attribute_Name = '" + F[j].field + "' AND Attribute_Class = '" + F[j].table + "'");
+		  					lj.push(attTable + " AS " + F[j].field + " ON " + F[j].field + ".FK_Attribute__ID=" + F[j].field + '_Att.Attribute_ID AND FK_' + F[j].table + '__ID=' + F[j].table + '.' + primary );
+		  					f.push(F[j].field + '.Attribute_Value AS ' + F[j].prompt);
+		  					console.log("ADD " + F[j].field + '.Attribute_Value AS ' + F[j].prompt);
+		  				}
+		  				else {
+		  					f.push(F[j].table + '.' + F[j].field + ' AS ' + F[j].prompt);
+		  					console.log("normal add: " + F[j].table + '.' + F[j].field + ' AS ' + F[j].prompt);
+		  				}
+		  					
+		  				if (tables.indexOf(F[j].table) === -1) {
+		  					tables.push(F[j].table)
+		  					if (F[j].join_condition !== '1') { conditions.push(F[j].join_condition) }
+		  				}
+		  				
+		  				j=F.length;
+		  			}
+		  		}
+		  		
+	  		}
+
+	  		console.log("BUILT: " + JSON.stringify(f));
+
+	  		if (reqd) {
+	  			for (var k=0; k<reqd.length; k++) {
+	  				f.push(reqd[k]);
+	  				console.log("add required field: " + reqd[k]);
 	  			}
 	  		}
-	  		
-  		}
+	  		var select = "SELECT " + f.join(', ') + ' FROM (' + tables.join(', ') + ')';
 
-  		console.log("BUILT: " + JSON.stringify(f));
+	  		if (lj.length) { select += " LEFT JOIN " + lj.join(' LEFT JOIN ') }
 
-  		if (reqd) {
-  			for (var k=0; k<reqd.length; k++) {
-  				f.push(reqd[k]);
-  				console.log("add required field: " + reqd[k]);
-  			}
-  		}
-  		var select = "SELECT " + f.join(', ') + ' FROM (' + tables.join(', ') + ')';
+	  		if (conditions && conditions.length) { select += " WHERE " + conditions.join(' AND ') }
 
-  		if (lj.length) { select += " LEFT JOIN " + lj.join(' LEFT JOIN ') }
+	  		console.log("QUERY: " + select);
+	  		console.log(JSON.stringify(layer));
 
-  		if (conditions && conditions.length) { select += " WHERE " + conditions.join(' AND ') }
+	  		if (layer && layer.length) { select += " GROUP BY " + layer.join(',') }
+			
+			if (limit) { select += " LIMIT " + limit }	  		
 
-  		console.log("QUERY: " + select);
+	  		deferred.resolve({view: views[0], query: select, fields: fields, layer: layer});
+	  	})
+	  	.catch ( function (err) {
+	  		console.log("Error retrieving report");
+	  		deferred.reject(err);
+	  	});
+	})
+	.catch (function (err) {
+		console.log("Error finding view");
+		deferred.reject(err);
+	});
 
-  		if (generate) {
-			Record.query_promise(select)
+  	return deferred.promise;
+  },
+
+  generate : function (view_id, options) {
+	var deferred = q.defer();
+  	if (!options) { options = {} }
+
+  	View.setup(view_id, options)
+  	.then (function (setup) {
+  		
+  		console.log('setup: ' + JSON.stringify(setup));
+  		var query = setup.query;
+  		var view  = setup.view;
+	  	var layer  = setup.layer;
+
+  		if (query) {
+			Record.query_promise(query)
 			.then ( function (result) {
-				deferred.resolve({data: result, query: select});
+				deferred.resolve({data: result, view: view, query: query, layer:layer});
 			})
 			.catch ( function (err) {
 				console.log('error with query ?' + err);
@@ -128,8 +166,8 @@ module.exports = {
 			})
 		}
 		else {
-			console.log('built view (without generating data)')
-			deferred.resolve({query: select});
+			console.log('no query in report ?')
+			deferred.resolve({data: [], query: '', layer: layer});
 		}
   	})
   	.catch ( function (err) {
@@ -141,6 +179,11 @@ module.exports = {
   },
 
   save2excel: function (data, options) {
+
+  	if (!options) { options = {} }
+
+  	var filename = options.filename;
+  	var path     = options.path || './excel/';
 
   	var deferred = q.defer();
 
@@ -210,9 +253,17 @@ module.exports = {
 			console.log('added data...'); 
 			var user = 'generic';
 
-			var timestamp = String(new Date());
+			if (!filename) { 
+				var timestamp = String(new Date());			
+				filename = 'Dump.' + user + '.' + timestamp + '.xlsx'
+			}
+			else {
+				if (!filename.match(/\.xlsx?/)) {
+					filename = filename + '.xlsx';
+				}
+			}
 
-			var file = './data/excel/TestExcelFile.' + user + '.' + timestamp + '.xlsx';
+			var file = path + filename;
 
 			wb.write(file, function (err, stats) { 
 				// Writes the file ExcelFile.xlsx to the process.cwd(); 
@@ -223,7 +274,7 @@ module.exports = {
 			    }
 			    else { 
 			    	console.log(stats); // Prints out an instance of a node.js fs.Stats object 
-					deferred.resolve({file: file, stats: stats});
+					deferred.resolve({file: filename, stats: stats});
 				}
 			});
 		}
