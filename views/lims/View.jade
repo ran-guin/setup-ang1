@@ -5,9 +5,6 @@ block content
     - fields = [];
   if !view
     - view = data
-  if !data
-    b Nothing in View ?
-    - data = [];
 
   - var config = {};
   - config.view = view || {};
@@ -30,13 +27,12 @@ block content
 
     hr 
 
-    form.form-horizontal(role='form' width='100%')
     div(ng-app='myApp' ng-cloak=1)
       div(ng-controller="SharedController" ng-init="include_all=1")
         div(ng-controller="LIMSController")
           div(ng-controller='ViewController' ng-init="#{init}")
             form(role='form' method='post' action="/view/generate" enctype='form-data')
-                input(type='hidden' name='view_id' value="#{config.id}")
+                input(type='hidden' ng-model="form.view_id" name='view_id' value="#{config.id}")
                 input(type='hidden' name='generate' value='1')
                 
                 if message
@@ -48,28 +44,29 @@ block content
                                 button.btn.btn-success(type='button') Save Results as Excel File
                                 b &nbsp; &nbsp; [#{Math.round(excel.stats.size /100)/10} kB];
   
-                div.navbar-right(ng-show="#{data.length} && !showOptions")
+                div.navbar-right(ng-show="#{data} && !showOptions")
                     button.btn.btn-warning(ng-click="showOptions=true;" onclick='return false;') Revise Search Criteria
-                div.navbar-right(ng-show="!#{data.length} || showOptions")
-                    button.btn.btn-danger(ng-show="#{data.length}" ng-click="showOptions=false;" onclick='return false;') Hide Search Criteria
+                div.navbar-right(ng-show="!#{data} || showOptions")
+                    button.btn.btn-danger(ng-show="#{data}" ng-click="showOptions=false;" onclick='return false;') Hide Search Criteria
 
                 div.view-section
-                    if title
-                        h3 #{title}
-                    p
-                        - name = view.name;
-                        - id   = view.id;
-                        - tables = view.tables
-                        - fields = view.fields
-                        - desc  = view.description
-                    h4 #{name}
-                    b From Tables: #{tables}
-                    p #{desc}
+                    div.view-overview
+                        if title
+                            h3 #{title}
+                        p
+                            - name = view.name;
+                            - id   = view.id;
+                            - tables = view.tables
+                            - fields = view.fields
+                            - desc  = view.description
+                        h4 #{name}
+                        b From Tables: #{tables}
+                        p #{desc}
 
-                    div#data(ng-show='showData')
+                    div.input-options#data(ng-show='showData')
                         button(ng-click="showData=false" onclick='return false;') X
 
-                        if data.length
+                        if data && data.length
                             table.table
                                 tr
                                     each i,field in data[0]
@@ -80,23 +77,57 @@ block content
                                         each j, field in record
                                             td #{record[field]}
 
-                    div.search-section(ng-show="!#{data.length} || showOptions")
+                    div.search-options(ng-show="!#{data} || showOptions")
                         h3 Search Options:
 
                         if fields
-                            each field in fields.split(/,\s*/)
-                                br 
-                                input(type='checkbox' name='fields' value="#{field}")
-                                b &nbsp;#{field}
-                            p &nbsp;
-                        
-                        button.btn.btn-primary(type='submit') Generate Results
+                            table.table.table-bordered
+                                tr.text-info
+                                    td  
+                                        b Show
+                                    td  
+                                        b Field
+                                    td  
+                                        b Search Condition
+                                    td  
+                                        b Group by
+                                    td
+                                        b Separate Tab/Layer by
+
+                                each field in fields.split(/,\s*/)
+                                    tr
+                                        td
+                                            input(type='checkbox' ng-model="form.show['#{field}']" ng-click="updateList('show','#{field}')" name='fields')
+                                        td #{field}
+                                        td 
+                                            input.form-control(type='text' ng-model="form.search['#{field}']" name="search#{field}")
+                                        td
+                                            input(type='checkbox' ng-model="form.groupBy['#{field}']" ng-click="updateList('groupBy','#{field}')" name='group')
+                                        td
+                                            input(type='checkbox' ng-model="form.layer['#{field}']" ng-click="updateList('layer','#{field}')" name='group')
+                            
+                            b Show: &nbsp; &nbsp;
+                            b.text-success {{show.join(', ')}}                        
+                            br
+                            b Group by: &nbsp; &nbsp;
+                            b.text-success {{groupBy.join(', ')}}
+                            br
+                            b Separate results by: &nbsp; &nbsp;
+                            b.text-success {{layer.join(', ')}}
+                            p
+                            i Note: Re-select items as required to reorder:  items will be added in order selected
+                            hr
+                            b Form = {{form}}
+
+                        p &nbsp;
+                        button.btn.btn-primary(type='button' ng-click="generate()") Generate Results
                         span &nbsp; &nbsp;     
 
-                    div.results-section(ng-show='!showData')
-                        hr
-                        h3 Results:
-                        button.btn.btn-success(ng-click="showData=true;" onclick='return false;') Found #{data.length} record(s)
+                    if data
+                        div.results-section(ng-show='!showData')
+                            hr
+                            h3 Results:
+                            button.btn.btn-success(ng-click="showData=true;" onclick='return false;') Found #{data.length} record(s)
 
     hr
     b #{JSON.stringify(view)}
