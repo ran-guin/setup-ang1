@@ -669,7 +669,7 @@ module.exports = {
 		                        type = 'boolean';
 		                      	//options = recordModel.attributes[fld]['enum'];
 		                    }
-		                    else if (recordModel.attributes[fld]['type'] === 'int') {
+		                    else if (recordModel.attributes[fld]['type'] === 'integer') {
 		                    	type = 'number';
 		                    }
 		                }

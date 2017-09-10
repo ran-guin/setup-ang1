@@ -19,7 +19,7 @@ module.exports = {
 		New_Value : { type : 'string'},
 		FK_Employee__ID : { type : 'integer'},
 		Modified_Date : { type : 'time' },
-		Record_ID : { type : 'int' },
+		Record_ID : { type : 'integer' },
 		Comment : { type : 'text'}
 	},
 

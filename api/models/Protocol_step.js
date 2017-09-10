@@ -14,7 +14,7 @@ module.exports = {
 
 		name : { type : 'string'},
 		Lab_protocol : { model : 'lab_protocol' },
-		step_number : { type : 'int' },
+		step_number : { type : 'integer' },
 		instructions : { type : 'text'},
 		message : { type : 'string' },
 		Target_format : { model : 'container_format' },
