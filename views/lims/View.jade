@@ -7,11 +7,16 @@ block content
     - view = data
 
   - var config = {};
-  - config.view = view || {};
-  - config.data = data || [];
+  - config.view = view;
+  - config.data = data;
   - config.id  = id;
-  - config.file = file || '';
-  - config.excel = excel || {};
+  - config.file = file;
+  - config.excel = excel;
+
+  if view 
+    - view_id = view_id || view.id
+    - tables = view.tables
+    - fields = fields || view.fields
 
   - var init = "initialize(" + JSON.stringify(config) + ")";
 
@@ -35,19 +40,7 @@ block content
                 input(type='hidden' ng-model="form.view_id" name='view_id' value="#{config.id}")
                 input(type='hidden' name='generate' value='1')
                 
-                if message
-                    div.container.alert.alert-info #{message}
-                        if message
-                            br
-                        if excel && excel.file
-                            a(href="/download?file=" + excel.file)
-                                button.btn.btn-success(type='button') Save Results as Excel File
-                                b &nbsp; &nbsp; [#{Math.round(excel.stats.size /100)/10} kB];
-  
-                div.navbar-right(ng-show="#{data} && !showOptions")
-                    button.btn.btn-warning(ng-click="showOptions=true;" onclick='return false;') Revise Search Criteria
-                div.navbar-right(ng-show="!#{data} || showOptions")
-                    button.btn.btn-danger(ng-show="#{data}" ng-click="showOptions=false;" onclick='return false;') Hide Search Criteria
+                div.container.alert.alert-info(ng-show="message") {{message}}
 
                 div.view-section
                     div.view-overview
@@ -63,21 +56,12 @@ block content
                         b From Tables: #{tables}
                         p #{desc}
 
-                    div.input-options#data(ng-show='showData')
-                        button(ng-click="showData=false" onclick='return false;') X
-
-                        if data && data.length
-                            table.table
-                                tr
-                                    each i,field in data[0]
-                                        td(style='background-color:#ccc') #{field}
-                                
-                                each record in data
-                                    tr
-                                        each j, field in record
-                                            td #{record[field]}
-
-                    div.search-options(ng-show="!#{data} || showOptions")
+                    div.navbar-right(ng-show="data && !showOptions")
+                        button.btn.btn-sm.btn-warning(ng-click="showOptions=true;" onclick='return false;') Revise Search Criteria
+ 
+                    div.search-options(ng-show="showOptions")
+                        div.navbar-right
+                            button.btn.btn-sm.btn-danger(ng-show="data" ng-click="showOptions=false;" onclick='return false;') Hide Search Criteria
                         h3 Search Options:
 
                         if fields
@@ -116,19 +100,36 @@ block content
                             b.text-success {{layer.join(', ')}}
                             p
                             i Note: Re-select items as required to reorder:  items will be added in order selected
-                            hr
-                            b Form = {{form}}
 
                         p &nbsp;
-                        button.btn.btn-primary(type='button' ng-click="generate()") Generate Results
-                        span &nbsp; &nbsp;     
+                        div(style='display:flex; flex-direction:row')
+                            button.btn.btn-primary(type='button' ng-click="generate()") Generate Results
+                            span &nbsp; &nbsp; 
+                            input(type='text' style="flex:1" placeholder=' -- optional filename -- (defaults to user + timestamp) ' ng-model='filename')    
 
-                    if data
-                        div.results-section(ng-show='!showData')
-                            hr
-                            h3 Results:
-                            button.btn.btn-success(ng-click="showData=true;" onclick='return false;') Found #{data.length} record(s)
+                    hr
+                    span.results-section(ng-show='data')
+                        h3 Results:
+                        span.results-section(ng-show='!showData')
+                            button.btn.btn-success(ng-click="showData=true;" onclick='return false;') Found {{data.length}} record(s)
+                            span &nbsp; &nbsp; &nbsp;
+                        span(ng-show="showData")
+                            button.btn.btn-danger(ng-click="showData=false" onclick='return false;') x
+                            span &nbsp; &nbsp; &nbsp;
+
+                    span(ng-show="excel && excel.file")
+                        a(href="/download?file={{excel.file}}")
+                            button.btn.btn-success(type='button') Download Results as Excel File
+                            b &nbsp; &nbsp; [{{excel.stats.size}} kB];
+ 
+                    span(ng-show="data && data.length && showData")
+                        p &nbsp;
+                        table.table
+                            tr
+                                td(ng-repeat="(i,f) in data[0]" style='background-color:#ccc') {{i}}                               
+                            tr(ng-repeat="record in data")
+                                td(ng-repeat="(j,fj) in record") {{fj}}             
 
     hr
-    b #{JSON.stringify(view)}
+    <folder body="#{JSON.stringify(view)}"></folder>
       
