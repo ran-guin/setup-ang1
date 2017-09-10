@@ -24,6 +24,8 @@ app.controller('ViewController',
 		$scope.file = config['file'];
 		$scope.excel = config['excel'];
 
+		$scope.showOptions = true;
+
 		var fields = $scope.view.fields;
 		var group  = {};
 		var search = {};
@@ -49,39 +51,55 @@ app.controller('ViewController',
 		$scope.form.layer['FK_Library__Name'] = true;
 		$scope.layer = ['FK_Library__Name'];
 
+		$scope.filename = null;
+
+		console.log('Config: ' + JSON.stringify(config));
 	}
 
 	$scope.generate = function () {
-		var url = "/view";
+		var url = "/getReport/run";
 		var options = $scope.view || {};
 
 		var data = {
-			view : $scope.view,
-			fields : $scope.show,
-			group  : $scope.groupBy,
-			layer  : $scope.layer,
-			conditions : $scope.conditions
+			view_id : $scope.view.id,
+
+			fields : $scope.form.show,
+			group  : $scope.form.groupBy,
+			layer  : $scope.form.layer,
+			search : $scope.form.search,
+			filename : $scope.filename,
+			limit  : 10
+			// condition : $scope.condition
 		}		
 		console.log("FORM: " + JSON.stringify($scope.form));
 
-		if (0) {
-			options.id = $scope.id;
-			options.generate = true;
-			options.fields = ['Employee_Name', 'thaws'];
+		console.log("POST: " + url);
+		console.log(JSON.stringify(data));
 
-			console.log("POST: " + url);
-			console.log(JSON.stringify(options));
+		$http.post(url, data)
+		.then ( function (result) {
+			console.log("requested data generation for this view");
+			console.log(JSON.stringify(result));
+			
+			$scope.showOptions = false;   // close options window 
 
-			$http.post(url, options)
-			.then ( function (result) {
-				console.log("requested data generation for this view");
-				console.log(JSON.stringify(result));
-				$scope.message("Generated Results");
-			})
-			.catch ( function (err) {
-				console.log("Error generating view");
-			});
-		}
+			if (result.data.message) { 
+				$scope.message(result.data.message)
+			}
+			if (result.data.excel) {
+				console.log('excel: ' + JSON.stringify(result.data.excel));
+				$scope.excel = result.data.excel;
+				$scope.filename = result.data.excel.file;
+			}
+
+			$scope.data = result.data.data;
+		})
+		.catch ( function (err) {
+			console.log("Error generating view");
+			$scope.error('Error generating view');
+			
+			$scope.data = null;
+		});
 	},
 
 	$scope.updateList = function (list, item) {
