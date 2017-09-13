@@ -30,30 +30,31 @@ module.exports = {
 
 		var fields = body.fields || req.param('fields');
 		var layer  = body.layer || req.param('layer');
+		var condition = body.condition || req.param('condition');
 		var conditions = body.conditions || req.param('conditions');
 
-		if (fields && fields.constructor === String) {
-			fields = fields.split(/,\s*/);
-		}
+		fields = View.cast2array(fields);
+		layer = View.cast2array(layer);
 
 		var options = {
 			fields: fields,
 			layer: layer,
-			conditions: conditions
+			conditions: conditions,
+			condition: condition
 		};
 
 		View.setup(view_id, options)
 		.then ( function (setup) {
 			console.log("options: " + JSON.stringify(options));
 			console.log("baseline query: " + setup.query);
-			console.log("setup: " + JSON.stringify(setup));
+			console.log("setup returned: " + JSON.stringify(setup));
 
 			setup.message = 'view initiated';
 			return res.render('lims/View', setup);
 		})
 		.catch ( function (err) {
 			console.log("error setting up intitial view");
-			options.message = 'view initiated';
+			options.error = 'error setting up view';
 
 			return res.render('lims/View', options);			
 		});
@@ -68,7 +69,9 @@ module.exports = {
 
 		var fields = body.fields || req.param('fields');
 		var layer  = body.layer || req.param('layer');
-		var conditions = body.conditions || req.param('conditions');
+		var search = body.search || req.param('search');
+		var group = body.group || req.param('group');
+		var condition = body.condition || req.param('condition');
 		var limit = body.limit;
 
 		var page = body.page || req.param('page') || 1;
@@ -77,16 +80,22 @@ module.exports = {
 		var save = body.save || req.param('save') || 1;
 		var filename = body.filename;
 
-		if (fields && fields.constructor === String) {
-			fields = fields.split(/,\s*/);
-		}
+		fields = View.cast2array(fields);
+		layer  = View.cast2array(layer);
+		group = View.cast2array(group);
+
+		var conditions = View.parse_conditions(search);
 
 		var options = {
 			fields: fields,
+			group: group,
 			layer: layer,
 			conditions: conditions,
+			condition: condition,
 			limit: limit
 		};
+
+		sails.log.info('options: ' + JSON.stringify(options));
 
 		View.generate(view_id, options)
 		.then (function (result) {
@@ -94,45 +103,53 @@ module.exports = {
 			if (save && result.data) {
 				console.log('save as excel');
 
-				View.save2excel(result.data, {path: excel_path, filename: filename})
-				.then ( function (excel) {
-					console.log("saved as excel");
-					return res.json({data: result.data, message: 'Excel file saved', excel: excel });
+				if (result.data.length) {
+					View.save2excel(result.data, {path: excel_path, filename: filename})
+					.then ( function (excel) {
+						console.log("saved as excel");
+						return res.json({data: result.data, query: result.query, message: 'Excel file saved', excel: excel });
 
-					// paginate results 
-					// return res.render('lims/View', {
-					// 	excel: excel,
-					// 	view : result.view,
-					// 	data : result.data,
-					// 	query: result.query,
-					// 	id: view_id,
-					// 	message: 'Excel file saved:  ',
-					// 	records: result.data.length,
-					// 	page: page
-					// });
-				})
-				.catch ( function (err) {
-					console.log("Error saving as excel...");
-					return res.json({data: result.data});
-				// return res.render('lims/View', { 
-					// 	view : result.view,
-					// 	data : result.data,
-					// 	query: result.query,
-					// 	id: view_id,
-					// 	message: 'error saving'
-					// });
-				});
+						// paginate results 
+						// return res.render('lims/View', {
+						// 	excel: excel,
+						// 	view : result.view,
+						// 	data : result.data,
+						// 	query: result.query,
+						// 	id: view_id,
+						// 	message: 'Excel file saved:  ',
+						// 	records: result.data.length,
+						// 	page: page
+						// });
+					})
+					.catch ( function (err) {
+						console.log("Error saving as excel...");
+						return res.json({data: result.data, uery: result.query, error: 'error saving to excel: ' + err.message});
+					// return res.render('lims/View', { 
+						// 	view : result.view,
+						// 	data : result.data,
+						// 	query: result.query,
+						// 	id: view_id,
+						// 	message: 'error saving'
+						// });
+					});
+				}
+				else {
+					console.log('no data ... ');
+					options.message = 'no data to save';
+					return res.json({query: result.query, warning: 'no data to save'});					
+				}
 			} else {
 				console.log('nothing saved ... ');
 				options.message = 'nothing saved';
-				return res.json({});
+				return res.json({query: result.query, warning: 'nothing to save'});
 				// return res.render('lims/View', options);								
 			}
 		})
 		.catch (function (err) {
 			console.log("Error generating view");
+			console.log(JSON.stringify(err));
 			options.message = 'error generating view';
-			return res.json({});
+			return res.json({error: 'error generating view: ' + err.message});
 			// return res.render('lims/View', options);
 		});
 	},
