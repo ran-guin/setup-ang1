@@ -45,8 +45,8 @@ app.controller('ViewController',
 		$scope.form.show['FK_Library__Name'] = true;
 		$scope.show = ['Plate_ID', 'FK_Library__Name'];
 
-		$scope.form.groupBy['FK_Library__Name'] = true;
-		$scope.groupBy = ['FK_Library__Name'];
+		// $scope.form.groupBy['FK_Library__Name'] = true;
+		// $scope.groupBy = ['FK_Library__Name'];
 
 		$scope.form.layer['FK_Library__Name'] = true;
 		$scope.layer = ['FK_Library__Name'];
@@ -60,6 +60,8 @@ app.controller('ViewController',
 		var url = "/getReport/run";
 		var options = $scope.view || {};
 
+		$scope.reset_messages();
+
 		var data = {
 			view_id : $scope.view.id,
 
@@ -71,32 +73,43 @@ app.controller('ViewController',
 			limit  : 10
 			// condition : $scope.condition
 		}		
-		console.log("FORM: " + JSON.stringify($scope.form));
 
+		console.log("FORM: " + JSON.stringify($scope.form));
 		console.log("POST: " + url);
 		console.log(JSON.stringify(data));
 
 		$http.post(url, data)
 		.then ( function (result) {
 			console.log("requested data generation for this view");
-			console.log(JSON.stringify(result));
 			
+			var data = result.data || {};
+			$scope.data = data.data || [];
+			$scope.query = data.query || '?';
+
 			$scope.showOptions = false;   // close options window 
 
-			if (result.data.message) { 
-				$scope.message(result.data.message)
+			if (data.message) { 
+				$scope.message(data.message)
 			}
-			if (result.data.excel) {
-				console.log('excel: ' + JSON.stringify(result.data.excel));
-				$scope.excel = result.data.excel;
-				$scope.filename = result.data.excel.file;
+			if (data.error) {
+				$scope.error(data.error)
+			}
+			if (data.warning) {
+				$scope.warning(data.warning)
 			}
 
-			$scope.data = result.data.data;
+			if (data.excel) {
+				console.log('excel: ' + JSON.stringify(data.excel));
+				$scope.excel = data.excel;
+				$scope.filename = data.excel.file;
+			}
+
+			console.log($scope.data.length + ' Records');
 		})
 		.catch ( function (err) {
 			console.log("Error generating view");
 			$scope.error('Error generating view');
+			console.log(JSON.stringify(err));
 			
 			$scope.data = null;
 		});
