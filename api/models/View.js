@@ -46,10 +46,9 @@ module.exports = {
   	var group  = options.group  || [];
   	var layer  = options.layer  || [];
   	var search = options.search || {};
-  	var condition = options.condition || ''; 
+  	var conditions = options.conditions || []; 
   	var limit = options.limit; 	
-
-  	var conditions = [];
+  	var condition = options.condition;
 
   	if (condition) { conditions.push(condition) }
 
@@ -74,6 +73,7 @@ module.exports = {
 	  		var reqd = [];
 	  		var  tables = [];
 	  		var lj = [];
+	  		var attributes = {};
 
 	 		for (var i=0; i<fields.length; i++) {
 	  			var lastcheck = fields.length - 1;
@@ -83,13 +83,16 @@ module.exports = {
 		  			if (F[j].field === fields[i] || fields[i] === F[j].prompt || fields[i] === F[j].table + '.' + F[j].field) {
 			  			console.log(fields[i] + ' : ' + JSON.stringify(F[j]));
 		  				if (F[j].type === 'attribute') {
+		  					// fields[i] =  F[j].field + '.Attribute_Value';
 		  					var primary = F[j].table + '_ID';
 
 		  					var attTable = F[j].table + '_Attribute';
 		  					lj.push('Attribute as ' + F[j].field + "_Att ON Attribute_Name = '" + F[j].field + "' AND Attribute_Class = '" + F[j].table + "'");
 		  					lj.push(attTable + " AS " + F[j].field + " ON " + F[j].field + ".FK_Attribute__ID=" + F[j].field + '_Att.Attribute_ID AND FK_' + F[j].table + '__ID=' + F[j].table + '.' + primary );
+		  					
 		  					f.push(F[j].field + '.Attribute_Value AS ' + F[j].prompt);
 		  					console.log("ADD " + F[j].field + '.Attribute_Value AS ' + F[j].prompt);
+		  					attributes[F[j].field] = F[j].prompt;
 		  				}
 		  				else {
 		  					f.push(F[j].table + '.' + F[j].field + ' AS ' + F[j].prompt);
@@ -124,11 +127,12 @@ module.exports = {
 	  		console.log("QUERY: " + select);
 	  		console.log(JSON.stringify(layer));
 
-	  		if (layer && layer.length) { select += " GROUP BY " + layer.join(',') }
+	  		// if (layer && layer.length) { select += " GROUP BY " + layer.join(',') }
+	  		// ensure layer field is in list of outputs... 
 			
 			if (limit) { select += " LIMIT " + limit }	  		
 
-	  		deferred.resolve({view: views[0], query: select, fields: fields, layer: layer});
+	  		deferred.resolve({view: views[0], query: select, fields: f, attributes: attributes, group: group, layer: layer});
 	  	})
 	  	.catch ( function (err) {
 	  		console.log("Error retrieving report");
@@ -154,20 +158,21 @@ module.exports = {
   		var query = setup.query;
   		var view  = setup.view;
 	  	var layer  = setup.layer;
+	  	var attributes = setup.attributes;
 
   		if (query) {
 			Record.query_promise(query)
 			.then ( function (result) {
-				deferred.resolve({data: result, view: view, query: query, layer:layer});
+				deferred.resolve({data: result, view: view, query: query, attributes: attributes, layer:layer});
 			})
 			.catch ( function (err) {
 				console.log('error with query ?' + err);
-				deferred.reject(err);
+				deferred.reject({error: err, query: query, message: 'query error'});
 			})
 		}
 		else {
 			console.log('no query in report ?')
-			deferred.resolve({data: [], query: '', layer: layer});
+			deferred.resolve({data: [], query: '', layer: layer, attributes: attributes});
 		}
   	})
   	.catch ( function (err) {
@@ -234,9 +239,7 @@ module.exports = {
 			for (var row=1; row<=data.length; row++) {
 				for (var col=1; col<=keys.length; col++) {
 					var string = String(data[row-1][keys[col-1]]);
-					console.log(row+1 + ', ' + col + ":" + keys[col-1] + ' = ' + string);
 					ws.cell(row+1, col).string(string).style(myStyle);
-					console.log('next...');
 				}
 			}
 			// ws.cell(1,1).number(100).style(style);
@@ -294,5 +297,69 @@ module.exports = {
 		// });
 
 		// wb.write('ExcelFile.xlsx', data);
+	},
+
+	parse_conditions: function (conditions) {
+
+		sails.log.debug(JSON.stringify(conditions));
+		if (conditions && conditions.constructor === Object) {
+			var c = [];
+			var keys = Object.keys(conditions);
+			for (var i=0; i<keys.length; i++) {
+				var search = conditions[keys[i]];
+
+				if (search.length) {
+					var operator_test = /^[<>=]/;
+					var range_test = /^(\d+)\s*\-\s*(\d+)$/;
+					var wild_test = /\*/;
+					var list_test = /\n/;
+
+					if (search.match(operator_test)) {
+						c.push(keys[i] + ' ' + search);  // eg feild "< 10"
+					}
+					else if (search.match(range_test)) {
+						var cond = search.replace(range_test, ' BETWEEN $1 AND $2');
+						c.push(keys[i] + cond); // eg field "1 - 3"
+					}
+					else if (search.match(wild_test)) { 
+						var ss = search.replace('*','%');
+						c.push(keys[i] + ' LIKE "' + ss + '"');
+					}
+					else if (search.match(list_test)) {
+						var list = search.split(list_test);
+						var csv = list.join('","');
+						c.push(keys[i] + ' IN ("' + csv + '")');
+					}
+					else {
+						c.push(keys[i] + ' = "' + search + '"');
+					}
+				}
+			}
+			console.log("C: " + c.join(' AND '));
+			return c;
+		}
+		else if (conditions && conditions.constructor === String) {
+			return [conditions];
+		}
+		else {
+			return conditions;
+		}
+	},
+
+	cast2array: function (input) {
+		if (input && input.constructor === String) {
+			input = input.split(/,\s*/);
+		}
+		else if (input && input.constructor === Object) {
+			var keys = Object.keys(input);
+			var farray = [];
+			for (var i=0; i<keys.length; i++) {
+				if (input[keys[i]]) {
+					farray.push(keys[i]);
+				}
+			}
+			input = farray;
+		}
+		return input;
 	}
 }
