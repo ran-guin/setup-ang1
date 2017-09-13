@@ -40,8 +40,8 @@ block content
                 input(type='hidden' ng-model="form.view_id" name='view_id' value="#{config.id}")
                 input(type='hidden' name='generate' value='1')
                 
-                div.container.alert.alert-info(ng-show="message") {{message}}
-
+                include ./../core/errorAngularMsg.jade
+               
                 div.view-section
                     div.view-overview
                         if title
@@ -56,11 +56,17 @@ block content
                         b From Tables: #{tables}
                         p #{desc}
 
-                    div.navbar-right(ng-show="data && !showOptions")
+                    hr
+                    
+                    div(ng-show='data')
+                        b Query: 
+                        i.text-danger {{query}}
+
+                    div.navbar-right(ng-show="!showOptions")
                         button.btn.btn-sm.btn-warning(ng-click="showOptions=true;" onclick='return false;') Revise Search Criteria
  
                     div.search-options(ng-show="showOptions")
-                        div.navbar-right
+                        span.navbar-right
                             button.btn.btn-sm.btn-danger(ng-show="data" ng-click="showOptions=false;" onclick='return false;') Hide Search Criteria
                         h3 Search Options:
 
@@ -73,8 +79,8 @@ block content
                                         b Field
                                     td  
                                         b Search Condition
-                                    td  
-                                        b Group by
+                                    //- td  
+                                    //-     b Group by
                                     td
                                         b Separate Tab/Layer by
 
@@ -83,10 +89,15 @@ block content
                                         td
                                             input(type='checkbox' ng-model="form.show['#{field}']" ng-click="updateList('show','#{field}')" name='fields')
                                         td #{field}
-                                        td 
-                                            input.form-control(type='text' ng-model="form.search['#{field}']" name="search#{field}")
-                                        td
-                                            input(type='checkbox' ng-model="form.groupBy['#{field}']" ng-click="updateList('groupBy','#{field}')" name='group')
+
+                                        if (attributes && attributes[field])
+                                            td 
+                                                textarea.form-control(rows=1 ng-model="form.search['#{field}.Attribute_Value']" name="search#{field}")
+                                        else 
+                                            td 
+                                                textarea.form-control(rows=1 ng-model="form.search['#{field}']" name="search#{field}")
+                                        //- td
+                                        //-     input(type='checkbox' ng-model="form.groupBy['#{field}']" ng-click="updateList('groupBy','#{field}')" name='group')
                                         td
                                             input(type='checkbox' ng-model="form.layer['#{field}']" ng-click="updateList('layer','#{field}')" name='group')
                             
@@ -105,7 +116,7 @@ block content
                         div(style='display:flex; flex-direction:row')
                             button.btn.btn-primary(type='button' ng-click="generate()") Generate Results
                             span &nbsp; &nbsp; 
-                            input(type='text' style="flex:1" placeholder=' -- optional filename -- (defaults to user + timestamp) ' ng-model='filename')    
+                            input(type='text' style="flex:1" placeholder=' i-- optional filename -- (defaults to user + timestamp) ' ng-model='filename')    
 
                     hr
                     span.results-section(ng-show='data')
