@@ -17,7 +17,8 @@ module.exports = {
   	},
   	order: { type: 'integer'},
   	mandatory: { type: 'boolean'},
-  	prompt: { type: 'string'}
+  	prompt: { type: 'string'},
+  	pre_picked: { type: 'boolean'}
   }
 };
 
