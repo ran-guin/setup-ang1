@@ -23,6 +23,21 @@ module.exports = {
 		}
 	},
 
+	edit: function (req, res) {
+		console.log('build view...');
+		var body = req.body || {};
+		var view_id = body.view_id  || body.id || req.param('id');
+
+		View.setup(view_id)
+		.then ( function (setup) {
+			console.log("** SETUP ** " + JSON.stringify(setup));
+			return res.render('lims/Edit_Report', setup);
+		})
+		.catch ( function (err) {
+			return res.render('lims/Edit_Report');
+		});
+	},
+
 	build: function (req, res) {
 		console.log('build view...');
 		var body = req.body || {};
@@ -45,9 +60,9 @@ module.exports = {
 
 		View.setup(view_id, options)
 		.then ( function (setup) {
-			console.log("options: " + JSON.stringify(options));
-			console.log("baseline query: " + setup.query);
-			console.log("setup returned: " + JSON.stringify(setup));
+			console.log("options provided: " + JSON.stringify(options));
+			console.log("Baseline Query: " + setup.query);
+			console.log("setup Returned: " + JSON.stringify(setup));
 
 			setup.message = 'view initiated';
 			return res.render('lims/View', setup);
@@ -56,6 +71,7 @@ module.exports = {
 			console.log("error setting up intitial view");
 			options.error = 'error setting up view';
 
+			console.log('** Pass: ' + JSON.stringify(options));
 			return res.render('lims/View', options);			
 		});
 	},
@@ -67,7 +83,7 @@ module.exports = {
 
 		var view_id = body.view_id  || body.id || req.param('id');
 
-		var fields = body.fields || req.param('fields');
+		var fields = body.fields || req.param('fields') || body.pick || req.param('pick');
 		var layer  = body.layer || req.param('layer');
 		var search = body.search || req.param('search');
 		var group = body.group || req.param('group');
@@ -100,6 +116,8 @@ module.exports = {
 		View.generate(view_id, options)
 		.then (function (result) {
 			console.log('generated view');
+
+			var setup = result.setup;
 			if (save && result.data) {
 				console.log('save as excel');
 
@@ -107,7 +125,7 @@ module.exports = {
 					View.save2excel(result.data, {path: excel_path, filename: filename})
 					.then ( function (excel) {
 						console.log("saved as excel");
-						return res.json({data: result.data, query: result.query, message: 'Excel file saved', excel: excel });
+						return res.json({data: result.data, query: setup.query, message: 'Excel file saved', excel: excel });
 
 						// paginate results 
 						// return res.render('lims/View', {
@@ -123,7 +141,7 @@ module.exports = {
 					})
 					.catch ( function (err) {
 						console.log("Error saving as excel...");
-						return res.json({data: result.data, uery: result.query, error: 'error saving to excel: ' + err.message});
+						return res.json({data: result.data, uery: setup.query, error: 'error saving to excel: ' + err.message});
 					// return res.render('lims/View', { 
 						// 	view : result.view,
 						// 	data : result.data,
@@ -136,12 +154,12 @@ module.exports = {
 				else {
 					console.log('no data ... ');
 					options.message = 'no data to save';
-					return res.json({query: result.query, warning: 'no data to save'});					
+					return res.json({query: setup.query, warning: 'no data to save'});					
 				}
 			} else {
 				console.log('nothing saved ... ');
 				options.message = 'nothing saved';
-				return res.json({query: result.query, warning: 'nothing to save'});
+				return res.json({query: setup.query, warning: 'nothing to save'});
 				// return res.render('lims/View', options);								
 			}
 		})
@@ -159,7 +177,7 @@ module.exports = {
 
 		View.list()
 		.then ( function (result) {
-			console.log("R: " + JSON.stringify(result));
+			console.log("Views: " + JSON.stringify(result));
 			return res.render('lims/Views', { 
 				views : result, 
 				title: 'Views',
