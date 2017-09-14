@@ -1,0 +1,112 @@
+extends ./../customize/privateLayout
+block content
+  
+  - var config = {};
+  - config.view = view;
+
+  if view 
+    - view_id = view_id || view.id
+    - tables = view.tables
+    - fields = fields || view.fields
+
+  - var init = "initialize(" + JSON.stringify(config) + ")";
+ 
+  div.container
+    h2 Report Editor
+
+    p &nbsp;
+    a(href="/View/getReport/#{view_id}" ) 
+        button.btn.btn-primary(type='button') Run View
+
+    span &nbsp; &nbsp;
+  
+    a(href="/views" ) 
+        button.btn.btn-danger(type='button') Return to List of Views
+    h4 #{JSON.stringify(view)}
+    h4 #{JSON.stringify(fields)}
+    h4 #{JSON.stringify(pick)}
+
+    hr 
+
+    div(ng-app='myApp' ng-cloak=1)
+      div(ng-controller="SharedController" ng-init="include_all=1")
+        div(ng-controller="LIMSController")
+          div(ng-controller='ViewController' ng-init="#{init}")
+
+            div.container
+                a(href='#' onclick='return false;' ng-click="page='view'") View
+                span &nbsp; &nbsp; &nbsp; &nbsp;
+                a(href='#' onclick='return false;' ng-click="page='table'") Tables
+                span &nbsp; &nbsp; &nbsp; &nbsp;
+                a(href='#' onclick='return false;' ng-click="page='field'") Fields
+                span &nbsp; &nbsp; &nbsp; &nbsp;
+
+            div(ng-show="page==='view'")
+                h3 Edit Main {{page}} Details
+                form(role='form' method='post' action="/view/generate" enctype='form-data')
+                    
+                    include ./../core/errorAngularMsg.jade
+                   
+                    div.view-section
+                        - name = view.name;
+                        - id   = view.id;
+                        - tables = view.tables
+                        - fields = view.fields
+                        - desc  = view.description
+                        - active = view.active
+                        - attributes = view.attributes || []
+            
+                        form(role='form')
+                            input(type='hidden' ng-model="form.view_id" name='view_id' value="#{config.id}")
+
+                            input.form-control(ng-model='view.name')
+                            input.form-control(ng-model='view.tables')
+                            textarea.form-control(rows=5 ng-model='view.description')
+                            p &nbsp;
+                            button.btn.btn-primary(type='button' ng-click="Save" ng-disabled='!viewChanged') Save
+                            span &nbsp; &nbsp; &nbsp; &nbsp;
+                            button.btn.btn-danger(type='button' ng-click="Delete") Delete
+
+            div(ng-show="page==='table'")
+                h3 Edit {{page}} TDetails
+                each table in tables.split(/,\s*/)
+                    form(role='form')
+                        input(type='hidden' ng-model="form.table.view_id" name='view_id')
+                        input(type='hidden' ng-model="form.table.table_name" name='table')
+                        input.form-control(type='text' ng-model='form.table.join_condition')
+                        input.form-control(type='checkbox' ng-model='form.table.mandatory')
+                        p &nbsp;
+                        button.btn.btn-primary(type='button' ng-click="Save" ng-disabled='!tableChanged') Save
+                        span &nbsp; &nbsp; &nbsp; &nbsp;
+                        button.btn.btn-danger(type='button' ng-click="Delete") Delete
+                        span &nbsp; &nbsp; &nbsp; &nbsp;
+                        button.btn.btn-primary(type='button' ng-click="addField(#{id}, '#{table}')") Add Field
+            
+            div(ng-show="page==='field'")
+                h3 Edit {{page}} FDetails
+                each field in fields.split(/,\s*/)
+                    form(role='form')
+                        - var fp = field.match(/(.*?)\.?(\w+) AS (.*)/i)
+                        - var prompt = field
+                        - var fld = field
+                        - var table = ''
+                        if fp && fp.length
+                            - table = fp[1]
+                            - fld = fp[2]
+                            - prompt = fp[3]
+
+                        input(type='hidden' ng-model="form.field.view_id")
+                        input(type='hidden' ng-model="form.field.table")
+                        input(type='hidden' ng-model='form.field.field')
+                        input(type='hidden' ng-model='form.field.type')                            
+                        input(type='hidden' ng-model='form.field.prompt')                            
+                        input.form-control(type='checkbox' ng-model='form.table.mandatory')
+                        input.form-control(type='checkbox' ng-model='form.table.pre_picked')
+                        p &nbsp;
+
+                        button.btn.btn-primary(type='button' ng-click="Save" ng-disabled='!tableChanged') Save
+                        span &nbsp; &nbsp; &nbsp; &nbsp;
+                        button.btn.btn-danger(type='button' ng-click="Delete") Delete
+                hr
+                button.btn.btn-primary(type='button' ng-click="newTable(#{id})") Add Table
+      
