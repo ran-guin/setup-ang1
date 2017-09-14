@@ -18,42 +18,60 @@ app.controller('ViewController',
 	$scope.initialize = function (config) {
 		$scope.initialize_payload(config);
 
-		$scope.view = config['view'];
-		$scope.data = config['data'];
+		$scope.view = config['view'] || {};
 		$scope.id = config['id'];
+
+		$scope.form = {
+			view_id: '',
+			layer: '',
+			condition: '',
+			show: {},
+			search: {}
+		};
+
+		if ($scope.view) {
+			$scope.fields = $scope.view.fields;
+			$scope.form.view_id = $scope.view.id;
+			$scope.form.layer = $scope.view.default_layer;
+			$scope.form.condition = $scope.view.condition;
+		}
+
+		$scope.show = config['pick'] || $scope.fields;
+		if ($scope.show && $scope.show.length) {
+			for (var i=0; i<$scope.show.length; i++) {
+				console.log('check ' + $scope.show[i]);
+				var fp = $scope.show[i].match(/(.*) AS (.*)/i);
+				if ( fp && fp.length ) {
+					var f = fp[1];
+					var p = fp[2];
+					$scope.form.show[f] = true;
+				}
+				else {
+					$scope.form.show[$scope.show[i]] = true;
+				}
+			}
+		}
+
+		$scope.data = config['data'];
 		$scope.file = config['file'];
 		$scope.excel = config['excel'];
 
 		$scope.showOptions = true;
 
-		var fields = $scope.view.fields;
-		var group  = {};
-		var search = {};
-		var show = {};
-		var layer = {};
-
-		$scope.form = {
-			view_id: $scope.id,
-			show: show,
-			fields: fields,
-			groupBy:  group,
-			search: search,
-			layer: layer
-		}
-
-		$scope.form.show['Plate_ID'] = true;
-		$scope.form.show['FK_Library__Name'] = true;
-		$scope.show = ['Plate_ID', 'FK_Library__Name'];
-
-		// $scope.form.groupBy['FK_Library__Name'] = true;
-		// $scope.groupBy = ['FK_Library__Name'];
-
-		$scope.form.layer['FK_Library__Name'] = true;
-		$scope.layer = ['FK_Library__Name'];
+		console.log("** INIT VIEW: " + JSON.stringify($scope.view));
+		console.log("** SHOW: " + JSON.stringify($scope.show));
+		console.log("** Form SHOW: " + JSON.stringify($scope.form.show));
 
 		$scope.filename = null;
 
 		console.log('Config: ' + JSON.stringify(config));
+	}
+
+	$scope.addAtt = function(field) {
+		console.log("force inclusion of attribute: " + field);
+		$scope.form.show[field] = true;
+
+		$scope.updateList('show',field);
 	}
 
 	$scope.generate = function () {
@@ -64,15 +82,26 @@ app.controller('ViewController',
 
 		var data = {
 			view_id : $scope.view.id,
-
-			fields : $scope.form.show,
 			group  : $scope.form.groupBy,
 			layer  : $scope.form.layer,
 			search : $scope.form.search,
+			pick : [],
 			filename : $scope.filename,
 			limit  : 10
 			// condition : $scope.condition
 		}		
+
+		if ($scope.form.show) {
+			console.log(JSON.stringify($scope.form.show));
+			var fields = Object.keys($scope.form.show);
+			if (fields && fields.length) {
+				for (var i=0; i<fields.length; i++) {
+					if ($scope.form.show[fields[i]]) {
+						data.pick.push(fields[i]);
+					}
+				}
+			}
+		}
 
 		console.log("FORM: " + JSON.stringify($scope.form));
 		console.log("POST: " + url);
@@ -120,8 +149,11 @@ app.controller('ViewController',
 
 		console.log('L1: ' + JSON.stringify($scope[list]));
 		if ($scope.form[list][item]) {
-			console.log('add ' + item);
-			$scope[list].push(item);
+			if ($scope[list].indexOf(item) === -1) {
+				console.log('add ' + item);
+				$scope[list].push(item);
+			}
+			else { console.log('already included ' + item) }
 		}
 		else {
 			console.log('remove ' + item);
