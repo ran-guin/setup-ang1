@@ -139,6 +139,9 @@ module.exports.routes = {
 
   'POST /uploadData' : 'Record_APIController.uploadData',
 
+  'GET /View/edit/:id' : 'ViewController.edit',
+  'POST /View/edit' : 'ViewController.edit',
+
   'GET /getReport/:id' : 'ViewController.build',
   'POST /getReport' : 'ViewController.build',
   'GET /reports' : 'ViewController.views',
