@@ -10,17 +10,37 @@ var xl = require('excel4node');
 var _ = require('underscore-node');
 
 module.exports = {
-
   attributes: {
   	name: { type: 'string' },
-  	description: { type: 'text'}
+  	description: { type: 'text'},
+  	active: { 
+  		type: 'boolean',
+  		defaultsTo: true
+  	},
+  	condition: {
+  		type: 'string'
+  	},
+  	default_layer: {
+  		type: 'string'
+  	}
   },
 
   list : function (view_id) {
   	var deferred = q.defer();
 
-	var query = "Select view.id, view.description as description, Group_Concat(distinct view_table.table_name SEPARATOR ', ') as tables, view.name as name, GROUP_CONCAT(distinct view_field.field SEPARATOR ', ') as fields"
-	query += " FROM view, view_table, view_field WHERE view_table.view_id=view.id and view_field.view_id=view.id";
+  	var fields = [
+  		'view.id', 
+  		'view.description as description', 
+  		"Group_Concat(distinct view_table.table_name SEPARATOR ', ') as tables", 
+  		'view.name as name', 
+  		"GROUP_CONCAT(distinct CASE WHEN view_field.type = 'attribute' THEN CONCAT(view_field.field,' AS ',view_field.prompt) ELSE CONCAT(table_name,'.',view_field.field, ' AS ',view_field.prompt) END  SEPARATOR ', ') as fields",
+  		'default_layer',
+  		"active",
+  		"GROUP_CONCAT(DISTINCT CASE WHEN type='attribute' THEN field ELSE null END) as attributes"
+  	];
+	var query = "Select " + fields.join(', ');
+	query += " FROM view, view_table, view_field ";
+	query += " WHERE view_table.view_id=view.id and view_field.table=view_table.table_name and view_field.view_id=view.id";
 
 	if (view_id) { query += " AND view.id = " + view_id }
 
@@ -40,11 +60,11 @@ module.exports = {
   setup : function (view_id, options) {
  	var deferred = q.defer();
 
-  	if (!options) { optios = {} }
+  	if (!options) { options = {} }
   	
   	var fields = options.fields || [];
   	var group  = options.group  || [];
-  	var layer  = options.layer  || [];
+  	var layer  = options.layer  || '';
   	var search = options.search || {};
   	var conditions = options.conditions || []; 
   	var limit = options.limit; 	
@@ -57,68 +77,110 @@ module.exports = {
 
   	View.list(view_id)
   	.then (function (views) {
-	 	Record.query_promise(query)
-		.then ( function (F) {
-	  		console.log("QF: " + JSON.stringify(F));
 
+  		console.log(JSON.stringify(views));
+  		if (views.length) {
+	 	  	if (!layer) { 
+	 	  		layer = views[0].default_layer
+	 	  	}
+	 	  	attributes = views[0].attributes.split(/\s*,\s*/);
+	 	}
+
+ 	  	console.log('Vquery:' + query);
+	 	Record.query_promise(query)
+		.then ( function (ViewFields) {
+	  		console.log("QF: " + JSON.stringify(ViewFields));
+
+	  		var pickF = [];
+	  		var flds  = [];
 	  		if (fields && fields.length) {
 	  			// ensure mandatory fields included...
+	  			// pickF = fields;
+	  			flds = fields;
 	  		}
 	  		else {
-	  			fields = _.pluck(F, 'field');
+	  			// initial setup ... no fields selected yet... 
+	  			console.log("prepick...");
+	  			for (var i=0; i<ViewFields.length; i++) {
+	  				console.log(i + ':' + JSON.stringify(ViewFields[i]));
+	  				if (ViewFields[i].pre_picked) {
+	  					fields.push(ViewFields[i].field + ' AS ' + ViewFields[i].prompt);
+	  					flds.push(ViewFields[i].field);
+	  				}
+	  			} 
 	  		}
 
-	  		console.log('fields: ' + JSON.stringify(fields));
-	  		var f = [];
+
+	  		console.log('picked fields: ' + JSON.stringify(flds));
+	  		console.log('default layer: ' + layer);
+	  		console.log("view fields: " + JSON.stringify(ViewFields));
+
 	  		var reqd = [];
 	  		var  tables = [];
 	  		var lj = [];
-	  		var attributes = {};
+	  		// var attributes = {};
 
 	 		for (var i=0; i<fields.length; i++) {
-	  			var lastcheck = fields.length - 1;
-		  		for (var j=0; j<F.length; j++) {
-		  			var prompt = F[j].prompt || F[j].field;
-		  			console.log(F[j].field + ' vs ' + fields[i]);
-		  			if (F[j].field === fields[i] || fields[i] === F[j].prompt || fields[i] === F[j].table + '.' + F[j].field) {
-			  			console.log(fields[i] + ' : ' + JSON.stringify(F[j]));
-		  				if (F[j].type === 'attribute') {
-		  					// fields[i] =  F[j].field + '.Attribute_Value';
-		  					var primary = F[j].table + '_ID';
+		  		for (var j=0; j<ViewFields.length; j++) {
+		  			var prompt = ViewFields[j].prompt || ViewFields[j].field;
+		  			if (ViewFields[j].field === flds[i] ||  ViewFields[j].prompt === flds[i] || ViewFields[j].table + '.' + ViewFields[j].field === flds[i]) {
+		  				if (ViewFields[j].type === 'attribute') {
+		  					// flds[i] =  ViewFields[j].field + '.Attribute_Value';
+		  					var primary = ViewFields[j].table + '_ID';
 
-		  					var attTable = F[j].table + '_Attribute';
-		  					lj.push('Attribute as ' + F[j].field + "_Att ON Attribute_Name = '" + F[j].field + "' AND Attribute_Class = '" + F[j].table + "'");
-		  					lj.push(attTable + " AS " + F[j].field + " ON " + F[j].field + ".FK_Attribute__ID=" + F[j].field + '_Att.Attribute_ID AND FK_' + F[j].table + '__ID=' + F[j].table + '.' + primary );
+		  					var attTable = ViewFields[j].table + '_Attribute';
+		  					lj.push('Attribute as ' + ViewFields[j].field + "_Att ON Attribute_Name = '" + ViewFields[j].field + "' AND Attribute_Class = '" + ViewFields[j].table + "'");
+		  					lj.push(attTable + " AS " + ViewFields[j].field + " ON " + ViewFields[j].field + ".FK_Attribute__ID=" + ViewFields[j].field + '_Att.Attribute_ID AND FK_' + ViewFields[j].table + '__ID=' + ViewFields[j].table + '.' + primary );
 		  					
-		  					f.push(F[j].field + '.Attribute_Value AS ' + F[j].prompt);
-		  					console.log("ADD " + F[j].field + '.Attribute_Value AS ' + F[j].prompt);
-		  					attributes[F[j].field] = F[j].prompt;
+		  					pickF.push(ViewFields[j].field + '.Attribute_Value AS ' + ViewFields[j].prompt);
+		  					// console.log("ADD " + ViewFields[j].field + '.Attribute_Value AS ' + ViewFields[j].prompt);
+		  					// attributes[ViewFields[j].field] = ViewFields[j].prompt;
+
 		  				}
 		  				else {
-		  					f.push(F[j].table + '.' + F[j].field + ' AS ' + F[j].prompt);
-		  					console.log("normal add: " + F[j].table + '.' + F[j].field + ' AS ' + F[j].prompt);
+		  					pickF.push(ViewFields[j].table + '.' + ViewFields[j].field + ' AS ' + ViewFields[j].prompt);
+		  					console.log("normal add: " + ViewFields[j].table + '.' + ViewFields[j].field + ' AS ' + ViewFields[j].prompt);
+
+		  					if (tables.indexOf(ViewFields[j].table) === -1) {
+		  						tables.push(ViewFields[j].table)
+		  						if (ViewFields[j].join_condition !== '1') { conditions.push(ViewFields[j].join_condition) }
+		  					}
 		  				}
-		  					
-		  				if (tables.indexOf(F[j].table) === -1) {
-		  					tables.push(F[j].table)
-		  					if (F[j].join_condition !== '1') { conditions.push(F[j].join_condition) }
-		  				}
-		  				
-		  				j=F.length;
+		  						  				
+		  				j=ViewFields.length;
 		  			}
-		  		}
-		  		
+		  		}		  		
 	  		}
 
-	  		console.log("BUILT: " + JSON.stringify(f));
+	  		console.log('add conditions');
+	  		for (var i=0; i<conditions.length; i++) {
+				for (var j=0; j<ViewFields.length; j++) {
+					var Tcheck = ViewFields[j].table;
+					if (ViewFields[j].type === 'attribute') {
+						Tcheck = ViewFields[j].field + '.Attribute_Value';
+					}
+
+					if ( ViewFields[j].type == 'field' && conditions[i].match(ViewFields[j].field) && tables.indexOf(Tcheck) === -1) {
+						console.log('** Matched ' + ViewFields[j].field + ' to ' + conditions[i]);
+	  					tables.push(ViewFields[j].table)
+	  					if (ViewFields[j].join_condition !== '1') { 
+	  						conditions.push(ViewFields[j].join_condition)
+		  				}
+		  			}
+				}  			
+	  		}
+
+	  		console.log("** Pick: " + JSON.stringify(pickF));
+	  		console.log("** Tables: " + JSON.stringify(tables));
+	  		console.log("** condition: " + JSON.stringify(conditions));
 
 	  		if (reqd) {
 	  			for (var k=0; k<reqd.length; k++) {
-	  				f.push(reqd[k]);
+	  				pickF.push(reqd[k]);
 	  				console.log("add required field: " + reqd[k]);
 	  			}
 	  		}
-	  		var select = "SELECT " + f.join(', ') + ' FROM (' + tables.join(', ') + ')';
+	  		var select = "SELECT " + pickF.join(', ') + ' FROM (' + tables.join(', ') + ')';
 
 	  		if (lj.length) { select += " LEFT JOIN " + lj.join(' LEFT JOIN ') }
 
@@ -132,7 +194,9 @@ module.exports = {
 			
 			if (limit) { select += " LIMIT " + limit }	  		
 
-	  		deferred.resolve({view: views[0], query: select, fields: f, attributes: attributes, group: group, layer: layer});
+			var setup = {view: views[0], query: select, pick: pickF, attributes: attributes, group: group, layer: layer};
+	  		console.log("Resolve setup: " + JSON.stringify(setup));
+	  		deferred.resolve(setup);
 	  	})
 	  	.catch ( function (err) {
 	  		console.log("Error retrieving report");
@@ -163,7 +227,7 @@ module.exports = {
   		if (query) {
 			Record.query_promise(query)
 			.then ( function (result) {
-				deferred.resolve({data: result, view: view, query: query, attributes: attributes, layer:layer});
+				deferred.resolve({data: result, setup: setup});
 			})
 			.catch ( function (err) {
 				console.log('error with query ?' + err);
