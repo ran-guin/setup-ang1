@@ -8,8 +8,10 @@ block content
 
   - var config = {};
   - config.view = view;
-  - config.data = data;
   - config.id  = id;
+  - config.fields = fields;
+  - config.pick = pick;
+  - config.data = data;
   - config.file = file;
   - config.excel = excel;
 
@@ -29,7 +31,6 @@ block content
   
     a(href="/views" ) 
         button.btn.btn-danger(type='button') Return to List of Views
-
     hr 
 
     div(ng-app='myApp' ng-cloak=1)
@@ -52,6 +53,9 @@ block content
                             - tables = view.tables
                             - fields = view.fields
                             - desc  = view.description
+                            - active = view.active
+                            - attributes = view.attributes || []
+
                         h4 #{name}
                         b From Tables: #{tables}
                         p #{desc}
@@ -70,7 +74,10 @@ block content
                             button.btn.btn-sm.btn-danger(ng-show="data" ng-click="showOptions=false;" onclick='return false;') Hide Search Criteria
                         h3 Search Options:
 
+                        h3 SHOW: {{show}}
+                        h3 FSHOW: {{form.show}}
                         if fields
+                            b F #{JSON.stringify(fields)}
                             table.table.table-bordered
                                 tr.text-info
                                     td  
@@ -82,35 +89,45 @@ block content
                                     //- td  
                                     //-     b Group by
                                     td
-                                        b Separate Tab/Layer by
+                                        b Separate Tab/Layer 
 
                                 each field in fields.split(/,\s*/)
+                                    - var fp = field.match(/(.*) AS (.*)/i)
+                                    - var prompt = field
+                                    - var fld = field
+                                    if fp && fp.length
+                                        - fld = fp[1]
+                                        - prompt = fp[2]
                                     tr
                                         td
-                                            input(type='checkbox' ng-model="form.show['#{field}']" ng-click="updateList('show','#{field}')" name='fields')
-                                        td #{field}
+                                            input(type='checkbox' ng-model="form.show['#{fld}']" ng-click="updateList('show','#{fld}')" name='fields')
+                                        td 
+                                            span(data-toggle='tooltip' title='#{fld}') #{prompt}
 
-                                        if (attributes && attributes[field])
-                                            td 
-                                                textarea.form-control(rows=1 ng-model="form.search['#{field}.Attribute_Value']" name="search#{field}")
+                                        if (attributes && attributes.indexOf(fld) >= 0)
+                                            td  
+                                                //- Attributes are not auto-included, so add to field list if condition supplied here... 
+                                                textarea.form-control(rows=1 ng-model="form.search['#{fld}.Attribute_Value']" ng-change="addAtt('#{fld}')" name="search#{fld}")
                                         else 
                                             td 
-                                                textarea.form-control(rows=1 ng-model="form.search['#{field}']" name="search#{field}")
+                                                textarea.form-control(rows=1 ng-model="form.search['#{fld}']" name="search#{fld}")
                                         //- td
-                                        //-     input(type='checkbox' ng-model="form.groupBy['#{field}']" ng-click="updateList('groupBy','#{field}')" name='group')
+                                        //-     input(type='checkbox' ng-model="form.groupBy['#{fld}']" ng-click="updateList('groupBy','#{fld}')" name='group')
                                         td
-                                            input(type='checkbox' ng-model="form.layer['#{field}']" ng-click="updateList('layer','#{field}')" name='group')
-                            
-                            b Show: &nbsp; &nbsp;
-                            b.text-success {{show.join(', ')}}                        
-                            br
-                            b Group by: &nbsp; &nbsp;
-                            b.text-success {{groupBy.join(', ')}}
-                            br
-                            b Separate results by: &nbsp; &nbsp;
-                            b.text-success {{layer.join(', ')}}
-                            p
-                            i Note: Re-select items as required to reorder:  items will be added in order selected
+                                            input(type='radio' name='layer' ng-model="form.layer" value="#{fld}")
+
+                        input.form-control(ng-model='form.condition' placeholder=' -- optional additional condition --')
+                        p &nbsp;  
+                        b Show Fields: &nbsp; &nbsp;
+                        b.text-success {{show.join(', ')}}                        
+                        //- br
+                        //- b Group by: &nbsp; &nbsp;
+                        //- b.text-success {{groupBy.join(', ')}}
+                        br
+                        b Layer results by: &nbsp; &nbsp;
+                        b.text-success {{form.layer}}
+                        p
+                        i Note: Re-select items as required to reorder:  items will be added in order selected
 
                         p &nbsp;
                         div(style='display:flex; flex-direction:row')
@@ -141,6 +158,4 @@ block content
                             tr(ng-repeat="record in data")
                                 td(ng-repeat="(j,fj) in record") {{fj}}             
 
-    hr
-    <folder body="#{JSON.stringify(view)}"></folder>
       
