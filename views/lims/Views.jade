@@ -23,18 +23,20 @@ block content
               th Name
               th Tables
               th Fields
+              th Active
             each view in views
               - id   = view.id || id;
               - name = view.name;
               - table = view.tables;
               - fields = view.fields;
               - desc = view.description
+              - active = view.active
 
               - colour = 'red'
-              if status === 'Active'
+              if status
                 - colour = 'blue'
 
-              tr(ng-show="include_all || '#{status}' == 'Active'") 
+              tr(ng-show="include_all || #{active}") 
                 td  
                   a(href="/getReport/#{id}")
                     b(style='color: #{colour}') #{name}
@@ -42,6 +44,11 @@ block content
                   span #{table}
                 td
                   span #{fields}
+                td
+                  if active
+                    i.fa.fa-check(style='color: green')
+                  else
+                    i.fa.fa-close(style='color: red')
     b #{JSON.stringify(views)} 
 
 
