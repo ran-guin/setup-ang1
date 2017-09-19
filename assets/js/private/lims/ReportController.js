@@ -35,6 +35,8 @@ app.controller('ReportController',
 		for var(i=0; i< $scope.report_field.length; i++) {
 			$scope.fieldChanged[$scope.report_field[i]] = false;
 		}
+
+		$scope.page = 'view';
 	}
 	
 }]);

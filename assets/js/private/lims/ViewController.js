@@ -44,7 +44,7 @@ app.controller('ViewController',
 				if ( fp && fp.length ) {
 					var f = fp[1];
 					var p = fp[2];
-					$scope.form.show[f] = true;
+					$scope.form.show[p] = true;
 				}
 				else {
 					$scope.form.show[$scope.show[i]] = true;
@@ -87,7 +87,7 @@ app.controller('ViewController',
 			search : $scope.form.search,
 			pick : [],
 			filename : $scope.filename,
-			limit  : 10
+			limit  : 1000
 			// condition : $scope.condition
 		}		
 
