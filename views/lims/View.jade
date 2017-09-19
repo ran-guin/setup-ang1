@@ -100,7 +100,7 @@ block content
                                         - prompt = fp[2]
                                     tr
                                         td
-                                            input(type='checkbox' ng-model="form.show['#{fld}']" ng-click="updateList('show','#{fld}')" name='fields')
+                                            input(type='checkbox' ng-model="form.show['#{prompt}']" ng-click="updateList('show','#{prompt}')" name='fields')
                                         td 
                                             span(data-toggle='tooltip' title='#{fld}') #{prompt}
 
@@ -114,7 +114,7 @@ block content
                                         //- td
                                         //-     input(type='checkbox' ng-model="form.groupBy['#{fld}']" ng-click="updateList('groupBy','#{fld}')" name='group')
                                         td
-                                            input(type='radio' name='layer' ng-model="form.layer" value="#{fld}")
+                                            input(type='radio' name='layer' ng-model="form.layer" value="#{fld}" ng-disabled="!form.show['#{prompt}']")
 
                         input.form-control(ng-model='form.condition' placeholder=' -- optional additional condition --')
                         p &nbsp;  
@@ -142,7 +142,7 @@ block content
                             button.btn.btn-success(ng-click="showData=true;" onclick='return false;') Found {{data.length}} record(s)
                             span &nbsp; &nbsp; &nbsp;
                         span(ng-show="showData")
-                            button.btn.btn-danger(ng-click="showData=false" onclick='return false;') x
+                            button.btn.btn-danger(ng-click="showData=false" onclick='return false;') Hide Results
                             span &nbsp; &nbsp; &nbsp;
 
                     span(ng-show="excel && excel.file")
@@ -152,9 +152,10 @@ block content
  
                     span(ng-show="data && data.length && showData")
                         p &nbsp;
-                        table.table
+                        table.table(style='background-color: lightyellow;')
                             tr
-                                td(ng-repeat="(i,f) in data[0]" style='background-color:#ccc') {{i}}                               
+                                td(ng-repeat="(i,f) in data[0]" style='background-color:grey; color: white') 
+                                    b {{i}}                               
                             tr(ng-repeat="record in data")
                                 td(ng-repeat="(j,fj) in record") {{fj}}             
 
