@@ -57,7 +57,7 @@ block content
                             - attributes = view.attributes || []
 
                         h4 #{name}
-                        b From Tables: #{tables}
+                        //- b From Tables: #{tables}
                         p #{desc}
 
                     hr
@@ -74,14 +74,14 @@ block content
                             button.btn.btn-sm.btn-danger(ng-show="data" ng-click="showOptions=false;" onclick='return false;') Hide Search Criteria
                         h3 Search Options:
 
-                        h3 SHOW: {{show}}
-                        h3 FSHOW: {{form.show}}
                         if fields
-                            b F #{JSON.stringify(fields)}
                             table.table.table-bordered
                                 tr.text-info
                                     td  
                                         b Show
+                                        span &nbsp; &nbsp;
+                                        i.fa.fa-expand(ng-show="!showAll" ng-click="showAll=1")
+                                        i.fa.fa-compress(ng-show="showAll" ng-click="showAll=0")
                                     td  
                                         b Field
                                     td  
@@ -98,7 +98,8 @@ block content
                                     if fp && fp.length
                                         - fld = fp[1]
                                         - prompt = fp[2]
-                                    tr
+
+                                    tr(ng-show="form.show['#{prompt}'] || showAll")
                                         td
                                             input(type='checkbox' ng-model="form.show['#{prompt}']" ng-click="updateList('show','#{prompt}')" name='fields')
                                         td 
@@ -116,7 +117,7 @@ block content
                                         td
                                             input(type='radio' name='layer' ng-model="form.layer" value="#{fld}" ng-disabled="!form.show['#{prompt}']")
 
-                        input.form-control(ng-model='form.condition' placeholder=' -- optional additional condition --')
+                        input.form-control(ng-model='form.condition' placeholder='-- optional additional condition --')
                         p &nbsp;  
                         b Show Fields: &nbsp; &nbsp;
                         b.text-success {{show.join(', ')}}                        
