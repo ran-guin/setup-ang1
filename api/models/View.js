@@ -31,16 +31,17 @@ module.exports = {
   	var fields = [
   		'view.id', 
   		'view.description as description', 
-  		"Group_Concat(distinct view_table.table_name SEPARATOR ', ') as tables", 
+  		"Group_Concat(distinct concat(view_table.table_name,' AS ',view_table.title) SEPARATOR ', ') as tables", 
   		'view.name as name', 
   		"GROUP_CONCAT(distinct CASE WHEN view_field.type = 'attribute' THEN CONCAT(view_field.field,' AS ',view_field.prompt) ELSE CONCAT(table_name,'.',view_field.field, ' AS ',view_field.prompt) END  SEPARATOR ', ') as fields",
   		'default_layer',
   		"active",
   		"GROUP_CONCAT(DISTINCT CASE WHEN type='attribute' THEN field ELSE null END) as attributes"
   	];
+
 	var query = "Select " + fields.join(', ');
 	query += " FROM view, view_table, view_field ";
-	query += " WHERE view_table.view_id=view.id and view_field.table=view_table.table_name and view_field.view_id=view.id";
+	query += " WHERE view_table.view_id=view.id and view_field.ref_title=view_table.title and view_field.view_id=view.id";
 
 	if (view_id) { query += " AND view.id = " + view_id }
 
@@ -72,7 +73,9 @@ module.exports = {
 
   	if (condition) { conditions.push(condition) }
 
-  	var query = "Select * from view_field, view_table where view_field.table=view_table.table_name AND view_table.view_id = view_field.view_id";
+  	var all_conditions = conditions.slice(0);  // shallow clone - includes standard condition + left join conditions
+
+  	var query = "Select * from view_field, view_table where view_field.ref_title=view_table.title AND view_table.view_id = view_field.view_id";
   	if (view_id) { query +=  " AND view_field.view_id = " + view_id }
 
   	View.list(view_id)
@@ -91,7 +94,6 @@ module.exports = {
 		.then ( function (ViewFields) {
 	  		console.log("QF: " + JSON.stringify(ViewFields));
 
-	  		var pickF = [];
 	  		var flds  = [];
 	  		if (fields && fields.length) {
 	  			// ensure mandatory fields included...
@@ -105,98 +107,81 @@ module.exports = {
 	  				console.log(i + ':' + JSON.stringify(ViewFields[i]));
 	  				if (ViewFields[i].pre_picked) {
 	  					fields.push(ViewFields[i].field + ' AS ' + ViewFields[i].prompt);
-	  					flds.push(ViewFields[i].field);
+	  					flds.push(ViewFields[i].title + '.' + ViewFields[i].field);
 	  				}
 	  			} 
 	  		}
-
-
 	  		console.log('picked fields: ' + JSON.stringify(flds));
 	  		console.log('default layer: ' + layer);
 	  		console.log("view fields: " + JSON.stringify(ViewFields));
+	  		console.log('initial conditions: ' + JSON.stringify(conditions));
+	  		console.log("*************************************************************");
+		  			
+  			View.dynamic_join_fields(ViewFields, flds, conditions)
+  			.then (function (result) {
+  				console.log("dynamically added fields...");
+  				console.log("*** DYNAMIC FIELDS ***");
+  				console.log(JSON.stringify(result));
 
-	  		var reqd = [];
-	  		var  tables = [];
-	  		var lj = [];
-	  		// var attributes = {};
+  				var lj = [];
+  				var tables = [];
+  				if (result) {
+  					pickF = result.pick;
+  					tables = result.tables;
+  					lj = result.lj;
+  					conditions = result.conditions;
+  				}
 
-	 		for (var i=0; i<fields.length; i++) {
-		  		for (var j=0; j<ViewFields.length; j++) {
-		  			var prompt = ViewFields[j].prompt || ViewFields[j].field;
-		  			if (ViewFields[j].field === flds[i] ||  ViewFields[j].prompt === flds[i] || ViewFields[j].table + '.' + ViewFields[j].field === flds[i]) {
-		  				if (ViewFields[j].type === 'attribute') {
-		  					// flds[i] =  ViewFields[j].field + '.Attribute_Value';
-		  					var primary = ViewFields[j].table + '_ID';
+  				console.log('add conditions...');
+	  			View.dynamic_join_conditions(ViewFields, tables, conditions, lj)
+	  			.then ( function (Cresult) {
+	  				console.log('dynamically added conditions...');
+	  				var c = Cresult.conditions || [];
+	  				var lj = Cresult.lj || [];
+	  				var tables = Cresult.tables || [];
 
-		  					var attTable = ViewFields[j].table + '_Attribute';
-		  					lj.push('Attribute as ' + ViewFields[j].field + "_Att ON Attribute_Name = '" + ViewFields[j].field + "' AND Attribute_Class = '" + ViewFields[j].table + "'");
-		  					lj.push(attTable + " AS " + ViewFields[j].field + " ON " + ViewFields[j].field + ".FK_Attribute__ID=" + ViewFields[j].field + '_Att.Attribute_ID AND FK_' + ViewFields[j].table + '__ID=' + ViewFields[j].table + '.' + primary );
-		  					
-		  					pickF.push(ViewFields[j].field + '.Attribute_Value AS ' + ViewFields[j].prompt);
-		  					// console.log("ADD " + ViewFields[j].field + '.Attribute_Value AS ' + ViewFields[j].prompt);
-		  					// attributes[ViewFields[j].field] = ViewFields[j].prompt;
+			  		console.log("** Pick: " + JSON.stringify(pickF));
+			  		console.log("** Tables: " + JSON.stringify(tables));
+			  		console.log("** LJ: " + JSON.stringify(lj));
+			  		console.log("** condition: " + JSON.stringify(c));
+			  		
+			  		var reqd = [];
+			  		// var attributes = {};
 
-		  				}
-		  				else {
-		  					pickF.push(ViewFields[j].table + '.' + ViewFields[j].field + ' AS ' + ViewFields[j].prompt);
-		  					console.log("normal add: " + ViewFields[j].table + '.' + ViewFields[j].field + ' AS ' + ViewFields[j].prompt);
+			  		if (reqd && reqd.length) {
+			  			for (var k=0; k<reqd.length; k++) {
+			  				pickF.push(reqd[k]);
+			  				console.log("add required field: " + reqd[k]);
+			  			}
+			  		}
+			  		var select = "SELECT " + pickF.join(', ') + ' FROM (' + tables.join(', ') + ')';
 
-		  					if (tables.indexOf(ViewFields[j].table) === -1) {
-		  						tables.push(ViewFields[j].table)
-		  						if (ViewFields[j].join_condition !== '1') { conditions.push(ViewFields[j].join_condition) }
-		  					}
-		  				}
-		  						  				
-		  				j=ViewFields.length;
-		  			}
-		  		}		  		
-	  		}
+			  		if (lj.length) { select += " LEFT JOIN " + lj.join(' LEFT JOIN ') }
 
-	  		console.log('add conditions');
-	  		for (var i=0; i<conditions.length; i++) {
-				for (var j=0; j<ViewFields.length; j++) {
-					var Tcheck = ViewFields[j].table;
-					if (ViewFields[j].type === 'attribute') {
-						Tcheck = ViewFields[j].field + '.Attribute_Value';
-					}
+			  		if (conditions && conditions.length) { select += " WHERE " + conditions.join(' AND ') }
 
-					if ( ViewFields[j].type == 'field' && conditions[i].match(ViewFields[j].field) && tables.indexOf(Tcheck) === -1) {
-						console.log('** Matched ' + ViewFields[j].field + ' to ' + conditions[i]);
-	  					tables.push(ViewFields[j].table)
-	  					if (ViewFields[j].join_condition !== '1') { 
-	  						conditions.push(ViewFields[j].join_condition)
-		  				}
-		  			}
-				}  			
-	  		}
+			  		console.log("QUERY: " + select);
 
-	  		console.log("** Pick: " + JSON.stringify(pickF));
-	  		console.log("** Tables: " + JSON.stringify(tables));
-	  		console.log("** condition: " + JSON.stringify(conditions));
+			  		// if (layer && layer.length) { select += " GROUP BY " + layer.join(',') }
+			  		// ensure layer field is in list of outputs... 
+					
+					if (limit) { select += " LIMIT " + limit }	  		
 
-	  		if (reqd) {
-	  			for (var k=0; k<reqd.length; k++) {
-	  				pickF.push(reqd[k]);
-	  				console.log("add required field: " + reqd[k]);
-	  			}
-	  		}
-	  		var select = "SELECT " + pickF.join(', ') + ' FROM (' + tables.join(', ') + ')';
+					var setup = {view: views[0], query: select, pick: pickF, attributes: attributes, group: group, layer: layer};
+			  		console.log("Resolve setup: " + JSON.stringify(setup));
+			  		deferred.resolve(setup);
 
-	  		if (lj.length) { select += " LEFT JOIN " + lj.join(' LEFT JOIN ') }
+	  			})
+	  			.catch ( function (err) {
+	  				console.log("Error dynamically adding conditions");
+	  				deferred.reject(err);
+		  		});
+  			})
+  			.catch ( function (err) {
+  				console.log("Error dynamically adding fields")
+  				deferred.reject(err);
+	  		});
 
-	  		if (conditions && conditions.length) { select += " WHERE " + conditions.join(' AND ') }
-
-	  		console.log("QUERY: " + select);
-	  		console.log(JSON.stringify(layer));
-
-	  		// if (layer && layer.length) { select += " GROUP BY " + layer.join(',') }
-	  		// ensure layer field is in list of outputs... 
-			
-			if (limit) { select += " LIMIT " + limit }	  		
-
-			var setup = {view: views[0], query: select, pick: pickF, attributes: attributes, group: group, layer: layer};
-	  		console.log("Resolve setup: " + JSON.stringify(setup));
-	  		deferred.resolve(setup);
 	  	})
 	  	.catch ( function (err) {
 	  		console.log("Error retrieving report");
@@ -209,6 +194,161 @@ module.exports = {
 	});
 
   	return deferred.promise;
+  },
+
+dynamic_join_fields : function (ViewFields, fields, conditions) {
+
+	var deferred = q.defer();
+	console.log('dynamically add fields...');
+	console.log("** F **" + JSON.stringify(fields));
+
+	var tables = [];
+	var lj = [];
+	var pickF = [];
+
+	var found = 0;
+	for (var i=0; i<fields.length; i++) {
+		var fld = fields[i];
+		for (var j=0; j<ViewFields.length; j++) {
+			var ViewField = ViewFields[j] || {};
+			var prompt = ViewField.prompt || ViewField.field;
+			if (ViewField.field === fld ||  ViewField.prompt === fld || ViewField.title + '.' + ViewField.field === fld) {
+				if (ViewField.type === 'attribute') {
+					// fld =  ViewField.field + '.Attribute_Value';
+					var primary = ViewField.title + '_ID';
+
+					var attTable = ViewField.title + '_Attribute';
+
+					console.log('left join attribute ' + prompt);
+					lj.push('Attribute as ' + ViewField.field + "_Att ON Attribute_Name = '" + ViewField.field + "' AND Attribute_Class = '" + ViewField.table_name + "'");
+					lj.push(attTable + " AS " + ViewField.field + " ON " + ViewField.field + ".FK_Attribute__ID=" + ViewField.field + '_Att.Attribute_ID AND FK_' + ViewField.table_name + '__ID=' + ViewField.title + '.' + primary );
+					
+					pickF.push(ViewField.field + '.Attribute_Value AS ' + ViewField.prompt);
+					// console.log("ADD " + ViewField.field + '.Attribute_Value AS ' + ViewField.prompt);
+					// attributes[ViewField.field] = ViewField.prompt;
+
+				}
+				else {
+					pickF.push(ViewField.title + '.' + ViewField.field + ' AS ' + ViewField.prompt);
+					console.log("include: " + ViewField.title + '.' + ViewField.field + ' AS ' + ViewField.prompt);
+			
+					var Tcheck = ViewFields[j].table_name;
+					if (ViewFields[j].table_name !== ViewFields[j].title) {
+						Tcheck +=  ' AS ' + ViewFields[j].title;
+					}
+
+					if (ViewField.left_join) {
+						if (tables.indexOf(Tcheck) === -1) {
+			  				console.log("** LJ on select **");
+			  				lj.push( Tcheck + ' ON ' + ViewField.join_condition);
+			  			}
+					}
+					else {
+						if (tables.indexOf(Tcheck)) {
+							tables.push(Tcheck);
+							console.log("** J on select **");
+							if (ViewField.join_condition !== '1') { 
+								conditions.push(ViewField.join_condition)
+							}
+						}
+					}
+				}
+				j = ViewFields.length;	  				
+			}
+		}
+	}
+
+	deferred.resolve({pick: pickF, tables: tables, lj: lj, conditions: conditions});
+	return deferred.promise;
+
+  },
+
+  dynamic_join_conditions : function (ViewFields, tables, conditions, lj, add_conditions, add_lj) {
+  	var deferred = q.defer();
+  	console.log("dynamically adding conditions...");
+
+  	var extra_conditions = [];
+  	var extra_lj = [];
+
+  	console.log('t1');
+  	if (!add_conditions && !add_lj) {
+  	console.log('t2');
+  		// initial call...
+  		console.log("** Use initial conditions...");
+  		if (conditions && conditions.length) { 
+  			add_conditions = conditions.slice(0)
+  		}
+  		else { add_conditions = [] }
+  		if (lj && lj.length) {
+	  		add_lj = lj.slice(0)
+	  	}
+	  	else { add_lj = [] }
+  	}
+  	console.log('t3');
+	console.log("Add C: " + add_conditions.join(' AND '));
+	console.log("Add LEFT JOIN: " + add_lj.join(' LEFT JOIN '));
+
+  	var all_conditions = [];
+  	for (var count=0; count<add_conditions.length; count++) {
+  		all_conditions.push(add_conditions[count]);
+  	}
+  	for (var count2=0; count2<add_lj.length; count2++) {
+  		all_conditions.push(add_lj[count2]);
+  	}
+
+	for (var i=0; i<all_conditions.length; i++) {
+		for (var j=0; j<ViewFields.length; j++) {
+			
+			var Tcheck = ViewFields[j].table_name;
+			if (ViewFields[j].table_name !== ViewFields[j].title) {
+				Tcheck +=  ' AS ' + ViewFields[j].title;
+			}
+			var condition = all_conditions[i] || '';
+
+			if (ViewFields[j].type === 'attribute') {
+				Tcheck = ViewFields[j].field + '.Attribute_Value';
+			}
+
+			var test_match = ViewFields[j].title + '.';
+
+			if ( ViewFields[j].type == 'field' && condition.match(test_match)) {
+				console.log('** Matched ' + ViewFields[j].title + ' to ' + condition);
+				if (ViewFields[j].left_join) {
+					if (lj.indexOf(Tcheck + ' ON ' + ViewFields[j].join_condition) === -1) {	
+	  					console.log("** LJ on condition **");
+
+	  					lj.push( Tcheck + ' ON ' + ViewFields[j].join_condition)
+	  					extra_lj.push( Tcheck + ' ON ' + ViewFields[j].join_condition)
+	  				}
+	  			}
+	  			else {
+	  				if (tables.indexOf(Tcheck) === -1) {
+						tables.push(Tcheck)
+						if (ViewFields[j].join_condition !== '1') { 
+							conditions.push(ViewFields[j].join_condition);
+							extra_conditions.push(ViewFields[j].join_condition);
+						}
+					}
+				}
+			}
+		}
+	}
+	
+	if (extra_conditions.length || extra_lj.length) {
+		console.log("rerun using extra conditions...");
+		console.log('c+: ' + extra_conditions.join(', '));
+		console.log('lj: left join ' + extra_lj.join(' LEFT JOIN '));
+
+		View.dynamic_join_conditions(ViewFields, tables, conditions, lj, extra_conditions, extra_lj)
+		.then ( function (result) {
+			deferred.resolve(result)
+		})
+	}
+	else {
+		deferred.resolve({ conditions: conditions, lj: lj, tables: tables });
+	}
+	
+	return deferred.promise;
   },
 
   generate : function (view_id, options) {
