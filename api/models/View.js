@@ -458,7 +458,7 @@ dynamic_join_fields : function (ViewFields, fields, conditions) {
 			// ws.cell(2,1).string('string').style(style);
 			 
 			console.log('added data...'); 
-			var user = 'generic';
+			var user = 'thisuser';
 
 			if (!filename) { 
 				var timestamp = String(new Date());			
