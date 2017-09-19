@@ -11,8 +11,8 @@ module.exports = {
   	view_id: { model: 'view' },
   	table_name: { type: 'string' },
   	join_condition: { type: 'string' },
-  	mandatory: { type: 'boolean' },
-  	label: { type: 'string'}
+  	left_join: { type: 'boolean' },
+  	title: { type: 'string'}
   }
 };
 
