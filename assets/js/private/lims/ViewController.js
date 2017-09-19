@@ -36,7 +36,7 @@ app.controller('ViewController',
 			$scope.form.condition = $scope.view.condition;
 		}
 
-		$scope.show = config['pick'] || $scope.fields;
+		$scope.show = config['pick'] || $scope.fields || [];
 		if ($scope.show && $scope.show.length) {
 			for (var i=0; i<$scope.show.length; i++) {
 				console.log('check ' + $scope.show[i]);
