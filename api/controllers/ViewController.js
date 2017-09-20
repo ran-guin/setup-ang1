@@ -97,7 +97,6 @@ module.exports = {
 		var filename = body.filename;
 
 		fields = View.cast2array(fields);
-		layer  = View.cast2array(layer);
 		group = View.cast2array(group);
 
 		var conditions = View.parse_conditions(search);
@@ -122,7 +121,7 @@ module.exports = {
 				console.log('save as excel');
 
 				if (result.data.length) {
-					View.save2excel(result.data, {path: excel_path, filename: filename})
+					View.save2excel(result.data, {path: excel_path, filename: filename, layer: layer})
 					.then ( function (excel) {
 						console.log("saved as excel");
 						return res.json({data: result.data, query: setup.query, message: 'Excel file saved', excel: excel });
