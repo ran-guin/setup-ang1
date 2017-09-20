@@ -36,18 +36,22 @@ app.controller('ViewController',
 			$scope.form.condition = $scope.view.condition;
 		}
 
-		$scope.show = config['pick'] || $scope.fields || [];
-		if ($scope.show && $scope.show.length) {
-			for (var i=0; i<$scope.show.length; i++) {
-				console.log('check ' + $scope.show[i]);
-				var fp = $scope.show[i].match(/(.*) AS (.*)/i);
+		$scope.pick = config['pick'] || $scope.fields || [];
+		$scope.show = [];
+
+		if ($scope.pick && $scope.pick.length) {
+			for (var i=0; i<$scope.pick.length; i++) {
+				console.log('check ' + $scope.pick[i]);
+				var fp = $scope.pick[i].match(/(.*) AS (.*)/i);
 				if ( fp && fp.length ) {
 					var f = fp[1];
 					var p = fp[2];
+					$scope.show.push(p);
 					$scope.form.show[p] = true;
 				}
 				else {
 					$scope.form.show[$scope.show[i]] = true;
+					$scope.show.push($scope.show[i]);
 				}
 			}
 		}
@@ -131,6 +135,9 @@ app.controller('ViewController',
 				console.log('excel: ' + JSON.stringify(data.excel));
 				$scope.excel = data.excel;
 				$scope.filename = data.excel.file;
+			}
+			else {
+				$scope.excel = {};
 			}
 
 			console.log($scope.data.length + ' Records');
