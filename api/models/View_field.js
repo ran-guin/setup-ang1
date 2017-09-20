@@ -8,8 +8,7 @@
 module.exports = {
 
   attributes: {
-  	view_id: { model: 'view'},
-  	ref_title: { type: 'string'},
+  	view_table_id: { model: 'view_table'},
   	field: { type: 'string'},
   	type: { 
   		type: 'string',
