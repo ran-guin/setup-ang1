@@ -31,7 +31,7 @@ block content
     div(ng-app='myApp' ng-cloak=1)
       div(ng-controller="SharedController" ng-init="include_all=1")
         div(ng-controller="LIMSController")
-          div(ng-controller='ViewController' ng-init="#{init}")
+          div(ng-controller='ReportController' ng-init="#{init}")
 
             div.container
                 a(href='#' onclick='return false;' ng-click="page='view'") View
