@@ -8,7 +8,15 @@ app.controller('ReportController',
   
     console.log('loaded report controller');
 
-	$scope.report = '';
+	$scope.view = {};
+	$scope.page = 'view';
+	$scope.tableChanged = {};
+	$scope.fieldChanged = {};
+
+	$scope.view = {};
+	$scope.view_table = [];
+	$scope.view_field = [];
+
 
    	$scope.load = function(config) {
         console.log('load : ' + JSON.stringify(config));
@@ -18,25 +26,26 @@ app.controller('ReportController',
 	$scope.initialize = function (config) {
 		$scope.initialize_payload(config);
 
-		$scope.report = config['report'] || {};
-		$scope.report_table = config['tables'] || [];
-		$scope.report_field = config['fields'] || [];
-
+		if (config['view']) { $scope.view = config['view'] }
+		if (config['tables']) { $scope.view_table = config['tables'] }
+		if (config['view']) { $scope.view_field = config['view']['fields'].split(',') }
 		$scope.form = {
-			report: $scope.report,
-			table: $scope.report_table,
-			field: $scope.report_field
+			report: $scope.view,
+			table: $scope.view_table,
+			field: $scope.view_field
 		};
 
+		console.log('Config');
+		console.log(JSON.stringify($scope.view_field));
+
 		$scope.viewChanged = false;
-		for var(i=0; i< $scope.report_table.length; i++) {
-			$scope.tableChanged[$scope.report_table[i]] = false;
+		for (var i=0; i<$scope.view_table.length; i++) {
+			$scope.tableChanged[$scope.view_table[i]] = false;
 		}
-		for var(i=0; i< $scope.report_field.length; i++) {
-			$scope.fieldChanged[$scope.report_field[i]] = false;
+		for (var i=0; i< $scope.view_field.length; i++) {
+			$scope.fieldChanged[$scope.view_field[i]] = false;
 		}
 
-		$scope.page = 'view';
 	}
 	
 }]);
