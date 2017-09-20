@@ -40,8 +40,8 @@ module.exports = {
   	];
 
 	var query = "Select " + fields.join(', ');
-	query += " FROM view, view_table, view_field ";
-	query += " WHERE view_table.view_id=view.id and view_field.ref_title=view_table.title and view_field.view_id=view.id";
+	query += " FROM view, view_table LEFT JOIN view_field ON view_field.view_table_id=view_table.id";
+	query += " WHERE view_table.view_id=view.id";
 
 	if (view_id) { query += " AND view.id = " + view_id }
 
@@ -75,8 +75,8 @@ module.exports = {
 
   	var all_conditions = conditions.slice(0);  // shallow clone - includes standard condition + left join conditions
 
-  	var query = "Select * from view_field, view_table where view_field.ref_title=view_table.title AND view_table.view_id = view_field.view_id";
-  	if (view_id) { query +=  " AND view_field.view_id = " + view_id }
+  	var query = "Select * from view_table LEFT JOIN view_field ON view_table.id = view_field.view_table_id";
+  	if (view_id) { query +=  " WHERE view_table.view_id = " + view_id }
 
   	View.list(view_id)
   	.then (function (views) {
@@ -270,9 +270,7 @@ dynamic_join_fields : function (ViewFields, fields, conditions) {
   	var extra_conditions = [];
   	var extra_lj = [];
 
-  	console.log('t1');
   	if (!add_conditions && !add_lj) {
-  	console.log('t2');
   		// initial call...
   		console.log("** Use initial conditions...");
   		if (conditions && conditions.length) { 
@@ -284,9 +282,8 @@ dynamic_join_fields : function (ViewFields, fields, conditions) {
 	  	}
 	  	else { add_lj = [] }
   	}
-  	console.log('t3');
-	console.log("Add C: " + add_conditions.join(' AND '));
-	console.log("Add LEFT JOIN: " + add_lj.join(' LEFT JOIN '));
+
+  	var titles = _.pluck(ViewFields, 'title');
 
   	var all_conditions = [];
   	for (var count=0; count<add_conditions.length; count++) {
@@ -306,12 +303,13 @@ dynamic_join_fields : function (ViewFields, fields, conditions) {
 			var condition = all_conditions[i] || '';
 
 			if (ViewFields[j].type === 'attribute') {
+				// Irrelevant? ... attributes not accounted for below ... 
 				Tcheck = ViewFields[j].field + '.Attribute_Value';
 			}
 
-			var test_match = ViewFields[j].title + '.';
+			var test_match = new RegExp( '\\b' + ViewFields[j].title + '\\.');
 
-			if ( ViewFields[j].type == 'field' && condition.match(test_match)) {
+			if ( ViewFields[j].type != 'attribute' && condition.match(test_match)) {
 				console.log('** Matched ' + ViewFields[j].title + ' to ' + condition);
 				if (ViewFields[j].left_join) {
 					if (lj.indexOf(Tcheck + ' ON ' + ViewFields[j].join_condition) === -1) {	
@@ -323,22 +321,21 @@ dynamic_join_fields : function (ViewFields, fields, conditions) {
 	  			}
 	  			else {
 	  				if (tables.indexOf(Tcheck) === -1) {
+	  					console.log("** J on condition **");
 						tables.push(Tcheck)
 						if (ViewFields[j].join_condition !== '1') { 
 							conditions.push(ViewFields[j].join_condition);
 							extra_conditions.push(ViewFields[j].join_condition);
 						}
+						continue;
 					}
 				}
 			}
+			else { console.log('no match..') }
 		}
 	}
 	
 	if (extra_conditions.length || extra_lj.length) {
-		console.log("rerun using extra conditions...");
-		console.log('c+: ' + extra_conditions.join(', '));
-		console.log('lj: left join ' + extra_lj.join(' LEFT JOIN '));
-
 		View.dynamic_join_conditions(ViewFields, tables, conditions, lj, extra_conditions, extra_lj)
 		.then ( function (result) {
 			deferred.resolve(result)
@@ -392,6 +389,7 @@ dynamic_join_fields : function (ViewFields, fields, conditions) {
   	if (!options) { options = {} }
 
   	var filename = options.filename;
+  	var layer    = options.layer;
   	var path     = options.path || './excel/';
 
   	var deferred = q.defer();
@@ -400,98 +398,114 @@ dynamic_join_fields : function (ViewFields, fields, conditions) {
   		console.log(JSON.stringify(data));
 
 		var wb = new xl.Workbook();
-		console.log('made new workbook...');
-
-		var ws = wb.addWorksheet('Sheet 1');
-		console.log('defined sheet...');
 
 		// Create a reusable style 
-		var myStyle = wb.createStyle({
+		var data_style = wb.createStyle({
 		    font: {
-		        bold: true,
-		        color: '00FF00'
+		        color: '333333',
+		        size: 14
 		    }
 		});
 
-		console.log('define Data style...');
-		// var data_style = wb.createStyle({
-		//     font: {
-		//         color: '#F33',
-		//         size: 14
-		//     }
-		// });
-		// // numberFormat: '$#,##0.00; ($#,##0.00); -'
+		var header_style = wb.createStyle({
+		    font: {
+		        color: '3333ff',
+		        size: 12
+		    }
+		});
 
-		// console.log('define header style...');
-		// var header_style = wb.createStyle({
-		//     font: {
-		//         color: '#333',
-		//         size: 12
-		//     }
-		// });
+		var sheetname = 'Results';
+		var sheets = [];
+		var layered_data;
 
-		if (data && data.length) {
-			var keys = Object.keys(data[0]);
-			// add headers
-			console.log('add headers...' + keys.join(', '));
-			for (var col=1; col<=keys.length; col++) {
-				ws.cell(1,col).string(keys[col-1]);
-			}
-			console.log('add data...');
-			console.log(JSON.stringify(data));
-			// add data
-			for (var row=1; row<=data.length; row++) {
-				for (var col=1; col<=keys.length; col++) {
-					var string = String(data[row-1][keys[col-1]]);
-					ws.cell(row+1, col).string(string).style(myStyle);
-				}
-			}
-			// ws.cell(1,1).number(100).style(style);
-	 
-			// Set value of cell B1 to 300 as a number type styled with paramaters of style 
-			// ws.cell(1,2).number(200).style(style);
-			 
-			// Set value of cell C1 to a formula styled with paramaters of style 
-			// ws.cell(1,3).formula('A1 + B1').style(style);
-			 
-			// Set value of cell A2 to 'string' styled with paramaters of style 
-			// ws.cell(2,1).string('string').style(style);
-			 
-			console.log('added data...'); 
-			var user = 'thisuser';
-
-			if (!filename) { 
-				var timestamp = String(new Date());			
-				filename = 'Dump.' + user + '.' + timestamp + '.xlsx'
-			}
-			else {
-				if (!filename.match(/\.xlsx?/)) {
-					filename = filename + '.xlsx';
-				}
-			}
-
-			var file = path + filename;
-
-			wb.write(file, function (err, stats) { 
-				// Writes the file ExcelFile.xlsx to the process.cwd(); 
+		if (layer) {
+			layered_data = {};
 			
-			    if (err) {
-			        console.error(err);
-			        deferred.reject(err);
-			    }
-			    else { 
-			    	console.log(stats); // Prints out an instance of a node.js fs.Stats object 
-					deferred.resolve({file: filename, stats: stats});
-				}
-			});
+			layers = _.uniq(_.pluck(data, layer));
+			layers.sort(function(a, b){ return a-b });
+
+			sheetname = layers[0];
+
+			for (var i=0; i<layers.length; i++) {
+				var layername = layers[i];
+				var title = layer + ': ' + layername;
+				sheets.push( wb.addWorksheet(title) );
+				layered_data[layername] = [];
+			}
+
+			for (var x=0; x<data.length; x++) {
+				var layername = data[x][layer];
+				var rowdata = Object.assign({}, data[x]);
+
+				layered_data[layername].push(rowdata);
+			}
 		}
 		else {
-			console.log('no data');
-			deferred.reject('empty dataset');
+			sheets.push(wb.addWorksheet(sheetname));
 		}
 
-		console.log('wrote');
+		for (var s=0; s<layers.length; s++) {
+			var ldata;
+			var layername = layers[s];
+			if (layered_data) {
+				ldata = layered_data[layername];
+				console.log(layername + ': ' + ldata.length + ' records');
+			}
+			else {
+				ldata = data;
+			}
 
+
+			if (ldata && ldata.length) {
+				var keys = Object.keys(ldata[0]);
+
+				// add headers
+				for (var col=1; col<=keys.length; col++) {
+					sheets[s].cell(1,col).string(keys[col-1]).style(header_style);
+				}
+
+				// add data
+				for (var row=1; row<=ldata.length; row++) {
+					for (var col=1; col<=keys.length; col++) {
+						var string = String(ldata[row-1][keys[col-1]]);
+						sheets[s].cell(row+1, col).string(string).style(data_style);
+					}
+				}
+
+				console.log('added data...'); 
+				var user = 'thisuser';
+
+				if (!filename) { 
+					var timestamp = String(new Date());			
+					filename = 'Dump.' + user + '.' + timestamp + '.xlsx'
+				}
+				else {
+					if (!filename.match(/\.xlsx?/)) {
+						filename = filename + '.xlsx';
+					}
+				}
+
+				var file = path + filename;
+
+				wb.write(file, function (err, stats) { 
+					// Writes the file ExcelFile.xlsx to the process.cwd(); 
+				
+				    if (err) {
+				        console.error(err);
+				        deferred.reject(err);
+				    }
+				    else { 
+				    	console.log(stats); // Prints out an instance of a node.js fs.Stats object 
+						deferred.resolve({file: filename, stats: stats});
+					}
+				});
+			}
+			else {
+				console.log('no data for sheet ' + s);
+				deferred.reject('empty dataset');
+			}
+		}
+	
 		return deferred.promise;
 		// wb.write('ExcelFile.xlsx', function (err, stats) {
 		//     if (err) {
