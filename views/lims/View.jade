@@ -2,7 +2,7 @@ extends ./../customize/privateLayout
 block content
 
   if !fields
-    - fields = [];
+    - fields = pick || [];
   if !view
     - view = data
 
@@ -108,14 +108,14 @@ block content
                                         if (attributes && attributes.indexOf(fld) >= 0)
                                             td  
                                                 //- Attributes are not auto-included, so add to field list if condition supplied here... 
-                                                textarea.form-control(rows=1 ng-model="form.search['#{fld}.Attribute_Value']" ng-change="addAtt('#{fld}')" name="search#{fld}")
+                                                textarea.form-control(rows=1 ng-model="form.search['#{fld}.Attribute_Value']" ng-change="addAtt('#{prompt}')" name="search#{fld}")
                                         else 
                                             td 
                                                 textarea.form-control(rows=1 ng-model="form.search['#{fld}']" name="search#{fld}")
                                         //- td
                                         //-     input(type='checkbox' ng-model="form.groupBy['#{fld}']" ng-click="updateList('groupBy','#{fld}')" name='group')
                                         td
-                                            input(type='radio' name='layer' ng-model="form.layer" value="#{fld}" ng-disabled="!form.show['#{prompt}']")
+                                            input(type='radio' name='layer' ng-model="form.layer" value="#{prompt}" ng-disabled="!form.show['#{prompt}']")
 
                         input.form-control(ng-model='form.condition' placeholder='-- optional additional condition --')
                         p &nbsp;  
