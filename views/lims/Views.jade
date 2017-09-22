@@ -9,7 +9,7 @@ block content
     a(href="/reports/new")
       button.btn.btn-primary(type='button') Add New View Report  
 
-    h3 List of Current Views: #{id}
+    h3 List of Current Views
 
     div.container
        div(ng-app='myApp' ng-cloak=1)
@@ -24,6 +24,9 @@ block content
               th Tables
               th Fields
               th Active
+            
+            - tablesVisible = {}
+
             each view in views
               - id   = view.id || id;
               - name = view.name;
@@ -36,20 +39,58 @@ block content
               if status
                 - colour = 'blue'
 
+              - tablesVisible[id] = false;
+
+              - flist = []
+              - tlist = []
+              if fields
+                - flist = fields.split(/\s*,\s*/);
+              if tlist
+                - tlist = table.split(/\s*,\s*/);
+
               tr(ng-show="include_all || #{active}") 
                 td  
                   a(href="/getReport/#{id}")
                     b(style='color: #{colour}') #{name}
                 td
-                  span #{table}
+                  div(ng-show="!tablesVisible['#{id}']")
+                      button.btn.btn-success.btn-xs(type='button' onClick='return false;' data-toggle='tooltip' title='open' ng-click="tablesVisible['#{id}']=1")
+                        span show tables &nbsp;
+                          i.fa.fa-expand
+
+                  div(ng-show="tablesVisible['#{id}']")
+                      button.btn.btn-danger.btn-xs(type='button' onClick='return false;' data-toggle='tooltip' title='close' ng-click="tablesVisible['#{id}']=0")
+                        i.fa.fa-close
+                      p &nbsp;
+                        ul
+                          each t in tlist
+                            li 
+                              i.text-danger #{t}
+
                 td
-                  span #{fields}
+                  div(ng-show="!fieldsVisible['#{id}']")
+                      button.btn.btn-success.btn-xs(type='button' onClick='return false;' data-toggle='tooltip' title='open' ng-click="fieldsVisible['#{id}']=1")
+                        span show fields &nbsp;
+                          i.fa.fa-expand
+
+                  div(ng-show="fieldsVisible")
+                      button.btn.btn-danger.btn-xs(type='button' onClick='return false;' data-toggle='tooltip' title='close' ng-click="fieldsVisible['#{id}']=0")
+                        i.fa.fa-close
+                      p &nbsp;
+                        ul
+                          - var prefix = ''
+                          each f in flist
+                            if f.match(/ AS /i)
+                              li 
+                                i.text-danger #{prefix}#{f} 
+                              - prefix = ''
+                            else
+                              - prefix = prefix + f             
                 td
                   if active
                     i.fa.fa-check(style='color: green')
                   else
                     i.fa.fa-close(style='color: red')
-    b #{JSON.stringify(views)} 
 
 
 
