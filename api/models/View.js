@@ -11,7 +11,10 @@ var _ = require('underscore-node');
 
 module.exports = {
   attributes: {
-  	name: { type: 'string' },
+  	name: { 
+  		type: 'string',
+  		unique: true
+  	},
   	description: { type: 'text'},
   	active: { 
   		type: 'boolean',
@@ -58,12 +61,94 @@ module.exports = {
 	return deferred.promise;
   },
 
-  setup : function (view_id, options) {
+  initialize : function (view_id) {
+  	var deferred = q.defer();
+
+ 	View.list(view_id)
+  	.then (function (views) {
+
+  		var view = views[0]
+  		var query = "Select * from view_table LEFT JOIN view_field ON view_table.id = view_field.view_table_id";
+  		query +=  " WHERE view_table.view_id = " + view_id;
+
+	 	Record.query_promise(query)
+		.then ( function (ViewFields) {
+	  		console.log("QF: " + JSON.stringify(ViewFields));
+
+	  		var all_fields = [];
+	  		var prepicked = [];
+	  		var attributes = [];
+	  		var prompts = {};
+  			
+  			for (var i=0; i<ViewFields.length; i++) {
+				var f;
+				switch (ViewFields[i].type) {
+					case 'field':  
+						f = ViewFields[i].title + '.' + ViewFields[i].field;
+						break;
+					case 'attribute':
+						f = ViewFields[i].field + '.Attribute_Value';
+						break;
+					case 'sql':
+						f = ViewFields[i].field;
+						break;
+					default: 
+						console.log(ViewFields[i].type + ' type not recognized');
+				}
+
+				if (f) {
+
+  					all_fields.push(f + ' AS ' + ViewFields[i].prompt);
+
+  					prompts[ViewFields[i].prompt] = f;
+
+  					if (ViewFields[i].pre_picked) {
+  						prepicked.push(ViewFields[i].prompt);
+  					}
+
+  					if (ViewFields[i].type === 'attribute') {
+  						attributes.push(ViewFields[i].prompt);
+  					}
+  				}
+  			} 
+
+  			view.fields = all_fields;
+  			view.prepicked = prepicked;
+  			view.prompts   = prompts;
+  			view.field_data = ViewFields;
+  			view.attributes = attributes;
+
+			console.log("*************************************************************");
+			console.log("all fields: " + JSON.stringify(view.fields));
+			console.log('picked fields: ' + JSON.stringify(view.prepicked));
+			console.log('default layer: ' + view.layer);
+			console.log("view fields: " + JSON.stringify(view.field_data));
+
+			console.log('prompts: ' + JSON.stringify(view.prompts));
+			console.log("*************************************************************");
+
+  			deferred.resolve(view);
+  		})
+  		.catch ( function (err) {
+  			console.log("Error initializing view");
+  			deferred.reject(err);
+  		});
+  	})
+  	.catch ( function (err) {
+  		console.log('error getting list');
+  		deferred.reject(err);
+  	})
+
+	return deferred.promise;
+  },
+
+  setup : function (view, options) {
  	var deferred = q.defer();
+  	console.log('setup');
+  	console.log(JSON.stringify(options));
 
   	if (!options) { options = {} }
-  	
-  	var fields = options.fields || [];
+  	var select = options.select || view.prepicked;
   	var group  = options.group  || [];
   	var layer  = options.layer  || '';
   	var search = options.search || {};
@@ -71,164 +156,147 @@ module.exports = {
   	var limit = options.limit; 	
   	var condition = options.condition;
 
+  	var add_conditions = View.parse_search_conditions(view, search);
+  	if (add_conditions) { 
+  		for (var i=0; i<add_conditions.length; i++) {
+  			conditions.push(add_conditions[i])
+  		}
+  	}
+
+  	console.log("** C **" + JSON.stringify(conditions));
   	if (condition) { conditions.push(condition) }
 
   	var all_conditions = conditions.slice(0);  // shallow clone - includes standard condition + left join conditions
 
-  	var query = "Select * from view_table LEFT JOIN view_field ON view_table.id = view_field.view_table_id";
-  	if (view_id) { query +=  " WHERE view_table.view_id = " + view_id }
+	View.dynamic_join_fields(view.field_data, select, conditions)
+	.then (function (result) {
+		console.log("dynamically added fields...");
+		console.log("*** DYNAMIC FIELDS ***");
+		console.log("c0: " + JSON.stringify(conditions));
+		console.log("lj0: " + JSON.stringify(lj));
 
-  	View.list(view_id)
-  	.then (function (views) {
+		console.log(JSON.stringify(result));
 
-  		console.log(JSON.stringify(views));
-  		if (views.length) {
-	 	  	if (!layer) { 
-	 	  		layer = views[0].default_layer
-	 	  	}
-	 	  	attributes = views[0].attributes.split(/\s*,\s*/);
-	 	}
+		var lj = [];
+		var tables = [];
+		if (result) {
+			pickF = result.pick;
+			tables = result.tables;
+			lj = result.lj;
+			conditions = result.conditions;
+		}
 
- 	  	console.log('Vquery:' + query);
-	 	Record.query_promise(query)
-		.then ( function (ViewFields) {
-	  		console.log("QF: " + JSON.stringify(ViewFields));
+		console.log('***** initial conditions: ******');
+		console.log('tables: ' + JSON.stringify(tables));
+		console.log("conditions: " + JSON.stringify(conditions));
+		console.log("lj: " + JSON.stringify(lj));
 
-	  		var flds  = [];
-	  		if (fields && fields.length) {
-	  			// ensure mandatory fields included...
-	  			// pickF = fields;
-	  			flds = fields;
+		View.dynamic_join_conditions(view.field_data, tables, conditions, lj)
+		.then ( function (Cresult) {
+			var c = Cresult.conditions || [];
+			var lj = Cresult.lj || [];
+			var tables = Cresult.tables || [];
+
+			console.log('***** Final Conditions *****');
+	  		console.log("** Pick: " + JSON.stringify(pickF));
+	  		console.log("** Tables: " + JSON.stringify(tables));
+	  		console.log("** LJ: " + JSON.stringify(lj));
+	  		console.log("** condition: " + JSON.stringify(c));
+			console.log('********************************************');
+	  		
+	  		var reqd = [];
+	  		// var attributes = {};
+
+	  		if (reqd && reqd.length) {
+	  			for (var k=0; k<reqd.length; k++) {
+	  				pickF.push(reqd[k]);
+	  				console.log("add required field: " + reqd[k]);
+	  			}
 	  		}
-	  		else {
-	  			// initial setup ... no fields selected yet... 
-	  			console.log("prepick...");
-	  			for (var i=0; i<ViewFields.length; i++) {
-	  				console.log(i + ':' + JSON.stringify(ViewFields[i]));
-	  				if (ViewFields[i].pre_picked) {
-	  					fields.push(ViewFields[i].field + ' AS ' + ViewFields[i].prompt);
-	  					flds.push(ViewFields[i].title + '.' + ViewFields[i].field);
-	  				}
-	  			} 
-	  		}
-	  		console.log('picked fields: ' + JSON.stringify(flds));
-	  		console.log('default layer: ' + layer);
-	  		console.log("view fields: " + JSON.stringify(ViewFields));
-	  		console.log('initial conditions: ' + JSON.stringify(conditions));
-	  		console.log("*************************************************************");
-		  			
-  			View.dynamic_join_fields(ViewFields, flds, conditions)
-  			.then (function (result) {
-  				console.log("dynamically added fields...");
-  				console.log("*** DYNAMIC FIELDS ***");
-  				console.log(JSON.stringify(result));
 
-  				var lj = [];
-  				var tables = [];
-  				if (result) {
-  					pickF = result.pick;
-  					tables = result.tables;
-  					lj = result.lj;
-  					conditions = result.conditions;
-  				}
+	  		var select = "SELECT " + pickF.join(', ') + ' FROM (' + tables.join(', ') + ')';
+	  		if (lj.length) { select += " LEFT JOIN " + lj.join(' LEFT JOIN ') }
 
-  				console.log('add conditions...');
-	  			View.dynamic_join_conditions(ViewFields, tables, conditions, lj)
-	  			.then ( function (Cresult) {
-	  				console.log('dynamically added conditions...');
-	  				var c = Cresult.conditions || [];
-	  				var lj = Cresult.lj || [];
-	  				var tables = Cresult.tables || [];
+	  		if (conditions && conditions.length) { select += " WHERE " + conditions.join(' AND ') }
 
-			  		console.log("** Pick: " + JSON.stringify(pickF));
-			  		console.log("** Tables: " + JSON.stringify(tables));
-			  		console.log("** LJ: " + JSON.stringify(lj));
-			  		console.log("** condition: " + JSON.stringify(c));
-			  		
-			  		var reqd = [];
-			  		// var attributes = {};
+	  		console.log("** QUERY: " + select);
 
-			  		if (reqd && reqd.length) {
-			  			for (var k=0; k<reqd.length; k++) {
-			  				pickF.push(reqd[k]);
-			  				console.log("add required field: " + reqd[k]);
-			  			}
-			  		}
-			  		var select = "SELECT " + pickF.join(', ') + ' FROM (' + tables.join(', ') + ')';
+	  		// if (layer && layer.length) { select += " GROUP BY " + layer.join(',') }
+	  		// ensure layer field is in list of outputs... 
+			
+			var setup = {view: view, query: select, pick: pickF, group: group, layer: layer, extra_conditions: add_conditions};
 
-			  		if (lj.length) { select += " LEFT JOIN " + lj.join(' LEFT JOIN ') }
+	  		deferred.resolve(setup);
 
-			  		if (conditions && conditions.length) { select += " WHERE " + conditions.join(' AND ') }
-
-			  		console.log("QUERY: " + select);
-
-			  		// if (layer && layer.length) { select += " GROUP BY " + layer.join(',') }
-			  		// ensure layer field is in list of outputs... 
-					
-					if (limit) { select += " LIMIT " + limit }	  		
-
-					var setup = {view: views[0], query: select, pick: pickF, attributes: attributes, group: group, layer: layer};
-			  		console.log("Resolve setup: " + JSON.stringify(setup));
-			  		deferred.resolve(setup);
-
-	  			})
-	  			.catch ( function (err) {
-	  				console.log("Error dynamically adding conditions");
-	  				deferred.reject(err);
-		  		});
-  			})
-  			.catch ( function (err) {
-  				console.log("Error dynamically adding fields")
-  				deferred.reject(err);
-	  		});
-
-	  	})
-	  	.catch ( function (err) {
-	  		console.log("Error retrieving report");
-	  		deferred.reject(err);
-	  	});
+		})
+		.catch ( function (err) {
+			console.log("Error dynamically adding conditions");
+			console.log(err);
+			deferred.reject(err);
+		});
 	})
-	.catch (function (err) {
-		console.log("Error finding view");
+	.catch ( function (err) {
+		console.log("Error dynamically adding fields")
+		console.log(err);
 		deferred.reject(err);
 	});
 
   	return deferred.promise;
   },
 
-dynamic_join_fields : function (ViewFields, fields, conditions) {
+dynamic_join_fields : function (ViewFields, select, conditions) {
 
 	var deferred = q.defer();
 	console.log('dynamically add fields...');
-	console.log("** F **" + JSON.stringify(fields));
+	console.log("** F **" + JSON.stringify(select));
 
 	var tables = [];
 	var lj = [];
 	var pickF = [];
 
 	var found = 0;
-	for (var i=0; i<fields.length; i++) {
-		var fld = fields[i];
+	for (var i=0; i<select.length; i++) {
+
+		var fld = select[i];
+		var full_fld = select[i].match(/ AS (.*)/);
+		if (full_fld && full_fld.length) {
+			fld = full_fld[1];
+		}
 		for (var j=0; j<ViewFields.length; j++) {
 			var ViewField = ViewFields[j] || {};
 			var prompt = ViewField.prompt || ViewField.field;
 			if (ViewField.field === fld ||  ViewField.prompt === fld || ViewField.title + '.' + ViewField.field === fld) {
 				if (ViewField.type === 'attribute') {
 					// fld =  ViewField.field + '.Attribute_Value';
-					var primary = ViewField.title + '_ID';
+					var primary = ViewField.table_name + '_ID';
 
-					var attTable = ViewField.title + '_Attribute';
 
 					console.log('left join attribute ' + prompt);
-					lj.push('Attribute as ' + ViewField.field + "_Att ON Attribute_Name = '" + ViewField.field + "' AND Attribute_Class = '" + ViewField.table_name + "'");
-					lj.push(attTable + " AS " + ViewField.field + " ON " + ViewField.field + ".FK_Attribute__ID=" + ViewField.field + '_Att.Attribute_ID AND FK_' + ViewField.table_name + '__ID=' + ViewField.title + '.' + primary );
+					var VF = ViewField.field;
+					var VFA = ViewField.table_name + '_Attribute';
+
+					var VF_cond = 'Attribute as ' + VF + "_Att ON " + VF + "_Att.Attribute_Name = '" + VF;
+					VF_cond += "' AND " + VF + "_Att.Attribute_Class = '" + ViewField.table_name + "'";
+		
+					var VFA_cond = VFA + " AS " + VF + " ON " + VF + ".FK_Attribute__ID=" + VF + '_Att.Attribute_ID';
+					VFA_cond += ' AND ' + VF + '.FK_' + ViewField.table_name + '__ID=' + ViewField.title + '.' + primary;
+
+			  		if (lj.indexOf(VF_cond) === -1) {
+						lj.push(VF_cond);
+					}
+			  		
+			  		if (lj.indexOf(VFA_cond) === -1) {
+						lj.push(VFA_cond);
+					}
+					// lj.push(VF_cond);
+					// lj.push(VFA_cond);
 					
-					pickF.push(ViewField.field + '.Attribute_Value AS ' + ViewField.prompt);
+					pickF.push(VF + '.Attribute_Value AS ' + ViewField.prompt);
 					// console.log("ADD " + ViewField.field + '.Attribute_Value AS ' + ViewField.prompt);
 					// attributes[ViewField.field] = ViewField.prompt;
 
 				}
-				else {
+				else if (ViewField.type === 'field') {
 					pickF.push(ViewField.title + '.' + ViewField.field + ' AS ' + ViewField.prompt);
 					console.log("include: " + ViewField.title + '.' + ViewField.field + ' AS ' + ViewField.prompt);
 			
@@ -239,24 +307,39 @@ dynamic_join_fields : function (ViewFields, fields, conditions) {
 
 					if (ViewField.left_join) {
 						if (tables.indexOf(Tcheck) === -1) {
-			  				console.log("** LJ on select **");
-			  				lj.push( Tcheck + ' ON ' + ViewField.join_condition);
+			  				var ljf =  Tcheck + ' ON ' + ViewField.join_condition;
+			  				if (lj.indexOf(ljf) === -1) {
+			  					lj.push( Tcheck + ' ON ' + ViewField.join_condition);
+				  				console.log("** LJ " + ljf + " **");
+			  				}
 			  			}
 					}
 					else {
 						if (tables.indexOf(Tcheck)) {
 							tables.push(Tcheck);
-							console.log("** J on select **");
 							if (ViewField.join_condition !== '1') { 
 								conditions.push(ViewField.join_condition)
+								console.log("** J " + Tcheck + " **");
 							}
 						}
 					}
 				}
+				else if (ViewField.type === 'sql') {
+					var F = ViewField.field + ' AS ' + ViewField.prompt;
+					pickF.push(F);
+					// table ref can be anything included... 
+					console.log('add sql explicit field: ' + F);
+				}
+				else {
+					console.log("unrecognized view_field type: " + ViewField.type);
+				}
+
 				j = ViewFields.length;	  				
 			}
 		}
 	}
+
+	console.log("PICK : " + JSON.stringify(pickF));
 
 	deferred.resolve({pick: pickF, tables: tables, lj: lj, conditions: conditions});
 	return deferred.promise;
@@ -274,7 +357,7 @@ dynamic_join_fields : function (ViewFields, fields, conditions) {
   		// initial call...
   		console.log("** Use initial conditions...");
   		if (conditions && conditions.length) { 
-  			add_conditions = conditions.slice(0)
+  			add_conditions = conditions.slice(0);
   		}
   		else { add_conditions = [] }
   		if (lj && lj.length) {
@@ -310,18 +393,23 @@ dynamic_join_fields : function (ViewFields, fields, conditions) {
 			var test_match = new RegExp( '\\b' + ViewFields[j].title + '\\.');
 
 			if ( ViewFields[j].type != 'attribute' && condition.match(test_match)) {
-				console.log('** Matched ' + ViewFields[j].title + ' to ' + condition);
+				console.log('*** Matched ' + ViewFields[j].title + ' to ' + condition);
 				if (ViewFields[j].left_join) {
 					if (lj.indexOf(Tcheck + ' ON ' + ViewFields[j].join_condition) === -1) {	
-	  					console.log("** LJ on condition **");
+	  					console.log("** LJ: " + Tcheck + ' ON ' + ViewFields[j].join_condition);
 
 	  					lj.push( Tcheck + ' ON ' + ViewFields[j].join_condition)
 	  					extra_lj.push( Tcheck + ' ON ' + ViewFields[j].join_condition)
 	  				}
+	  		// 		else {
+					// 	console.log('already included...');
+					// }
 	  			}
 	  			else {
 	  				if (tables.indexOf(Tcheck) === -1) {
-	  					console.log("** J on condition **");
+	  					console.log("** J: " + Tcheck);
+	  					console.log(Tcheck);
+
 						tables.push(Tcheck)
 						if (ViewFields[j].join_condition !== '1') { 
 							conditions.push(ViewFields[j].join_condition);
@@ -329,42 +417,52 @@ dynamic_join_fields : function (ViewFields, fields, conditions) {
 						}
 						continue;
 					}
+	  		// 		else {
+					// 	console.log('already included...');
+					// }
 				}
 			}
-			else { console.log('no match..') }
 		}
 	}
 	
 	if (extra_conditions.length || extra_lj.length) {
+		console.log('** INTERMEDIATE ADDITIONS: ');
+		console.log(JSON.stringify(conditions));
+		console.log(JSON.stringify(lj));
+
 		View.dynamic_join_conditions(ViewFields, tables, conditions, lj, extra_conditions, extra_lj)
 		.then ( function (result) {
 			deferred.resolve(result)
 		})
 	}
 	else {
+		console.log('** DYNAMIC ADDITIONS: ');
+		console.log(JSON.stringify(conditions));
+		console.log(JSON.stringify(lj));
+
 		deferred.resolve({ conditions: conditions, lj: lj, tables: tables });
 	}
 	
 	return deferred.promise;
   },
 
-  generate : function (view_id, options) {
+  generate : function (view, options) {
 	var deferred = q.defer();
   	if (!options) { options = {} }
 
-  	View.setup(view_id, options)
-  	.then (function (setup) {
-  		
-  		console.log('setup: ' + JSON.stringify(setup));
-  		var query = setup.query;
-  		var view  = setup.view;
-	  	var layer  = setup.layer;
-	  	var attributes = setup.attributes;
+  	console.log("\n** Generate: " + JSON.stringify(options));
 
+  	View.setup(view, options)
+  	.then (function (setup) {  		
+  		var view  = setup.view;
+  		var query = setup.query;
+	  	var layer  = setup.layer;
+
+	  	console.log("Generating query: " + query);
   		if (query) {
 			Record.query_promise(query)
 			.then ( function (result) {
-				deferred.resolve({data: result, setup: setup});
+				deferred.resolve({data: result, setup: setup, query: query});
 			})
 			.catch ( function (err) {
 				console.log('error with query ?' + err);
@@ -373,7 +471,7 @@ dynamic_join_fields : function (ViewFields, fields, conditions) {
 		}
 		else {
 			console.log('no query in report ?')
-			deferred.resolve({data: [], query: '', layer: layer, attributes: attributes});
+			deferred.resolve({data: [], query: '', layer: layer});
 		}
   	})
   	.catch ( function (err) {
@@ -394,173 +492,192 @@ dynamic_join_fields : function (ViewFields, fields, conditions) {
 
   	var deferred = q.defer();
 
-  		console.log('save data to excel');
-  		console.log(JSON.stringify(data));
+	console.log('save data to excel');
+	// console.log(JSON.stringify(data));
 
-		var wb = new xl.Workbook();
+	var wb = new xl.Workbook();
 
-		// Create a reusable style 
-		var data_style = wb.createStyle({
-		    font: {
-		        color: '333333',
-		        size: 14
-		    }
-		});
+	// Create a reusable style 
+	var data_style = wb.createStyle({
+	    font: {
+	        color: '333333',
+	        size: 14
+	    }
+	});
 
-		var header_style = wb.createStyle({
-		    font: {
-		        color: '3333ff',
-		        size: 12
-		    }
-		});
+	var header_style = wb.createStyle({
+	    font: {
+	        color: '3333ff',
+	        size: 12
+	    }
+	});
 
-		var sheetname = 'Results';
-		var sheets = [];
-		var layered_data;
+	var sheetname = 'Results';
+	var sheets = [];
+	var layered_data;
 
-		if (layer) {
-			layered_data = {};
-			
-			layers = _.uniq(_.pluck(data, layer));
-			layers.sort(function(a, b){ return a-b });
+	if (layer) {
+		layered_data = {};
+		
+		layers = _.uniq(_.pluck(data, layer));
+		layers.sort(function(a, b){ return a-b });
 
-			sheetname = layers[0];
+		sheetname = layers[0];
 
-			for (var i=0; i<layers.length; i++) {
-				var layername = layers[i];
-				var title = layer + ': ' + layername;
-				sheets.push( wb.addWorksheet(title) );
-				layered_data[layername] = [];
+		for (var i=0; i<layers.length; i++) {
+			var layername = layers[i];
+			var title = layer + ': ' + layername;
+			sheets.push( wb.addWorksheet(title) );
+			layered_data[layername] = [];
+		}
+
+		for (var x=0; x<data.length; x++) {
+			var layername = data[x][layer];
+			var rowdata = Object.assign({}, data[x]);
+
+			layered_data[layername].push(rowdata);
+		}
+	}
+	else {
+		sheets.push(wb.addWorksheet(sheetname));
+	}
+
+	for (var s=0; s<layers.length; s++) {
+		var ldata;
+		var layername = layers[s];
+		if (layered_data) {
+			ldata = layered_data[layername];
+			console.log(layername + ': ' + ldata.length + ' records');
+		}
+		else {
+			ldata = data;
+		}
+
+
+		if (ldata && ldata.length) {
+			var keys = Object.keys(ldata[0]);
+
+			// add headers
+			for (var col=1; col<=keys.length; col++) {
+				sheets[s].cell(1,col).string(keys[col-1]).style(header_style);
 			}
 
-			for (var x=0; x<data.length; x++) {
-				var layername = data[x][layer];
-				var rowdata = Object.assign({}, data[x]);
-
-				layered_data[layername].push(rowdata);
+			// add data
+			for (var row=1; row<=ldata.length; row++) {
+				for (var col=1; col<=keys.length; col++) {
+					var string = String(ldata[row-1][keys[col-1]]);
+					sheets[s].cell(row+1, col).string(string).style(data_style);
+				}
 			}
 		}
 		else {
-			sheets.push(wb.addWorksheet(sheetname));
+			console.log('no data for sheet ' + s);
+		}
+	}		
+
+	if (sheets.length) {
+		console.log('added data...'); 
+		var user = 'thisuser';
+
+		if (!filename) { 
+			var timestamp = String(new Date());			
+			filename = 'Dump.' + user + '.' + timestamp + '.xlsx'
+		}
+		else {
+			if (!filename.match(/\.xlsx?/)) {
+				filename = filename + '.xlsx';
+			}
 		}
 
-		for (var s=0; s<layers.length; s++) {
-			var ldata;
-			var layername = layers[s];
-			if (layered_data) {
-				ldata = layered_data[layername];
-				console.log(layername + ': ' + ldata.length + ' records');
+		var file = path + filename;
+
+		wb.write(file, function (err, stats) { 
+			// Writes the file ExcelFile.xlsx to the process.cwd(); 
+		
+		    if (err) {
+		        console.error(err);
+		        deferred.reject(err);
+		    }
+		    else { 
+		    	console.log('wrote to file:' + file);
+		    	console.log(stats); // Prints out an instance of a node.js fs.Stats object 
+				deferred.resolve({file: filename, stats: stats});
 			}
-			else {
-				ldata = data;
-			}
+		});
+	}
+	else {
+		console.log("empty dataset");
+		deferred.reject('empty dataset');
+	}
 
+	return deferred.promise;
+	// wb.write('ExcelFile.xlsx', function (err, stats) {
+	//     if (err) {
+	//         console.error(err);
+	//     } 
+	//     console.log(stats); // Prints out an instance of a node.js fs.Stats object 
+	// });
 
-			if (ldata && ldata.length) {
-				var keys = Object.keys(ldata[0]);
+	// wb.write('ExcelFile.xlsx', data);
+  },
 
-				// add headers
-				for (var col=1; col<=keys.length; col++) {
-					sheets[s].cell(1,col).string(keys[col-1]).style(header_style);
-				}
+	parse_search_conditions: function (view, search_input) {
 
-				// add data
-				for (var row=1; row<=ldata.length; row++) {
-					for (var col=1; col<=keys.length; col++) {
-						var string = String(ldata[row-1][keys[col-1]]);
-						sheets[s].cell(row+1, col).string(string).style(data_style);
-					}
-				}
+		sails.log.debug("** Parse conditions: " + JSON.stringify(search_input));
+		console.log(JSON.stringify(view.prompts));
 
-				console.log('added data...'); 
-				var user = 'thisuser';
-
-				if (!filename) { 
-					var timestamp = String(new Date());			
-					filename = 'Dump.' + user + '.' + timestamp + '.xlsx'
+		if (search_input && search_input.constructor === Object) {
+			var c = [];
+			var keys = Object.keys(search_input);
+			for (var i=0; i<keys.length; i++) {
+				var fld = keys[i];
+				var search = search_input[fld];
+				
+				if (view && view.prompts && view.prompts[fld]) {
+					console.log('convert ' + fld + ' to ' + view.prompts[fld]);
+					fld = view.prompts[fld];
 				}
 				else {
-					if (!filename.match(/\.xlsx?/)) {
-						filename = filename + '.xlsx';
-					}
+					console.log(fld + ' not in prompt list');
 				}
 
-				var file = path + filename;
-
-				wb.write(file, function (err, stats) { 
-					// Writes the file ExcelFile.xlsx to the process.cwd(); 
-				
-				    if (err) {
-				        console.error(err);
-				        deferred.reject(err);
-				    }
-				    else { 
-				    	console.log(stats); // Prints out an instance of a node.js fs.Stats object 
-						deferred.resolve({file: filename, stats: stats});
-					}
-				});
-			}
-			else {
-				console.log('no data for sheet ' + s);
-				deferred.reject('empty dataset');
-			}
-		}
-	
-		return deferred.promise;
-		// wb.write('ExcelFile.xlsx', function (err, stats) {
-		//     if (err) {
-		//         console.error(err);
-		//     } 
-		//     console.log(stats); // Prints out an instance of a node.js fs.Stats object 
-		// });
-
-		// wb.write('ExcelFile.xlsx', data);
-	},
-
-	parse_conditions: function (conditions) {
-
-		sails.log.debug(JSON.stringify(conditions));
-		if (conditions && conditions.constructor === Object) {
-			var c = [];
-			var keys = Object.keys(conditions);
-			for (var i=0; i<keys.length; i++) {
-				var search = conditions[keys[i]];
-
-				if (search.length) {
+				if (search && search.length) {
 					var operator_test = /^[<>=]/;
 					var range_test = /^(\d+)\s*\-\s*(\d+)$/;
 					var wild_test = /\*/;
 					var list_test = /\n/;
 
 					if (search.match(operator_test)) {
-						c.push(keys[i] + ' ' + search);  // eg feild "< 10"
+						c.push(fld + ' ' + search);  // eg feild "< 10"
 					}
 					else if (search.match(range_test)) {
 						var cond = search.replace(range_test, ' BETWEEN $1 AND $2');
-						c.push(keys[i] + cond); // eg field "1 - 3"
+						c.push(fld + cond); // eg field "1 - 3"
 					}
 					else if (search.match(wild_test)) { 
 						var ss = search.replace('*','%');
-						c.push(keys[i] + ' LIKE "' + ss + '"');
+						c.push(fld + ' LIKE "' + ss + '"');
 					}
 					else if (search.match(list_test)) {
 						var list = search.split(list_test);
 						var csv = list.join('","');
-						c.push(keys[i] + ' IN ("' + csv + '")');
+						c.push(fld + ' IN ("' + csv + '")');
 					}
 					else {
-						c.push(keys[i] + ' = "' + search + '"');
+						c.push(fld + ' = "' + search + '"');
 					}
 				}
 			}
-			console.log("C: " + c.join(' AND '));
+			console.log("** Parsed C: " + c.join(' AND '));
 			return c;
 		}
-		else if (conditions && conditions.constructor === String) {
-			return [conditions];
+		else if (search_input && search_input.constructor === String) {
+			console.log('string search ?')
+			return [search_input];
 		}
 		else {
-			return conditions;
+			console.log('array of search criteria ?');
+			return search_input;
 		}
 	},
 

@@ -28,14 +28,23 @@ module.exports = {
 		var body = req.body || {};
 		var view_id = body.view_id  || body.id || req.param('id');
 
-		View.setup(view_id)
-		.then ( function (setup) {
-			console.log("** SETUP ** " + JSON.stringify(setup));
-			return res.render('lims/Edit_Report', setup);
+		View.initialize(view_id)
+		.then (function (view) {
+
+			View.setup(view)
+			.then ( function (setup) {
+				console.log("** SETUP ** " + JSON.stringify(setup));
+				return res.render('lims/Edit_Report', setup);
+			})
+			.catch ( function (err) {
+				return res.render('lims/Edit_Report');
+			});
 		})
 		.catch ( function (err) {
-			return res.render('lims/Edit_Report');
-		});
+			console.log("Error initiating view editor");
+			console.log(err);
+			return res.render('lims/Edit_Report', { error: err })
+		})
 	},
 
 	build: function (req, res) {
@@ -58,36 +67,49 @@ module.exports = {
 			condition: condition
 		};
 
-		View.setup(view_id, options)
-		.then ( function (setup) {
-			console.log("options provided: " + JSON.stringify(options));
-			console.log("Baseline Query: " + setup.query);
-			console.log("setup Returned: " + JSON.stringify(setup));
+		console.log('initialize view#' + view_id);
+		View.initialize(view_id)
+		.then (function (view) {
+			View.setup(view, options)
+			.then ( function (setup) {
+				// console.log("options provided: " + JSON.stringify(options));
+				// console.log("Baseline Query: " + setup.query);
+				// console.log("*** Setup Returned: " + JSON.stringify(setup));
 
-			setup.message = 'view initiated';
-			return res.render('lims/View', setup);
+				setup.message = 'view loaded';
+
+				return res.render('lims/View', setup);
+			})
+			.catch ( function (err) {
+				console.log("error setting up intitial view");
+				console.log(err);
+
+				options.error = 'error setting up view';
+				console.log('** Pass: ' + JSON.stringify(options));
+				return res.render('lims/View', {view: view});			
+			});
 		})
 		.catch ( function (err) {
-			console.log("error setting up intitial view");
-			options.error = 'error setting up view';
+			console.log("Error building view report");
+			console.log(err);
+			return res.render('lims/View', { view_id: view_id, error: err })
+		})
 
-			console.log('** Pass: ' + JSON.stringify(options));
-			return res.render('lims/View', options);			
-		});
 	},
 
 	generate: function (req, res) {
-
-		console.log('build view...');
 		var body = req.body || {};
 
 		var view_id = body.view_id  || body.id || req.param('id');
 
-		var fields = body.fields || req.param('fields') || body.pick || req.param('pick');
+		var select = body.select || body.pick || req.param('select');
 		var layer  = body.layer || req.param('layer');
 		var search = body.search || req.param('search');
 		var group = body.group || req.param('group');
 		var condition = body.condition || req.param('condition');
+		var render = body.render;
+
+		var V = body.view;   // make post only for generate ? ...
 		var limit = body.limit;
 
 		var page = body.page || req.param('page') || 1;
@@ -96,78 +118,96 @@ module.exports = {
 		var save = body.save || req.param('save') || 1;
 		var filename = body.filename;
 
-		fields = View.cast2array(fields);
+		console.log('build view ' + view_id);
+
+		select = View.cast2array(select);
 		group = View.cast2array(group);
 
-		var conditions = View.parse_conditions(search);
-
 		var options = {
-			fields: fields,
+			select: select,
 			group: group,
 			layer: layer,
-			conditions: conditions,
 			condition: condition,
-			limit: limit
+			limit: limit,
+			search: search
 		};
 
-		sails.log.info('options: ' + JSON.stringify(options));
+		sails.log.info('view ' + view_id + ' options: ' + JSON.stringify(options));
 
-		View.generate(view_id, options)
-		.then (function (result) {
-			console.log('generated view');
+		View.initialize(view_id)
+		.then (function (view) {
+			console.log('now generate with options');
+			console.log(JSON.stringify(options));
+			View.generate(view, options)
+			.then (function (result) {
+				console.log('generated view');
 
-			var setup = result.setup;
-			if (save && result.data) {
-				console.log('save as excel');
+				var setup = result.setup || {};
+				var extra_conditions = setup.extra_conditions;
+				if (save && result.data) {
+					console.log('save as excel');
 
-				if (result.data.length) {
-					View.save2excel(result.data, {path: excel_path, filename: filename, layer: layer})
-					.then ( function (excel) {
-						console.log("saved as excel");
-						return res.json({data: result.data, query: setup.query, message: 'Excel file saved', excel: excel });
+					if (result.data.length) {
+						View.save2excel(result.data, {path: excel_path, filename: filename, layer: layer})
+						.then ( function (excel) {
+							console.log("saved as excel");
 
-						// paginate results 
-						// return res.render('lims/View', {
-						// 	excel: excel,
-						// 	view : result.view,
-						// 	data : result.data,
-						// 	query: result.query,
-						// 	id: view_id,
-						// 	message: 'Excel file saved:  ',
-						// 	records: result.data.length,
-						// 	page: page
-						// });
-					})
-					.catch ( function (err) {
-						console.log("Error saving as excel...");
-						return res.json({data: result.data, uery: setup.query, error: 'error saving to excel: ' + err.message});
-					// return res.render('lims/View', { 
-						// 	view : result.view,
-						// 	data : result.data,
-						// 	query: result.query,
-						// 	id: view_id,
-						// 	message: 'error saving'
-						// });
-					});
+							if (render) {
+								return res.render('customize/injectedData', 
+									{ fields: result.setup.pick, data: result.data, title: 'View Results', element:'injectedViewData'}
+								);
+							}
+							else {
+								return res.json({data: result.data, query: setup.query, message: 'Excel file saved', excel: excel, extra_conditions: extra_conditions});
+							}
+							// paginate results 
+							// return res.render('lims/View', {
+							// 	excel: excel,
+							// 	view : result.view,
+							// 	data : result.data,
+							// 	query: result.query,
+							// 	id: view_id,
+							// 	message: 'Excel file saved:  ',
+							// 	records: result.data.length,
+							// 	page: page
+							// });
+						})
+						.catch ( function (err) {
+							console.log("Error saving as excel...");
+							return res.json({data: result.data, query: setup.query, error: 'error saving to excel: ' + err.message, extra_conditions: extra_conditions});
+						// return res.render('lims/View', { 
+							// 	view : result.view,
+							// 	data : result.data,
+							// 	query: result.query,
+							// 	id: view_id,
+							// 	message: 'error saving'
+							// });
+						});
+					}
+					else {
+						console.log('no data ... ');
+						options.message = 'no data to save';
+						return res.json({query: setup.query, warning: 'no data to save', extra_conditions: extra_conditions});					
+					}
+				} else {
+					console.log('nothing saved ... ');
+					options.message = 'nothing saved';
+					return res.json({query: setup.query, warning: 'nothing to save', extra_conditions: extra_conditions});
+					// return res.render('lims/View', options);								
 				}
-				else {
-					console.log('no data ... ');
-					options.message = 'no data to save';
-					return res.json({query: setup.query, warning: 'no data to save'});					
-				}
-			} else {
-				console.log('nothing saved ... ');
-				options.message = 'nothing saved';
-				return res.json({query: setup.query, warning: 'nothing to save'});
-				// return res.render('lims/View', options);								
-			}
+			})
+			.catch (function (err) {
+				console.log("Error generating view");
+				console.log(JSON.stringify(err));
+				options.message = 'error generating view';
+				return res.json({error: 'error generating view: ' + err.message, extra_conditions: extra_conditions});
+				// return res.render('lims/View', options);
+			});
 		})
-		.catch (function (err) {
-			console.log("Error generating view");
-			console.log(JSON.stringify(err));
-			options.message = 'error generating view';
-			return res.json({error: 'error generating view: ' + err.message});
-			// return res.render('lims/View', options);
+		.catch ( function (err) {
+			console.log("Error initializing view report");
+			console.log(err);
+			return res.json({ error: err, extra_conditions: extra_conditions})
 		});
 	},
 
