@@ -260,6 +260,20 @@ app.controller('SharedController',
             //return "\n<div class='container' style='padding:20px'>\n" + view + "</div>\n";
         }
         
+        $scope.injectRenderedData = function(element, rendered) {
+            // var opt  = {};
+            // if (options) { opt = JSON.parse(options) }
+
+            if (!options) { options = {} }
+
+            if (element && rendered) {
+                console.log("Inject rendered data into element: " + element);
+                var el = document.getElementById(element);
+                el.innerHTML = rendered;
+            }
+            console.log('done');   
+        }
+
         $scope.injectData = function (url, element, ids, attribute, options) {
             console.log("INJECT HTML ");
             
@@ -269,7 +283,7 @@ app.controller('SharedController',
 
             if (!attribute) { attribute = 'ids'}
             if (! element) { element = 'injectedData' }
-
+           
             var method = 'POST';  // default 
             if (url.match(/\?/)) { 
                 method = 'GET';
@@ -337,3 +351,44 @@ app.controller('SharedController',
         }
 
 }]);
+
+app.directive("myHiddenText", function($rootScope) {
+    return {
+          restrict: 'AEC',
+          replace: 'true',
+          
+          scope: {
+            label: '=',
+            content: '@',
+            colour: '='
+          },
+          template: "\
+            <div class=\"container\">\
+                <div ng-show=\"!isVisible\">\
+                    <button type=\"button\" onClick='return false;'  data-toggle=\"tooltip\" title=\"open\" ng-click=\"openMe()\">{{label}}<\/button>\
+                <\/div>\
+                <div ng-show=\"isVisible\" style=\"padding: 10px; background-color:lightyellow; border 1px solid black\">\
+                    <button onClick='return false;' data-toggle=\"tooltip\" title=\"close\" ng-click=\"closeMe()\">x<\/button>\
+                    <b>{{content}}<\/b>\
+                <\/div>\
+            <\/div>",
+
+            link: function(scope, element, attrs) {
+                scope.isVisible = false;
+                scope.label = attrs.label;
+                scope.content = attrs.content;
+                console.log('init my hidden text');
+
+                scope.closeMe = function () {
+                    console.log("close it");
+                    scope.isVisible = false;
+                }
+
+                scope.openMe = function () {
+                    console.log("open up");
+                    scope.isVisible = true;
+                }
+            }
+
+      };
+});
