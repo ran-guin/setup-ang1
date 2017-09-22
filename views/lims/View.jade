@@ -1,10 +1,13 @@
 extends ./../customize/privateLayout
 block content
 
-  if !fields
-    - fields = pick || [];
-  if !view
+  if view 
+    - view_id = view_id || view.id
+    - tables = view.tables
+    - fields = view.fields || []
+  else
     - view = data
+    - fields = fields || []
 
   - var config = {};
   - config.view = view;
@@ -15,10 +18,6 @@ block content
   - config.file = file;
   - config.excel = excel;
 
-  if view 
-    - view_id = view_id || view.id
-    - tables = view.tables
-    - fields = fields || view.fields
 
   - var init = "initialize(" + JSON.stringify(config) + ")";
 
@@ -28,8 +27,8 @@ block content
         button.btn.btn-primary(type='button') Edit View
 
     span &nbsp; &nbsp;
-  
-    a(href="/views" ) 
+
+    a(href="/reports" ) 
         button.btn.btn-danger(type='button') Return to List of Views
     hr 
 
@@ -61,10 +60,27 @@ block content
                         p #{desc}
 
                     hr
-                    
-                    div(ng-show='data')
-                        b Query: 
-                        i.text-danger {{query}}
+
+                    div.container(ng-show='data')
+                        div(ng-show="query === '?'")
+                            i.text-danger ? ... (possible error with query generation - see admin if this persists)
+                        div(ng-show="query !== '?'")
+                            div(ng-show="!FQisVisible")
+                                button.btn.btn-success.btn-xs(type='button' onClick='return false;' data-toggle='tooltip' title='open' ng-click='FQisVisible=1')
+                                    span Full Query &nbsp;
+                                        i.fa.fa-expand
+                            div(ng-show="FQisVisible")
+                                button.btn.btn-danger.btn-xs(type='button' onClick='return false;' data-toggle='tooltip' title='close' ng-click='FQisVisible=0')
+                                    i.fa.fa-close
+                                p 
+                                    i.text-danger {{query}}
+                                p &nbsp;
+
+                    div(ng-show="extra_conditions && extra_conditions.length")
+                        b Extra Conditions:
+                        ul
+                          li(ng-repeat="c in extra_conditions") 
+                            i.text-danger {{c}}
 
                     div.navbar-right(ng-show="!showOptions")
                         button.btn.btn-sm.btn-warning(ng-click="showOptions=true;" onclick='return false;') Revise Search Criteria
@@ -80,8 +96,8 @@ block content
                                     td  
                                         b Show
                                         span &nbsp; &nbsp;
-                                        i.fa.fa-expand(ng-show="!showAll" ng-click="showAll=1")
-                                        i.fa.fa-compress(ng-show="showAll" ng-click="showAll=0")
+                                        i.fa.fa-expand(ng-show="!showAll" ng-click="showAll=1" data-toggle='tooltip' title='Add other optional fields')
+                                        i.fa.fa-compress(ng-show="showAll" ng-click="showAll=0" data-toggle='tooltip' title='Hide de-selected fields')
                                     td  
                                         b Field
                                     td  
@@ -91,7 +107,7 @@ block content
                                     td
                                         b Separate Tab/Layer 
 
-                                each field in fields.split(/,\s*/)
+                                each field in fields
                                     - var fp = field.match(/(.*) AS (.*)/i)
                                     - var prompt = field
                                     - var fld = field
@@ -99,23 +115,29 @@ block content
                                         - fld = fp[1]
                                         - prompt = fp[2]
 
-                                    tr(ng-show="form.show['#{prompt}'] || showAll")
-                                        td
-                                            input(type='checkbox' ng-model="form.show['#{prompt}']" ng-click="updateList('show','#{prompt}')" name='fields')
-                                        td 
-                                            span(data-toggle='tooltip' title='#{fld}') #{prompt}
+                                    if 0
+                                        tr
+                                            td #{field}
+                                            td #{prompt}
+                                    else
 
-                                        if (attributes && attributes.indexOf(fld) >= 0)
-                                            td  
-                                                //- Attributes are not auto-included, so add to field list if condition supplied here... 
-                                                textarea.form-control(rows=1 ng-model="form.search['#{fld}.Attribute_Value']" ng-change="addAtt('#{prompt}')" name="search#{fld}")
-                                        else 
+                                        tr(ng-show="form.show['#{prompt}'] || showAll")
+                                            td
+                                                input(type='checkbox' ng-model="form.show['#{prompt}']" ng-click="updateList('show','#{prompt}')" name='fields')
                                             td 
-                                                textarea.form-control(rows=1 ng-model="form.search['#{fld}']" name="search#{fld}")
-                                        //- td
-                                        //-     input(type='checkbox' ng-model="form.groupBy['#{fld}']" ng-click="updateList('groupBy','#{fld}')" name='group')
-                                        td
-                                            input(type='radio' name='layer' ng-model="form.layer" value="#{prompt}" ng-disabled="!form.show['#{prompt}']")
+                                                span(data-toggle='tooltip' title='#{fld}') #{prompt}
+
+                                            if (attributes && attributes.indexOf(prompt) >= 0)
+                                                td  
+                                                    //- Attributes are not auto-included, so add to field list if condition supplied here... 
+                                                    textarea.form-control(rows=1 ng-model="form.search['#{prompt}']" ng-change="addAtt('#{prompt}')" )
+                                            else 
+                                                td 
+                                                    textarea.form-control(rows=1 ng-model="form.search['#{prompt}']")
+                                            //- td
+                                            //-     input(type='checkbox' ng-model="form.groupBy['#{fld}']" ng-click="updateList('groupBy','#{fld}')" name='group')
+                                            td
+                                                input(type='radio' name='layer' ng-model="form.layer" value="#{prompt}" ng-disabled="!form.show['#{prompt}']")
 
                         input.form-control(ng-model='form.condition' placeholder='-- optional additional condition --')
                         p &nbsp;  
@@ -137,6 +159,11 @@ block content
                             input(type='text' style="flex:1" placeholder=' i-- optional filename -- (defaults to user + timestamp) ' ng-model='filename')    
 
                     hr
+                    span.results-section(ng-show='data && injected')
+                        h2 Injected Data
+                        div#injectedViewResults
+
+                    hr
                     span.results-section(ng-show='data')
                         h3 Results:
                         span.results-section(ng-show='!showData')
@@ -153,11 +180,22 @@ block content
  
                     span(ng-show="data && data.length && showData")
                         p &nbsp;
-                        table.table(style='background-color: lightyellow;')
-                            tr
-                                td(ng-repeat="(i,f) in data[0]" style='background-color:grey; color: white') 
-                                    b {{i}}                               
-                            tr(ng-repeat="record in data")
-                                td(ng-repeat="(j,fj) in record") {{fj}}             
+
+
+                        span(ng-if="form.layer") {{form.layer}} : 
+                        span(ng-repeat="lyr in layers")
+                            a(href='#' onClick='return false;' ng-click="setPage(lyr)")
+                                button.btn.btn-xs.btn-default(type='button')
+                                    span &nbsp; {{lyr}} &nbsp;
+
+                        div(ng-show="page===lyr" ng-repeat="(lyr,ldata) in layer_data track by $index")
+                            h3 {{form.layer}} = {{page}} 
+                                i.text-info [{{ldata.length}} records]
+                            table.table(style='background-color: lightyellow;')
+                                tr
+                                    th(ng-repeat="(fld,i) in ldata[0]" style='background-color:grey; color: white') 
+                                        b {{fld}}                        
+                                tr(ng-repeat="record in ldata track by $index")
+                                    td(ng-repeat="(j,fj) in record") {{fj}}       
 
       
