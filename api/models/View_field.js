@@ -12,12 +12,17 @@ module.exports = {
   	field: { type: 'string'},
   	type: { 
   		type: 'string',
-  		enum: ['field','attribute']
+  		enum: ['field','attribute','sql']
   	},
-  	order: { type: 'integer'},
+  	display_order: { type: 'integer'},
   	mandatory: { type: 'boolean'},
   	prompt: { type: 'string'},
-  	pre_picked: { type: 'boolean'}
+  	pre_picked: { type: 'boolean'},
+    default_search: { 
+      type: 'string',
+      defaultsTo: '',
+      notNull: true
+    }
   }
 };
 
