@@ -33,7 +33,7 @@ module.exports = {
 
 			View.setup(view)
 			.then ( function (setup) {
-				console.log("** SETUP ** " + JSON.stringify(setup));
+				console.log("** SETUP ** " + JSON.stringify(setup.view.fields));
 				return res.render('lims/Edit_Report', setup);
 			})
 			.catch ( function (err) {
@@ -216,7 +216,7 @@ module.exports = {
 
 		View.list()
 		.then ( function (result) {
-			console.log("Views: " + JSON.stringify(result));
+			console.log("*** Views: *** " + JSON.stringify(result));
 			return res.render('lims/Views', { 
 				views : result, 
 				title: 'Views',
