@@ -73,7 +73,6 @@ module.exports = {
 
 	 	Record.query_promise(query)
 		.then ( function (ViewFields) {
-	  		console.log("QF: " + JSON.stringify(ViewFields));
 
 	  		var all_fields = [];
 	  		var prepicked = [];
@@ -119,12 +118,12 @@ module.exports = {
   			view.attributes = attributes;
 
 			console.log("*************************************************************");
-			console.log("all fields: " + JSON.stringify(view.fields));
-			console.log('picked fields: ' + JSON.stringify(view.prepicked));
-			console.log('default layer: ' + view.layer);
-			console.log("view fields: " + JSON.stringify(view.field_data));
+			console.log("* all fields: " + JSON.stringify(view.fields));
+			console.log('* picked fields: ' + JSON.stringify(view.prepicked));
+			console.log('* default layer: ' + view.layer);
+			console.log("* view fields: " + JSON.stringify(view.field_data));
 
-			console.log('prompts: ' + JSON.stringify(view.prompts));
+			console.log('* prompts: ' + JSON.stringify(view.prompts));
 			console.log("*************************************************************");
 
   			deferred.resolve(view);
@@ -163,17 +162,17 @@ module.exports = {
   		}
   	}
 
-  	console.log("** C **" + JSON.stringify(conditions));
   	if (condition) { conditions.push(condition) }
 
   	var all_conditions = conditions.slice(0);  // shallow clone - includes standard condition + left join conditions
 
 	View.dynamic_join_fields(view.field_data, select, conditions)
 	.then (function (result) {
-		console.log("dynamically added fields...");
-		console.log("*** DYNAMIC FIELDS ***");
-		console.log("c0: " + JSON.stringify(conditions));
-		console.log("lj0: " + JSON.stringify(lj));
+		console.log("*** Dynamically Adjusted for fields ***");
+		console.log("* tables: " + JSON.stringify(result.tables))
+		console.log("* fields : " + JSON.stringify(result.pick));
+		console.log("* conditions: " + JSON.stringify(result.conditions));
+		console.log("* lj: " + JSON.stringify(result.lj));
 
 		console.log(JSON.stringify(result));
 
@@ -186,19 +185,13 @@ module.exports = {
 			conditions = result.conditions;
 		}
 
-		console.log('***** initial conditions: ******');
-		console.log('tables: ' + JSON.stringify(tables));
-		console.log("conditions: " + JSON.stringify(conditions));
-		console.log("lj: " + JSON.stringify(lj));
-
 		View.dynamic_join_conditions(view.field_data, tables, conditions, lj)
 		.then ( function (Cresult) {
 			var c = Cresult.conditions || [];
 			var lj = Cresult.lj || [];
 			var tables = Cresult.tables || [];
 
-			console.log('***** Final Conditions *****');
-	  		console.log("** Pick: " + JSON.stringify(pickF));
+			console.log("*** FINAL Conditions ***");
 	  		console.log("** Tables: " + JSON.stringify(tables));
 	  		console.log("** LJ: " + JSON.stringify(lj));
 	  		console.log("** condition: " + JSON.stringify(c));
@@ -219,7 +212,9 @@ module.exports = {
 
 	  		if (conditions && conditions.length) { select += " WHERE " + conditions.join(' AND ') }
 
-	  		console.log("** QUERY: " + select);
+	  		console.log("***** QUERY *****");
+	  		console.log(select);
+	  		console.log("*****************")
 
 	  		// if (layer && layer.length) { select += " GROUP BY " + layer.join(',') }
 	  		// ensure layer field is in list of outputs... 
@@ -309,17 +304,17 @@ dynamic_join_fields : function (ViewFields, select, conditions) {
 						if (tables.indexOf(Tcheck) === -1) {
 			  				var ljf =  Tcheck + ' ON ' + ViewField.join_condition;
 			  				if (lj.indexOf(ljf) === -1) {
-			  					lj.push( Tcheck + ' ON ' + ViewField.join_condition);
+			  					lj.push(ljf);
 				  				console.log("** LJ " + ljf + " **");
 			  				}
 			  			}
 					}
 					else {
-						if (tables.indexOf(Tcheck)) {
+						if (tables.indexOf(Tcheck) === -1) {
 							tables.push(Tcheck);
 							if (ViewField.join_condition !== '1') { 
 								conditions.push(ViewField.join_condition)
-								console.log("** J " + Tcheck + " **");
+								console.log("** Join " + Tcheck + " **");
 							}
 						}
 					}
@@ -339,8 +334,6 @@ dynamic_join_fields : function (ViewFields, select, conditions) {
 		}
 	}
 
-	console.log("PICK : " + JSON.stringify(pickF));
-
 	deferred.resolve({pick: pickF, tables: tables, lj: lj, conditions: conditions});
 	return deferred.promise;
 
@@ -348,14 +341,12 @@ dynamic_join_fields : function (ViewFields, select, conditions) {
 
   dynamic_join_conditions : function (ViewFields, tables, conditions, lj, add_conditions, add_lj) {
   	var deferred = q.defer();
-  	console.log("dynamically adding conditions...");
 
   	var extra_conditions = [];
   	var extra_lj = [];
 
   	if (!add_conditions && !add_lj) {
   		// initial call...
-  		console.log("** Use initial conditions...");
   		if (conditions && conditions.length) { 
   			add_conditions = conditions.slice(0);
   		}
@@ -393,21 +384,19 @@ dynamic_join_fields : function (ViewFields, select, conditions) {
 			var test_match = new RegExp( '\\b' + ViewFields[j].title + '\\.');
 
 			if ( ViewFields[j].type != 'attribute' && condition.match(test_match)) {
-				console.log('*** Matched ' + ViewFields[j].title + ' to ' + condition);
+				console.log('*** Confirm inclusion of ' + ViewFields[j].title + ' for ' + condition);
 				if (ViewFields[j].left_join) {
-					if (lj.indexOf(Tcheck + ' ON ' + ViewFields[j].join_condition) === -1) {	
-	  					console.log("** LJ: " + Tcheck + ' ON ' + ViewFields[j].join_condition);
+					var add_lj = Tcheck + ' ON ' + ViewFields[j].join_condition
+					if (lj.indexOf(add_lj) === -1) {	
+	  					console.log("** LJ: " + add_lj);
 
-	  					lj.push( Tcheck + ' ON ' + ViewFields[j].join_condition)
-	  					extra_lj.push( Tcheck + ' ON ' + ViewFields[j].join_condition)
+	  					lj.push(add_lj);
+	  					extra_lj.push(add_lj)
 	  				}
-	  		// 		else {
-					// 	console.log('already included...');
-					// }
 	  			}
 	  			else {
 	  				if (tables.indexOf(Tcheck) === -1) {
-	  					console.log("** J: " + Tcheck);
+	  					console.log("** Join: " + Tcheck);
 	  					console.log(Tcheck);
 
 						tables.push(Tcheck)
@@ -417,18 +406,15 @@ dynamic_join_fields : function (ViewFields, select, conditions) {
 						}
 						continue;
 					}
-	  		// 		else {
-					// 	console.log('already included...');
-					// }
 				}
 			}
 		}
 	}
 	
 	if (extra_conditions.length || extra_lj.length) {
-		console.log('** INTERMEDIATE ADDITIONS: ');
-		console.log(JSON.stringify(conditions));
-		console.log(JSON.stringify(lj));
+		console.log('** Intermediate Additions **: ');
+		console.log(JSON.stringify(extra_conditions));
+		console.log(JSON.stringify(extra_lj));
 
 		View.dynamic_join_conditions(ViewFields, tables, conditions, lj, extra_conditions, extra_lj)
 		.then ( function (result) {
@@ -436,10 +422,6 @@ dynamic_join_fields : function (ViewFields, select, conditions) {
 		})
 	}
 	else {
-		console.log('** DYNAMIC ADDITIONS: ');
-		console.log(JSON.stringify(conditions));
-		console.log(JSON.stringify(lj));
-
 		deferred.resolve({ conditions: conditions, lj: lj, tables: tables });
 	}
 	
@@ -624,7 +606,6 @@ dynamic_join_fields : function (ViewFields, select, conditions) {
 	parse_search_conditions: function (view, search_input) {
 
 		sails.log.debug("** Parse conditions: " + JSON.stringify(search_input));
-		console.log(JSON.stringify(view.prompts));
 
 		if (search_input && search_input.constructor === Object) {
 			var c = [];
@@ -668,7 +649,7 @@ dynamic_join_fields : function (ViewFields, select, conditions) {
 					}
 				}
 			}
-			console.log("** Parsed C: " + c.join(' AND '));
+			console.log("** Parsed Search Condition: " + c.join(' AND '));
 			return c;
 		}
 		else if (search_input && search_input.constructor === String) {
