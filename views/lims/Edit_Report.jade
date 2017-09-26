@@ -14,7 +14,7 @@ block content
   - var init = "initialize(" + JSON.stringify(config) + ")";
  
   div.container
-    h2 Report Editor
+    h2 Report Details
 
     p &nbsp;
     a(href="/View/getReport/#{view_id}" ) 
@@ -22,7 +22,7 @@ block content
 
     span &nbsp; &nbsp;
   
-    a(href="/views" ) 
+    a(href="/reports" ) 
         button.btn.btn-danger(type='button') Return to List of Views
    
     hr 
@@ -86,9 +86,9 @@ block content
                                         input.form-control(type='textfield' ng-model='view.default_layer' placeholder='-- default layer --')
 
                             p &nbsp;
-                            button.btn.btn-primary(type='button' ng-click="Save" ng-disabled='!viewChanged') Save
-                            span &nbsp; &nbsp; &nbsp; &nbsp;
-                            button.btn.btn-danger(type='button' ng-click="Delete") Delete
+                            //- button.btn.btn-primary(type='button' ng-click="Save" ng-disabled='!viewChanged') Save
+                            //- span &nbsp; &nbsp; &nbsp; &nbsp;
+                            //- button.btn.btn-danger(type='button' ng-click="Delete") Delete
 
             div(ng-show="page==='table'")
                 h3 Manage Report Tables
@@ -124,11 +124,9 @@ block content
                                 td
                                     input.form-control(type='checkbox' ng-model="form.table[t].left_join")
                     p &nbsp;
-                    button.btn.btn-primary(type='button' ng-click="Save" ng-disabled='!tableChanged') Save
-                    span &nbsp; &nbsp; &nbsp; &nbsp;
-                    //- button.btn.btn-danger(type='button' ng-click="Delete") Delete
+                    //- button.btn.btn-primary(type='button' ng-click="Save" ng-disabled='!tableChanged') Save
                     //- span &nbsp; &nbsp; &nbsp; &nbsp;
-                    button.btn.btn-primary(type='button' ng-click="addTable(#{id})") Add Table
+                    //- button.btn.btn-primary(type='button' ng-click="addTable(#{id})") Add Table
             
             div(ng-show="page==='field'")
                 h3 Manage Report Fields
@@ -168,9 +166,7 @@ block content
                                 input(type='checkbox' ng-model="form.field[f].mandatory")
                     p &nbsp;
 
-                    button.btn.btn-primary(type='button' ng-click="Save" ng-disabled='!fieldChanged') Save
-                    span &nbsp; &nbsp; &nbsp; &nbsp;
-                    //- button.btn.btn-danger(type='button' ng-click="Delete") Delete
+                    //- button.btn.btn-primary(type='button' ng-click="Save" ng-disabled='!fieldChanged') Save
                     //- span &nbsp; &nbsp; &nbsp; &nbsp;
-                    button.btn.btn-primary(type='button' ng-click="newTable(#{id})") Add Field
+                    //- button.btn.btn-primary(type='button' ng-click="newTable(#{id})") Add Field
       
