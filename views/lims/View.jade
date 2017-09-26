@@ -20,6 +20,10 @@ block content
 
 
   - var init = "initialize(" + JSON.stringify(config) + ")";
+  - var field_help = "Reports enable users to define the labels used for each field.<p />These should be unique for each view/report.<p />To see exact database fields referenced, please examine view/report details";
+  - var search_help = "Options:<ul><li>Range - (eg '1-5' or '>3')</li><li>* = Wildcard - (eg 'BC000123*')</li><li>Paste List (one value per line)</li></ul>";
+  - var layer_help = "Layers enable separation of data into distinct Tabs on the interface.<p />Layers appear in excel files as distinct worksheets";
+  - var show_help = "Expand this list to select fields not on the output list by default.<p />To add another field to the report or enable it to be shown by default, please see administrator to edit this report";
 
   div.container
     p &nbsp;
@@ -98,14 +102,25 @@ block content
                                         span &nbsp; &nbsp;
                                         i.fa.fa-expand(ng-show="!showAll" ng-click="showAll=1" data-toggle='tooltip' title='Add other optional fields')
                                         i.fa.fa-compress(ng-show="showAll" ng-click="showAll=0" data-toggle='tooltip' title='Hide de-selected fields')
+                                        span &nbsp; &nbsp;
+                                        a(href='#' onclick='return false' data-toggle="popover" data-placement="right" data-trigger="focus" title="Search Conditions" data-content="#{show_help}" data-html="true")
+                                            i.fa.fa-question-circle
                                     td  
-                                        b Field
-                                    td  
-                                        b Search Condition
+                                        b Field &nbsp; &nbsp;
+                                        a(href='#' onclick='return false' data-toggle="popover" data-placement="bottom" data-trigger="focus" title="Search Conditions" data-content="#{field_help}" data-html="true")
+                                            i.fa.fa-question-circle
+
+                                    td
+                                        b Search Condition &nbsp; &nbsp;
+                                        a(href='#' onclick='return false' data-toggle="popover" data-placement="bottom" data-trigger="focus" title="Search Conditions" data-content="#{search_help}" data-html="true")
+                                            i.fa.fa-question-circle
+
                                     //- td  
                                     //-     b Group by
                                     td
-                                        b Separate Tab/Layer 
+                                        b Separate Tab/Layer &nbsp; &nbsp;
+                                        a(href='#' onclick='return false' data-toggle="popover" data-placement="left" data-trigger="focus" title="Report Layers" data-content="#{layer_help}" data-html="true")
+                                            i.fa.fa-question-circle
 
                                 each field in fields
                                     - var fp = field.match(/(.*) AS (.*)/i)
