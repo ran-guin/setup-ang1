@@ -21,7 +21,7 @@ block content
 
   - var init = "initialize(" + JSON.stringify(config) + ")";
   - var field_help = "Reports enable users to define the labels used for each field.<p />These should be unique for each view/report.<p />To see exact database fields referenced, please examine view/report details";
-  - var search_help = "Options:<ul><li>Range - (eg '1-5' or '>3')</li><li>* = Wildcard - (eg 'BC000123*')</li><li>Paste List (one value per line)</li></ul>";
+  - var search_help = "Options:<ul><li>Range - (eg '1-5' or '>3')</li><li>* = Wildcard - (eg 'BC000123*')</li><li>Paste List (one value per line)</li></ul><hr />Conditions added by user should show up clearly as Extra Conditions at the top of the page.<P />Results may be limited by default to avoid queries slowing the system by returning too many records.<p />If more records are required please adjust limit field at the bottom of the page";
   - var layer_help = "Layers enable separation of data into distinct Tabs on the interface.<p />Layers appear in excel files as distinct worksheets";
   - var show_help = "Expand this list to select fields not on the output list by default.<p />To add another field to the report or enable it to be shown by default, please see administrator to edit this report";
 
@@ -155,6 +155,11 @@ block content
                                                 input(type='radio' name='layer' ng-model="form.layer" value="#{prompt}" ng-disabled="!form.show['#{prompt}']")
 
                         input.form-control(ng-model='form.condition' placeholder='-- optional additional condition --')
+                        p &nbsp;
+                        b Limit results to &nbsp;
+                        input(size=8 ng-model='form.limit')
+                        b &nbsp; Records
+
                         p &nbsp;  
                         b Show Fields: &nbsp; &nbsp;
                         b.text-success {{show.join(', ')}}                        
