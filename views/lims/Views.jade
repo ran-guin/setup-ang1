@@ -73,7 +73,7 @@ block content
                         span show fields &nbsp;
                           i.fa.fa-expand
 
-                  div(ng-show="fieldsVisible")
+                  div(ng-show="fieldsVisible['#{id}']")
                       button.btn.btn-danger.btn-xs(type='button' onClick='return false;' data-toggle='tooltip' title='close' ng-click="fieldsVisible['#{id}']=0")
                         i.fa.fa-close
                       p &nbsp;
