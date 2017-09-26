@@ -26,7 +26,8 @@ app.controller('ViewController',
 			layer: '',
 			condition: '',
 			show: {},
-			search: {}
+			search: {},
+			limit: 1000
 		};
 
 		if ($scope.view) {
@@ -105,7 +106,7 @@ app.controller('ViewController',
 			search : $scope.form.search,
 			select : $scope.show,
 			filename : $scope.filename,
-			limit  : 1000,
+			limit  : $scope.form.limit,
 			render: $scope.render
 			// condition : $scope.condition
 		}		
