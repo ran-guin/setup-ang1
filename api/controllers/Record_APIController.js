@@ -75,6 +75,8 @@ module.exports = {
 				'shipment' : ['waybill_number', 'comments'],
 				'lab_protocol' : ['name'],
 				'protocol_step' : ['name', 'message'],
+				'disease' : ['name'],
+				'vaccine' : ['name','code']
 			};
 		}
 
@@ -82,27 +84,47 @@ module.exports = {
 			var newscope = {};
 			newscope[table] = scope[table];
 			
+			var conditions = [];
+			if (condition) { conditions.push(condition) }
+
 			if (link && scope[link]) {
 				for (var i=0; i<scope[link].length; i++) {
-					newscope[table].push(scope[link][i]);
+					var fld = scope[link][i];
+					newscope[table].push(fld);
 				}
 			}
+
+			console.log('check for ' + table + ' conditions');
+			for (var i=0; i<scope[table].length; i++) {
+				var fld = scope[table][i];
+				var test = body[fld] || body[table + '.' + fld] || req.param(fld) || req.param(table + '.' + fld);
+				console.log(fld + ' ? : ' + test);
+				if (test) {
+					test = test.replace('*','%');
+					conditions.push(table + '.' + scope[table][i] + " LIKE '" + test + "%'");
+				}
+			}
+
+			condition = conditions.join(' AND ');
 
 			scope = newscope;
 			console.log("SCOPE IS" + JSON.stringify(scope));
 			console.log('and ' + link + ' and ' + JSON.stringify(newscope))
+		
+			console.log("Condition: " + condition);
 
+			Record.search({scope : scope, link: link, search : search, condition: condition, group: group, idField: idField})
+			.then (function (result) {
+				return res.json(result);
+			})
+			.catch ( function (err) {
+				console.log("Error in search: " + err);
+				return res.render({})
+			});
 		}
-		console.log("C: " + condition);
-
-		Record.search({scope : scope, link: link, search : search, condition: condition, group: group, idField: idField})
-		.then (function (result) {
-			return res.json(result);
-		})
-		.catch ( function (err) {
-			console.log("Error in search: " + err);
-			return res.render({})
-		});
+		else {
+			return res.json({error: 'Scope restricted'});
+		}
 	},
 
 	parseMetaFields : function (req, res) {
