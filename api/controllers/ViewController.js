@@ -33,6 +33,7 @@ module.exports = {
 
 			View.setup(view)
 			.then ( function (setup) {
+				console.log("** SETUP ** " + JSON.stringify(setup));
 				return res.render('lims/Edit_Report', setup);
 			})
 			.catch ( function (err) {
@@ -109,7 +110,7 @@ module.exports = {
 		var render = body.render;
 
 		var V = body.view;   // make post only for generate ? ...
-		var limit = body.limit;
+		var limit = body.limit || 1000;
 
 		var page = body.page || req.param('page') || 1;
 		var page_size = body.page_size || req.param('page_size') || 50;
