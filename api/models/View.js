@@ -612,6 +612,7 @@ dynamic_join_fields : function (ViewFields, select, conditions) {
 			var keys = Object.keys(search_input);
 			for (var i=0; i<keys.length; i++) {
 				var fld = keys[i];
+
 				var search = search_input[fld];
 				
 				if (view && view.prompts && view.prompts[fld]) {
@@ -622,6 +623,16 @@ dynamic_join_fields : function (ViewFields, select, conditions) {
 					console.log(fld + ' not in prompt list');
 				}
 
+				// var type;
+				// var findex = _.pluck(view.field_data, 'prompt').indexOf(fld);
+				// if (findex >=0) {
+				// 	type = view.field_data[findex].field_type;
+				// 	console.log("field type: ' + type);
+				// }
+				// else {
+				// 	console.log("type undetermined... could not find " + fld + ' prompt in view specs')
+				// }
+
 				if (search && search.length) {
 					var operator_test = /^[<>=]/;
 					var range_test = /^(\d+)\s*\-\s*(\d+)$/;
@@ -629,10 +640,17 @@ dynamic_join_fields : function (ViewFields, select, conditions) {
 					var list_test = /\n/;
 
 					if (search.match(operator_test)) {
+						if (search.match(/^\d\d\d\d\-\d\d/)) {
+							search = "'" + search + "'";   // quote dates... 
+						}
 						c.push(fld + ' ' + search);  // eg feild "< 10"
 					}
 					else if (search.match(range_test)) {
-						var cond = search.replace(range_test, ' BETWEEN $1 AND $2');
+						var cond = search.replace(range_test, " BETWEEN '$1' AND '$2'");
+
+						// if (type.match(/date/)) {
+						// 	cond = search.replace(range_test, " BETWEEN '$1' AND '$2'");
+						// }
 						c.push(fld + cond); // eg field "1 - 3"
 					}
 					else if (search.match(wild_test)) { 
