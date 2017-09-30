@@ -110,7 +110,7 @@ module.exports = {
 		var render = body.render;
 
 		var V = body.view;   // make post only for generate ? ...
-		var limit = body.limit || 1000;
+		var limit = body.limit;
 
 		var page = body.page || req.param('page') || 1;
 		var page_size = body.page_size || req.param('page_size') || 50;
