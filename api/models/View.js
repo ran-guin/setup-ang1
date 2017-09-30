@@ -152,7 +152,7 @@ module.exports = {
   	var layer  = options.layer  || '';
   	var search = options.search || {};
   	var conditions = options.conditions || []; 
-  	var limit = options.limit; 	
+  	var limit = options.limit || 1000; 	
   	var condition = options.condition;
 
   	var add_conditions = View.parse_search_conditions(view, search);
@@ -211,6 +211,8 @@ module.exports = {
 	  		if (lj.length) { select += " LEFT JOIN " + lj.join(' LEFT JOIN ') }
 
 	  		if (conditions && conditions.length) { select += " WHERE " + conditions.join(' AND ') }
+
+	  		if (limit) { select += " LIMIT " + limit }
 
 	  		console.log("***** QUERY *****");
 	  		console.log(select);
@@ -634,16 +636,20 @@ dynamic_join_fields : function (ViewFields, select, conditions) {
 				// }
 
 				if (search && search.length) {
-					var operator_test = /^[<>=]/;
-					var range_test = /^(\d+)\s*\-\s*(\d+)$/;
+					var date_operator_test = /^([<>]\=?)\s*(\d\d\d\d\-\d\d.*)/;
+					var val_operator_test = /^[<>]\=?/;
+					var range_test = /^([\d\-\.]+)\s*\-\s*([\d\-\.]+)$/;  // allow float range or dates 
 					var wild_test = /\*/;
 					var list_test = /\n/;
 
-					if (search.match(operator_test)) {
-						if (search.match(/^\d\d\d\d\-\d\d/)) {
-							search = "'" + search + "'";   // quote dates... 
-						}
+					if (search.match(date_operator_test)) {
+						cond = search.replace(date_operator_test, " $1 '$2'");
+						c.push(fld + ' ' + cond);  // eg feild "< 10"
+						console.log("adding quotes to date operation: " + cond);
+					}
+					else if (search.match(val_operator_test)) {
 						c.push(fld + ' ' + search);  // eg feild "< 10"
+						console.log("standard operator: " + search);
 					}
 					else if (search.match(range_test)) {
 						var cond = search.replace(range_test, " BETWEEN '$1' AND '$2'");
