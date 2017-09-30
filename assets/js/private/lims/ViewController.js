@@ -194,6 +194,7 @@ app.controller('ViewController',
 			}
 			else {
 				$scope.excel = {};
+				$scope.warning('no data file generated');
 			}
 
 			console.log($scope.data.length + ' Records');
