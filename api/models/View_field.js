@@ -14,6 +14,9 @@ module.exports = {
   		type: 'string',
   		enum: ['field','attribute','sql']
   	},
+    field_type: {
+      type: 'String'
+    },
   	display_order: { type: 'integer'},
   	mandatory: { type: 'boolean'},
   	prompt: { type: 'string'},
