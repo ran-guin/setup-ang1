@@ -386,7 +386,6 @@ dynamic_join_fields : function (ViewFields, select, conditions) {
 			var test_match = new RegExp( '\\b' + ViewFields[j].title + '\\.');
 
 			if ( ViewFields[j].type != 'attribute' && condition.match(test_match)) {
-				console.log('*** Confirm inclusion of ' + ViewFields[j].title + ' for ' + condition);
 				if (ViewFields[j].left_join) {
 					var add_lj = Tcheck + ' ON ' + ViewFields[j].join_condition
 					if (lj.indexOf(add_lj) === -1) {	
@@ -625,15 +624,15 @@ dynamic_join_fields : function (ViewFields, select, conditions) {
 					console.log(fld + ' not in prompt list');
 				}
 
-				// var type;
-				// var findex = _.pluck(view.field_data, 'prompt').indexOf(fld);
-				// if (findex >=0) {
-				// 	type = view.field_data[findex].field_type;
-				// 	console.log("field type: ' + type);
-				// }
-				// else {
-				// 	console.log("type undetermined... could not find " + fld + ' prompt in view specs')
-				// }
+				var type;
+				var findex = _.pluck(view.field_data, 'prompt').indexOf(fld);
+				if (findex >=0) {
+					type = view.field_data[findex].field_type;
+					console.log('field type: ' + type);
+				}
+				else {
+					console.log('type undetermined... could not find ' + fld + ' prompt in view specs')
+				}
 
 				if (search && search.length) {
 					var date_operator_test = /^([<>]\=?)\s*(\d\d\d\d\-\d\d.*)/;
