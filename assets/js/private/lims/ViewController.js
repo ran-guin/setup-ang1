@@ -86,52 +86,6 @@ app.controller('ViewController',
 		console.log('Config: ' + JSON.stringify(config));
 	}
 
-	$scope.validateRanges = function () {
-		// Move to Fancy Form ?...
-
-       	var deferred = $q.defer();
-		
-		var from_flds = Object.keys($scope.form.from);
-		var until_flds = Object.keys($scope.form.until);
-
-		var fail = false;
-		for (var i=0; i<from_flds.length; i++) {
-			var fld = from_flds[i];
-			var f = new Date($scope.form.from[fld]);
-			var u = new Date($scope.form.until[fld]);
-
-			console.log('validate range:' + from + ' => ' + until);
-
-			if (!f && !u) {
-				// no condition... 
-			}
-			if (f && !u) {
-				var from = f.toISOString().substring(0.16).replace('T',' ');
-				$scope.form.search[fld] = " >= " + from;
-			}
-			else if (!f && u) {
-				var until = u.toISOString().substring(0,16).replace('T',' ');
-				$scope.form.search[fld] = " <= " + until ;
-			}
-			else if (f < u) {
-				var from = f.toISOString().substring(0.16).replace('T',' ');
-				var until = u.toISOString().substring(0,16).replace('T',' ');
-
-				$scope.form.search[fld] = "BETWEEN '" + from + "' AND '" + until + "'";
-			}
-			else {
-				fail = true;
-				$scope.error(fld + ' Failed range validation')
-			}
-			console.log("search condition ?: " + $scope.form.search[fld]);
-		}
-
-		if (fail) { deferred.reject() }
-		else { deferred.resolve() }
-
-		return deferred.promise
-	}
-
 	$scope.addAtt = function(field) {
 		console.log("force inclusion of attribute: " + field);
 		$scope.form.show[field] = true;
@@ -148,122 +102,112 @@ app.controller('ViewController',
 		console.log('validate ranges...');
 		$scope.validateRanges()
 		.then (function (result) {
-			console.log("VALID ? " + result)
-		})
-		.catch ( function (err) {
-			console.log('invalid ' + err)
-		});
+			console.log("validated ranges if applicable...");
+			$scope.render = 0;
 
-		console.log('validated ranges.');
+			var data = {
+				view_id : $scope.view.id,
+				group  : $scope.form.groupBy,
+				layer  : $scope.form.layer,
+				search : $scope.form.search,
+				select : $scope.show,
+				filename : $scope.filename,
+				limit  : $scope.form.limit,
+				render: $scope.render
+				// condition : $scope.condition
+			}		
 
-		$scope.render = 0;
+			console.log("FORM: " + JSON.stringify($scope.form));
+			console.log("POST: " + url);
+			console.log(JSON.stringify(data));
 
-		var data = {
-			view_id : $scope.view.id,
-			group  : $scope.form.groupBy,
-			layer  : $scope.form.layer,
-			search : $scope.form.search,
-			select : $scope.show,
-			filename : $scope.filename,
-			limit  : $scope.form.limit,
-			render: $scope.render
-			// condition : $scope.condition
-		}		
+			$http.post(url, data)
+			.then ( function (result) {
 
-		// if ($scope.form.show) {
-		// 	console.log(JSON.stringify($scope.form.show));
-		// 	var fields = Object.keys($scope.form.show);
-		// 	if (fields && fields.length) {
-		// 		for (var i=0; i<fields.length; i++) {
-		// 			if ($scope.form.show[fields[i]]) {
-		// 				data.select.push(fields[i]);
-		// 			}
-		// 		}
-		// 	}
-		// }
+				if ($scope.render) {
+					console.log('try to render results');
+					console.log('Rendered: ' + JSON.stringify(result));
 
-		console.log("FORM: " + JSON.stringify($scope.form));
-		console.log("POST: " + url);
-		console.log(JSON.stringify(data));
-
-		$http.post(url, data)
-		.then ( function (result) {
-
-			if ($scope.render) {
-				console.log('try to render results');
-				console.log('Rendered: ' + JSON.stringify(result));
-
-				var el = document.getElementById('injectedViewResults');			
-				el.innerHTML = result.data;
-				$scope.injected = true;
-			}
-
-			// $scope.injectRenderedData('injectedViewData', result);
-			console.log("requested data generation for this view");
-
-			var data = result.data || {};
-			$scope.extra_conditions = data.extra_conditions || 'None';
-
-			$scope.data = data.data || [];
-
-			if ($scope.form.layer) {
-				$scope.layer_data = {};
-				console.log('separate into data layers... ');
-				for (var i=0; i<$scope.data.length; i++) {
-					var record = $scope.data[i];
-
-					var l = $scope.data[i][$scope.form.layer];
-
-					if (! $scope.layer_data[l]) {
-						$scope.layer_data[l] = [];
-					}
-					console.log('Layer: ' + l);
-
-					console.log("Record: " + JSON.stringify(record));
-					$scope.layer_data[l].push(record);
+					var el = document.getElementById('injectedViewResults');			
+					el.innerHTML = result.data;
+					$scope.injected = true;
 				}
-				$scope.layers = Object.keys($scope.layer_data);
-			}
-			else {
-				console.log('use single layer for results');
-				$scope.layer_data['Results'] = $scope.data;
-				$scope.layers = 'Results';
-			}
-			$scope.page = $scope.layers[0];
 
-			$scope.query = data.query || '?';
+				// $scope.injectRenderedData('injectedViewData', result);
+				console.log("requested data generation for this view");
 
-			$scope.showOptions = false;   // close options window 
+				var data = result.data || {};
+				$scope.extra_conditions = data.extra_conditions || 'None';
+
+				$scope.data = data.data || [];
+
+				if ($scope.form.layer) {
+					$scope.layer_data = {};
+					console.log('separate into data layers... ');
+					for (var i=0; i<$scope.data.length; i++) {
+						var record = $scope.data[i];
+
+						var l = $scope.data[i][$scope.form.layer];
+
+						if (! $scope.layer_data[l]) {
+							$scope.layer_data[l] = [];
+						}
+						console.log('Layer: ' + l);
+
+						console.log("Record: " + JSON.stringify(record));
+						$scope.layer_data[l].push(record);
+					}
+					$scope.layers = Object.keys($scope.layer_data);
+				}
+				else {
+					console.log('use single layer for results');
+					$scope.layer_data['Results'] = $scope.data;
+					$scope.layers = 'Results';
+				}
+				$scope.page = $scope.layers[0];
+
+				$scope.query = data.query || '?';
 
 
-			if (data.message) { 
-				$scope.message(data.message)
-			}
-			if (data.error) {
-				$scope.error(data.error)
-			}
-			if (data.warning) {
-				$scope.warning(data.warning)
-			}
 
-			if (data.excel) {
-				console.log('excel: ' + JSON.stringify(data.excel));
-				$scope.excel = data.excel;
-				$scope.filename = data.excel.file;
-			}
-			else {
-				$scope.excel = {};
-				$scope.warning('no data file generated');
-			}
+				if (data.message) { 
+					$scope.message(data.message)
+				}
 
-			console.log($scope.data.length + ' Records');
+				if (data.warning) {
+					$scope.warning(data.warning)
+				}
+
+				if (data.excel) {
+					console.log('excel: ' + JSON.stringify(data.excel));
+					$scope.excel = data.excel;
+					$scope.filename = data.excel.file;
+				}
+				else {
+					$scope.excel = {};
+					$scope.warning('no data file generated');
+				}
+
+				if (data.error) {
+					$scope.error(data.error)
+					$scope.showOptions = true;   // close options window 
+				} else {
+					$scope.showOptions = false;   // close options window 
+				}
+
+				console.log($scope.data.length + ' Records');
+			})
+			.catch ( function (err) {
+				console.log("Error generating view");
+				$scope.error('Error generating view');
+				console.log(JSON.stringify(err));
+				
+				$scope.data = null;
+			});
 		})
 		.catch ( function (err) {
-			console.log("Error generating view");
-			$scope.error('Error generating view');
-			console.log(JSON.stringify(err));
-			
-			$scope.data = null;
+			console.log('invalid ranges ' + err)
+			$scope.showOptions = true;   // close options window 
 		});
 	},
 
@@ -317,5 +261,47 @@ app.controller('ViewController',
 		}
 	}
 
-	
+    $scope.validateRanges = function () {
+        // Move to Fancy Form ?...
+
+        var deferred = $q.defer();
+        
+        var from_flds = Object.keys($scope.form.from);
+
+        var fail = false;
+        for (var i=0; i<from_flds.length; i++) {
+            var fld = from_flds[i];
+            var f = new Date($scope.form.from[fld]);
+            var u = new Date($scope.form.until[fld]);
+
+            if (!f && !u) {
+                // no condition... 
+            }
+            else if (f && !u) {
+                var from = f.toISOString().substring(0.16).replace('T',' ');
+                $scope.form.search[fld] = " >= " + from;
+            }
+            else if (!f && u) {
+                var until = u.toISOString().substring(0,16).replace('T',' ');
+                $scope.form.search[fld] = " <= " + until ;
+            }
+            else if (f < u) {
+                var from = f.toISOString().substring(0,16).replace('T',' ');
+                var until = u.toISOString().substring(0,16).replace('T',' ');
+
+                $scope.form.search[fld] = "'" + from + "' - '" + until + "'";
+            }
+            else {
+                fail = true;
+                $scope.error('Date range invalid for \'' + fld + '\'');
+            }
+            console.log("search condition ?: " + $scope.form.search[fld]);
+        }
+
+        if (fail) { deferred.reject() }
+        else { deferred.resolve() }
+
+        return deferred.promise
+    }
+
 }]);
