@@ -1,8 +1,8 @@
 var app = angular.module('myApp');
 
 app.controller('SharedController', 
-    ['$scope', '$q', '$rootScope', '$http', '$location', 
-    function ($scope, $q, $rootScope, $http, $location) {
+    ['$scope', '$q', '$rootScope', '$http', '$location', '$anchorScroll',
+    function ($scope, $q, $rootScope, $http, $location, $anchorScroll) {
 
         console.log('loaded Shared Controller');
         $scope.messages = [];
@@ -155,6 +155,8 @@ app.controller('SharedController',
                 $scope.warnings.push(msg);
             }
             console.log("Angular Warning: " + msg);
+            $location.hash('AngularMsgBlock');
+            $anchorScroll();
         }
         
         $scope.error = function (msg) {
@@ -167,6 +169,8 @@ app.controller('SharedController',
                 $scope.errors.push(msg);
             }
             console.log("Angular Error: " + msg);
+            $location.hash('AngularMsgBlock');
+            $anchorScroll();
         }
 
         $scope.parse_standard_error = function (msg, type) {
