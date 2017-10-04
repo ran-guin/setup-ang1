@@ -122,7 +122,7 @@ block content
                                         a(href='#' onclick='return false' data-toggle="popover" data-placement="left" data-trigger="focus" title="Report Layers" data-content="#{layer_help}" data-html="true")
                                             i.fa.fa-question-circle
 
-                                each field in fields
+                                each field,i in fields
                                     - var fp = field.match(/(.*) AS (.*)/i)
                                     - var prompt = field
                                     - var fld = field
@@ -142,11 +142,25 @@ block content
                                             td 
                                                 span(data-toggle='tooltip' title='#{fld}') #{prompt}
 
+                                            var isAtt = true
                                             if (attributes && attributes.indexOf(prompt) >= 0)
-                                                td  
-                                                    //- Attributes are not auto-included, so add to field list if condition supplied here... 
-                                                    textarea.form-control(rows=1 ng-model="form.search['#{prompt}']" ng-change="addAtt('#{prompt}')" )
-                                            else 
+                                                isAtt = true
+                                            
+                                            td
+                                                if (view.field_data && view.field_data[i].field_type && view.field_data[i].field_type.match(/date/))
+                                                    input-lg.my-datepicker#from(name="#{prompt}From" type="text" defaultTo='' placeholder='-- From Date --' ng-model="form.from['#{prompt}']" ng-change="validateRange('#{prompt}') && isAtt && addAtt('#{prompt}')")
+                                                    span &nbsp; &nbsp; 
+                                                    i.fa.fa-arrow-right
+                                                    soan &nbsp; &nbsp;
+                                                    input-lg.my-datepicker#until(type="text" name="#{prompt}Until" defaultTo='' placeholder='-- Until Date --' ng-model="form.until['#{prompt}']" ng-change="validateRange('#{prompt}') && isAtt && addAtt('#{prompt}')")
+                                                else 
+                                                    textarea.form-control(rows=1 ng-model="form.search['#{prompt}']" ng-change="isAtt && addAtt('#{prompt}')")
+                                                b #{i} : {{ form.from['#{prompt}'] }} -> {{ form.until['#{prompt}'] }}
+
+                                            //-     td  
+                                            //-         //- Attributes are not auto-included, so add to field list if condition supplied here... 
+                                            //-         textarea.form-control(rows=1 ng-model="form.search['#{prompt}']" ng-change="addAtt('#{prompt}')" )
+                                            //- else 
                                                 td 
                                                     textarea.form-control(rows=1 ng-model="form.search['#{prompt}']")
                                             //- td
