@@ -38,198 +38,198 @@ block content
 
     div(ng-app='myApp' ng-cloak=1)
       div(ng-controller="SharedController" ng-init="include_all=1")
-        div(ng-controller="LIMSController")
-          div(ng-controller='ViewController' ng-init="#{init}")
-            form(role='form' method='post' action="/view/generate" enctype='form-data')
-                input(type='hidden' ng-model="form.view_id" name='view_id' value="#{config.id}")
-                input(type='hidden' name='generate' value='1')
-                
-                include ./../core/errorAngularMsg.jade
-               
-                div.view-section
-                    div.view-overview
-                        if title
-                            h3 #{title}
-                        p
-                            - name = view.name;
-                            - id   = view.id;
-                            - tables = view.tables
-                            - fields = view.fields
-                            - desc  = view.description
-                            - active = view.active
-                            - attributes = view.attributes || []
+        div(ng-controller="FancyFormController")
+            div(ng-controller="LIMSController")
+              div(ng-controller='ViewController' ng-init="#{init}")
+                form(role='form' method='post' action="/view/generate" enctype='form-data')
+                    input(type='hidden' ng-model="form.view_id" name='view_id' value="#{config.id}")
+                    input(type='hidden' name='generate' value='1')
+                    
+                    include ./../core/errorAngularMsg.jade
+                   
+                    div.view-section
+                        div.view-overview
+                            if title
+                                h3 #{title}
+                            p
+                                - name = view.name;
+                                - id   = view.id;
+                                - tables = view.tables
+                                - fields = view.fields
+                                - desc  = view.description
+                                - active = view.active
+                                - attributes = view.attributes || []
 
-                        h4 #{name}
-                        //- b From Tables: #{tables}
-                        p #{desc}
+                            h4 #{name}
+                            //- b From Tables: #{tables}
+                            p #{desc}
 
-                    hr
+                        hr
 
-                    div.container(ng-show='data')
-                        div(ng-show="query === '?'")
-                            i.text-danger ? ... (possible error with query generation - see admin if this persists)
-                        div(ng-show="query !== '?'")
-                            div(ng-show="!FQisVisible")
-                                button.btn.btn-success.btn-xs(type='button' onClick='return false;' data-toggle='tooltip' title='open' ng-click='FQisVisible=1')
-                                    span Full Query &nbsp;
-                                        i.fa.fa-expand
-                            div(ng-show="FQisVisible")
-                                button.btn.btn-danger.btn-xs(type='button' onClick='return false;' data-toggle='tooltip' title='close' ng-click='FQisVisible=0')
-                                    i.fa.fa-close
-                                p 
-                                    i.text-danger {{query}}
-                                p &nbsp;
+                        div.container(ng-show='data')
+                            div(ng-show="query === '?'")
+                                i.text-danger ? ... (possible error with query generation - see admin if this persists)
+                            div(ng-show="query !== '?'")
+                                div(ng-show="!FQisVisible")
+                                    button.btn.btn-success.btn-xs(type='button' onClick='return false;' data-toggle='tooltip' title='open' ng-click='FQisVisible=1')
+                                        span Full Query &nbsp;
+                                            i.fa.fa-expand
+                                div(ng-show="FQisVisible")
+                                    button.btn.btn-danger.btn-xs(type='button' onClick='return false;' data-toggle='tooltip' title='close' ng-click='FQisVisible=0')
+                                        i.fa.fa-close
+                                    p 
+                                        i.text-danger {{query}}
+                                    p &nbsp;
 
-                    div(ng-show="extra_conditions && extra_conditions.length")
-                        b Extra Conditions:
-                        ul
-                          li(ng-repeat="c in extra_conditions") 
-                            i.text-danger {{c}}
+                        div(ng-show="extra_conditions && extra_conditions.length")
+                            b Extra Conditions:
+                            ul
+                              li(ng-repeat="c in extra_conditions") 
+                                i.text-danger {{c}}
 
-                    div.navbar-right(ng-show="!showOptions")
-                        button.btn.btn-sm.btn-warning(ng-click="showOptions=true;" onclick='return false;') Revise Search Criteria
- 
-                    div.search-options(ng-show="showOptions")
-                        span.navbar-right
-                            button.btn.btn-sm.btn-danger(ng-show="data" ng-click="showOptions=false;" onclick='return false;') Hide Search Criteria
-                        h3 Search Options:
+                        div.navbar-right(ng-show="!showOptions")
+                            button.btn.btn-sm.btn-warning(ng-click="showOptions=true;" onclick='return false;') Revise Search Criteria
+     
+                        div.search-options#searchOptions(ng-show="showOptions")
+                            span.navbar-right
+                                button.btn.btn-sm.btn-danger(ng-show="data" ng-click="showOptions=false;" onclick='return false;') Hide Search Criteria
+                            h3 Search Options:
 
-                        if fields
-                            table.table.table-bordered
-                                tr.text-info
-                                    td  
-                                        b Show
-                                        span &nbsp; &nbsp;
-                                        i.fa.fa-expand(ng-show="!showAll" ng-click="showAll=1" data-toggle='tooltip' title='Add other optional fields')
-                                        i.fa.fa-compress(ng-show="showAll" ng-click="showAll=0" data-toggle='tooltip' title='Hide de-selected fields')
-                                        span &nbsp; &nbsp;
-                                        a(href='#' onclick='return false' data-toggle="popover" data-placement="right" data-trigger="focus" title="Search Conditions" data-content="#{show_help}" data-html="true")
-                                            i.fa.fa-question-circle
-                                    td  
-                                        b Field &nbsp; &nbsp;
-                                        a(href='#' onclick='return false' data-toggle="popover" data-placement="bottom" data-trigger="focus" title="Search Conditions" data-content="#{field_help}" data-html="true")
-                                            i.fa.fa-question-circle
+                            if fields
+                                table.table.table-bordered
+                                    tr.text-info
+                                        td  
+                                            b Show
+                                            span &nbsp; &nbsp;
+                                            i.fa.fa-expand(ng-show="!showAll" ng-click="showAll=1" data-toggle='tooltip' title='Add other optional fields')
+                                            i.fa.fa-compress(ng-show="showAll" ng-click="showAll=0" data-toggle='tooltip' title='Hide de-selected fields')
+                                            span &nbsp; &nbsp;
+                                            a(href='#' onclick='return false' data-toggle="popover" data-placement="right" data-trigger="focus" title="Search Conditions" data-content="#{show_help}" data-html="true")
+                                                i.fa.fa-question-circle
+                                        td  
+                                            b Field &nbsp; &nbsp;
+                                            a(href='#' onclick='return false' data-toggle="popover" data-placement="bottom" data-trigger="focus" title="Search Conditions" data-content="#{field_help}" data-html="true")
+                                                i.fa.fa-question-circle
 
-                                    td
-                                        b Search Condition &nbsp; &nbsp;
-                                        a(href='#' onclick='return false' data-toggle="popover" data-placement="bottom" data-trigger="focus" title="Search Conditions" data-content="#{search_help}" data-html="true")
-                                            i.fa.fa-question-circle
+                                        td
+                                            b Search Condition &nbsp; &nbsp;
+                                            a(href='#' onclick='return false' data-toggle="popover" data-placement="bottom" data-trigger="focus" title="Search Conditions" data-content="#{search_help}" data-html="true")
+                                                i.fa.fa-question-circle
 
-                                    //- td  
-                                    //-     b Group by
-                                    td
-                                        b Separate Tab/Layer &nbsp; &nbsp;
-                                        a(href='#' onclick='return false' data-toggle="popover" data-placement="left" data-trigger="focus" title="Report Layers" data-content="#{layer_help}" data-html="true")
-                                            i.fa.fa-question-circle
+                                        //- td  
+                                        //-     b Group by
+                                        td
+                                            b Separate Tab/Layer &nbsp; &nbsp;
+                                            a(href='#' onclick='return false' data-toggle="popover" data-placement="left" data-trigger="focus" title="Report Layers" data-content="#{layer_help}" data-html="true")
+                                                i.fa.fa-question-circle
 
-                                each field,i in fields
-                                    - var fp = field.match(/(.*) AS (.*)/i)
-                                    - var prompt = field
-                                    - var fld = field
-                                    if fp && fp.length
-                                        - fld = fp[1]
-                                        - prompt = fp[2]
+                                    each field,i in fields
+                                        - var fp = field.match(/(.*) AS (.*)/i)
+                                        - var prompt = field
+                                        - var fld = field
+                                        if fp && fp.length
+                                            - fld = fp[1]
+                                            - prompt = fp[2]
 
-                                    if 0
-                                        tr
-                                            td #{field}
-                                            td #{prompt}
-                                    else
+                                        if 0
+                                            tr
+                                                td #{field}
+                                                td #{prompt}
+                                        else
 
-                                        tr(ng-show="form.show['#{prompt}'] || showAll")
-                                            td
-                                                input(type='checkbox' ng-model="form.show['#{prompt}']" ng-click="updateList('show','#{prompt}')" name='fields')
-                                            td 
-                                                span(data-toggle='tooltip' title='#{fld}') #{prompt}
-
-                                            var isAtt = true
-                                            if (attributes && attributes.indexOf(prompt) >= 0)
-                                                isAtt = true
-                                            
-                                            td
-                                                if (view.field_data && view.field_data[i].field_type && view.field_data[i].field_type.match(/date/))
-                                                    input-lg.my-datepicker#from(name="#{prompt}From" type="text" defaultTo='' placeholder='-- From Date --' ng-model="form.from['#{prompt}']" ng-change="validateRange('#{prompt}') && isAtt && addAtt('#{prompt}')")
-                                                    span &nbsp; &nbsp; 
-                                                    i.fa.fa-arrow-right
-                                                    soan &nbsp; &nbsp;
-                                                    input-lg.my-datepicker#until(type="text" name="#{prompt}Until" defaultTo='' placeholder='-- Until Date --' ng-model="form.until['#{prompt}']" ng-change="validateRange('#{prompt}') && isAtt && addAtt('#{prompt}')")
-                                                else 
-                                                    textarea.form-control(rows=1 ng-model="form.search['#{prompt}']" ng-change="isAtt && addAtt('#{prompt}')")
-                                                b #{i} : {{ form.from['#{prompt}'] }} -> {{ form.until['#{prompt}'] }}
-
-                                            //-     td  
-                                            //-         //- Attributes are not auto-included, so add to field list if condition supplied here... 
-                                            //-         textarea.form-control(rows=1 ng-model="form.search['#{prompt}']" ng-change="addAtt('#{prompt}')" )
-                                            //- else 
+                                            tr(ng-show="form.show['#{prompt}'] || showAll")
+                                                td
+                                                    input(type='checkbox' ng-model="form.show['#{prompt}']" ng-click="updateList('show','#{prompt}')" name='fields')
                                                 td 
-                                                    textarea.form-control(rows=1 ng-model="form.search['#{prompt}']")
-                                            //- td
-                                            //-     input(type='checkbox' ng-model="form.groupBy['#{fld}']" ng-click="updateList('groupBy','#{fld}')" name='group')
-                                            td
-                                                input(type='radio' name='layer' ng-model="form.layer" value="#{prompt}" ng-disabled="!form.show['#{prompt}']")
+                                                    span(data-toggle='tooltip' title='#{fld}') #{prompt}
 
-                        input.form-control(ng-model='form.condition' placeholder='-- optional additional condition --')
-                        p &nbsp;
-                        b Limit results to &nbsp;
-                        input(size=8 ng-model='form.limit')
-                        b &nbsp; Records
+                                                - var isAtt = true
+                                                if (attributes && attributes.indexOf(prompt) >= 0)
+                                                    - isAtt = true
+                                                
+                                                td
+                                                    if (view.field_data && view.field_data[i].field_type && view.field_data[i].field_type.match(/date/))
+                                                        input-lg.my-datepicker#from(name="#{prompt}From" type="text" defaultTo='' placeholder='-- From Date --' ng-model="form.from['#{prompt}']" ng-change="validateRange('#{prompt}') && isAtt && addAtt('#{prompt}')")
+                                                        span &nbsp; &nbsp; 
+                                                        i.fa.fa-arrow-right
+                                                        soan &nbsp; &nbsp;
+                                                        input-lg.my-datepicker#until(type="text" name="#{prompt}Until" defaultTo='' placeholder='-- Until Date --' ng-model="form.until['#{prompt}']" ng-change="validateRange('#{prompt}') && isAtt && addAtt('#{prompt}')")
+                                                    else 
+                                                        textarea.form-control(rows=1 ng-model="form.search['#{prompt}']" ng-change="isAtt && addAtt('#{prompt}')")
 
-                        p &nbsp;  
-                        b Show Fields: &nbsp; &nbsp;
-                        b.text-success {{show.join(', ')}}                        
-                        //- br
-                        //- b Group by: &nbsp; &nbsp;
-                        //- b.text-success {{groupBy.join(', ')}}
-                        br
-                        b Layer results by: &nbsp; &nbsp;
-                        b.text-success {{form.layer}}
-                        p
-                        i Note: Re-select items as required to reorder:  items will be added in order selected
+                                                //-     td  
+                                                //-         //- Attributes are not auto-included, so add to field list if condition supplied here... 
+                                                //-         textarea.form-control(rows=1 ng-model="form.search['#{prompt}']" ng-change="addAtt('#{prompt}')" )
+                                                //- else 
+                                                    td 
+                                                        textarea.form-control(rows=1 ng-model="form.search['#{prompt}']")
+                                                //- td
+                                                //-     input(type='checkbox' ng-model="form.groupBy['#{fld}']" ng-click="updateList('groupBy','#{fld}')" name='group')
+                                                td
+                                                    input(type='radio' name='layer' ng-model="form.layer" value="#{prompt}" ng-disabled="!form.show['#{prompt}']")
 
-                        p &nbsp;
-                        div(style='display:flex; flex-direction:row')
-                            button.btn.btn-primary(type='button' ng-click="generate()") Generate Results
-                            span &nbsp; &nbsp; 
-                            input(type='text' style="flex:1" placeholder=' i-- optional filename -- (defaults to user + timestamp) ' ng-model='filename')    
+                            input.form-control(ng-model='form.condition' placeholder='-- optional additional condition --')
+                            p &nbsp;
+                            b Limit results to &nbsp;
+                            input(size=8 ng-model='form.limit')
+                            b &nbsp; Records
 
-                    hr
-                    span.results-section(ng-show='data && injected')
-                        h2 Injected Data
-                        div#injectedViewResults
+                            p &nbsp;  
+                            b Show Fields: &nbsp; &nbsp;
+                            b.text-success {{show.join(', ')}}                        
+                            //- br
+                            //- b Group by: &nbsp; &nbsp;
+                            //- b.text-success {{groupBy.join(', ')}}
+                            br
+                            b Layer results by: &nbsp; &nbsp;
+                            b.text-success {{form.layer}}
+                            p
+                            i Note: Re-select items as required to reorder:  items will be added in order selected
 
-                    hr
-                    span.results-section(ng-show='data')
-                        h3 Results:
-                        span.results-section(ng-show='!showData')
-                            button.btn.btn-success(ng-click="showData=true;" onclick='return false;') Found {{data.length}} record(s)
-                            span &nbsp; &nbsp; &nbsp;
-                        span(ng-show="showData")
-                            button.btn.btn-danger(ng-click="showData=false" onclick='return false;') Hide Results
-                            span &nbsp; &nbsp; &nbsp;
+                            p &nbsp;
+                            div(style='display:flex; flex-direction:row')
+                                button.btn.btn-primary(type='button' ng-click="generate()") Generate Results
+                                span &nbsp; &nbsp; 
+                                input(type='text' style="flex:1" placeholder=' i-- optional filename -- (defaults to user + timestamp) ' ng-model='filename')    
 
-                    span(ng-show="excel && excel.file")
-                        a(href="/download?file={{excel.file}}")
-                            button.btn.btn-success(type='button') Download Results as Excel File
-                            b &nbsp; &nbsp; [{{excel.stats.size}} kB];
- 
-                    span(ng-show="data && data.length && showData")
-                        p &nbsp;
+                        hr
+                        span.results-section(ng-show='data && injected')
+                            h2 Injected Data
+                            div#injectedViewResults
+
+                        hr
+                        span.results-section(ng-show='data')
+                            h3 Results:
+                            span.results-section(ng-show='!showData')
+                                button.btn.btn-success(ng-click="showData=true;" onclick='return false;') Found {{data.length}} record(s)
+                                span &nbsp; &nbsp; &nbsp;
+                            span(ng-show="showData")
+                                button.btn.btn-danger(ng-click="showData=false" onclick='return false;') Hide Results
+                                span &nbsp; &nbsp; &nbsp;
+
+                        span(ng-show="excel && excel.file")
+                            a(href="/download?file={{excel.file}}")
+                                button.btn.btn-success(type='button') Download Results as Excel File
+                                b &nbsp; &nbsp; [{{excel.stats.size}} kB];
+     
+                        span(ng-show="data && data.length && showData")
+                            p &nbsp;
 
 
-                        span(ng-if="form.layer") {{form.layer}} : 
-                        span(ng-repeat="lyr in layers")
-                            a(href='#' onClick='return false;' ng-click="setPage(lyr)")
-                                button.btn.btn-xs.btn-default(type='button')
-                                    span &nbsp; {{lyr}} &nbsp;
+                            span(ng-if="form.layer") {{form.layer}} : 
+                            span(ng-repeat="lyr in layers")
+                                a(href='#' onClick='return false;' ng-click="setPage(lyr)")
+                                    button.btn.btn-xs.btn-default(type='button')
+                                        span &nbsp; {{lyr}} &nbsp;
 
-                        div(ng-show="page===lyr" ng-repeat="(lyr,ldata) in layer_data track by $index")
-                            h3 {{form.layer}} = {{page}} 
-                                i.text-info [{{ldata.length}} records]
-                            table.table(style='background-color: lightyellow;')
-                                tr
-                                    th(ng-repeat="(fld,i) in ldata[0]" style='background-color:grey; color: white') 
-                                        b {{fld}}                        
-                                tr(ng-repeat="record in ldata track by $index")
-                                    td(ng-repeat="(j,fj) in record") {{fj}}       
+                            div(ng-show="page===lyr" ng-repeat="(lyr,ldata) in layer_data track by $index")
+                                h3 {{form.layer}} = {{page}} 
+                                    i.text-info [{{ldata.length}} records]
+                                table.table(style='background-color: lightyellow;')
+                                    tr
+                                        th(ng-repeat="(fld,i) in ldata[0]" style='background-color:grey; color: white') 
+                                            b {{fld}}                        
+                                    tr(ng-repeat="record in ldata track by $index")
+                                        td(ng-repeat="(j,fj) in record") {{fj}}       
 
       
