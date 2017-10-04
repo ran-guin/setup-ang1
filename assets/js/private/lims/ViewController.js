@@ -27,6 +27,8 @@ app.controller('ViewController',
 			condition: '',
 			show: {},
 			search: {},
+			from: {},
+			until: {},
 			limit: 1000
 		};
 
@@ -84,6 +86,52 @@ app.controller('ViewController',
 		console.log('Config: ' + JSON.stringify(config));
 	}
 
+	$scope.validateRanges = function () {
+		// Move to Fancy Form ?...
+
+       	var deferred = $q.defer();
+		
+		var from_flds = Object.keys($scope.form.from);
+		var until_flds = Object.keys($scope.form.until);
+
+		var fail = false;
+		for (var i=0; i<from_flds.length; i++) {
+			var fld = from_flds[i];
+			var f = new Date($scope.form.from[fld]);
+			var u = new Date($scope.form.until[fld]);
+
+			console.log('validate range:' + from + ' => ' + until);
+
+			if (!f && !u) {
+				// no condition... 
+			}
+			if (f && !u) {
+				var from = f.toISOString().substring(0.16).replace('T',' ');
+				$scope.form.search[fld] = " >= " + from;
+			}
+			else if (!f && u) {
+				var until = u.toISOString().substring(0,16).replace('T',' ');
+				$scope.form.search[fld] = " <= " + until ;
+			}
+			else if (f < u) {
+				var from = f.toISOString().substring(0.16).replace('T',' ');
+				var until = u.toISOString().substring(0,16).replace('T',' ');
+
+				$scope.form.search[fld] = "BETWEEN '" + from + "' AND '" + until + "'";
+			}
+			else {
+				fail = true;
+				$scope.error(fld + ' Failed range validation')
+			}
+			console.log("search condition ?: " + $scope.form.search[fld]);
+		}
+
+		if (fail) { deferred.reject() }
+		else { deferred.resolve() }
+
+		return deferred.promise
+	}
+
 	$scope.addAtt = function(field) {
 		console.log("force inclusion of attribute: " + field);
 		$scope.form.show[field] = true;
@@ -96,6 +144,17 @@ app.controller('ViewController',
 		var options = $scope.view || {};
 
 		$scope.reset_messages();
+
+		console.log('validate ranges...');
+		$scope.validateRanges()
+		.then (function (result) {
+			console.log("VALID ? " + result)
+		})
+		.catch ( function (err) {
+			console.log('invalid ' + err)
+		});
+
+		console.log('validated ranges.');
 
 		$scope.render = 0;
 
