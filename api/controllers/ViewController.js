@@ -138,12 +138,16 @@ module.exports = {
 		.then (function (view) {
 			console.log('now generate with options');
 			console.log(JSON.stringify(options));
+
+			var extra_conditions = [];
+
 			View.generate(view, options)
 			.then (function (result) {
 				console.log('generated view');
 
 				var setup = result.setup || {};
-				var extra_conditions = setup.extra_conditions;
+				extra_conditions = setup.extra_conditions;
+				
 				if (save && result.data) {
 					console.log('save as excel');
 
@@ -197,10 +201,17 @@ module.exports = {
 				}
 			})
 			.catch (function (err) {
-				console.log("Error generating view");
-				console.log(JSON.stringify(err));
-				options.message = 'error generating view';
-				return res.json({error: 'error generating view: ' + err.message, extra_conditions: extra_conditions});
+				console.log("Error Generating view");
+				var msg = err.message;
+				console.log(msg);
+
+				options.message = 'error generating view: ' + msg;
+				console.log('gen return hash');
+				console.log('extras: ' + JSON.stringify(extra_conditions));
+
+				var returnval = {error: 'error generating view: ' + msg, extra_conditions: extra_conditions};				
+				console.log('returning error');
+				return res.json(returnval);
 				// return res.render('lims/View', options);
 			});
 		})
