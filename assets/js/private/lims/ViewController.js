@@ -195,10 +195,10 @@ app.controller('ViewController',
 				if (data.error) {
 					$scope.error(data.error)
 					$scope.showOptions = true;   // close options window 
-					$scope.set_page_status('aborted')
+					$scope.set_page_status('aborted');
 				} else {
 					$scope.showOptions = false;   // close options window 
-					$scope.set_page_status('loaded')
+					$scope.set_page_status('loaded');
 				}
 
 				console.log($scope.data.length + ' Records');
@@ -208,14 +208,14 @@ app.controller('ViewController',
 				$scope.error('Error generating view');
 				console.log(JSON.stringify(err));
 				$scope.set_page_status('aborted')
-				
 				$scope.data = null;
 			});
 		})
 		.catch ( function (err) {
 			console.log('invalid ranges ' + err)
 			$scope.showOptions = true;   // close options window 
-			$scope.set_page_status('aborted')
+			$scope.set_page_status('aborted');
+
 		});
 	},
 
