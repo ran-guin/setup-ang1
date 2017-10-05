@@ -9,6 +9,7 @@ app.controller('ViewController',
     console.log('loaded view controller');
 
 	$scope.view = '';
+	$scope.set_page_status('initialized');
 
    	$scope.load = function(config) {
         console.log('load : ' + JSON.stringify(config));
@@ -98,8 +99,11 @@ app.controller('ViewController',
 		var options = $scope.view || {};
 
 		$scope.reset_messages();
+		
+		$scope.set_page_status('loading');
 
 		console.log('validate ranges...');
+
 		$scope.validateRanges()
 		.then (function (result) {
 			console.log("validated ranges if applicable...");
@@ -191,8 +195,10 @@ app.controller('ViewController',
 				if (data.error) {
 					$scope.error(data.error)
 					$scope.showOptions = true;   // close options window 
+					$scope.set_page_status('aborted')
 				} else {
 					$scope.showOptions = false;   // close options window 
+					$scope.set_page_status('loaded')
 				}
 
 				console.log($scope.data.length + ' Records');
@@ -201,6 +207,7 @@ app.controller('ViewController',
 				console.log("Error generating view");
 				$scope.error('Error generating view');
 				console.log(JSON.stringify(err));
+				$scope.set_page_status('aborted')
 				
 				$scope.data = null;
 			});
@@ -208,6 +215,7 @@ app.controller('ViewController',
 		.catch ( function (err) {
 			console.log('invalid ranges ' + err)
 			$scope.showOptions = true;   // close options window 
+			$scope.set_page_status('aborted')
 		});
 	},
 
