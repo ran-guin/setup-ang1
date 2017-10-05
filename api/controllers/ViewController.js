@@ -76,7 +76,7 @@ module.exports = {
 				// console.log("Baseline Query: " + setup.query);
 				// console.log("*** Setup Returned: " + JSON.stringify(setup));
 
-				setup.message = 'view loaded';
+				// setup.message = 'view loaded';
 
 				return res.render('lims/View', setup);
 			})
