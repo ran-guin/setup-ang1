@@ -5,10 +5,77 @@ app.controller('SharedController',
     function ($scope, $q, $rootScope, $http, $location, $anchorScroll) {
 
         console.log('loaded Shared Controller');
+
+        // Generic monitoring of page status (eg initialized / loading / loaded / aborted) ...
+        $scope.page_status = 'initialized';
+        $scope.set_page_status = function (status) {
+            $scope.page_status = status;
+        }
+
+
+        // Generic Messaging attributes / methods 
         $scope.messages = [];
         $scope.warnings = [];
         $scope.errors   = [];
         $scope.persistent = { messages: [], warnings: [], errors: [] };
+
+        $scope.message = function (msg) {
+            var repeat = $scope.messages.indexOf(msg);
+            if (repeat >= 0) {
+                if ( $scope.repeat_messages[repeat] ) { $scope.repeat_messages[repeat]++ }
+                else { $scope.repeat_messages[repeat] = 2 }
+            }
+            else {
+                $scope.messages.push(msg);
+            }
+            console.log("Angular Message: " + msg);
+        }
+
+       $scope.set_persistent = function (type, msg) {
+            type = type + 's';
+
+            if (Object.keys($scope.persistent).indexOf(type) > -1) {
+                $scope[type].push(msg);
+
+                var repeat = $scope.persistent[type].indexOf(msg);
+                if ( repeat === -1 ) {
+                    $scope.persistent[type].push(msg);
+                }
+                console.log("Persistent Angular message: " + msg);
+            }
+            else {
+                console.log("invalid persistent type: " + type);
+                console.log("Valid types :" + JSON.stringify($scope.persistent));
+            }
+        }
+
+        $scope.warning = function (msg) {
+            var repeat = $scope.warnings.indexOf(msg);
+            if (repeat >= 0) {
+                if ( $scope.repeat_warnings[repeat] ) { $scope.repeat_warnings[repeat]++ }
+                else { $scope.repeat_warnings[repeat] = 2 }
+            }
+            else {
+                $scope.warnings.push(msg);
+            }
+            console.log("Angular Warning: " + msg);
+            $location.hash('AngularMsgBlock');
+            $anchorScroll();
+        }
+        
+        $scope.error = function (msg) {
+            var repeat = $scope.errors.indexOf(msg);
+            if (repeat >= 0) {
+                if ( $scope.repeat_errors[repeat] ) { $scope.repeat_errors[repeat]++ }
+                else { $scope.repeat_errors[repeat] = 2 }
+            }
+            else {
+                $scope.errors.push(msg);
+            }
+            console.log("Angular Error: " + msg);
+            $location.hash('AngularMsgBlock');
+            $anchorScroll();
+        }
 
         $scope.reset_messages = function (tag) {
             $scope.messages = [];
@@ -78,6 +145,7 @@ app.controller('SharedController',
             });
         }
 
+        // Generic show / hide functionality 
 
         $scope.hide = {};
         $scope.show = {};
@@ -115,64 +183,8 @@ app.controller('SharedController',
             $scope.$apply();
         }, update_seconds*1000);
    
-        $scope.message = function (msg) {
-            var repeat = $scope.messages.indexOf(msg);
-            if (repeat >= 0) {
-                if ( $scope.repeat_messages[repeat] ) { $scope.repeat_messages[repeat]++ }
-                else { $scope.repeat_messages[repeat] = 2 }
-            }
-            else {
-                $scope.messages.push(msg);
-            }
-            console.log("Angular Message: " + msg);
-        }
 
-       $scope.set_persistent = function (type, msg) {
-            type = type + 's';
-
-            if (Object.keys($scope.persistent).indexOf(type) > -1) {
-                $scope[type].push(msg);
-
-                var repeat = $scope.persistent[type].indexOf(msg);
-                if ( repeat === -1 ) {
-                    $scope.persistent[type].push(msg);
-                }
-                console.log("Persistent Angular message: " + msg);
-            }
-            else {
-                console.log("invalid persistent type: " + type);
-                console.log("Valid types :" + JSON.stringify($scope.persistent));
-            }
-        }
-
-        $scope.warning = function (msg) {
-            var repeat = $scope.warnings.indexOf(msg);
-            if (repeat >= 0) {
-                if ( $scope.repeat_warnings[repeat] ) { $scope.repeat_warnings[repeat]++ }
-                else { $scope.repeat_warnings[repeat] = 2 }
-            }
-            else {
-                $scope.warnings.push(msg);
-            }
-            console.log("Angular Warning: " + msg);
-            $location.hash('AngularMsgBlock');
-            $anchorScroll();
-        }
-        
-        $scope.error = function (msg) {
-            var repeat = $scope.errors.indexOf(msg);
-            if (repeat >= 0) {
-                if ( $scope.repeat_errors[repeat] ) { $scope.repeat_errors[repeat]++ }
-                else { $scope.repeat_errors[repeat] = 2 }
-            }
-            else {
-                $scope.errors.push(msg);
-            }
-            console.log("Angular Error: " + msg);
-            $location.hash('AngularMsgBlock');
-            $anchorScroll();
-        }
-
+        // Generic error & message parsing 
         $scope.parse_standard_error = function (msg, type) {
             // Convert warning / error messages into more readable format
             // (if <match> is included in value, then the regexp of the key will be evaluated and the match replaced in the value string)
@@ -264,6 +276,8 @@ app.controller('SharedController',
             //return "\n<div class='container' style='padding:20px'>\n" + view + "</div>\n";
         }
         
+        // Generic Block injection methods 
+
         $scope.injectRenderedData = function(element, rendered) {
             // var opt  = {};
             // if (options) { opt = JSON.parse(options) }
