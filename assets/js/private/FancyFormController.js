@@ -1,7 +1,7 @@
-var app = angular.module('myApp',['ngFileUpload', 'checklist-model']);
+var app = angular.module('myApp',['ngFileUpload', 'checklist-model', 'angularjs-dropdown-multiselect']);
 
 app.controller('FancyFormController', 
-    ['$scope', '$q', '$rootScope', '$http', '$location', 'FancyFormFactory', 'Upload', 
+    ['$scope', '$q', '$rootScope', '$http', '$location', 'FancyFormFactory', 'Upload',
     function ($scope, $q, $rootScope, $http, $location, FancyFormFactory, Upload) {
         console.log('loaded Fancy Form Controller');
         
@@ -877,10 +877,12 @@ app.controller('FancyFormController',
             
             // var defaultVal = ''; 
 
-            // var deferred = $q.defer();
+            var deferred = $q.defer();
 
-            console.log("Generate enums for " + enumType);
 
+            enumType = enumType.replace(/^\w+\./g, '');  // in case field is fully qualified... 
+            console.log("Generate enums for " + enumType + ' in ' + element);
+            
             $scope.get_List(enumType, condition)
             .then ( function (list) {          
                 
@@ -906,21 +908,24 @@ app.controller('FancyFormController',
                     for (var i=0; i<list.length; i++) {
                         var id = i+1;
                         id = id.toString();
-                        $scope.MenuList[element].push( { id: id, name: list[i] });
+                        $scope.MenuList[element].push( { id: id, name: list[i], label: list[i]});
                         $scope.ReverseLookup[element][id] = list[i];
                     }
                     console.log(element + " array list = " + JSON.stringify(list));
                     console.log('Reverse Lookup: ' + JSON.stringify($scope.ReverseLookup[element]));
                 }
 
-                console.log("DROPDOWN LIST: " + JSON.stringify( $scope.MenuList ));
+                console.log(element + " DROPDOWN LIST: " + JSON.stringify( $scope.MenuList ));
                 console.log("default to " + JSON.stringify($scope[element]));
 
+                deferred.resolve();
             })
             .catch ( function (err) {
                 console.log("Error generating enum list: " + err);
-
+                deferred.reject();
             });
+
+            return deferred.promise;
         }
 
         $scope.menu_Item = function (element, id) {
@@ -980,13 +985,15 @@ app.controller('FancyFormController',
                 var reference = ref[1]; // .replace(/^FK[\_\(]/,'').replace(/(__ID|\))$/,'');
                 console.log('get list from reference: ' + reference);
                 
-                var url = '/lookup/' + reference + '?';
+                var model = reference.toLowerCase();
+
+                var url = '/lookup/' + model + '?';
                 if (condition) { 
                     condition = encodeURIComponent(condition);
                     url = url + 'condition=' + condition;
                 }
 
-                console.log("get lookup for " + reference);
+                console.log("*** get lookup for " + model);
                 console.log(url);
                 $http.get(url)
                 .then ( function (result) {
@@ -994,7 +1001,7 @@ app.controller('FancyFormController',
                     var list = result.data;
                     var options = [];
                     for (var i=0; i<list.length; i++) {
-                        options.push( { id: list[i].id, name: list[i].label } );
+                        options.push( { id: list[i].id, name: list[i].label, label: list[i].label } );
                     }
                     console.log("OPTIONS: " + JSON.stringify(options));
                     deferred.resolve(options);
@@ -1272,6 +1279,23 @@ app.controller('FancyFormController',
 
         $scope.colours = [ { name: 'Red'}, { name:'White'} , {name: 'Blue'}];
         $scope.colour = ''; // {name: 'Blue'};
+
+        // Multiselect setup 
+        // Usage:  
+        //    div(ng-dropdown-multiselect="" options="MenuList['#{field}']" selected-model="msd['#{field}']" extra-settings="msd_settings['id']" ng-init="SetupMenu('form.#{field}', \"#{fType}\",'','#{def}')")")
+        // 
+
+        $scope.selectedModel = [];
+        $scope.smartButtonTextProviderModel = []; 
+        $scope.msd = {};
+
+        $scope.msd_settings = {};
+
+        // $scope.msd_settings = { smartButtonMaxItems: 3, enableSearch: true};        
+        $scope.msd_settings['name'] = { smartButtonMaxItems: 3, enableSearch: true, idProp: 'name', externalIdProp: 'name'};
+        $scope.msd_settings['label'] = { smartButtonMaxItems: 3, enableSearch: true, idProp: 'label', externalIdProp: 'label'};
+        $scope.msd_settings['id'] = { smartButtonMaxItems: 3, enableSearch: true};
+
 
 }])
 .directive('myDatepicker', function ($parse) {
