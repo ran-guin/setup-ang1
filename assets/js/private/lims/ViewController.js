@@ -61,16 +61,43 @@ app.controller('ViewController',
 				}
 			}
 		}
-
-		console.log("** FIELDS: " + JSON.stringify($scope.fields));
+	            
+		console.log("** FIELDS: " + JSON.stringify($scope.field_data));
 		for (var i=0; i<$scope.field_data.length; i++) {
 			var prompt = $scope.field_data[i].prompt;
 			var def_search = $scope.field_data[i].default_search;
 			if (def_search) {
-				console.log('set default condition: ' + def_search);
+				console.log(prompt + ' set default condition: ' + def_search);
 				$scope.form.search[prompt] = def_search;
+
+			}
+			var f_type = $scope.field_data[i].field_type;
+			var def    = $scope.field_data[i].default_search;
+		            
+			if (f_type && f_type.match(/(enum|dropdown)/i)) {
+	            if (def) {
+		            $scope.msd[prompt] = [];
+		            var def_list = def.split(/\s*,\s*/);
+		            for (var j=0; j<def_list.length; j++) {
+		            	if (f_type.match(/enum/i)) {
+			            	$scope.msd[prompt].push({name: def_list[j]})
+			            }
+			            else {
+			            	$scope.msd[prompt].push({id: def_list[j]})
+			            }
+		            }
+		            console.log('default msd to ' + $scope.field_data[i].default_search);
+	            }
+	            else {
+		            $scope.msd[prompt] = [];
+	            }
+	            console.log('initialize multiselect for ' + prompt);
+			}
+			else {
+				console.log('ignore ' + $scope.field_data[i].field_type);
 			}
 		}
+
 
 		$scope.data = config['data'];
 		$scope.file = config['file'];
@@ -104,9 +131,9 @@ app.controller('ViewController',
 
 		console.log('validate ranges...');
 
-		$scope.validateRanges()
+		$scope.validateForm( {search: $scope.form.search, from: $scope.form.from, until: $scope.form.until})
 		.then (function (result) {
-			console.log("validated ranges if applicable...");
+			console.log("validated form ...");
 			$scope.render = 0;
 
 			var data = {
@@ -268,48 +295,5 @@ app.controller('ViewController',
 			console.log("no file to download - remember to select 'generate excel file' when generating results");
 		}
 	}
-
-    $scope.validateRanges = function () {
-        // Move to Fancy Form ?...
-
-        var deferred = $q.defer();
-        
-        var from_flds = Object.keys($scope.form.from);
-
-        var fail = false;
-        for (var i=0; i<from_flds.length; i++) {
-            var fld = from_flds[i];
-            var f = new Date($scope.form.from[fld]);
-            var u = new Date($scope.form.until[fld]);
-
-            if (!f && !u) {
-                // no condition... 
-            }
-            else if (f && !u) {
-                var from = f.toISOString().substring(0.16).replace('T',' ');
-                $scope.form.search[fld] = " >= " + from;
-            }
-            else if (!f && u) {
-                var until = u.toISOString().substring(0,16).replace('T',' ');
-                $scope.form.search[fld] = " <= " + until ;
-            }
-            else if (f < u) {
-                var from = f.toISOString().substring(0,16).replace('T',' ');
-                var until = u.toISOString().substring(0,16).replace('T',' ');
-
-                $scope.form.search[fld] = "'" + from + "' - '" + until + "'";
-            }
-            else {
-                fail = true;
-                $scope.error('Date range invalid for \'' + fld + '\'');
-            }
-            console.log("search condition ?: " + $scope.form.search[fld]);
-        }
-
-        if (fail) { deferred.reject() }
-        else { deferred.resolve() }
-
-        return deferred.promise
-    }
 
 }]);
