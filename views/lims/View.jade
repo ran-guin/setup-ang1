@@ -174,7 +174,7 @@ block content
                                                             soan &nbsp; &nbsp;
                                                             input-lg.my-datepicker#until(type="text" name="#{prompt}Until" defaultTo='' placeholder='-- Until Date --' ng-model="form.until['#{prompt}']" ng-change="validateRange('#{prompt}') && isAtt && addAtt('#{prompt}')")
                                                             span &nbsp; &nbsp;
-                                                            button.btn.btn-default.btn-lg(type='button' ng-click="form.from['#{prompt}'] = 0; form.until['#{prompt}'] = 0;") Clear
+                                                            button.btn.btn-default.btn-lg(type='button' ng-click="form.from['#{prompt}'] = 0; form.until['#{prompt}'] = 0; form.search['#{prompt}'] = ''") Clear
                                                         else if (form_type.match(/dropdown/))
 
                                                             div(ng-dropdown-multiselect="" options="MenuList['form.#{prompt}']" selected-model="msd['#{prompt}']" extra-settings="msd_settings['id']" ng-init="setup_Menu('form.#{prompt}','#{fld}', null, '#{def}')" )
