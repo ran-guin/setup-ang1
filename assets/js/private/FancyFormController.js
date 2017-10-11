@@ -1296,6 +1296,112 @@ app.controller('FancyFormController',
         $scope.msd_settings['label'] = { smartButtonMaxItems: 3, enableSearch: true, idProp: 'label', externalIdProp: 'label'};
         $scope.msd_settings['id'] = { smartButtonMaxItems: 3, enableSearch: true};
 
+        // Form Validation functions ... 
+    $scope.validateForm = function (options) {
+
+        var deferred = $q.defer();
+
+        if (!options) { options = {} }
+        var search = options.search;
+
+        $scope.validateRanges(options)
+        .then ( function (ok1) {
+            $scope.convert_multiselect_search(search)
+            .then ( function (ok2) {
+                deferred.resolve();
+            })
+            .catch (function (err2) {
+                deferred.reject(err2);
+            })
+        })
+        .catch (function (err1) {
+            deferred.reject(err1)
+        });
+
+        return deferred.promise;
+    }
+
+    $scope.convert_multiselect_search = function (search) {
+
+        var deferred = $q.defer();
+
+        if ($scope.msd) {
+            var msd = Object.keys($scope.msd) || [];
+            for (var i=0; i<msd.length; i++) {
+                var field = msd[i];
+                if ($scope.msd[field].length) {
+                    var props = Object.keys($scope.msd[field][0]);
+
+                    var refs = _.pluck($scope.msd[field], props[0]);
+                    console.log(props[0] + " REFS = " + JSON.stringify($scope.msd[field]))
+                    console.log(' replace ' +JSON.stringify(search[field]));
+                    search[field] = refs.join("\n");
+                    console.log(' with ' +JSON.stringify(search[field]));                   
+                }
+                else {
+                    search[field] = '';
+                }
+            }
+
+            deferred.resolve();
+        }
+        else { deferred.resolve() }
+
+        return deferred.promise;
+    }
+
+    $scope.validateRanges = function (options) {
+        // Move to Fancy Form ?...
+
+        if (!options) { options = {} }
+
+        var search = options.search || {};
+        var fromFld   = options.from || {};
+        var untilFld  = options.until || {};
+
+        var deferred = $q.defer();
+        
+        var from_flds = Object.keys(fromFld);
+
+        console.log('validating ' + from_flds.length + ' range fields');
+        var fail = false;
+        for (var i=0; i<from_flds.length; i++) {
+            var fld = from_flds[i];
+            var f = fromFld[fld];
+            var u = untilFld[fld];
+            var fD = new Date(f);
+            var uD = new Date(u);
+
+            if (!f && !u) {
+                // no condition... 
+            }
+            else if (f && !u) {
+                var from = fD.toISOString().substring(0.16).replace('T',' ');
+                search[fld] = " >= " + from;
+            }
+            else if (!f && u) {
+                var until = uD.toISOString().substring(0,16).replace('T',' ');
+                search[fld] = " <= " + until ;
+            }
+            else if (f < u) {
+                var from = fD.toISOString().substring(0,16).replace('T',' ');
+                var until = uD.toISOString().substring(0,16).replace('T',' ');
+
+                search[fld] = "'" + from + "' - '" + until + "'";
+            }
+            else {
+                fail = true;
+                $scope.error('Date range invalid for \'' + fld + '\'');
+                $scope.error("from " + f + ' to ' + u + ' ?');
+            }
+            console.log("search condition ?: " + search[fld]);
+        }
+
+        if (fail) { deferred.reject() }
+        else { deferred.resolve() }
+
+        return deferred.promise
+    }
 
 }])
 .directive('myDatepicker', function ($parse) {
