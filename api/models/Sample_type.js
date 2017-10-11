@@ -14,6 +14,8 @@ module.exports = {
 	/* LEGACY */
 
 	attributes: {
+		Sample_Type_ID: { type: 'integer'},
+		Sample_Type: { type: 'string'}
 		//
 	},
 
