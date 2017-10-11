@@ -118,6 +118,12 @@ module.exports = {
 		var save = body.save || req.param('save') || 1;
 		var filename = body.filename;
 
+		var session = req.session;
+		var payload;
+		if (session && session.payload) {
+			payload = session.payload
+		}
+
 		console.log('build view ' + view_id);
 
 		select = View.cast2array(select);
@@ -152,7 +158,7 @@ module.exports = {
 					console.log('save as excel');
 
 					if (result.data.length) {
-						View.save2excel(result.data, {path: excel_path, filename: filename, layer: layer})
+						View.save2excel(result.data, {path: excel_path, filename: filename, layer: layer, payload: payload})
 						.then ( function (excel) {
 							console.log("saved as excel");
 
