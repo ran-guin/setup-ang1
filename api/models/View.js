@@ -472,6 +472,7 @@ dynamic_join_fields : function (ViewFields, select, conditions) {
   	var filename = options.filename;
   	var layer    = options.layer;
   	var path     = options.path || './excel/';
+  	var payload  = options.payload;
 
   	var deferred = q.defer();
 
@@ -560,11 +561,15 @@ dynamic_join_fields : function (ViewFields, select, conditions) {
 
 	if (sheets.length) {
 		console.log('added data...'); 
-		var user = 'thisuser';
+
+		var user = '';
+		if (payload && payload.user) {
+			user = payload.user;
+		}
 
 		if (!filename) { 
 			var timestamp = String(new Date());			
-			filename = 'Dump.' + user + '.' + timestamp + '.xlsx'
+			filename = 'Report.' + user + '.' + timestamp + '.xlsx'
 		}
 		else {
 			if (!filename.match(/\.xlsx?/)) {
@@ -639,9 +644,11 @@ dynamic_join_fields : function (ViewFields, select, conditions) {
 					var val_operator_test = /^[<>]\=?/;
 					var range_test = /^(\d+\.?\d*)\s*\-\s*(\d+\.?\d*)\s*$/;  // allow float range or dates 
 					var date_range_test = /^['"]?(\d\d\d\d-\d\d[\s\-\d\\:]+)['"]?\s*\-\s*['"]?(\d\d\d\d-\d\d[\s\-\d\\:]+)['"]?\s*$/;  // allow float range or dates 
-					var wild_test = /\*/;
+					var wild_test = /\*/g;
 					var list_test = /\n/;
 
+					console.log('S:' + JSON.stringify(search));
+					
 					if (search.match(date_operator_test)) {
 						cond = search.replace(date_operator_test, " $1 '$2'");
 						c.push(fld + ' ' + cond);  // eg feild "< 10"
@@ -660,7 +667,7 @@ dynamic_join_fields : function (ViewFields, select, conditions) {
 						c.push(fld + cond); // eg field "1 - 3"
 					}
 					else if (search.match(wild_test)) { 
-						var ss = search.replace('*','%');
+						var ss = search.replace(wild_test,'%');
 						c.push(fld + ' LIKE "' + ss + '"');
 					}
 					else if (search.match(list_test)) {
