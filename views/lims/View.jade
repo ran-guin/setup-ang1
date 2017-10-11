@@ -98,6 +98,13 @@ block content
                                     button.btn.btn-sm.btn-danger(ng-show="data" ng-click="showOptions=false;" onclick='return false;') Hide Search Criteria
                                 h3 Search Options:
 
+                                div(style='display:flex; flex-direction:row')
+                                    button.btn.btn-primary(type='button' ng-click="generate()") Re-generate Results
+                                  
+                                    //- span &nbsp; &nbsp; &nbsp; &nbsp;
+                                    //- button.btn.btn-sm.btn-warning(type='reset') Clear Form 
+                                    p &nbsp;                         
+
                                 if fields
                                     table.table.table-bordered
                                         tr.text-info
@@ -123,6 +130,8 @@ block content
                                             //-     b Group by
                                             td
                                                 b Separate Tab/Layer &nbsp; &nbsp;
+                                                input(type='radio' name='layer' ng-model="form.layer" value="")
+                                                b &nbsp; No Layering
                                                 a(href='#' onclick='return false' data-toggle="popover" data-placement="left" data-trigger="focus" title="Report Layers" data-content="#{layer_help}" data-html="true")
                                                     i.fa.fa-question-circle
 
@@ -150,14 +159,29 @@ block content
                                                     if (attributes && attributes.indexOf(prompt) >= 0)
                                                         - isAtt = true
                                                     
+                                                    - var form_type = ''
+                                                    - var enums = []
+                                                    if (view.field_data)
+                                                        - form_type = view.field_data[i].field_type || ''
+                                                        - table = view.field_data[i].table_name || ''
+                                                        - enums = form_type.match(/enum\((.*)\)/i);
+                                                        - def   = view.field_data[i].default_search;
                                                     td
-                                                        if (view.field_data && view.field_data[i].field_type && view.field_data[i].field_type.match(/date/))
+                                                        if (form_type.match(/date/))
                                                             input-lg.my-datepicker#from(name="#{prompt}From" type="text" defaultTo='' placeholder='-- From Date --' ng-model="form.from['#{prompt}']" ng-change="validateRange('#{prompt}') && isAtt && addAtt('#{prompt}')")
                                                             span &nbsp; &nbsp; 
                                                             i.fa.fa-arrow-right
                                                             soan &nbsp; &nbsp;
                                                             input-lg.my-datepicker#until(type="text" name="#{prompt}Until" defaultTo='' placeholder='-- Until Date --' ng-model="form.until['#{prompt}']" ng-change="validateRange('#{prompt}') && isAtt && addAtt('#{prompt}')")
-                                                        else 
+                                                            span &nbsp; &nbsp;
+                                                            button.btn.btn-default.btn-lg(type='button' ng-click="form.from['#{prompt}'] = 0; form.until['#{prompt}'] = 0;") Clear
+                                                        else if (form_type.match(/dropdown/))
+
+                                                            div(ng-dropdown-multiselect="" options="MenuList['form.#{prompt}']" selected-model="msd['#{prompt}']" extra-settings="msd_settings['id']" ng-init="setup_Menu('form.#{prompt}','#{fld}', null, '#{def}')" )
+                                                        else if (enums && enums.length) 
+                                                            - enum_list = enums[1].replace(/['"]/g, '');
+                                                            div(ng-dropdown-multiselect="" options="MenuList['form.#{prompt}']" selected-model="msd['#{prompt}']" extra-settings="msd_settings['name']" ng-init="setup_Menu('form.#{prompt}','#{enum_list}',null,'#{def}')" )
+                                                        else
                                                             textarea.form-control(rows=1 ng-model="form.search['#{prompt}']" ng-change="isAtt && addAtt('#{prompt}')")
 
                                                     //-     td  
@@ -175,7 +199,9 @@ block content
                                 p &nbsp;
                                 b Limit results to &nbsp;
                                 input(size=8 ng-model='form.limit')
-                                b &nbsp; Records
+                                b &nbsp; Records &nbsp; &nbsp; &nbsp; &nbsp;
+                                    //- span.navbar-right
+                                    //- button.btn.btn-sm.btn-warning(type='reset') Clear Form                           
 
                                 p &nbsp;  
                                 b Show Fields: &nbsp; &nbsp;
@@ -203,7 +229,6 @@ block content
                                 hr
                         div.navbar-right(ng-show="!showOptions")
                             button.btn.btn-sm.btn-warning(ng-click="showOptions=true;" onclick='return false;') Revise Search Criteria
-                      
                         div.results-section(ng-show="data && page_status === 'loaded'")
                             h3 Results:
                             span.results-section(ng-show='!showData')
