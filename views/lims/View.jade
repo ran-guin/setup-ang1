@@ -166,8 +166,10 @@ block content
                                                         - table = view.field_data[i].table_name || ''
                                                         - enums = form_type.match(/enum\((.*)\)/i);
                                                         - def   = view.field_data[i].default_search;
+                                                        - model = view.field_data[i].model
                                                     td
                                                         if (form_type.match(/date/))
+                                                            //- input-lg.my-datepicker-popup()
                                                             input-lg.my-datepicker#from(name="#{prompt}From" type="text" defaultTo='' placeholder='-- From Date --' ng-model="form.from['#{prompt}']" ng-change="validateRange('#{prompt}') && isAtt && addAtt('#{prompt}')")
                                                             span &nbsp; &nbsp; 
                                                             i.fa.fa-arrow-right
@@ -176,8 +178,7 @@ block content
                                                             span &nbsp; &nbsp;
                                                             button.btn.btn-default.btn-lg(type='button' ng-click="form.from['#{prompt}'] = 0; form.until['#{prompt}'] = 0; form.search['#{prompt}'] = ''") Clear
                                                         else if (form_type.match(/dropdown/))
-
-                                                            div(ng-dropdown-multiselect="" options="MenuList['form.#{prompt}']" selected-model="msd['#{prompt}']" extra-settings="msd_settings['id']" ng-init="setup_Menu('form.#{prompt}','#{fld}', null, '#{def}')" )
+                                                            div(ng-dropdown-multiselect="" options="MenuList['form.#{prompt}']" selected-model="msd['#{prompt}']" extra-settings="msd_settings['name']" ng-init="setup_Menu('form.#{prompt}','#{model}', null, '#{def}')" )
                                                         else if (enums && enums.length) 
                                                             - enum_list = enums[1].replace(/['"]/g, '');
                                                             div(ng-dropdown-multiselect="" options="MenuList['form.#{prompt}']" selected-model="msd['#{prompt}']" extra-settings="msd_settings['name']" ng-init="setup_Menu('form.#{prompt}','#{enum_list}',null,'#{def}')" )
