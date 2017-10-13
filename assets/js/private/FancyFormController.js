@@ -972,7 +972,10 @@ app.controller('FancyFormController',
             
             var enums = type.match(/^ENUM\('(.*)'\)$/i);
             var ref   = type.match(/^FK[\_\(](.+)(__ID|\))/);
+            var word = type.match(/^\w+$/);
             
+            console.log('get_List for ' + type);
+
             var list = [];
             if (enums) {
                 var options = enums[1]  ;
@@ -980,12 +983,20 @@ app.controller('FancyFormController',
                 console.log("Enums: " + list.join(', '));
                 deferred.resolve(list);
             }
-            else if (ref) { 
-                console.log("reference dropdown: " + JSON.stringify(ref[1]));
-                var reference = ref[1]; // .replace(/^FK[\_\(]/,'').replace(/(__ID|\))$/,'');
-                console.log('get list from reference: ' + reference);
-                
-                var model = reference.toLowerCase();
+            else if (ref || word) {
+
+                var model;
+                if (ref) { 
+                    console.log("reference dropdown: " + JSON.stringify(ref[1]));
+                    var reference = ref[1]; // .replace(/^FK[\_\(]/,'').replace(/(__ID|\))$/,'');
+                    console.log('get list from reference: ' + reference);
+                    
+                    model = reference.toLowerCase();
+                }
+                else {
+                    model = word[0];
+                    console.log('use model: ' + model);
+                }
 
                 var url = '/lookup/' + model + '?';
                 if (condition) { 
@@ -1403,7 +1414,155 @@ app.controller('FancyFormController',
         return deferred.promise
     }
 
+  //   // Datepicker methods ... 
+  //  $scope.dt = new Date();
+  //   $scope.defaultDate = 'now';
+  //   $scope.today = function() {
+  //       $scope.dt = new Date();
+  //   };
+  //   $scope.today();
+
+  //   $scope.clear = function() {
+  //       $scope.dt = null;
+  //   };
+
+  //   $scope.inlineOptions = {
+  //       customClass: getDayClass,
+  //       minDate: new Date(),
+  //       showWeeks: true
+  //   };
+
+  //   $scope.dateOptions = {
+  //       dateDisabled: disabled,
+  //       formatYear: 'yy',
+  //       maxDate: new Date(2020, 5, 22),
+  //       minDate: new Date(),
+  //       startingDay: 1
+  //   };
+
+  //     // Disable weekend selection
+  //     function disabled(data) {
+  //       var date = data.date,
+  //         mode = data.mode;
+  //       return mode === 'day' && (date.getDay() === 0 || date.getDay() === 6);
+  //     }
+
+  // $scope.toggleMin = function() {
+  //   $scope.inlineOptions.minDate = $scope.inlineOptions.minDate ? null : new Date();
+  //   $scope.dateOptions.minDate = $scope.inlineOptions.minDate;
+  // };
+
+  // $scope.toggleMin();
+
+  // $scope.open1 = function() {
+  //   console.log('open 1');
+  //   $scope.popup1.opened = true;
+  // };
+
+  // $scope.open2 = function() {
+  //   console.log('open2')
+  //   $scope.popup2.opened = true;
+  // };
+
+  // $scope.setDate = function(year, month, day) {
+  //   $scope.dt = new Date(year, month, day);
+  // };
+
+  // $scope.formats = ['dd-MMMM-yyyy', 'yyyy/MM/dd', 'dd.MM.yyyy', 'shortDate'];
+  // $scope.format = $scope.formats[0];
+  // $scope.altInputFormats = ['M!/d!/yyyy'];
+
+  // $scope.popup1 = {
+  //   opened: false
+  // };
+
+  // $scope.popup2 = {
+  //   opened: false
+  // };
+
+  // var tomorrow = new Date();
+  // tomorrow.setDate(tomorrow.getDate() + 1);
+  // var afterTomorrow = new Date();
+  // afterTomorrow.setDate(tomorrow.getDate() + 1);
+  // $scope.events = [
+  //   {
+  //     date: tomorrow,
+  //     status: 'full'
+  //   },
+  //   {
+  //     date: afterTomorrow,
+  //     status: 'partially'
+  //   }
+  // ];
+
+  // function getDayClass(data) {
+  //   var date = data.date,
+  //     mode = data.mode;
+  //   if (mode === 'day') {
+  //     var dayToCheck = new Date(date).setHours(0,0,0,0);
+
+  //     for (var i = 0; i < $scope.events.length; i++) {
+  //       var currentDay = new Date($scope.events[i].date).setHours(0,0,0,0);
+
+  //       if (dayToCheck === currentDay) {
+  //         return $scope.events[i].status;
+  //       }
+  //     }
+  //   }
+
+  //   return '';
+  // }
+
 }])
+// .directive('myDatepickerPopup', function ($filter, $document, $compile, $parse) {
+//    return {
+//         restrict: "AEC",
+//         replace: true,
+//         transclude: false,
+//         scope: {
+//             options: '='
+//         },
+//         compile: function (element, attrs) {
+//             var html = "<pre>Selected date is: {{defaultDate}} or <em>{{dt | date:'fullDate' }}</em></pre><b>popup 1: {{popup1.open}}</b>";
+//             html += '<div>';
+//             html += '    <div class="row">';
+//             html += '      <div class="col-md-6">';
+//             html += '        <p class="input-group">';
+//             html += '          <input type="text" class="form-control" uib-datepicker-popup="{{format}}" ng-model="dt" is-open="popup1.opened" datepicker-options="dateOptions" ng-required="true" close-text="Close" alt-input-formats="altInputFormats" />';
+//             html += '          <span class="input-group-btn">';
+//             html += '            <button type="button" class="btn btn-default" ng-click="open1()"><i class="glyphicon glyphicon-calendar"></i></button>';
+//             html += '          </span>';
+//             html += '        </p>';
+//             html += '      </div>';
+//             html += '';
+//             html += '      <div class="col-md-6">';
+//             html += '        <p class="input-group">';
+//             html += '          <input type="text" class="form-control" uib-datepicker-popup ng-model="dt" is-open="popup2.opened" datepicker-options="dateOptions" ng-required="true" close-text="Close" />';
+//             html += '          <span class="input-group-btn">';
+//             html += '            <button type="button" class="btn btn-default" ng-click="open2()"><i class="glyphicon glyphicon-calendar"></i></button>';
+//             html += '          </span>';
+//             html += '        </p>';
+//             html += '      </div>';
+//             html += '    </div>';
+//                 // <div class="row">
+//                 //   <div class="col-md-6">
+//                 //     <label>Format: <span class="muted-text">(manual alternate <em>{{altInputFormats[0]}}</em>)</span></label> <select class="form-control" ng-model="format" ng-options="f for f in formats"><option></option></select>
+//                 //   </div>
+//                 // </div>
+
+//             html += '    <hr />'
+//             html += '    <button type="button" class="btn btn-sm btn-info" ng-click="today()">Today</button>'
+//             html += '    <button type="button" class="btn btn-sm btn-default" ng-click="setDate(2009, 7, 24)">2009-08-24</button>'
+//             html += '    <button type="button" class="btn btn-sm btn-danger" ng-click="clear()">Clear</button>'
+//             html += '    <button type="button" class="btn btn-sm btn-default" ng-click="toggleMin()" uib-tooltip="After today restriction">Min date</button>'
+//             html += '</div>';
+
+//             element.html(html);
+//         },
+//         link: function ($scope, $element, $attrs) {
+//         }
+//     }
+// })
 .directive('myDatepicker', function ($parse) {
    return {
       restrict: "AEC",
