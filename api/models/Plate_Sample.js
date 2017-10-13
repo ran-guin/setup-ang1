@@ -7,7 +7,7 @@
 
 module.exports = {
 
-  migrate: 'alter',
+  migrate: 'safe',
   tableName: 'Plate_Sample',
 
   attributes: {
@@ -16,6 +16,10 @@ module.exports = {
   	FKOriginal_Plate__ID  : { model: 'container'}
 
   },
+
+  alias: {
+  	id: 'Plate_Sample_ID'
+  }
 
 };
 
