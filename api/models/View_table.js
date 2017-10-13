@@ -9,6 +9,7 @@ module.exports = {
 
   attributes: {
   	view_id: { model: 'view' },
+  	model: { type: 'string' },
   	table_name: { type: 'string' },
   	join_condition: { type: 'string' },
   	left_join: { type: 'boolean' },
