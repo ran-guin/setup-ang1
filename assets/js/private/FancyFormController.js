@@ -1605,7 +1605,8 @@ app.controller('FancyFormController',
                dateFormat : 'yy-mm-dd',
                inline: true,
                onClose: processChange,
-               onSelect: processChange
+               onSelect: processChange,
+               changeYear: true,
             });
 
             scope.$watch(modelAccessor, function (val) {
