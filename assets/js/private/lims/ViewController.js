@@ -21,6 +21,7 @@ app.controller('ViewController',
 
 		$scope.view = config['view'] || {};
 		$scope.id = config['id'] || $scope.view.id;
+		$scope.initialPick = config['pick'] || [];
 
 		$scope.form = {
 			view_id: '',
@@ -33,6 +34,17 @@ app.controller('ViewController',
 			limit: 1000
 		};
 
+		$scope.resetForm();
+		
+		$scope.data = config['data'];
+		$scope.file = config['file'];
+		$scope.excel = config['excel'];
+
+		console.log('Config: ' + JSON.stringify(config));
+	}
+
+	$scope.resetForm = function () {
+
 		if ($scope.view) {
 			$scope.fields = $scope.view.fields;
 			$scope.field_data = $scope.view.field_data;
@@ -42,7 +54,7 @@ app.controller('ViewController',
 			$scope.form.condition = $scope.view.condition;
 		}
 
-		$scope.pick = config['pick'] || [];
+		$scope.pick = $scope.initialPick;
 		$scope.show = [];
 
 		if ($scope.pick && $scope.pick.length) {
@@ -65,12 +77,15 @@ app.controller('ViewController',
 		console.log("** FIELDS: " + JSON.stringify($scope.field_data));
 		for (var i=0; i<$scope.field_data.length; i++) {
 			var prompt = $scope.field_data[i].prompt;
-			var def_search = $scope.field_data[i].default_search;
-			if (def_search) {
-				console.log(prompt + ' set default condition: ' + def_search);
-				$scope.form.search[prompt] = def_search;
+			var def_search = $scope.field_data[i].default_search || '';
+			
+			console.log(prompt + ' set default condition: ' + def_search);
+			$scope.form.search[prompt] = def_search;
 
-			}
+			if ($scope.form.from && $scope.form.from[prompt]) { $scope.form.from[prompt] = def_search }
+			if ($scope.form.until && $scope.form.until[prompt]) { $scope.form.from[until] = '' }
+	
+
 			var f_type = $scope.field_data[i].field_type;
 			var def    = $scope.field_data[i].default_search;
 		            
@@ -99,10 +114,6 @@ app.controller('ViewController',
 		}
 
 
-		$scope.data = config['data'];
-		$scope.file = config['file'];
-		$scope.excel = config['excel'];
-
 		$scope.showOptions = true;
 
 		console.log("** INIT VIEW: " + JSON.stringify($scope.view));
@@ -111,7 +122,6 @@ app.controller('ViewController',
 
 		$scope.filename = null;
 
-		console.log('Config: ' + JSON.stringify(config));
 	}
 
 	$scope.addAtt = function(field) {
@@ -144,18 +154,20 @@ app.controller('ViewController',
 				select : $scope.show,
 				filename : $scope.filename,
 				limit  : $scope.form.limit,
-				render: $scope.render
-				// condition : $scope.condition
+				render: $scope.render,
+				condition : $scope.form.extra_condition
 			}		
 
-			console.log("FORM: " + JSON.stringify($scope.form));
-			console.log("POST: " + url);
+			console.log("** FORM: " + JSON.stringify($scope.form));
+			console.log("** POST: " + url);
 			console.log(JSON.stringify(data));
+			console.log("***************");
 
 			$http.post(url, data)
 			.then ( function (result) {
 
 				if ($scope.render) {
+					 // Not used...
 					console.log('try to render results');
 					console.log('Rendered: ' + JSON.stringify(result));
 
@@ -185,7 +197,7 @@ app.controller('ViewController',
 						}
 						console.log('Layer: ' + l);
 
-						console.log("Record: " + JSON.stringify(record));
+						if (i==0) { console.log("First Record: " + JSON.stringify(record)) }
 						$scope.layer_data[l].push(record);
 					}
 					$scope.layers = Object.keys($scope.layer_data);
