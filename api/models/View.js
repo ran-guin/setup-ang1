@@ -155,6 +155,8 @@ module.exports = {
   	var limit = options.limit || 1000; 	
   	var condition = options.condition;
 
+  	if (condition) { conditions.push(condition) }
+
   	var add_conditions = View.parse_search_conditions(view, search);
   	if (add_conditions) { 
   		for (var i=0; i<add_conditions.length; i++) {
@@ -162,9 +164,7 @@ module.exports = {
   		}
   	}
 
-  	if (condition) { conditions.push(condition) }
-
-  	var all_conditions = conditions.slice(0);  // shallow clone - includes standard condition + left join conditions
+  	var initial_conditions = conditions.slice(0);  // shallow clone - includes standard condition + left join conditions
 
 	View.dynamic_join_fields(view.field_data, select, conditions)
 	.then (function (result) {
@@ -221,7 +221,7 @@ module.exports = {
 	  		// if (layer && layer.length) { select += " GROUP BY " + layer.join(',') }
 	  		// ensure layer field is in list of outputs... 
 			
-			var setup = {view: view, query: select, pick: pickF, group: group, layer: layer, extra_conditions: add_conditions};
+			var setup = {view: view, query: select, pick: pickF, group: group, layer: layer, extra_conditions: initial_conditions};
 
 	  		deferred.resolve(setup);
 
@@ -294,8 +294,18 @@ dynamic_join_fields : function (ViewFields, select, conditions) {
 
 				}
 				else if (ViewField.type === 'field') {
-					pickF.push(ViewField.title + '.' + ViewField.field + ' AS ' + ViewField.prompt);
-					console.log("include: " + ViewField.title + '.' + ViewField.field + ' AS ' + ViewField.prompt);
+
+					var selectField = ViewField.title + '.' + ViewField.field;
+
+					if (ViewField.field_type && ViewField.field_type.match(/time/i) ) {
+						selectField = "LEFT(" + selectField + ",16)"
+					} 
+					else if (ViewField.field_type && ViewField.field_type.match(/date/i) ) {
+						selectField = "LEFT(" + selectField + ",10)"
+					}
+
+					pickF.push(selectField + ' AS ' + ViewField.prompt);
+					console.log("include: " + selectField + ' AS ' + ViewField.prompt);
 			
 					var Tcheck = ViewFields[j].table_name;
 					if (ViewFields[j].table_name !== ViewFields[j].title) {
