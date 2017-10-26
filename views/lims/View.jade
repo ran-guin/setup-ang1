@@ -90,7 +90,7 @@ block content
                             div(ng-show="extra_conditions && extra_conditions.length")
                                 b Extra Conditions:
                                 ul
-                                  li(ng-repeat="c in extra_conditions") 
+                                  li(ng-repeat="c in extra_conditions track by $index") 
                                     i.text-danger {{c}}
          
                             div.search-options#searchOptions(ng-show="showOptions")
@@ -243,25 +243,32 @@ block content
                                 a(href="/download?file={{excel.file}}")
                                     button.btn.btn-success(type='button') Download Results as Excel File
                                     b &nbsp; &nbsp; [{{excel.stats.size}} kB];
+
+                            span(ng-show="data.length == form.limit")
+                                p
+                                    br 
+                                    i.alert-danger &nbsp; &nbsp; Note: Record limit reached!  Revise search criteria and increase limit if required
          
                             span(ng-show="data.length && showData")
                                 p &nbsp;
 
 
                                 span(ng-if="form.layer") {{form.layer}} : 
-                                span(ng-repeat="lyr in layers")
+                                span(ng-repeat="lyr in layers track by $index")
                                     a(href='#' onClick='return false;' ng-click="setPage(lyr)")
                                         button.btn.btn-xs.btn-default(type='button')
                                             span &nbsp; {{lyr}} &nbsp;
 
                                 div(ng-show="page===lyr" ng-repeat="(lyr,ldata) in layer_data track by $index")
-                                    h3 {{form.layer}} = {{page}} 
-                                        i.text-info [{{ldata.length}} records]
+                                    h3
+                                        span(ng-show="form.layer && form.layer.length") {{form.layer}} = {{page}} : {{form.layer.length}}
+                                        i.text-info &nbsp; &nbsp; [{{ldata.length}} records]
+                                        
                                     table.table(style='background-color: lightyellow;')
                                         tr
-                                            th(ng-repeat="(fld,i) in ldata[0]" style='background-color:grey; color: white') 
+                                            th(ng-repeat="(fld,i) in ldata[0] track by $index" style='background-color:grey; color: white') 
                                                 b {{fld}}                        
                                         tr(ng-repeat="record in ldata track by $index")
-                                            td(ng-repeat="(j,fj) in record") {{fj}}       
+                                            td(ng-repeat="(j,fj) in record track by $index") {{fj}}       
 
       

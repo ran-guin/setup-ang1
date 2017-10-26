@@ -19,21 +19,24 @@ block content
           p &nbsp;
 
           table.table
-            tr
-              th Name
-              th Tables
-              th Fields
-              th Active
-            
+
             - tablesVisible = {}
 
-            each view in views
+            each view,index in views
               - id   = view.id || id;
               - name = view.name;
               - table = view.tables;
               - fields = view.fields;
               - desc = view.description
               - active = view.active
+              - picked = view.picked
+              - pick_list = picked.split(',')
+              - search = view.default_search
+              - layer = view.default_layer
+              - custom_name = view.custom_name
+              - last_name = ''
+              if (index)
+                - last_name = views[index-1].name
 
               - colour = 'red'
               if status
@@ -48,10 +51,9 @@ block content
               if tlist
                 - tlist = table.split(/\s*,\s*/);
 
-              tr(ng-show="include_all || #{active}") 
-                td  
-                  a(href="/getReport/#{id}")
-                    b(style='color: #{colour}') #{name}
+              tr(ng-show="!#{index} || '#{name}' != '#{last_name}'")
+                td
+                  h3 #{name}
                 td
                   div(ng-show="!tablesVisible['#{id}']")
                       button.btn.btn-success.btn-xs(type='button' onClick='return false;' data-toggle='tooltip' title='open' ng-click="tablesVisible['#{id}']=1")
@@ -68,7 +70,7 @@ block content
                               i.text-danger #{t}
 
                 td
-                  div(ng-show="!fieldsVisible['#{id}']")
+                  div(ng-show="!fieldsVisible['#{id}']" colspan=3)
                       button.btn.btn-success.btn-xs(type='button' onClick='return false;' data-toggle='tooltip' title='open' ng-click="fieldsVisible['#{id}']=1")
                         span show fields &nbsp;
                           i.fa.fa-expand
@@ -86,11 +88,40 @@ block content
                               - prefix = ''
                             else
                               - prefix = prefix + f             
+              tr(ng-show="!#{index} || '#{name}' != '#{last_name}'")
+                th Name
+                th Active
+                th Pre-Selected
+                th Default Condition
+                th Default Layer
+
+              tr(ng-show="include_all || #{active}") 
+                td 
+                  a(href="/getReport/#{id}")
+                    b(style='color: #{colour}') #{custom_name}
                 td
                   if active
                     i.fa.fa-check(style='color: green')
                   else
                     i.fa.fa-close(style='color: red')
+                td
+                  div(ng-show="!P['#{custom_name}']")
+                    button.btn.btn-success.btn-xs(type='button' onClick='return false;' data-toggle='tooltip' title='open' ng-click="P['#{custom_name}']=1")
+                      b #{pick_list.length - 1} Fields &nbsp;
+                        i.fa.fa-expand
+                  div(ng-show="P['#{custom_name}']")
+                    button.btn.btn-danger.btn-xs(type='button' onClick='return false;' data-toggle='tooltip' title='close' ng-click="P['#{custom_name}']=0")
+                      b #{pick_list.length - 1} Fields &nbsp;
+                        i.fa.fa-close
+                    ul
+                    each pick in pick_list
+                      li(ng-show="'#{pick}'") #{pick}
+                td
+                  ul
+                  each s in search.split(',')
+                    li(ng-show="'#{s}'") #{s}
+                td
+                  b #{layer}
 
 
 
