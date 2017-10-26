@@ -16,39 +16,40 @@ module.exports = {
   		unique: true
   	},
   	description: { type: 'text'},
-  	active: { 
-  		type: 'boolean',
-  		defaultsTo: true
-  	},
   	condition: {
   		type: 'string'
   	},
-  	default_layer: {
-  		type: 'string'
-  	}
   },
 
   list : function (view_id) {
   	var deferred = q.defer();
 
   	var fields = [
-  		'view.id', 
+  		'custom_view.id', 
   		'view.description as description', 
   		"Group_Concat(distinct concat(view_table.table_name,' AS ',view_table.title) SEPARATOR ', ') as tables", 
   		'view.name as name', 
-  		"GROUP_CONCAT(distinct CASE WHEN view_field.type = 'attribute' THEN CONCAT(view_field.field,' AS ',view_field.prompt) ELSE CONCAT(table_name,'.',view_field.field, ' AS ',view_field.prompt) END  SEPARATOR ', ') as fields",
+  		'custom_view.custom_name as custom_name',
+  		"GROUP_CONCAT(distinct CASE WHEN view_field.type = 'attribute' THEN CONCAT(view_field.field,' AS ',view_field.prompt) ELSE CONCAT(table_name,'.',view_field.field, ' AS ',view_field.prompt) END  ORDER BY display_order SEPARATOR ', ') as fields",
   		'default_layer',
   		"active",
-  		"GROUP_CONCAT(DISTINCT CASE WHEN type='attribute' THEN field ELSE null END) as attributes"
+  		"GROUP_CONCAT(DISTINCT CASE WHEN type='attribute' THEN field ELSE null END) as attributes",
+  		"GROUP_CONCAT(DISTINCT CASE WHEN custom_view_setting.pre_picked THEN view_field.prompt ELSE '' END) as picked",
+  		"GROUP_CONCAT(DISTINCT CASE WHEN LENGTH(custom_view_setting.default_search)>0 THEN CONCAT(view_field.prompt,'=',custom_view_setting.default_search)  ELSE '' END) as default_search"
   	];
 
 	var query = "Select " + fields.join(', ');
-	query += " FROM view, view_table LEFT JOIN view_field ON view_field.view_table_id=view_table.id";
-	query += " WHERE view_table.view_id=view.id";
+	query += " FROM (view, custom_view, view_table, view_field)";
+	query += " LEFT JOIN custom_view_setting ON view_field.id=view_field_id and custom_view_id=custom_view.id"
+	query += " WHERE custom_view.view_id=view.id AND view_table.view_id=view.id AND view_field.view_table_id=view_table.id";
 
-	if (view_id) { query += " AND view.id = " + view_id }
+	if (view_id) { query += " AND custom_view.id = " + view_id }
 
-	query += " GROUP BY view.id";
+	query += " GROUP BY view.id, custom_view.id";
+	query += " ORDER by view.name, custom_view.custom_name";
+
+
+	console.log("*** " + query);
 
 	Record.query_promise(query)
 	.then ( function (result) {
@@ -68,9 +69,12 @@ module.exports = {
   	.then (function (views) {
 
   		var view = views[0]
-  		var query = "Select * from view_table LEFT JOIN view_field ON view_table.id = view_field.view_table_id";
-  		query +=  " WHERE view_table.view_id = " + view_id;
+  		var query = "Select * from (custom_view, view_table)";
+  		query += " LEFT JOIN view_field ON view_table.id = view_field.view_table_id";
+  		query += " LEFT JOIN custom_view_setting ON view_field_id = view_field.id and custom_view_id=custom_view.id";
+  		query +=  " WHERE custom_view.view_id = view_table.view_id AND custom_view.id = " + view_id;
 
+  		console.log('initialize query: ' + query);
 	 	Record.query_promise(query)
 		.then ( function (ViewFields) {
 
@@ -79,6 +83,8 @@ module.exports = {
 	  		var attributes = [];
 	  		var prompts = {};
   			
+  			console.log(JSON.stringify(ViewFields));
+
   			for (var i=0; i<ViewFields.length; i++) {
 				var f;
 				switch (ViewFields[i].type) {
@@ -264,6 +270,7 @@ dynamic_join_fields : function (ViewFields, select, conditions) {
 			var prompt = ViewField.prompt || ViewField.field;
 			if (ViewField.field === fld ||  ViewField.prompt === fld || ViewField.title + '.' + ViewField.field === fld) {
 				if (ViewField.type === 'attribute') {
+					
 					// fld =  ViewField.field + '.Attribute_Value';
 					var primary = ViewField.table_name + '_ID';
 
@@ -506,17 +513,24 @@ dynamic_join_fields : function (ViewFields, select, conditions) {
 	    }
 	});
 
-	var sheetname = 'Results';
 	var sheets = [];
 	var layered_data;
+	var layers;
+
+	console.log("*** DATA ***");
+	console.log(JSON.stringify(data));
+	console.log("*********");
+	// if (!layer) {
+	// 	layer = 'Data Results';
+	// 	data = { 'Data Results' : data }
+	// }
 
 	if (layer) {
+		console.log('layer by ' + layer);
 		layered_data = {};
 		
 		layers = _.uniq(_.pluck(data, layer));
 		layers.sort(function(a, b){ return a-b });
-
-		sheetname = layers[0];
 
 		for (var i=0; i<layers.length; i++) {
 			var layername = layers[i];
@@ -533,12 +547,15 @@ dynamic_join_fields : function (ViewFields, select, conditions) {
 		}
 	}
 	else {
-		sheets.push(wb.addWorksheet(sheetname));
+		console.log('no layering');
+		layers = ['Data Results'];
+		sheets.push(wb.addWorksheet(layers[0]));
 	}
 
 	for (var s=0; s<layers.length; s++) {
 		var ldata;
 		var layername = layers[s];
+		console.log('layer: ' + layername);
 		if (layered_data) {
 			ldata = layered_data[layername];
 			console.log(layername + ': ' + ldata.length + ' records');

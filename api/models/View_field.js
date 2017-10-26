@@ -17,15 +17,8 @@ module.exports = {
     field_type: {
       type: 'String'
     },
-  	display_order: { type: 'integer'},
   	mandatory: { type: 'boolean'},
   	prompt: { type: 'string'},
-  	pre_picked: { type: 'boolean'},
-    default_search: { 
-      type: 'string',
-      defaultsTo: '',
-      notNull: true
-    }
   }
 };
 
