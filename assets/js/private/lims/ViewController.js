@@ -184,8 +184,8 @@ app.controller('ViewController',
 
 				$scope.data = data.data || [];
 
+				$scope.layer_data = {};
 				if ($scope.form.layer) {
-					$scope.layer_data = {};
 					console.log('separate into data layers... ');
 					for (var i=0; i<$scope.data.length; i++) {
 						var record = $scope.data[i];
@@ -205,7 +205,7 @@ app.controller('ViewController',
 				else {
 					console.log('use single layer for results');
 					$scope.layer_data['Results'] = $scope.data;
-					$scope.layers = 'Results';
+					$scope.layers = ['Results'];
 				}
 				$scope.page = $scope.layers[0];
 
