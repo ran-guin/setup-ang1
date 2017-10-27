@@ -19,6 +19,7 @@ module.exports = {
     },
   	mandatory: { type: 'boolean'},
   	prompt: { type: 'string'},
+    scope: { type: 'string'}
   }
 };
 
