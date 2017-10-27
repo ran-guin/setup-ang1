@@ -127,8 +127,7 @@ module.exports = {
 			console.log("* all fields: " + JSON.stringify(view.fields));
 			console.log('* picked fields: ' + JSON.stringify(view.prepicked));
 			console.log('* default layer: ' + view.layer);
-			console.log("* view fields: " + JSON.stringify(view.field_data));
-
+			console.log("* view fields: " + JSON.stringify(view.field_data[0]) + ' ...');
 			console.log('* prompts: ' + JSON.stringify(view.prompts));
 			console.log("*************************************************************");
 
@@ -270,7 +269,7 @@ dynamic_join_fields : function (ViewFields, select, conditions) {
 			var prompt = ViewField.prompt || ViewField.field;
 			if (ViewField.field === fld ||  ViewField.prompt === fld || ViewField.title + '.' + ViewField.field === fld) {
 				if (ViewField.type === 'attribute') {
-					
+
 					// fld =  ViewField.field + '.Attribute_Value';
 					var primary = ViewField.table_name + '_ID';
 
@@ -302,6 +301,43 @@ dynamic_join_fields : function (ViewFields, select, conditions) {
 				}
 				else if (ViewField.type === 'field') {
 
+					if (ViewField.join_condition.match(/Attribute_Value/)) {
+
+						var scope = ViewField.scope; /* necessary only for Lookup tables referenced by attribute */
+						var scope_model = scope;
+
+						for (var k=0; k<tables.length; k++) {
+				  			if (tables[k].match(scope)) {
+				  				var reg = RegExp('(\\w+) AS ' + scope);
+				  				var check = tables[k].match(reg);
+				  				scope_model = check[1];
+				  				console.log("** CHECKED " + JSON.stringify(check));
+				  				k = tables.length;
+				  			}
+				  		}
+
+						if (scope) {
+							console.log("** DYNAMICALLY ADD ID Field for " + ViewField.prompt);
+
+							var VF = ViewField.table_name;  /* special case for Attributes which are FK to lookup table */
+							var VFA = scope_model + '_Attribute';                        /* need to add attribute to enable link to lookup table */
+
+							var VF_cond = 'Attribute as ' + VF + "_Att ON " + VF + "_Att.Attribute_Name = '" + VF;
+							VF_cond += "' AND " + VF + "_Att.Attribute_Class = '" + scope_model + "'";
+				
+							var VFA_cond = VFA + " AS " + VF + " ON " + VF + ".FK_Attribute__ID=" + VF + '_Att.Attribute_ID';
+							VFA_cond += ' AND ' + VF + '.FK_' + scope_model + '__ID=' + scope + '.' + primary;
+
+					  		if (lj.indexOf(VF_cond) === -1) { lj.push(VF_cond) }
+					  		if (lj.indexOf(VFA_cond) === -1) { lj.push(VFA_cond) }
+						}
+						else {
+							console.log("*** Error determining Attribute Class - add class to join condition **");
+						}
+
+
+					}
+
 					var selectField = ViewField.title + '.' + ViewField.field;
 
 					if (ViewField.field_type && ViewField.field_type.match(/time/i) ) {
@@ -324,7 +360,7 @@ dynamic_join_fields : function (ViewFields, select, conditions) {
 			  				var ljf =  Tcheck + ' ON ' + ViewField.join_condition;
 			  				if (lj.indexOf(ljf) === -1) {
 			  					lj.push(ljf);
-				  				console.log("** LJ " + ljf + " **");
+				  				console.log("** LJf " + ljf + " **");
 			  				}
 			  			}
 					}
@@ -406,7 +442,7 @@ dynamic_join_fields : function (ViewFields, select, conditions) {
 				if (ViewFields[j].left_join) {
 					var add_lj = Tcheck + ' ON ' + ViewFields[j].join_condition
 					if (lj.indexOf(add_lj) === -1) {	
-	  					console.log("** LJ: " + add_lj);
+	  					console.log("** LJc: " + add_lj);
 
 	  					lj.push(add_lj);
 	  					extra_lj.push(add_lj)
@@ -645,11 +681,12 @@ dynamic_join_fields : function (ViewFields, select, conditions) {
 			var keys = Object.keys(search_input);
 			for (var i=0; i<keys.length; i++) {
 				var fld = keys[i];
+				var prompt = keys[i];
 
 				var search = search_input[fld];
 				
 				if (view && view.prompts && view.prompts[fld]) {
-					console.log('convert ' + fld + ' to ' + view.prompts[fld]);
+					// console.log('convert ' + fld + ' to ' + view.prompts[fld]);
 					fld = view.prompts[fld];
 				}
 				else {
@@ -657,13 +694,13 @@ dynamic_join_fields : function (ViewFields, select, conditions) {
 				}
 
 				var type;
-				var findex = _.pluck(view.field_data, 'prompt').indexOf(fld);
+				var findex = _.pluck(view.field_data, 'prompt').indexOf(prompt);
 				if (findex >=0) {
 					type = view.field_data[findex].field_type;
-					console.log('field type: ' + type);
+					console.log(fld + ' type: ' + type);
 				}
 				else {
-					console.log('type undetermined... could not find ' + fld + ' prompt in view specs')
+					console.log('type undetermined... could not find ' + prompt + ' prompt in view specs')
 				}
 
 				if (search && search.length) {
