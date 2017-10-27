@@ -57,6 +57,7 @@ block content
                                     h3 #{title}
                                 p
                                     - name = view.name;
+                                    - custom_name = view.custom_name
                                     - id   = view.id;
                                     - tables = view.tables
                                     - fields = view.fields
@@ -64,7 +65,7 @@ block content
                                     - active = view.active
                                     - attributes = view.attributes || []
 
-                                h4 #{name}
+                                h4 #{name} : #{custom_name}
                                 //- b From Tables: #{tables}
                                 p #{desc}
 
