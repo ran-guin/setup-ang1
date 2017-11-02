@@ -168,6 +168,7 @@ block content
                                                         - enums = form_type.match(/enum\((.*)\)/i);
                                                         - def   = view.field_data[i].default_search;
                                                         - model = view.field_data[i].model
+                                                        - field_id = view.field_data[i].view_field_id
                                                     td
                                                         if (form_type.match(/date/))
                                                             //- input-lg.my-datepicker-popup()
@@ -195,17 +196,25 @@ block content
                                                     //- td
                                                     //-     input(type='checkbox' ng-model="form.groupBy['#{fld}']" ng-click="updateList('groupBy','#{fld}')" name='group')
                                                     td
-                                                        input(type='radio' name='layer' ng-model="form.layer" value="#{prompt}" ng-disabled="!form.show['#{prompt}']")
+                                                        input(type='radio' name='layer' ng-model="form.layer" value="#{prompt}" ng-click="changedView()" ng-disabled="!form.show['#{prompt}']")
 
-                                input.form-control(ng-model='form.extra_condition' placeholder='-- optional additional condition --')
+                                input.form-control(ng-model='form.extra_condition' ng-change="changedView()" placeholder='-- optional additional condition --')
                                 p &nbsp;
                                 b Limit results to &nbsp;
                                 input(size=8 ng-model='form.limit')
                                 b &nbsp; Records &nbsp; &nbsp; &nbsp; &nbsp;
                                     span.navbar-right
                                     button.btn.btn-sm.btn-warning(ng-click='resetForm()' onClick='return false;') Reset Form                           
-
-                                p &nbsp;  
+                                p &nbsp;
+                                div.alert.alert-danger(ng-show="changed_view")
+                                    i View adapted... &nbsp; &nbsp;
+                                    button.btn.btn-sm.btn-primary(ng-click="saveView()" onClick='return false;') Save Custom View
+                                    span &nbsp; as &nbsp;
+                                    input(type='text' size=50 ng-model='view.custom_name')
+                                    span &nbsp;
+                                    input(type='checkbox' ng-model='form.overwrite')
+                                    span &nbsp; Overwrite
+                                    p &nbsp;  
                                 b Show Fields: &nbsp; &nbsp;
                                 b.text-success {{show.join(', ')}}                        
                                 //- br
