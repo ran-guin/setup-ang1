@@ -68,75 +68,81 @@ module.exports = {
  	View.list(view_id)
   	.then (function (views) {
 
-  		var view = views[0]
-  		var query = "Select * from (custom_view, view_table)";
-  		query += " LEFT JOIN view_field ON view_table.id = view_field.view_table_id";
-  		query += " LEFT JOIN custom_view_setting ON view_field_id = view_field.id and custom_view_id=custom_view.id";
-  		query +=  " WHERE custom_view.view_id = view_table.view_id AND custom_view.id = " + view_id;
+  		if (views && views.length) {
+	  		var view = views[0]
+	  		var query = "Select * from (custom_view, view_table)";
+	  		query += " LEFT JOIN view_field ON view_table.id = view_field.view_table_id";
+	  		query += " LEFT JOIN custom_view_setting ON view_field_id = view_field.id and custom_view_id=custom_view.id";
+	  		query +=  " WHERE custom_view.view_id = view_table.view_id AND custom_view.id = " + view_id;
 
-  		console.log('initialize query: ' + query);
-	 	Record.query_promise(query)
-		.then ( function (ViewFields) {
+	  		console.log('initialize query: ' + query);
+		 	Record.query_promise(query)
+			.then ( function (ViewFields) {
 
-	  		var all_fields = [];
-	  		var prepicked = [];
-	  		var attributes = [];
-	  		var prompts = {};
-  			
-  			console.log(JSON.stringify(ViewFields));
+		  		var all_fields = [];
+		  		var prepicked = [];
+		  		var attributes = [];
+		  		var prompts = {};
+	  			
+	  			console.log(JSON.stringify(ViewFields));
 
-  			for (var i=0; i<ViewFields.length; i++) {
-				var f;
-				switch (ViewFields[i].type) {
-					case 'field':  
-						f = ViewFields[i].title + '.' + ViewFields[i].field;
-						break;
-					case 'attribute':
-						f = ViewFields[i].field + '.Attribute_Value';
-						break;
-					case 'sql':
-						f = ViewFields[i].field;
-						break;
-					default: 
-						console.log(ViewFields[i].type + ' type not recognized');
-				}
+	  			for (var i=0; i<ViewFields.length; i++) {
+					var f;
+					switch (ViewFields[i].type) {
+						case 'field':  
+							f = ViewFields[i].title + '.' + ViewFields[i].field;
+							break;
+						case 'attribute':
+							f = ViewFields[i].field + '.Attribute_Value';
+							break;
+						case 'sql':
+							f = ViewFields[i].field;
+							break;
+						default: 
+							console.log(ViewFields[i].type + ' type not recognized');
+					}
 
-				if (f) {
+					if (f) {
 
-  					all_fields.push(f + ' AS ' + ViewFields[i].prompt);
+	  					all_fields.push(f + ' AS ' + ViewFields[i].prompt);
 
-  					prompts[ViewFields[i].prompt] = f;
+	  					prompts[ViewFields[i].prompt] = f;
 
-  					if (ViewFields[i].pre_picked) {
-  						prepicked.push(ViewFields[i].prompt);
-  					}
+	  					if (ViewFields[i].pre_picked) {
+	  						prepicked.push(ViewFields[i].prompt);
+	  					}
 
-  					if (ViewFields[i].type === 'attribute') {
-  						attributes.push(ViewFields[i].prompt);
-  					}
-  				}
-  			} 
+	  					if (ViewFields[i].type === 'attribute') {
+	  						attributes.push(ViewFields[i].prompt);
+	  					}
+	  				}
+	  			} 
 
-  			view.fields = all_fields;
-  			view.prepicked = prepicked;
-  			view.prompts   = prompts;
-  			view.field_data = ViewFields;
-  			view.attributes = attributes;
+	  			view.fields = all_fields;
+	  			view.prepicked = prepicked;
+	  			view.prompts   = prompts;
+	  			view.field_data = ViewFields;
+	  			view.attributes = attributes;
 
-			console.log("*************************************************************");
-			console.log("* all fields: " + JSON.stringify(view.fields));
-			console.log('* picked fields: ' + JSON.stringify(view.prepicked));
-			console.log('* default layer: ' + view.layer);
-			console.log("* view fields: " + JSON.stringify(view.field_data[0]) + ' ...');
-			console.log('* prompts: ' + JSON.stringify(view.prompts));
-			console.log("*************************************************************");
+				console.log("*************************************************************");
+				console.log("* all fields: " + JSON.stringify(view.fields));
+				console.log('* picked fields: ' + JSON.stringify(view.prepicked));
+				console.log('* default layer: ' + view.layer);
+				console.log("* view fields: " + JSON.stringify(view.field_data[0]) + ' ...');
+				console.log('* prompts: ' + JSON.stringify(view.prompts));
+				console.log("*************************************************************");
 
-  			deferred.resolve(view);
-  		})
-  		.catch ( function (err) {
-  			console.log("Error initializing view");
-  			deferred.reject(err);
-  		});
+	  			deferred.resolve(view);
+	  		})
+	  		.catch ( function (err) {
+	  			console.log("Error initializing view");
+	  			deferred.reject(err);
+	  		});
+	  	}
+	  	else {
+	  		console.log('no views available');
+	  		deferred.reject('no views');
+	  	}
   	})
   	.catch ( function (err) {
   		console.log('error getting list');
