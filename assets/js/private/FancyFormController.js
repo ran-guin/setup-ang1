@@ -915,7 +915,7 @@ app.controller('FancyFormController',
                     console.log('Reverse Lookup: ' + JSON.stringify($scope.ReverseLookup[element]));
                 }
 
-                console.log(element + " DROPDOWN LIST: " + JSON.stringify( $scope.MenuList ));
+                console.log(element + " DROPDOWN LIST: " + JSON.stringify( $scope.MenuList[element] ));
                 console.log("default to " + JSON.stringify($scope[element]));
 
                 deferred.resolve();
