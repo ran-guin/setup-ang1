@@ -9,11 +9,21 @@ module.exports = {
 
   attributes: {
   	view_id: { model: 'view'},
-  	custom_name: { type: 'string'},
-    active: { type: 'boolean' },
+  	custom_name: { 
+      type: 'string',
+      unique: true
+    },
+    active: { 
+      type: 'boolean',
+      defaultsTo: true
+    },
     default_layer: {
       type: 'string'
     }
+  },
+
+  alias: {
+    name: 'custom_name'
   }
 };
 
