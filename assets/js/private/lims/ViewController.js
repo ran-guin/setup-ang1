@@ -101,16 +101,18 @@ app.controller('ViewController',
 			if (f_type && f_type.match(/(enum|dropdown)/i)) {
 	            if (def) {
 		            $scope.msd[prompt] = [];
-		            var def_list = def.split(/\s*,\s*/);
+		            var def_list = def.split(/\s*[,\n]\s*/);
 		            for (var j=0; j<def_list.length; j++) {
-		            	if (f_type.match(/enum/i)) {
-			            	$scope.msd[prompt].push({name: def_list[j]})
+		            	// if (f_type.match(/enum/i)) {
+		            	if (def_list[j].match(/^\d+$/)) {
+			            	$scope.msd[prompt].push({id: def_list[j]})
 			            }
 			            else {
-			            	$scope.msd[prompt].push({id: def_list[j]})
+			            	$scope.msd[prompt].push({name: def_list[j]})
 			            }
 		            }
 		            console.log('default msd to ' + $scope.field_data[i].default_search);
+		            console.log(JSON.stringify($scope.msd[prompt]))
 	            }
 	            else {
 		            $scope.msd[prompt] = [];
@@ -118,7 +120,7 @@ app.controller('ViewController',
 	            console.log('initialize multiselect for ' + prompt);
 			}
 			else {
-				console.log('ignore ' + $scope.field_data[i].field_type);
+				console.log('ignore non-dropdown ' + $scope.field_data[i].field_type);
 			}
 		}
 
@@ -328,11 +330,11 @@ app.controller('ViewController',
 
 		for (var i=0; i<keys.length; i++) {
 			var k = keys[i];
-			if (hash[k].constructor === String && hash[k].length) {
+			if (hash[k] && hash[k].constructor === String && hash[k].length) {
 				Trim[k] = hash[k];
 			}
 			else if (hash[k]) {
-				Trim[k] = hash[k];
+				Trim[k] = JSON.parse(JSON.stringify(hash[k]));
 			}
 		}
 		return Trim;
@@ -342,8 +344,9 @@ app.controller('ViewController',
 		var url = "/saveReport";
 		$scope.reset_messages();
 		
+		console.log("SEARCH: " + JSON.stringify($scope.form.search)); 
 		$scope.validateForm( {search: $scope.form.search, from: $scope.form.from, until: $scope.form.until})
-		.then (function (result) {
+		.then (function (validated) {
 			console.log("validated form ...");
 			$scope.render = 0;
 
@@ -357,21 +360,20 @@ app.controller('ViewController',
 				condition : $scope.form.extra_condition,
 				custom_name : $scope.view.custom_name,
 				overwrite : overwrite,
-				field_id  : $scope.form.field_id
+				field_id  : $scope.trimmed_hash($scope.form.field_id)
 			};		
-	
-
 
 			$http.get("/lookup/custom_view?condition=custom_name='" + $scope.view.custom_name + "'")
 			.then ( function (found) {
 				var exists = found.data;
-				console.log(overwrite + " Exists ? " + JSON.stringify(exists));
+				console.log(overwrite + " Exists ? " + JSON.stringify(exists) + exists.length);
 				if (exists && exists.length && !overwrite) {
 					$scope.error("'" + $scope.view.custom_name + "' Exists.  Select overwrite option or change name");
 				}
 				else {
-					data.custom_view_id = exists[0].id;
-
+					if (exists && exists.length) {
+						data.custom_view_id = exists[0].id;
+					}
 					console.log("** POST: " + url);
 					console.log(JSON.stringify(data));
 					console.log("***************");
@@ -387,12 +389,12 @@ app.controller('ViewController',
 					})					
 				}
 			})
-			.catch ( function (err0) {
+			.catch ( function (Gerr) {
 				console.log("Error checking for existing view");
 				$scope.error("Could not access existing view list");
 			});
 		})
-		.catch ( function (err0) {
+		.catch ( function (Verr) {
 			console.log("error validating form");
 			$scope.error("Form validation error ?");
 		});
