@@ -150,6 +150,7 @@ module.exports.routes = {
   'POST /getReport/run' : 'ViewController.generate',
   
   'POST /saveReport' : 'ViewController.save',
+  'POST /resetReportStatus' : 'View.Controller.reset_status',
 
   'GET /download' : 'ViewController.download',
   'POST /download' : 'ViewController.download',
