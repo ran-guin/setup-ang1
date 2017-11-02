@@ -11,6 +11,8 @@ app.controller('ViewController',
 	$scope.view = '';
 	$scope.set_page_status('initialized');
 
+	$scope.changed_view = false;
+
    	$scope.load = function(config) {
         console.log('load : ' + JSON.stringify(config));
 
@@ -31,6 +33,7 @@ app.controller('ViewController',
 			search: {},
 			from: {},
 			until: {},
+			field_id: {},
 			limit: 1000
 		};
 
@@ -44,6 +47,8 @@ app.controller('ViewController',
 	}
 
 	$scope.resetForm = function () {
+
+		$scope.changed_view = false;
 
 		if ($scope.view) {
 			$scope.fields = $scope.view.fields;
@@ -75,16 +80,20 @@ app.controller('ViewController',
 		}
 	            
 		console.log("** FIELDS: " + JSON.stringify($scope.field_data));
+
 		for (var i=0; i<$scope.field_data.length; i++) {
 			var prompt = $scope.field_data[i].prompt;
+			var field_id = $scope.field_data[i].view_field_id;
 			var def_search = $scope.field_data[i].default_search || '';
 			
+			$scope.view_id = $scope.field_data[i].view_id;
+
 			console.log(prompt + ' set default condition: ' + def_search);
 			$scope.form.search[prompt] = def_search;
+			$scope.form.field_id[prompt] = field_id;
 
 			if ($scope.form.from && $scope.form.from[prompt]) { $scope.form.from[prompt] = def_search }
 			if ($scope.form.until && $scope.form.until[prompt]) { $scope.form.from[until] = '' }
-	
 
 			var f_type = $scope.field_data[i].field_type;
 			var def    = $scope.field_data[i].default_search;
@@ -121,7 +130,6 @@ app.controller('ViewController',
 		console.log("** Form SHOW: " + JSON.stringify($scope.form.show));
 
 		$scope.filename = null;
-
 	}
 
 	$scope.addAtt = function(field) {
@@ -282,6 +290,12 @@ app.controller('ViewController',
 			}
 			
 		}
+
+		$scope.changedView();
+	}
+
+	$scope.changedView = function () {
+		$scope.changed_view = true;
 	}
 
 	$scope.regenerate = function () {
@@ -306,6 +320,82 @@ app.controller('ViewController',
 		else{
 			console.log("no file to download - remember to select 'generate excel file' when generating results");
 		}
+	}
+
+	$scope.trimmed_hash = function (hash) {
+		var keys = Object.keys(hash);
+		var Trim = {};
+
+		for (var i=0; i<keys.length; i++) {
+			var k = keys[i];
+			if (hash[k].constructor === String && hash[k].length) {
+				Trim[k] = hash[k];
+			}
+			else if (hash[k]) {
+				Trim[k] = hash[k];
+			}
+		}
+		return Trim;
+	}
+
+	$scope.saveView = function () {
+		var url = "/saveReport";
+		$scope.reset_messages();
+		
+		$scope.validateForm( {search: $scope.form.search, from: $scope.form.from, until: $scope.form.until})
+		.then (function (result) {
+			console.log("validated form ...");
+			$scope.render = 0;
+
+			var overwrite = $scope.form.overwrite || false;
+
+			var data = {
+				view_id : $scope.view_id,
+				layer  : $scope.form.layer,
+				search : $scope.trimmed_hash($scope.form.search),
+				select : $scope.show,
+				condition : $scope.form.extra_condition,
+				custom_name : $scope.view.custom_name,
+				overwrite : overwrite,
+				field_id  : $scope.form.field_id
+			};		
+	
+
+
+			$http.get("/lookup/custom_view?condition=custom_name='" + $scope.view.custom_name + "'")
+			.then ( function (found) {
+				var exists = found.data;
+				console.log(overwrite + " Exists ? " + JSON.stringify(exists));
+				if (exists && exists.length && !overwrite) {
+					$scope.error("'" + $scope.view.custom_name + "' Exists.  Select overwrite option or change name");
+				}
+				else {
+					data.custom_view_id = exists[0].id;
+
+					console.log("** POST: " + url);
+					console.log(JSON.stringify(data));
+					console.log("***************");
+
+					$http.post(url, data)
+					.then ( function (result) {
+						console.log(JSON.stringify(result));
+						$scope.message("Saved view: " + $scope.view.custom_name);
+					})
+					.catch ( function (err) {
+						console.log("error saving view");
+						$scope.error("Error saving view");
+					})					
+				}
+			})
+			.catch ( function (err0) {
+				console.log("Error checking for existing view");
+				$scope.error("Could not access existing view list");
+			});
+		})
+		.catch ( function (err0) {
+			console.log("error validating form");
+			$scope.error("Form validation error ?");
+		});
 	}
 
 }]);
