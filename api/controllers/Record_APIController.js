@@ -76,7 +76,8 @@ module.exports = {
 				'lab_protocol' : ['name'],
 				'protocol_step' : ['name', 'message'],
 				'disease' : ['name'],
-				'vaccine' : ['name','code']
+				'vaccine' : ['name','code'],
+				'custom_view' : ['custom_name']
 			};
 		}
 
@@ -240,7 +241,7 @@ module.exports = {
 		var condition = req.param('condition') || 1;
 		var defaultTo = req.param('default') || 'ml';
 		var field     = req.param('field');
-		var label     = req.param('labal');
+		var label     = req.param('label');
 		var table = req.param('table');
 		var render = req.param('render') || false;
 
