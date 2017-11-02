@@ -772,5 +772,82 @@ dynamic_join_fields : function (ViewFields, select, conditions) {
 			input = farray;
 		}
 		return input;
+	},
+
+	save: function (custom_name, options, payload) {
+		if (!options) { options = {} }
+
+		var deferred = q.defer();
+
+		var select    = options.select || [];
+		var search    = options.search || {};
+		var default_layer     = options.default_layer;
+		var condition = options.condition;
+		var view_id   = options.view_id;
+		var custom_id = options.custom_id;
+
+		var overwrite = options.overwrite;
+		var field_ids = options.field_ids;
+
+		console.log('Save view: ' + custom_name + ' : ' + custom_id);
+		console.log(JSON.stringify(options));
+
+
+		var promises = [];
+		if (custom_id) {
+			console.log("delete previous settings");
+			promises.push(Record.delete_record('custom_view_setting', custom_id, 'custom_view_id', payload) )
+			id = options.custom_view_id;
+		}
+		else {
+			console.log("generate new custom_view");
+			var record =  {custom_name: custom_name, view_id: view_id, active: true, default_layer: default_layer};
+			promises.push(Record.createNew('custom_view',record, null, payload))
+		}
+
+		q.all(promises)
+		.then ( function (result) {
+			console.log("PROMISE: " + JSON.stringify(result));
+			if (!custom_id) {
+				custom_id = result[0].insertId;
+				console.log("created " + custom_id);
+			}
+
+			var added = {};
+			var settings = [];
+			for (var i=0; i<select.length; i++) {
+				var prompt = select[i];
+				var s = search[prompt] || '';
+				var field_id = field_ids[prompt];
+				if (field_id) {
+					var setting = { custom_view_id: custom_id, view_field_id: field_id, display_order: i, pre_picked: 1, default_search: s}
+					settings.push(setting);
+				}
+				else {
+					console.log("missing field id for " + prompt);
+				}
+				added[prompt] = 1;
+			}
+
+			// add search fields that are not selected if applicable 
+			var keys = Object.keys(search);
+			for (var i=0; i<keys.length; i++) {
+				var prompt = keys[i];
+				var s = search[prompt];
+				field_id = field_ids[prompt];
+				if (field_id && ! added[prompt]) {
+					var setting = { custom_view_id: custom_id, view_field_id: field_id, pre_picked: 0, default_search: s}
+					settings.push(setting);
+					console.log('searching without retrieval for ' + prompt);
+				}
+			}
+
+			Record.createNew('custom_view_setting', settings, null, payload);
+		})
+	
+		deferred.resolve();
+
+		return deferred.promise;
 	}
+
 }
