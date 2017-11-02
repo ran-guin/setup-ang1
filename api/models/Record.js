@@ -2244,12 +2244,20 @@ module.exports = {
 				if (debug) { console.log("SQL statement detected: " + value) }
 				noQuote = 1;
 			}
+			else if (value === 'true' || value === 'false') {
+				console.log("Should this be a boolean ?...");
+			}
 
 			// account for redundant quotes ... 
 
 			if (value.constructor === String && value.match(/^\"/) && value.match(/\"$/)) {
 				noQuote = 1;
 			}
+		}
+		else if (value && value.constructor === Boolean) {
+			console.log('boolean converted to int');
+			if (value) { value = 1 }
+			else { value = 0 }
 		}
 		else if (value && value.constructor === Date) {
 			value = JSON.stringify(value);
@@ -2354,27 +2362,38 @@ module.exports = {
     	return deferred.promise;
     },
 
-    delete_record : function (model, id) {
+    delete_record : function (model, id, idfield, payload) {
 
     	var deferred = q.defer();
     	
     	var Mod = sails.models[model] || {};    	
     	var	table = Mod.tableName || model;
 
-		// add access check potentially ...
-		// var idfield = table;
-		var idfield = Record.alias(model, 'id');
+    	if (! payload) {
+			console.log("no payload ?");
+			deferred.reject('user credentials unavailable... please see LIMS admin');
+		}
+		else {
+			var user = payload.userid;
+			var timestamp = '<now>';
 
-		var sql = "DELETE FROM " + table + " WHERE " + idfield + "=" + id;
-		
-		console.log(sql);
-		Record.query_promise(sql)
-		.then (function (result) {
-			deferred.resolve(result);
-		})
-		.catch ( function (err) {
-			deferred.reject(err);
-		})
+			// add access check potentially ...
+			// var idfield = table;
+			if (!idfield) {
+				idfield = Record.alias(model, 'id') || 'id';
+			}
+
+			var sql = "DELETE FROM " + table + " WHERE " + idfield + "=" + id;
+			
+			console.log(sql);
+			Record.query_promise(sql)
+			.then (function (result) {
+				deferred.resolve(result);
+			})
+			.catch ( function (err) {
+				deferred.reject(err);
+			});
+		}
 
 		return deferred.promise;
     
