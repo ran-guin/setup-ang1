@@ -97,6 +97,38 @@ module.exports = {
 
 	},
 
+	save: function (req, res) {
+		var body = req.body || {};
+
+		var custom_id = body.custom_view_id  || body.custom_id;
+
+		var view_id = body.view_id;
+		var select = body.select || body.pick;
+		var layer  = body.layer;
+		var search = body.search;
+		var condition = body.condition;
+		var custom_name = body.custom_name;
+
+		var field_ids = body.field_id;
+		var overwrite = body.overwrite;
+
+		var payload= req.session.payload || {};
+
+		var options = {select: select, search: search, layer: layer, condition: condition, overwrite: overwrite, view_id: view_id, custom_id: custom_id, field_ids: field_ids};
+
+		console.log('save view');
+		console.log( JSON.stringify(options));
+
+		View.save(custom_name, options, payload)
+		.then (function (saved) {
+			return res.json(saved);
+		})
+		.catch (function (err) {
+			console.log("Error saving view");
+			return res.json(err);
+		});
+	},	
+
 	generate: function (req, res) {
 		var body = req.body || {};
 
