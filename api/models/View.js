@@ -715,38 +715,42 @@ dynamic_join_fields : function (ViewFields, select, conditions) {
 					var range_test = /^(\d+\.?\d*)\s*\-\s*(\d+\.?\d*)\s*$/;  // allow float range or dates 
 					var date_range_test = /^['"]?(\d\d\d\d-\d\d[\s\-\d\\:]+)['"]?\s*\-\s*['"]?(\d\d\d\d-\d\d[\s\-\d\\:]+)['"]?\s*$/;  // allow float range or dates 
 					var wild_test = /\*/g;
-					var list_test = /\n/;
 
-					console.log('S:' + JSON.stringify(search));
-					
-					if (search.match(date_operator_test)) {
-						cond = search.replace(date_operator_test, " $1 '$2'");
-						c.push(fld + ' ' + cond);  // eg feild "< 10"
-						console.log("adding quotes to date operation: " + cond);
-					}
-					else if (search.match(val_operator_test)) {
-						c.push(fld + ' ' + search);  // eg feild "< 10"
-						console.log("standard operator: " + search);
-					}
-					else if (search.match(range_test)) {
-						var cond = search.replace(range_test, " BETWEEN '$1' AND '$2'");
-						c.push(fld + cond); // eg field "1 - 3"
-					}
-					else if (search.match(date_range_test)) {
-						var cond = search.replace(date_range_test, " BETWEEN '$1' AND '$2'");
-						c.push(fld + cond); // eg field "1 - 3"
-					}
-					else if (search.match(wild_test)) { 
-						var ss = search.replace(wild_test,'%');
-						c.push(fld + ' LIKE "' + ss + '"');
-					}
-					else if (search.match(list_test)) {
-						var list = search.split(list_test);
-						var csv = list.join('","');
+					if (search.constructor === Array) {
+						var csv = search.join('","');
 						c.push(fld + ' IN ("' + csv + '")');
 					}
 					else {
-						c.push(fld + ' = "' + search + '"');
+					
+						if (search.match(date_operator_test)) {
+							cond = search.replace(date_operator_test, " $1 '$2'");
+							c.push(fld + ' ' + cond);  // eg feild "< 10"
+							console.log("adding quotes to date operation: " + cond);
+						}
+						else if (search.match(val_operator_test)) {
+							c.push(fld + ' ' + search);  // eg feild "< 10"
+							console.log("standard operator: " + search);
+						}
+						else if (search.match(range_test)) {
+							var cond = search.replace(range_test, " BETWEEN '$1' AND '$2'");
+							c.push(fld + cond); // eg field "1 - 3"
+						}
+						else if (search.match(date_range_test)) {
+							var cond = search.replace(date_range_test, " BETWEEN '$1' AND '$2'");
+							c.push(fld + cond); // eg field "1 - 3"
+						}
+						else if (search.match(wild_test)) { 
+							var ss = search.replace(wild_test,'%');
+							c.push(fld + ' LIKE "' + ss + '"');
+						}
+						// else if (search.match(list_test)) {
+						// 	var list = search.split(list_test);
+						// 	var csv = list.join('","');
+						// 	c.push(fld + ' IN ("' + csv + '")');
+						// }
+						else {
+							c.push(fld + ' = "' + search + '"');
+						}
 					}
 				}
 			}
@@ -787,7 +791,7 @@ dynamic_join_fields : function (ViewFields, select, conditions) {
 
 		var select    = options.select || [];
 		var search    = options.search || {};
-		var default_layer     = options.default_layer;
+		var default_layer     = options.layer;
 		var condition = options.condition;
 		var view_id   = options.view_id;
 		var custom_id = options.custom_id;
@@ -803,6 +807,9 @@ dynamic_join_fields : function (ViewFields, select, conditions) {
 		if (custom_id) {
 			console.log("delete previous settings");
 			promises.push(Record.delete_record('custom_view_setting', custom_id, 'custom_view_id', payload) )
+
+			promises.push(Record.update('custom_view',custom_id, {default_layer: default_layer}, {}, payload));
+
 			id = options.custom_view_id;
 		}
 		else {
@@ -813,7 +820,7 @@ dynamic_join_fields : function (ViewFields, select, conditions) {
 
 		q.all(promises)
 		.then ( function (result) {
-			console.log("PROMISE: " + JSON.stringify(result));
+			console.log("save PROMISE: " + JSON.stringify(result));
 			if (!custom_id) {
 				custom_id = result[0].insertId;
 				console.log("created " + custom_id);
@@ -823,7 +830,15 @@ dynamic_join_fields : function (ViewFields, select, conditions) {
 			var settings = [];
 			for (var i=0; i<select.length; i++) {
 				var prompt = select[i];
-				var s = search[prompt] || '';
+
+				var s = '';
+				if (search[prompt] && search[prompt].constructor === Array) { 
+					s = search[prompt].join(" | ");
+				}
+				else if (search[prompt]) { 
+					s = search[prompt]; 
+				}
+
 				var field_id = field_ids[prompt];
 				if (field_id) {
 					var setting = { custom_view_id: custom_id, view_field_id: field_id, display_order: i, pre_picked: 1, default_search: s}
@@ -839,7 +854,14 @@ dynamic_join_fields : function (ViewFields, select, conditions) {
 			var keys = Object.keys(search);
 			for (var i=0; i<keys.length; i++) {
 				var prompt = keys[i];
-				var s = search[prompt];
+				var s = '';
+				if (search[prompt] && search[prompt].constructor === Array) { 
+					s = search[prompt].join(" | ");
+				}
+				else if (search[prompt]) { 
+					s = search[prompt]; 
+				}
+
 				field_id = field_ids[prompt];
 				if (field_id && ! added[prompt]) {
 					var setting = { custom_view_id: custom_id, view_field_id: field_id, pre_picked: 0, default_search: s}
@@ -848,6 +870,7 @@ dynamic_join_fields : function (ViewFields, select, conditions) {
 				}
 			}
 
+			console.log('add record: ' + JSON.stringify(settings));
 			Record.createNew('custom_view_setting', settings, null, payload);
 		})
 	
