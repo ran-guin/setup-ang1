@@ -1346,7 +1346,7 @@ app.controller('FancyFormController',
                     var refs = _.pluck($scope.msd[field], props[0]);
                     console.log(props[0] + " REFS = " + JSON.stringify($scope.msd[field]))
                     console.log(' replace ' +JSON.stringify(search[field]));
-                    search[field] = refs.join("\n");
+                    search[field] = refs;  // .join("\n");
                     console.log(' with ' +JSON.stringify(search[field]));                   
                 }
                 else {
