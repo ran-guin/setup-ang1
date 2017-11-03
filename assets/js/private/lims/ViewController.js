@@ -101,7 +101,7 @@ app.controller('ViewController',
 			if (f_type && f_type.match(/(enum|dropdown)/i)) {
 	            if (def) {
 		            $scope.msd[prompt] = [];
-		            var def_list = def.split(/\s*[,\n]\s*/);
+		            var def_list = def.split(/\s*[,\n|]\s*/);
 		            for (var j=0; j<def_list.length; j++) {
 		            	// if (f_type.match(/enum/i)) {
 		            	if (def_list[j].match(/^\d+$/)) {
