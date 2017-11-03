@@ -2156,6 +2156,7 @@ module.exports = {
 
 	parseValue : function (value, options, payload) {
 		// parses values that may be formatted for specific purposes (eg '<today>, '<id>','<SQL_statement>' ...)
+		console.log('parse ' + value + ' : ' + value.constructor);
 
 		if (! options ) { options = {} }
 
@@ -2188,6 +2189,7 @@ module.exports = {
 		
 		if (value == null) { }			
 		else if (value.constructor === String) {
+			console.log("parse string... ");
 			if (value.match(/^<userid>$/i)) {
 				// change this to access user id and phase out alDente_ID ... 
 				value = payload.userid || 0;
@@ -2254,7 +2256,7 @@ module.exports = {
 				noQuote = 1;
 			}
 		}
-		else if (value && value.constructor === Boolean) {
+		else if (value.constructor === Boolean) {
 			console.log('boolean converted to int');
 			if (value) { value = 1 }
 			else { value = 0 }
@@ -2262,6 +2264,9 @@ module.exports = {
 		else if (value && value.constructor === Date) {
 			value = JSON.stringify(value);
 			noQuote=1;
+		}
+		else {
+			console.log("type not recognized ? " + value.constructor)
 		}
 
 
