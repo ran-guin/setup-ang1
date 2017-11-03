@@ -278,6 +278,55 @@ module.exports = {
 			res.render('core/500.jade')
 		})
 
+	},
+
+	reset_status: function (req, res) {
+		var body = req.body || {};
+
+		var custom_id = body.custom_id;
+		var status    = body.status;
+
+		var payload = req.session.payload || {};
+
+		if (custom_id) {
+			if (status.match(/activ/)) {
+				var active;
+				if (status.match(/^activ/)) { active = true }
+				else { active = false }
+
+				Record.update('custom_view', custom_id, { active: active })
+				.then ( function (ok) {
+					console.log("set active status to " + active);
+					return res.json(ok);
+				})
+				.catch ( function (err) {
+					console.log('error activating')
+					return res.json(err);
+				})
+			}
+			else if (status === 'delete') {
+				Record.delete_record('custom_view_setting', custom_id, 'custom_view_id', payload)
+				.then (function (ok) {
+					Record.delete_record('custom_view', custom_id, null, payload)
+					.then ( function (ok2) {
+						console.log("deleted view and settings")
+						return res.json(ok2);
+					})
+					.catch ( function (err2) {
+						console.log('error deleting view');
+						return res.json(err2);
+					})
+				})
+				.catch ( function (err) {
+					return res.json(err);
+				});
+			}
+			else {
+				console.log('unidentified status');
+				return res.json({error: 'unidentified status'});
+			}
+		}
 	}
+
 };
 
