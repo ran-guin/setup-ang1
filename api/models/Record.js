@@ -2156,7 +2156,6 @@ module.exports = {
 
 	parseValue : function (value, options, payload) {
 		// parses values that may be formatted for specific purposes (eg '<today>, '<id>','<SQL_statement>' ...)
-		console.log('parse ' + value + ' : ' + value.constructor);
 
 		if (! options ) { options = {} }
 
@@ -2189,7 +2188,6 @@ module.exports = {
 		
 		if (value == null) { }			
 		else if (value.constructor === String) {
-			console.log("parse string... ");
 			if (value.match(/^<userid>$/i)) {
 				// change this to access user id and phase out alDente_ID ... 
 				value = payload.userid || 0;
