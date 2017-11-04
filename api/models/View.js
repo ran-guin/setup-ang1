@@ -797,13 +797,13 @@ dynamic_join_fields : function (ViewFields, select, conditions) {
 		var custom_id = options.custom_id;
 
 		var overwrite = options.overwrite;
-		var field_ids = options.field_ids;
 
+		var field_ids = {};
 		console.log('Save view: ' + custom_name + ' : ' + custom_id);
 		console.log(JSON.stringify(options));
 
 
-		var promises = [];
+		var promises = [Record.query_promise('Select view_field.id, prompt from view_field, view_table where view_table_id=view_table.id AND view_id = ' + view_id)];
 		if (custom_id) {
 			console.log("delete previous settings");
 			promises.push(Record.delete_record('custom_view_setting', custom_id, 'custom_view_id', payload) )
@@ -820,9 +820,17 @@ dynamic_join_fields : function (ViewFields, select, conditions) {
 
 		q.all(promises)
 		.then ( function (result) {
-			console.log("save PROMISE: " + JSON.stringify(result));
+			console.log("save PROMISE: " + JSON.stringify(result));			var vf = result[0];
+			
+			for (var i=0; i<vf.length; i++) {
+				var prompt = vf[i].prompt;
+				var vf_id  = vf[i].id
+				field_ids[prompt] = vf_id;
+			}
+			console.log("parsed vfids: " + JSON.stringify(field_ids));
+
 			if (!custom_id) {
-				custom_id = result[0].insertId;
+				custom_id = result[1].insertId;
 				console.log("created " + custom_id);
 			}
 
