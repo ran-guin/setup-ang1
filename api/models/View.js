@@ -34,7 +34,7 @@ module.exports = {
   		'default_layer',
   		"active",
   		"GROUP_CONCAT(DISTINCT CASE WHEN type='attribute' THEN field ELSE null END) as attributes",
-  		"GROUP_CONCAT(DISTINCT CASE WHEN custom_view_setting.pre_picked THEN view_field.prompt ELSE '' END) as picked",
+  		"GROUP_CONCAT(DISTINCT CASE WHEN custom_view_setting.pre_picked THEN view_field.prompt ELSE '' END ORDER BY custom_view_setting.display_order, view_field.prompt) as picked",
   		"GROUP_CONCAT(DISTINCT CASE WHEN LENGTH(custom_view_setting.default_search)>0 THEN CONCAT(view_field.prompt,'=',custom_view_setting.default_search)  ELSE '' END) as default_search"
   	];
 
@@ -46,7 +46,7 @@ module.exports = {
 	if (view_id) { query += " AND custom_view.id = " + view_id }
 
 	query += " GROUP BY view.id, custom_view.id";
-	query += " ORDER by view.name, custom_view.custom_name";
+	query += " ORDER by view.name, custom_view.custom_name, custom_view_setting.display_order, view_field.prompt";
 
 
 	console.log("*** " + query);
@@ -74,6 +74,8 @@ module.exports = {
 	  		query += " LEFT JOIN view_field ON view_table.id = view_field.view_table_id";
 	  		query += " LEFT JOIN custom_view_setting ON view_field_id = view_field.id and custom_view_id=custom_view.id";
 	  		query +=  " WHERE custom_view.view_id = view_table.view_id AND custom_view.id = " + view_id;
+	  		query += " AND prompt IS NOT NULL";
+	  		query += " ORDER BY custom_view.id, custom_view_setting.display_order, view_field.prompt";
 
 	  		console.log('initialize query: ' + query);
 		 	Record.query_promise(query)
