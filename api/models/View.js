@@ -705,17 +705,17 @@ dynamic_join_fields : function (ViewFields, select, conditions) {
 				var findex = _.pluck(view.field_data, 'prompt').indexOf(prompt);
 				if (findex >=0) {
 					type = view.field_data[findex].field_type;
-					console.log(fld + ' type: ' + type);
 				}
 				else {
 					console.log('type undetermined... could not find ' + prompt + ' prompt in view specs')
 				}
 
 				if (search && search.length) {
-					var date_operator_test = /^([<>]\=?)\s*(\d\d\d\d\-\d\d.*)/;
-					var val_operator_test = /^[<>]\=?/;
-					var range_test = /^(\d+\.?\d*)\s*\-\s*(\d+\.?\d*)\s*$/;  // allow float range or dates 
-					var date_range_test = /^['"]?(\d\d\d\d-\d\d[\s\-\d\\:]+)['"]?\s*\-\s*['"]?(\d\d\d\d-\d\d[\s\-\d\\:]+)['"]?\s*$/;  // allow float range or dates 
+					console.log(fld + ' Test: ' + search);
+					var date_operator_test = /^\s*([<>]\=?)\s*(\d\d\d\d\-\d\d.*)/;
+					var val_operator_test = /^\s*[<>]\=?/;
+					var range_test = /^\s*(\d+\.?\d*)\s*\-\s*(\d+\.?\d*)\s*$/;  // allow float range or dates 
+					var date_range_test = /^\s*['"]?(\d\d\d\d-\d\d[\s\-\d\\:]+)['"]?\s*\-\s*['"]?(\d\d\d\d-\d\d[\s\-\d\\:]+)['"]?\s*$/;  // allow float range or dates 
 					var wild_test = /\*/g;
 
 					if (search.constructor === Array) {
@@ -751,6 +751,7 @@ dynamic_join_fields : function (ViewFields, select, conditions) {
 						// 	c.push(fld + ' IN ("' + csv + '")');
 						// }
 						else {
+							console.log(' NO special formatting required for ' + search);
 							c.push(fld + ' = "' + search + '"');
 						}
 					}
