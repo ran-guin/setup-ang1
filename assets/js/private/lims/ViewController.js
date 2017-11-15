@@ -88,12 +88,12 @@ app.controller('ViewController',
 			
 			$scope.view_id = $scope.field_data[i].view_id;
 
-			console.log(prompt + ' set default condition: ' + def_search);
+			if (def_search) { console.log(prompt + ' set default condition: ' + def_search) }
 			$scope.form.search[prompt] = def_search;
 			$scope.form.field_id[prompt] = field_id;
 
-			if ($scope.form.from && $scope.form.from[prompt]) { $scope.form.from[prompt] = def_search }
-			if ($scope.form.until && $scope.form.until[prompt]) { $scope.form.from[until] = '' }
+			if ($scope.form.from && $scope.form.from[prompt]) { $scope.form.from[prompt] = '' }
+			if ($scope.form.until && $scope.form.until[prompt]) { $scope.form.until[prompt] = '' }
 
 			var f_type = $scope.field_data[i].field_type;
 			var def    = $scope.field_data[i].default_search;
