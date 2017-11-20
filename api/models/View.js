@@ -46,7 +46,7 @@ module.exports = {
 	if (view_id) { query += " AND custom_view.id = " + view_id }
 
 	query += " GROUP BY view.id, custom_view.id";
-	query += " ORDER by view.name, custom_view.custom_name, custom_view_setting.display_order, view_field.prompt";
+	// query += " ORDER by view.name, custom_view.custom_name, custom_view_setting.display_order, view_field.prompt";
 
 
 	console.log("*** " + query);
@@ -688,6 +688,7 @@ dynamic_join_fields : function (ViewFields, select, conditions) {
 			var c = [];
 			var keys = Object.keys(search_input);
 			for (var i=0; i<keys.length; i++) {
+				console.log(i + ' / ' + keys.length)
 				var fld = keys[i];
 				var prompt = keys[i];
 
@@ -710,20 +711,21 @@ dynamic_join_fields : function (ViewFields, select, conditions) {
 					console.log('type undetermined... could not find ' + prompt + ' prompt in view specs')
 				}
 
-				if (search && search.length) {
+				if (search != null && search.length) {
 					console.log(fld + ' Test: ' + search);
 					var date_operator_test = /^\s*([<>]\=?)\s*(\d\d\d\d\-\d\d.*)/;
 					var val_operator_test = /^\s*[<>]\=?/;
 					var range_test = /^\s*(\d+\.?\d*)\s*\-\s*(\d+\.?\d*)\s*$/;  // allow float range or dates 
 					var date_range_test = /^\s*['"]?(\d\d\d\d-\d\d[\s\-\d\\:]+)['"]?\s*\-\s*['"]?(\d\d\d\d-\d\d[\s\-\d\\:]+)['"]?\s*$/;  // allow float range or dates 
 					var wild_test = /\*/g;
+					var list_test = /\s*\|\s*/;
+					var linefeed = /\n/;
 
 					if (search.constructor === Array) {
 						var csv = search.join('","');
 						c.push(fld + ' IN ("' + csv + '")');
 					}
-					else {
-					
+					else {	
 						if (search.match(date_operator_test)) {
 							cond = search.replace(date_operator_test, " $1 '$2'");
 							c.push(fld + ' ' + cond);  // eg feild "< 10"
@@ -741,15 +743,24 @@ dynamic_join_fields : function (ViewFields, select, conditions) {
 							var cond = search.replace(date_range_test, " BETWEEN '$1' AND '$2'");
 							c.push(fld + cond); // eg field "1 - 3"
 						}
+						else if (search.match(list_test)) {
+							var list = search.split(list_test);
+							var orList = []
+							for (var j=0; j<list.length; j++) {
+								var ss = list[j].replace(wild_test,'%');
+								orList.push(fld + ' LIKE "' + ss + '"')
+							}
+							c.push('(' + orList.join(' OR ') + ')');
+						}
+						else if (search.match(linefeed)) {
+							var list = search.split(linefeed);
+							var csv = list.join('","');
+							c.push(fld + ' IN ("' + csv + '")');
+						}
 						else if (search.match(wild_test)) { 
 							var ss = search.replace(wild_test,'%');
 							c.push(fld + ' LIKE "' + ss + '"');
 						}
-						// else if (search.match(list_test)) {
-						// 	var list = search.split(list_test);
-						// 	var csv = list.join('","');
-						// 	c.push(fld + ' IN ("' + csv + '")');
-						// }
 						else {
 							console.log(' NO special formatting required for ' + search);
 							c.push(fld + ' = "' + search + '"');
