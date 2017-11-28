@@ -937,7 +937,8 @@ module.exports = {
 				var parsed_error = Record.parse_standard_error(err);
 				console.log("Parsed: " + parsed_error);
 
-				deferred.reject(parsed_error);
+				var e = new Error(parsed_error);
+				deferred.reject(e);
 			}
 			else { deferred.resolve(result) }
 		});
@@ -2289,8 +2290,9 @@ module.exports = {
         //
         var Map = {
             "Duplicate entry \'.+\' encountered" : "<match>",
-            'Unknown column'  : "Unrecognized column in database (?) - please inform LIMS administrator",
+            'Unknown column \'.+\''  : "<match> - please inform LIMS administrator",
             "Error saving \\w+" : "<match>",
+            "BAD_FIELD_ERROR: .+": "Bad Field: <match>"
         };
 
         console.log("Parse " + err.constructor + ' err ' + err);
