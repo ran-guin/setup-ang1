@@ -77,7 +77,8 @@ module.exports = {
 				'protocol_step' : ['name', 'message'],
 				'disease' : ['name'],
 				'vaccine' : ['name','code'],
-				'custom_view' : ['custom_name']
+				'custom_view' : ['custom_name'],
+				'country' : ['name', 'country', 'region', 'subregion']
 			};
 		}
 
