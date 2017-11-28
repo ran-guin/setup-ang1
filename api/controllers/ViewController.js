@@ -240,7 +240,15 @@ module.exports = {
 			})
 			.catch (function (err) {
 				console.log("Error Generating view");
-				var msg = err.message;
+
+				var msg = ''
+				if (err.constructor === Object) {
+					if (err.message) { msg = err.message }
+					if (err.error) { msg += ' [' + err.error + ']' }
+				}
+				else {
+					msg = err;
+				}
 				console.log(msg);
 
 				options.message = 'error generating view: ' + msg;
