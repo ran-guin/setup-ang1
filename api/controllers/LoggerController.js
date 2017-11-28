@@ -13,6 +13,8 @@ module.exports = {
 
 	'log' : function (req, res) {
 		// usage pass either error OR message in body ...
+		console.log("Generating log message");
+
 		var body = req.body || {};
 		var level = req.param('level');
 
@@ -20,6 +22,9 @@ module.exports = {
 
 		var message = data.message;
 		var e = data.err;
+
+
+		console.log(level + ': ' + JSON.stringify(body))
 
 		delete data.message;
 		delete data.err;
@@ -41,12 +46,13 @@ module.exports = {
 			return res.json('Error logged');
 		}
 		else if (message) {
+			console.log('remote message logged');
 			Logger.info(message, data);
 			return res.json('Message logged');
 		}
 		else {
-			Logger.info('called remoteLog without error or message')
 			console.log("No message supplied to log")
+			Logger.info('called remoteLog without error or message')
 			return res.json('No Message logged');
 		}
 
