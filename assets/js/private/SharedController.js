@@ -109,11 +109,11 @@ app.controller('SharedController',
 
         $scope.reset_messages('init');
 
-        $scope.remoteLog = function log(err, level) {
+        $scope.remoteLog = function log(err, level, payload) {
             var msg;
             if (err.constructor === String) {
                 msg = err;
-                err = null;
+                err = { message: msg, context: 'unknown' }
             }
 
             console.log("Posting " + level + " error/message: " + msg);
@@ -121,10 +121,12 @@ app.controller('SharedController',
             err_string = JSON.stringify(err, ['message', 'context', 'arguments', 'name', 'stack']);
 
             // requires services/logger.js and route to logger.js 
-            $http.post('/log/' + level, { err: err_string, message: msg })
+            $http.post('/log/' + level, { err: err_string, message: msg, payload: payload })
             .then ( function (resp) {
                 console.log("err: " + err_string);
                 console.log('message ? : ' + msg);
+                console.log("log response: " + JSON.stringify(resp));
+
                 if (msg) { 
                     if (level === 'error' || level === 'critical') {
                         $scope.errors.push(msg);
