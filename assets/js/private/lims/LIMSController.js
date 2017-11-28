@@ -88,6 +88,7 @@ function limsController ($scope, $rootScope, $http, $q) {
         })
         .catch (function (err) {
             console.log("Error with remote_log of " + JSON.stringify(data));
+            console.log(JSON.stringify(err));
         });
     }
 
