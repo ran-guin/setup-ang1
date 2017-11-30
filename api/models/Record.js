@@ -91,6 +91,9 @@ module.exports = {
 		var prefix = Barcode.prefix(table);
 		var regex = new RegExp( prefix, 'i');
 
+		console.log('prefix: ' + prefix); 
+		console.log('ids: ' + JSON.stringify(ids));
+
 		var barcode_ids = [];
 		var mapped = {};
 		var reverse_mapped;
@@ -99,7 +102,16 @@ module.exports = {
 
 		var select = idField + ' AS id';
 
-		if (ids && ids[0] && ids[0].match(regex)) { 
+		if (ids && ids[0] && ids[0].constructor === Number) {
+			reverse_mapped = {};
+			console.log('validating ids as integers...')
+			ids.map( function (i) {
+				mapped[i] = i;
+				reverse_mapped[i] = i;
+			});
+			conditions.push(idField + " IN (" + ids.join(',') + ")");
+		}
+		else if (ids && ids[0] && ids[0].constructor === String && ids[0].match(regex)) { 
 
 			reverse_mapped = {};
 			// strip prefix from valid barcodes 
