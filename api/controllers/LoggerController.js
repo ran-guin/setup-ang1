@@ -28,6 +28,8 @@ module.exports = {
 
 		delete data.message;
 		delete data.err;
+
+		data.quiet = true;  // no need to generate sails.config error since this is a remote log request
 		// delete this information so other data may be passed...
 
 		if (! e && level.match(/(error|warning|critical)/) ) {
