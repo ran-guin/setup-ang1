@@ -9,7 +9,7 @@ module.exports = {
 
   attributes: {
   	view_table_id: { model: 'view_table'},
-  	field: { type: 'string'},
+  	field: { type: 'text'},
   	type: { 
   		type: 'string',
   		enum: ['field','attribute','sql']
