@@ -40,8 +40,11 @@ module.exports = {
 
 	log : function (e, level, msg, options) {
 
+		if (!options) { options = {} }
+			
 		var data = options || {};
 		data.level = level || 'error';
+		var quiet = options.quiet;
 
 		if (e && e.constructor === String) {
 			console.log("Convert string message to error");
@@ -71,7 +74,7 @@ module.exports = {
 				e.message = messages[messages.length-1];
 			}	
 
-			if (messages.length && sails.config) {
+			if (messages.length && sails.config && !quiet) {
 				for (var i=0; i<messages.length; i++) {
 					if (level == 'error' || level == 'critical') { sails.config.errors.push(msg) }
 					else if (level == 'warning') { sails.config.warnings.push(msg) }
