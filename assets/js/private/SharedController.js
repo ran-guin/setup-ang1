@@ -110,13 +110,15 @@ app.controller('SharedController',
         $scope.reset_messages('init');
 
         $scope.remoteLog = function log(err, level, payload) {
-            var msg;
             if (err.constructor === String) {
                 msg = err;
                 err = { message: msg, context: 'unknown' }
             }
+            else {
+                msg = err.message
+            }
 
-            console.log("Posting " + level + " error/message: " + msg);
+            console.log("Posting " + level + ": " + msg);
 
             err_string = JSON.stringify(err, ['message', 'context', 'arguments', 'name', 'stack']);
 
