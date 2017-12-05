@@ -318,7 +318,8 @@ dynamic_join_fields : function (ViewFields, select, conditions) {
 				  			if (tables[k].match(scope)) {
 				  				var reg = RegExp('(\\w+) AS ' + scope);
 				  				var check = tables[k].match(reg);
-				  				scope_model = check[1];
+				  				if (check) { scope_model = check[1] }
+				  					
 				  				console.log("** CHECKED " + JSON.stringify(check));
 				  				k = tables.length;
 				  			}
