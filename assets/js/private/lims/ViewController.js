@@ -400,4 +400,31 @@ app.controller('ViewController',
 		});
 	}
 
+	$scope.draw = function () {
+
+		var data, file;
+
+		var test = {'F80-1': [{name: 'Alfred', value: 32}, {name: 'Joey', value: 66}], 'F80-3': [4,5,33.32,9]};
+		var sets = Object.keys(test);
+
+		console.log('data: ' + JSON.stringify($scope.data));
+
+		for (var i=0; i<sets.length; i++) {
+			
+			var id = sets[i];
+			data = test[id];
+			// Test 3 input variations below: 
+
+			// data = [4,5,33.32,9];
+			// data = [{name: 'Alfred', value: 32}, {name: 'Joey', value: 66}]
+			// file = 'data.tsv'; // $scope.fileData('data.tsv');
+
+			var options = {
+				data: data,
+				file: file
+			}
+			console.log(id + ': ' + JSON.stringify(options));
+			$scope.d3draw(id, options);
+		}
+	}
 }]);
