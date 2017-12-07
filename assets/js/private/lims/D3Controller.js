@@ -42,6 +42,58 @@ app.controller('D3Controller',
 
 		}
 	}
+	$scope.example = function (id, data, options) {
+		var width = 960,
+		    height = 500;
+
+		var x = d3.scale.ordinal()
+		    .rangeRoundBands([0, width], .1);
+
+		var y = d3.scale.linear()
+		    .range([height, 0]);
+
+
+		// customize ... 
+
+		var wrapper = d3.select('#d3block');   // this is the one element in the page that should be defined... 
+			
+		var block = wrapper.append('div');
+		
+		var chart = block.append('svg')
+			.attr('class', 'd3chart')
+			.attr('id', id)
+		    .attr("width", width)
+		    .attr("height", height);
+
+
+		// END Custom ..
+
+		d3.tsv("data.tsv", type, function(error, data) {
+		  x.domain(data.map(function(d) { return d.name; }));
+		  y.domain([0, d3.max(data, function(d) { return d.value; })]);
+
+		  var bar = chart.selectAll("g")
+		      .data(data)
+		    .enter().append("g")
+		      .attr("transform", function(d) { return "translate(" + x(d.name) + ",0)"; });
+
+		  bar.append("rect")
+		      .attr("y", function(d) { return y(d.value); })
+		      .attr("height", function(d) { return height - y(d.value); })
+		      .attr("width", x.rangeBand());
+
+		  bar.append("text")
+		      .attr("x", x.rangeBand() / 2)
+		      .attr("y", function(d) { return y(d.value) + 3; })
+		      .attr("dy", ".75em")
+		      .text(function(d) { return d.value; });
+		});
+
+		function type(d) {
+		  d.value = +d.value; // coerce to number
+		  return d;
+		}
+	}
 
 	$scope.drawData = function (id, data, options) {
 
@@ -147,9 +199,7 @@ app.controller('D3Controller',
 				label = bar.append("text")
 						    .attr("x", function(d) { return x(d.value) - 3; })
 		    				.attr("y", barHeight / 2)
-		    				.attr("dy", ".35em")
-		    				.text(function(d) { return d.name; });
-
+		    				.attr("dy", ".35em");
 			}
 			else if (chart_type === 'column') {
 				// width based on full_width. 
@@ -158,31 +208,30 @@ app.controller('D3Controller',
 
 				var barWidth = full_width / data.length		
 
-				// var x = d3.scale.ordinal().rangeRoundBands([0, full_width], .1);
-				var y = d3.scale.linear().range([chart_height, 0]);
+				var x = d3.scale.ordinal().rangeRoundBands([0, full_width], .1)
+				x.domain(data_objects.map(function(d) { return d.name; }));
 
-			    	// .attr("transform", function(d) { return "translate(" + x(d.name) + ",0)"; });
+				var y = d3.scale.linear().range([chart_height, 0]);
+				y.domain([0, max]);
+
 				bar = chart.selectAll("g")
 				      .data(data_objects)
 				    .enter().append("g")
-				      .attr("transform", function(d, i) { return "translate(" + i * barWidth + ",0)"; });	
+			    	.attr("transform", function(d) { return "translate(" + x(d.name) + ",0)"; });
 					
-					// .attr("width", x.rangeBand());  // barWidth - 1);
 				bar.append("rect")
 					.attr("y", function(d) { return y(d.value); })
 					.attr("height", function(d) { return chart_height - y(d.value); })
-					.attr("width", barWidth - 1);
+					.attr("width", x.rangeBand());  // barWidth - 1);
 
 							
-					// .attr("x", x.rangeBand() / 2)  //  barWidth / 2)
 				label = bar.append("text")
-							.attr("x", barWidth / 2)
+							.attr("x", x.rangeBand() / 2)  //  barWidth / 2)
     						.attr("y", function(d) { return y(d.value) + 3; })
-    						.attr("dy", ".75em")
-    						.text(function(d) { return 'dname'; });
+    						.attr("dy", ".75em");
 			}
 
-			// label.text(function(d) { return d.name; });
+			label.text(function(d) { return d.name; });
 		}
 		else {
 			console.log("no data");
