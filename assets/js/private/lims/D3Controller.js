@@ -99,15 +99,11 @@ app.controller('D3Controller',
 
 		if (!options) { options = {} }
 
+		// Optional input variables: 
+
 		var full_width = options.width || 960;
 		var full_height = options.height || 500;
 		var barHeight = options.barHeight || 40;  // for bar charts only ... 
-
-		// var data = [{name: 'Roger', value: 4}, {name: 'Steve', value: 8}, {name: 'Joey', value: 15}];
-		// var data = [3,4,5];
-
-		var values = data;
-		var data_type = 'numeric';
 
 		var chart_type = options.chart_type || 'column';
 
@@ -118,7 +114,7 @@ app.controller('D3Controller',
 			var data_type = data[0].constructor;
 
 			var data_objects = [];
-			values = [];
+			var values = [];
 
 			if (data_type === Object) {
 				// Data supplied as object (expecting keys: name, value)
@@ -136,17 +132,15 @@ app.controller('D3Controller',
 			else {
 				console.log('unexpected data value type: ' + data_type);
 			}
-			console.log('data: ' + JSON.stringify(data_objects));
 
+			console.log('data: ' + JSON.stringify(data_objects));
 			var max = d3.max(values);
 
-			var barHeight, barWidth, height, width;
+			var chart_height = full_height; // may need to adjust for title ?
+			var chart_width = full_width;   // may need to adjust for margins ?
 
 			if (chart_type === 'bar') {
-				// full height based on barHeight... 
-			}
-			else if (chart_type === 'column') {
-	
+				chart_height = barHeight * values.length;
 			}
 
 			var block = wrapper.append('div');
@@ -173,19 +167,15 @@ app.controller('D3Controller',
 			var chart = block.append('svg')
 				.attr('class', 'd3chart')
 				.attr('id', id)
-			    .attr("width", full_width)
-			    .attr("height", full_height);
+			    .attr("width", chart_width)
+			    .attr("height", chart_height);
 
 			chart.append("svg:title")
           		.text( "Generated with D3");
 
           	var bar, label;
 			if (chart_type === 'bar') {
-
-				var width = full_width;
-				var height = barHeight * values.length;
-
-				var x = d3.scale.linear().domain([0, max]).range([0, width]);
+				var x = d3.scale.linear().domain([0, max]).range([0, chart_width]);
 
 				bar = chart.selectAll("g")
 				    .data(data_objects)
@@ -202,13 +192,10 @@ app.controller('D3Controller',
 		    				.attr("dy", ".35em");
 			}
 			else if (chart_type === 'column') {
-				// width based on full_width. 
-				var chart_width = full_width;
-				var chart_height = full_height;	 // may need to adjust to add space for text title  ... 
+				// bar width based on full_width. 
+				var barWidth = chart_width / data.length		
 
-				var barWidth = full_width / data.length		
-
-				var x = d3.scale.ordinal().rangeRoundBands([0, full_width], .1)
+				var x = d3.scale.ordinal().rangeRoundBands([0, chart_width], .1)
 				x.domain(data_objects.map(function(d) { return d.name; }));
 
 				var y = d3.scale.linear().range([chart_height, 0]);
