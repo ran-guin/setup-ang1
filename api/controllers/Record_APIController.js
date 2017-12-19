@@ -51,7 +51,6 @@ module.exports = {
 	},
 
 	search : function (req, res) {
-
 		var body = req.body || {};
 		console.log("Search API");
 
@@ -78,7 +77,8 @@ module.exports = {
 				'disease' : ['name'],
 				'vaccine' : ['name','code'],
 				'custom_view' : ['custom_name'],
-				'country' : ['name', 'country', 'region', 'subregion']
+				'country' : ['name', 'country', 'region', 'subregion'],
+				'coverage': ['vaccine', 'code', 'coverage']
 			};
 		}
 
