@@ -61,6 +61,7 @@ app.controller('ViewController',
 
 		$scope.pick = $scope.initialPick;
 		$scope.show = [];
+		$scope.form.show = [];
 
 		if ($scope.pick && $scope.pick.length) {
 			for (var i=0; i<$scope.pick.length; i++) {
