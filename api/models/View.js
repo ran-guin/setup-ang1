@@ -713,10 +713,11 @@ dynamic_join_fields : function (ViewFields, select, conditions) {
 				}
 
 				if (search != null && search.length) {
-					console.log(fld + ' Test: ' + search);
+					console.log(type + ' ' + fld + ' Test: ' + search);
 					var date_operator_test = /^\s*([<>]\=?)\s*(\d\d\d\d\-\d\d.*)/;
 					var val_operator_test = /^\s*[<>]\=?/;
 					var range_test = /^\s*(\d+\.?\d*)\s*\-\s*(\d+\.?\d*)\s*$/;  // allow float range or dates 
+					var string_range_test = /^\s*['"](\w+)['"]\s*\-\s*['"](\w+)['"]\s*$/;  // allow float range or dates 
 					var date_range_test = /^\s*['"]?(\d\d\d\d-\d\d[\s\-\d\\:]+)['"]?\s*\-\s*['"]?(\d\d\d\d-\d\d[\s\-\d\\:]+)['"]?\s*$/;  // allow float range or dates 
 					var wild_test = /\*/g;
 					var list_test = /\s*\|\s*/;
@@ -737,8 +738,8 @@ dynamic_join_fields : function (ViewFields, select, conditions) {
 							console.log("standard operator: " + search);
 						}
 						else if (search.match(range_test)) {
-							var cond = search.replace(range_test, " BETWEEN '$1' AND '$2'");
-							c.push(fld + cond); // eg field "1 - 3"
+							var cond = search.replace(range_test, " BETWEEN $1 AND $2");
+							c.push(fld + cond); // eg field "1 - 3"								
 						}
 						else if (search.match(date_range_test)) {
 							var cond = search.replace(date_range_test, " BETWEEN '$1' AND '$2'");
@@ -761,6 +762,12 @@ dynamic_join_fields : function (ViewFields, select, conditions) {
 						else if (search.match(wild_test)) { 
 							var ss = search.replace(wild_test,'%');
 							c.push(fld + ' LIKE "' + ss + '"');
+						}
+						else if (search.match(string_range_test)) {
+							var opt1 = fld + search.replace(string_range_test, " BETWEEN '$1' AND '$2'");
+							var opt2 = fld + ' = "' + search + '"';
+							var cond = '(' + opt1 + ' OR ' + opt2 + ')';
+							c.push(cond); // eg field "1 - 3"								
 						}
 						else {
 							console.log(' NO special formatting required for ' + search);
