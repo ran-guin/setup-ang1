@@ -1,5 +1,6 @@
+- var url = url || '/Record/search'
 
-form.form-inline(role='form' method='post' action='/Record/search')   
+form.form-inline(role='form' method='post' action='#{url}')   
   span.form-group.has-success.has-feedback
     div.input-group
       input.form-control(type="text" default='' force=1 name='search' placeholder="- search -" required)
