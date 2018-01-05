@@ -4,6 +4,18 @@
 - var init = "initialize_payload(" + JSON.stringify(config) + ")";
 
 div.container
+  div.col-md-4 
+   form.form-inline(role='form' style='padding:10px' method='post' action="#{sails.config.root}/scan-barcode")       
+    div.form-group.has-success.has-feedback
+      //label.control-label(for='barcode') Scan Barcode &nbsp;
+      div.input-group
+        span.input-group-addon
+          i.fa.fa-barcode(style='padding:0px; color:#000')
+        input.form-control(type='text' placeholder='-- Scan Barcode --' id='barcode' name='barcode' ng-model='barcode')
+        span.input-group-btn
+          button.btn.btn-success(type='submit' ng-disabled='!barcode') Go
+
+
   div.col-md-4
     div.input.input-lg.navbar-left
       a(href="/home") Dashboard
@@ -13,18 +25,14 @@ div.container
       a(href='#' onclick="return false;" data-toggle='modal' data-target='#UploadFileModal') Upload        
         i.fa.fa-upload
       span &nbsp; &nbsp; &nbsp; &nbsp;
- 
-  div.col-md-4 
-
 
   div.col-md-4
     div.input.input-lg.navbar-right
       if config.access === 'admin'
-        a(href="/lab_admin") Lab Admin
+        a(href="/lab_admin" style='color: red') Lab Admin
         span &nbsp; &nbsp; | &nbsp; &nbsp;
-        a(href="/admin") Admin
-      if config.access === 'lab_admin'
-        a(href="/lab_admin") Lab Admin    
-
-  hr  
+        a(href="/admin" style='color: red') Admin
+      if config.access === 'lab admin'
+        a(href="/lab_admin" style='color: red') Lab Admin    
   include uploadFileModal.jade
+hr
