@@ -227,7 +227,7 @@ module.exports.routes = {
 
   'POST /scan-barcode' : 'BarcodeController.scan',
   'GET /scan-barcode' : 'BarcodeController.scan',
-  'POST /load-parents' : 'ContainerController.load_parents',
+  // 'POST /load-parents' : 'ContainerController.load_parents',
 
   //'POST /completed-step' : 'Lab_protocolController.complete',
 
