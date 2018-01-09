@@ -8,11 +8,16 @@
 module.exports = {
 
   attributes: {
+  	Rack : { model : 'rack' },
   	Container : { model : 'container'},
   	Moved_from  : { model : 'rack' },
   	Moved_to  : { model : 'rack' },
   	moved : { type : 'datetime' },
   	Moved_by : { model : 'user' }
-  }
+  },
+
+  
+
+
 };
 

@@ -47,6 +47,7 @@ module.exports = function (req, res, next) {
     console.log("FOUND PAYLOAD: " + req.payload);
   } 
   else {
+    console.log("no authorization found");
     return res.json(401, {err: 'No Authorization header was found'});
   }
 

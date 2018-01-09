@@ -1,25 +1,37 @@
 p &nbsp; 
 p &nbsp; 
+
+
 form(role='form' method='post' action="#{sails.config.root}/login")
   .form-group
     label(for='usrname')
       i.fa.fa-user
       |  Username
-    input#email.input-lg.form-control(name='email' type='text' default='' force=1 placeholder='-- Enter email or username --')
+    input#email.input-lg.form-control(name='email' type='text' default='' force=1 placeholder='-- Enter email or username --' required)
   .form-group
     label(for='psw')
       i.fa.fa-eye
       |  Password
-    input#password.input-lg.form-control(name='password' type='password' default='' force=1 placeholder='-- Enter password --')
-  .checkbox
-    label
-      input(type='checkbox', name='remember' value='', checked='')
-      | Remember me
-  button.btn.btn-default.btn-lg.btn-success.btn-block(type='submit')
+    input#password.input-lg.form-control(name='password' type='password' default='' force=1 placeholder='-- Enter password --' required)
+  if printers
+    .form-group
+      label(for='printers')
+        i.fa.fa-print
+        | &nbsp; Printer Group
+      div.radio
+        each pgroup in printers
+          label
+            input(type='radio' name='printers' value='#{pgroup}' required)
+            span #{pgroup} &nbsp;
+          br
+  
+  hr
+
+  button.btn.btn-default.btn-lg.btn-success.btn-block(type='submit') 
     fa.fa.fa-power-off
     |  Login  
 p &nbsp; 
-a(href='/reset_password') Problem logging in ?
+a(href='/reset_password') Problem Logging in ?
 p &nbsp; 
 p &nbsp; 
 p &nbsp; 

@@ -1,0 +1,7 @@
+id	name	parent	status
+1	Travel	NULL	active
+2	Politics	NULL	active
+3	Sports	NULL	active
+4	Literature	NULL	active
+5	Classic Lit	4	active
+6	International	1	active

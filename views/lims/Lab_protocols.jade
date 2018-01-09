@@ -6,15 +6,36 @@ block content
     a(href="/Lab_protocol/new")
       button.btn.btn-primary(type='button') Add New Protocol
     
+
     h3 List of Current Protocols:
-    each protocol,i in protocols
-      - id = protocol.id;
-      - name = protocol.name;
-      li 
-        a(href="/Lab_protocol/view/#{id}") #{name}
-        span &nbsp;
-        a(href="/Lab_protocol/demo/#{id}") 
-          i [Demo]
+
+    div.container
+       div(ng-app='myApp' ng-cloak=1)
+        div(ng-controller="SharedController")
+          input(type='checkbox' ng-model="include_all")
+          b &nbsp; Include inactive protocols
+          p &nbsp;
+
+          each protocol,i in protocols
+            - id = protocol.id;
+            - name = protocol.name;
+            - sample_type = protocol.sample_type || 'all';
+            - format = protocol.format || 'all';
+            - status = protocol.status
+
+            - colour = 'red'
+            if status === 'Active'
+              - colour = 'blue'
+
+            li(ng-show="include_all || '#{status}' == 'Active'") 
+              a(href="/Lab_protocol/view/#{id}")
+                b(style='color: #{colour}') #{name}
+              span &nbsp; &nbsp; [ for &nbsp;
+              b #{sample_type} 
+              span samples in &nbsp; 
+              b #{format}
+              span &nbsp; containers ]
+
 
 
       

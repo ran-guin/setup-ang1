@@ -1,0 +1,57 @@
+.body {
+    background: url(/images/lims/bcg-background.png);
+}
+
+div.header {
+    -webkit-transition: 16s;
+    -moz-transition: 16s;
+    -o-transition: 16s;
+    transition: 16s;
+    background: rgba(255, 255, 255, 0.89) url(/images/lims/BCG-transparent.png) no-repeat 42% bottom; 
+    padding: 90px 50px 100px 100px;
+}
+
+@media all and (min-width: 960px) {
+    div.mini-header {
+        background: rgba(255, 255, 255, 0.89) url(/images/lims/BCG-transparent-64x64.png) no-repeat 42% bottom; 
+    }
+}
+
+div.grow-header {
+    -webkit-transition: 16s;
+    -moz-transition: 16s;
+    -o-transition: 16s;
+    transition: 16s;
+    background: rgba(255, 255, 255, 0.89) url(/images/lims/BCG-transparent.png) no-repeat 42% bottom; 
+    padding: 5px;
+}
+.grow-header h1#main-title {
+    color: #fff;
+    font-weight: 300;
+    font-size: 2.5em;
+}
+.grow-header h3{
+    color: #b1eef7;
+    font-style: italic;
+    font-weight: 300;
+}
+.grow-header h3 code{
+    font-style: normal!important; background-color: rgba(255,255,255,0.5);
+    font-weight: 300; color:#0e6471;
+    margin: 0px 5px;
+}
+
+.no-margin {
+    margin: 0px;
+}
+
+.wellmap {
+    width:25px;
+    height:25px;
+    border-radius:50%;
+    font-size:10px;
+    color:#fff;
+    line-height:25px;
+    text-align:center;
+    background:#000
+}

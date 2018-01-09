@@ -14,6 +14,7 @@ function wellController ($scope, $rootScope, $http, $q ) {
 
         console.log("initialize Well Controller");
         $scope.completed = 0;
+        $scope.distributionStatus = 'Initialized';
         $scope.Config = Config;
 
         var Samples = Config['Samples'] || [];
@@ -37,18 +38,21 @@ function wellController ($scope, $rootScope, $http, $q ) {
 
         $scope.Max_Row = $scope.Max_Row || 'A';
         $scope.Max_Col = $scope.Max_Col || 1;
+        $scope.new_Samples = [];
+
+        $scope.backfill_relocate_date = $scope.options.backfill_date;  // optional backfill date for redistribution... 
+        if ($scope.backfill_relocate_date) {
+            console.log("*** Backfill : " + $scope.backfill_relocate_date );
+        }
 
         // $scope.set_to_default();
      
 
         console.log("SIZES: " + JSON.stringify($scope.sizes));
 
-        console.log("INIT Map");
-        $scope.form_validated = false;
-
         // $scope.map.transfer_qty_units = 'ml';  // custom default
 
-        if (options && options.distribute) {
+        if (Config && Config.distribute) {
             $scope.redistribute(1);
         }
     }
@@ -67,6 +71,13 @@ function wellController ($scope, $rootScope, $http, $q ) {
     }
 
     $scope.redistribute = function (reset, execute) {
+
+        $scope.reset_messages('redistribute');
+        
+        console.log("Redistribute wells");
+        if (execute) {
+            $scope.distributionStatus = 'Pending';
+        }
 
         var target_boxes = [];
         if ($scope.map.target_rack) {
@@ -91,6 +102,7 @@ function wellController ($scope, $rootScope, $http, $q ) {
             'pack_size'    : $scope.map.pack_size,
             'distribution_mode' : $scope.map.distribution_mode,
             'fill_by'  :    $scope.map.fill_by,
+            'load_by'  :    $scope.map.load_by,
             'target_size' : $scope.map.target_size,
             'target_boxes' : target_boxes,
             'pack_size'    : $scope.map.pack_size,
@@ -104,83 +116,42 @@ function wellController ($scope, $rootScope, $http, $q ) {
         
         $scope.redistribute_Samples($scope.active.Samples, Target, Options)
         .then ( function (result) {
-            console.log("MAP: " + JSON.stringify(result.Map));
-            // $scope.Map = result.Map;
-            if (result.errors) {
-                // $scope.form_validated = false;
-                // need to ensure validation is performed when boxes are updated.. 
-                console.log('invalidate form');
-            }
-            if (execute) { $scope.execute_transfer() }
+            // console.log("MAP: " + JSON.stringify(result.Map));
+            $scope.validate_redistribution_form()
+            .then ( function () {
+                if (execute) { $scope.execute_transfer() }
+            })
+            .catch ( function (err) {
+                console.log(err);
+            })
         })
         .catch ( function (err) {
-            console.log("Error redistributing samples");
-
+            if (execute) { $scope.distributionStatus = 'Failed' }
+            $scope.validate_redistribution_form()
+            .then ( function () {
+                console.log("error redistributing samples");
+                console.log(err);   
+                $scope.error("could not distribute samples");
+            })
+            .catch ( function (err2) {
+                $scope.error("could not distribute samples");
+                $scope.error("also could not validate form...");
+            })
         });
 
-        console.log('validate');
-        $scope.validate_Form();
     }
-    $scope.validate_Form = function validated_form() {
+
+    $scope.load_entire_volume = function () {
+        var quantities = _.pluck($scope.active.Samples,'qty');
+        var units = _.pluck($scope.active.Samples,'qty_units');
+        $scope.map.transfer_qty = quantities.join(',');
+        $scope.map.transfer_qty_units = units[0];
         
-        if ($scope.map.transfer_type === 'Move') {
-            if ( $scope.map.splitX > 1) {
-                $scope.map.splitX = 1;
-                $scope.redistribute('reset');
-                console.log("reset split to 1... ");
-            }
-
-            var quantities = _.pluck($scope.active.Samples,'qty');
-            var units = _.pluck($scope.active.Samples,'qty_units');
-            $scope.map.transfer_qty = quantities.join(',');
-            $scope.map.transfer_qty_units = units[0];
-        }
-
-        console.log("Validate " + $scope.map.transfer_type);
-        if (! $scope.map.transfer_qty && $scope.map.transfer_type==='Aliquot') { 
-            $scope.map.transfer_qty_errors = true;
-            console.log("missing qty for aliquot");
-            var testElement = document.getElementById('transfer_qty') || {} ;
-            testElement.style = "border-color: red; border-width: 2px;";
-        }
-        else if ($scope.map.transfer_qty) { 
-            $scope.map.transfer_qty_errors = false;
-            var testElement = document.getElementById('transfer_qty') || {};
-            testElement.style = "border-color: green; border-width: 2px;";
-        }
-        else {
-            $scope.map.transfer_qty_errors = false;
-            var testElement = document.getElementById('transfer_qty') || {};
-            testElement.style = "border-color: null; border-width: 2px;";            
-        }
-
-        if ($scope.map.transfer_qty) {
-            if ( $scope.map.transfer_qty_units) { 
-                $scope.units_errors = false;
-                var testElement = document.getElementById('transfer_qty_units') || {};
-                testElement.style = "border-color: green; border-width: 2px;";
-            }
-            else { 
-                $scope.units_errors = true;
-                var testElement = document.getElementById("transfer_qty_units") || {};
-                testElement.style = "border-color: red; border-width: 2px;";
-            }
-        }
-        else {
-            $scope.units_errors = false;
-            testElement = document.getElementById("transfer_qty_units") || {};
-            testElement.style = "border-color: green; border-width: 2px;";            
-        }
-
-
-        if ($scope.map.transfer_qty_errors || $scope.units_errors) {
-            console.log("failed validation");
-            $scope.form_validated = false ;
-        }
-        else {
-            console.log("passed validation"); 
-            $scope.form_validated = true;
-        }
+        $scope.redistribute('reset');
+    }
+    $scope.clear_volume = function () {
+         $scope.map.transfer_qty = '';
+        $scope.map.transfer_qty_units = '';       
     }
 
     $scope.parse_custom_options_OLD = function () {
@@ -237,18 +208,33 @@ function wellController ($scope, $rootScope, $http, $q ) {
         console.log("Found format: " + format + '=' + $scope['Plate_Format-id']);
 
         console.log('execute ' + $scope.map.transfer_type);
+        
+        var plate_set;
+        if ($scope.active.plate_set && 
+            ($scope.active.plate_set.constructor === Number || $scope.active.plate_set.match(/\d+/)) ) {
+            plate_set = $scope.active.plate_set;
+        }
+
+        var ids = $scope.active.plate_ids;
+        if ($scope.Map && $scope.Map.Transfer && $scope.Map.Transfer[0].source_id) {
+            ids = _.pluck($scope.Map.Transfer, 'source_id');
+            console.log("** IDS: " + ids.join(',') + ' vs ' + $scope.active.plate_ids.join(','));
+        } 
+
         var data = { 
-            ids: $scope.active.plate_ids,
+            ids: ids,
             Transfer: $scope.Map.Transfer,
             Options : {
                 transfer_type: $scope.map.transfer_type,
+                timestamp: $scope.backfill_relocate_date,
+                plate_set: plate_set,
                 // prep not necessary, but could be optionally added here ...
                 //
                 // Target_sample and Target_format qty should already be included in Transfer specs...
             },
         };
 
-        console.log("POSTING DATA: " + JSON.stringify(data));
+        console.log("** POSTING DATA: " + JSON.stringify(data));
 
         $scope.feedback = "..."
         $http.post("/xfer", data)
@@ -256,22 +242,50 @@ function wellController ($scope, $rootScope, $http, $q ) {
             console.log("xfer data: " + JSON.stringify(returnData));
 
             if ( returnData.data && returnData.data.plate_ids) {
-                $scope.message("Transferred " + returnData.data.plate_ids.length + " Samples");
+
+                if ($scope.map.transfer_type === 'Move') {
+                    $scope.message("Moved " + returnData.data.plate_ids.length + ' Samples');
+                    $scope.new_Samples = [];
+                }
+                else {
+                    $scope.new_Samples = returnData.data.plate_ids;
+                    var firstId = $scope.new_Samples[0];
+
+                    $scope.message("Transferred " + returnData.data.plate_ids.length + " Samples [#" + firstId + '...]');
+                }
+
                 $scope.completed = 1;
+                $scope.distributionStatus = 'Complete';
             }
             else {
+                $scope.distributionStatus = 'Warning';
                 $scope.warning("Could not retrieve target Samples (?)");
             }
+
             console.log("Reload active sample data...");
             $scope.reload_active_Samples($scope.active.Samples);
             $scope.set_defaults();
             // $scope.redistribute();
         })
         .catch (function (err) {
+            $scope.distributionStatus = 'Failed';
+
             console.log("Error posting transfer: " + err);
             $scope.feedback = 'error detected...';
             $scope.errorMsg = "Error detected during Transfer !";
         });        
+    }
+
+    $scope.reload_new_samples = function (samples) {
+        
+        if (!samples) { samples = $scope.new_Samples }
+
+        if (samples && samples.length) { 
+            $scope.reload_active_Samples(samples);
+        }
+        else {
+            $scope.warning("No new samples detected");
+        }
     }
 
 }]);

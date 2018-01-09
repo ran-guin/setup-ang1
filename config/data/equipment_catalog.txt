@@ -1,0 +1,70 @@
+Equipment_Category_ID   Prefix  Sub_Category    Category        Category_Description
+1       Balance NULL    Balance NULL
+2       BAnzl   NULL    Bioanalyzer     NULL
+3       Boil    NULL    Boiler  NULL
+4       QPIX    NULL    Colony Picker   NULL
+5       PDA     PDA     Computer Equipment      NULL
+6       DsTop   Desktop Computer Equipment      NULL
+7       Prnt    Printer Computer Equipment      NULL
+8       Scan    Scanner Computer Equipment      NULL
+9       LFH     Laminar Flowhood        Hood    NULL
+10      BSC     Bio-safety Cabinet      Hood    NULL
+11      FH      Chemical Fume   Hood    NULL
+12      FS      NULL    Fluidics Station        NULL
+13      F20     -20     Freezer NULL
+14      F80     -80     Freezer NULL
+15      F4      Fridge  Freezer NULL
+16      FLN     -196    Freezer Liquid Nitrogen Tank
+bcgpdev5    16:25:15    Gel Box NULL
+18      C       NULL    Gel Comb        NULL
+19      GWash   NULL    Glassware Washer        NULL
+20      LiqDis  Regular Liquid Dispenser        NULL
+21      AutoCLV Autoclave       Liquid Dispenser        NULL
+22      MS      NULL    Mass Spectrometer       NULL
+23      uPRdr   NULL    Microplate Reader       NULL
+24      Scope   NULL    Microscope      NULL
+25      AU      Alpha Unit      Thermal Cycler  NULL
+26      MJR     Chassis Thermal Cycler  PCR - Thermocycler Chassis
+27      RTPCR   Real-time       Thermal Cycler  PCR - Realtime
+28      P       Unknown Pipette NULL
+29      P-Dist  Distriman       Pipette NULL
+30      P-Rain  Rainin  Pipette NULL
+31      P10     10uL    Pipette NULL
+32      P100    100uL   Pipette NULL
+33      P1000   1000uL  Pipette NULL
+34      P2      2uL     Pipette NULL
+35      P20     20uL    Pipette NULL
+36      P200    200uL   Pipette NULL
+37      P5000   5mL     Pipette NULL
+38      PlSeal  NULL    Plate Sealer    NULL
+39      PwS     NULL    Power Supply    NULL
+40      Pump    NULL    Pump    NULL
+41      MB      MB      Sequencer       MegaBACE
+42      D3730   3730    Sequencer       3730 DNA Anlyzer
+43      SOLX    NULL    Solexa  NULL
+44      PS      NULL    Shaker/Mixer    NULL
+45      SpdVac  NULL    SpeedVac        NULL
+46      DRT     NULL    Transilluminator        NULL
+47      Tank    NULL    Water Purification S    NULL
+48      Bath    NULL    Waterbath       NULL
+49      Chll    NULL    Chiller Systems NULL
+50      Spec    NULL    Spectrophotometer       NULL
+51      EPrtr   NULL    Electroporator  NULL
+52      HPLC    NULL    HPLC    NULL
+53      Imgr    NULL    Imager/Scanner  NULL
+54      Cnt     NULL    Centrifuge      NULL
+55      Inc-B   Block/Dry Bath NA       Incubator       NULL
+56      Inc-S   Shaking Incubator       NULL
+61      Mwave   NULL    Microwave       NULL
+62              12 x 1200 uL    Pipette NULL
+63              8 x 1200 uL     Pipette NULL
+64              12 x 10 uL      Pipette NULL
+65              8 x 10uL        Pipette NULL
+66      P-Bio   Biohit  Pipette NULL
+67      P-El    Electronic      Pipette NULL
+80      Misc    NULL    Miscellaneous   NULL
+81      NA              N/A     Undefined Items
+82      NA              N/A     Undefined Items
+83      Site    Virtual Storage Meta-equipment for tracking general Locations untied to Freezers
+85      CAB     Standard        Cabinet
+

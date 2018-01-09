@@ -8,6 +8,8 @@
 var bodyParser = require('body-parser');
 var q = require('q');
 
+var Logger = require('../services/logger');
+
 module.exports = {
 
 	// get custom attributes from models to ensure specifications remain centralized
@@ -159,6 +161,7 @@ module.exports = {
 					return res.render('record/form', input);
 				})
 				.catch (function (err) {
+					Logger.error('could not load data in promises', 'form');
 					console.log("Error loading data: " + err);
 					return res.negotiate(err);
 				});
@@ -237,7 +240,7 @@ module.exports = {
 			if (err) {
 				return res.send("ERROR: " + err);
 			}
-			console.log("View Data: " + JSON.stringify(result));
+			// console.log("View Data: " + JSON.stringify(result));
 
 			if (result.length) {
 				if (!fields) { fields = Object.keys(result[0]) }
@@ -251,6 +254,118 @@ module.exports = {
 		});
 
 	},
+
+	record_dump : function (req, res) {
+		// generate a dump of N existing data records from a seed table, 
+		// automatically including any referenced records from other tables
+		var body = req.body || {};
+		var model = body.model || req.param('model');
+		var N = body.N;
+		var id = body.id || 1;
+		var iterate = body.iterate || 1;
+
+		var t = req.param('model');
+		console.log("model: " + t);
+		
+		console.log('body: ' + JSON.stringify(body));
+
+		Record.dump(model, { id: id, iterate: iterate, N: N })
+		.then ( function (result) {
+			return res.json(result);
+		})
+		.catch (function (err) {
+			return res.json(err);
+		});
+
+	},
+
+	build_FK : function (req, res) {
+
+		Record.build_FK('Plate')
+		.then ( function (result) {
+			console.log("build FK");
+			console.log(JSON.stringify(result));	
+			res.json(result);
+		})
+		.catch ( function (err) {
+			console.log("Error building FK");
+			res.json(err);
+		});
+	},
+
+	search : function (req, res) {
+
+		var body = req.body || {};
+		console.log("Internal Search");
+
+		var scope = body.scope;
+		var condition = body.condition || {};
+		var search    = body.search || '';
+
+		if (! scope ) {
+			// Generic Search 
+			scope = { 
+				'user' : ['email', 'name'],
+				'container' : ['comments'],
+				'equipment' : ['name', 'serial_number'],
+				'stock' : [ 'PO_Number', 'notes', 'Requisition_Number', 'lot_number'],
+				'prep'  : [ 'comments'],
+				'shipment' : ['waybill_number', 'comments'],
+				'lab_protocol' : ['name'],
+				'protocol_step' : ['name', 'message'],
+			};
+		}
+
+		Record.search({scope : scope, search : search, condition: condition})
+		.then (function (result) {
+			var keys = Object.keys(result);
+			if (!result || !keys.length) {
+				sails.warning("Nothing found");
+				return res.render('customize/private_home');
+			}
+			else if (keys.length == 1 && result[keys[0]].length == 1) {
+				console.log(JSON.stringify(result));
+
+				// Go to single page if applicable .. 
+				if (keys[0] == 'container') {
+					var ids = _.pluck(list,'Plate_ID');
+					
+					console.log('load view...');
+					Container.loadViewData(ids)
+					.then (function (viewData) {
+						console.log("Found container data");
+						console.log(JSON.stringify(viewData));
+						
+						viewData.messages = [];
+						viewData.warnings = [];
+						viewData.errors = [];
+						viewData.found = 'Container';
+
+						// return res.send("render container");
+						return res.render('lims/Container', viewData);
+					})
+			        .catch (function (err) {
+			        	console.log("error loading plate data");
+			        	// return res.send("error loading data");
+						return res.render('customize/private_home');
+			        });
+				}
+				else {
+					console.log('not recognized type');
+					return res.render('customize/private_home');
+				}
+			}
+			else {
+				console.log("Generate Search Results");
+				console.log(JSON.stringify(result));
+
+				return res.render('customize/searchResults', {data: result, title: "Search Results for '" + search + "'", scope: scope});
+			}
+		})
+		.catch ( function (err) {
+			return res.render('customize/private_home', { error: err})
+		});
+	}
 
 };
 

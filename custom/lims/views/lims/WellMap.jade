@@ -1,0 +1,231 @@
+extends ./../customize/privateLayout
+block content
+
+  - targets = [];
+  - config1 = { plate_ids : plate_ids, Samples : Samples, target_size: target_size, Target : target, Options : options, sizes : sizes};
+
+  - var init_options = { distribute : 1 };
+  - var init1 = "initialize(" + JSON.stringify(config1) + ',' + JSON.stringify(init_options) + ")";
+  - config2 = { plate_ids : plate_ids, Samples : Samples};
+  - var init2 = "initialize(" + JSON.stringify(config2) + ")";
+  
+  div.container
+
+    div(ng-app='myApp')
+     div(ng-controller="SharedController")
+      div(ng-controller="FancyFormController")
+       div(ng-controller="LIMSController")
+        div(ng-controller="WellMapperController", ng-init="#{init2}")
+          div(ng-controller='WellController', ng-init="#{init1}")
+            br
+            include ActiveSamples
+
+            br 
+            include ./../core/errorMsg.jade
+
+            div(ng-show='completed')
+              button.btn.btn-success(type='button' ng-click="completed=0") Transfer / Relocate Again
+
+            form.form-horizontal(role='form' method='post' action="#{sails.config.root}/transfer" ng-show="! completed")
+              p &nbsp;
+              if target
+                h2 Transfer Samples to #{target.Plate_Format_Type}
+                hr
+
+              div.form-group
+                div.col-sm-4
+                  label
+                    input.input(type='radio' value = 'Move' ng-model="map.transfer_type" ng-click="validate_Form(); redistribute('reset')")
+                    b &nbsp; Move &nbsp;
+                  label
+                    input(type='radio' value = 'Aliquot' ng-model="map.transfer_type" ng-click="validate_Form(); redistribute('reset')")
+                    b &nbsp; Aliquot &nbsp;                
+                  label
+                    input(type='radio' value = 'Transfer' ng-model="map.transfer_type" ng-click="validate_Form(); redistribute('reset')") 
+                    b &nbsp; Transfer &nbsp; 
+                  br
+
+                  span(ng-show="map.transfer_type === 'Transfer'" style='color:red') Note: Current tubes are thrown out during 'Transfer'<BR>(use 'Aliquot' to only remove portion of original sample) 
+                  span(ng-show="map.transfer_type === 'Move'" style='color:red') Note: Sanples remain in their current tube containers<BR>(use 'Aliquot' or 'Transfer' to move samples to new tubes) 
+
+                div.col-sm-4(ng-show="map.transfer_type !== 'Move'")
+                  div.form-group
+                    table
+                      tr
+                        td(width='100%')
+                          // preaddon & addon custom css only necessary for special type: dropdown 
+                          input.input-lg.preaddon#transfer_qty(type='text' aria-describedBy='tqu' placeholder=' -- Transfer Qty --', ng-model='map.transfer_qty' ng-blur="redistribute('reset')" size='24' ng-disabled="map.transfer_type=='Pre-Print'")
+                          // span.lookup(id='Lookup-units' ng-init="loadLookup('units','','units')" mandatory)
+                        
+                        // include Units.jade
+                        td
+                          my-dropdown.mini-dropdown.addon#transfer_qty_units(placeholder='units..' list="MenuList['map.transfer_qty_units']" selected="map.transfer_qty_units" property='name' track='name', ng-init="setup_Menu('map.transfer_qty_units','ml,ul,nl')" mandatory='true') 
+                  br
+                  span(style='color: red' ng-show='transfer_qty_errors || units_errors') Transfer Qty + Units Required
+                  span(ng-show="map.transfer_type === 'Transfer'")
+                    button(type='button' ng-click="load_entire_volume()") Transfer entire volume
+                    span &nbsp;
+                    button(ng-show="map.transfer_qty" ng-click="clear_volume()") Clear volume
+
+                div.col-sm-4(ng-show="map.transfer_type !== 'Move'")
+                  div.form-group(style='padding-top: 0px; padding-left: 40px')
+                    - var condition = "Transferrable LIKE 'Y%'"
+
+                    label(for='target_format' style='padding-top: 0px')
+                    my-dropdown#target_format(style='width:100%' placeholder='Target Format...' required list="MenuList['map.target_format']" selected="map.target_format" property='name' track='id' ng-init="setup_Menu('map.target_format','FK(container_format)',\"#{condition}\")" mandatory='true')        
+              hr 
+
+              div.form-group
+                div.col-sm-4
+                  div(ng-show="map.transfer_type !== 'Move'")
+                    b &nbsp; Split X: 
+                    input.input-lg(name='splitX' ng-model='map.splitX' type='text' ng-change="redistribute('reset')" size='3' default='1' tooltip="example")
+
+                div.col-sm-4
+                  div
+                    b Load by: 
+                      label
+                        input(type='radio' value = 'row' ng-model="map.load_by" ng-click="redistribute('reset');") 
+                        b &nbsp; Row &nbsp;
+                      label
+                        input(type='radio' value = 'column' ng-model="map.load_by" ng-click="redistribute('reset');")
+                        b &nbsp; Column &nbsp;
+                      label
+                        input(type='radio' value = 'scan' ng-model="map.load_by" ng-click="redistribute('reset');")
+                        b &nbsp; Scanned Order &nbsp;
+                    br
+                    b Fill by: 
+                      label
+                        input(type='radio' value = 'row' ng-model="map.fill_by" ng-click="redistribute('reset');") 
+                        // reset_map.fill_by(); 
+                        b &nbsp; Row &nbsp;
+                      label
+                        input(type='radio' value = 'column' ng-model="map.fill_by" ng-click="redistribute('reset');")
+                        b &nbsp; Column &nbsp;
+                      label
+                        input(type='radio' value = 'position' ng-model="map.fill_by" ng-click="redistribute('reset');")
+                        b &nbsp; Slot &nbsp;                      
+                div.col-sm-4
+                    div &nbsp; 
+                      b {{ map.fillExample }}
+
+              div.form-group(ng-show="map.splitX > 1 && map.fill_by != 'position'")
+                br
+                div.col-sm-4
+                    b Distribution: 
+                    label
+                      input(type='radio' value = 'serial' ng-model="map.split_mode" ng-click="reset_split_mode(); redistribute('reset');") 
+                      b &nbsp; Serial &nbsp;
+                    label
+                      input(type='radio' value = 'parallel' ng-model="map.split_mode" ng-click="reset_split_mode(); redistribute('reset');")
+                      b &nbsp; Parallel &nbsp;
+                div.col-sm-4
+                  div(ng-show="map.split_mode === 'serial' ")
+                    b in groups of: 
+                    label
+                      input.input-lg(name='pack_wells' type='text' size='6'  ng-model="map.pack_size" ng-change="redistribute('reset')")
+                div.col-sm-4
+                    div &nbsp; 
+                      b(ng-show="!map.packExample") {{ map.splitExample }}
+                      br
+                      b {{ map.packExample }}
+
+              hr
+
+              div.form-group
+                div.col-sm-4(ng-show="map.transfer_type !== 'Move'")
+                  span IF different Sample Type is being extracted:
+                  br
+                  my-dropdown#sample_type(placeholder='Extract...(if diff)' list="MenuList['map.sample_type']" selected="map.sample_type" property='name' track='id' ng-init="setup_Menu('map.sample_type','FK(sample_type)')") 
+
+                div.col-sm-4
+                  b Target : 
+                  div
+                    input.input-lg(type='text' required name='map.target_rack' size='24' ng-blur="validate_target(); redistribute('reset');" ng-model="map.target_rack" placeholder='-- Scan Target Box(es) --')
+                div.col-sm-4 &nbsp;
+                  button.btn.btn-lg.btn-primary(type='button' ng-click="redistribute('reset','execute');" ng-disabled="!form_validated || (map.transfer_type !== 'Move' && !map.target_format) || !map.target_rack") Relocate Samples
+                  p &nbsp;
+                  input(type='radio' ng-click="reset_messages(); custom_distribution('Matrix'); redistribute();") 
+                  span &nbsp; Custom Matrix sub-aliquot
+                  br
+                  input(type='radio' ng-click="set_defaults(); redistribute('reset')") 
+                  span &nbsp; Reset Defaults
+              
+              p &nbsp;
+
+              h3 Distribution View:
+              - var index = 0;
+              table.table()
+                tr
+                  td(style='width:50%')
+                    // h2 Source Samples: [ size: {{ active.Samples[0].box_size }} ]
+                    include SourceMap.jade
+                  td(style='width:50%')
+                    // h2 Target Samples: [ size: {{ map.target_size }} ]
+                    include TargetMap.jade
+
+              if debug || 1
+
+                div.alert.alert-warning Debugging Information:  (hidden in production)
+                  h2 Samples:  [{{ active.Samples.length }} samples]
+                  h4 plate_ids: #{plate_ids}
+                  h5 target: #{target}
+                  h5 target_size: #{JSON.stringify(target_size)}
+                  h5 options: #{JSON.stringify(options)}
+                  h5 sizes: #{sizes}
+                  
+                  h4 
+                    b Samples: 
+                    span {{ active.Samples[0] }}, {{ active.Samples[1] }} ...{{ active.Samples[active.Samples.length-1] }}
+                    p &nbsp;
+                    b Target: {{ target }}
+
+                  h4 
+                    b Options:
+                    ul
+                      li Split: {{ Options.splitX }}
+                      li Split_mode: {{ Options.split_mode }}
+                      li Pack: {{ Options.pack }} : {{ Options.pack_wells }}
+                      li Fill By: {{ Options.map.fill_by }}
+                      li Transfer Qty: {{ Transfer.transfer_qty }} {{ units }}
+                      li Target Container: {{ Plate_Format }}
+                      li Transfer Type: {{ Options.transfer_type }}
+                      li Available: {{ Options.available }}
+                      li Target Boxes: {{ map.target_boxes }}
+                  hr
+                  h4 Target: {{ target }}
+                  hr
+                  h5 Options: {{ Options }}
+                  hr
+                  button(type='button' ng-click="redistribute('reset')") Distribute
+                  span &nbsp; &nbsp;
+                  button(type='button' ng-click="redistribute('reset')") Re-Distribute
+                  span &nbsp; &nbsp;
+                  button(type='button' ng-click="source_by_Col()") Pick Columns First
+                  span &nbsp; &nbsp;
+                  button(type='button' ng-click="source_by_Row()") Pick Rows First
+                  span &nbsp; &nbsp;
+                  button(type='button' ng-click="reset_Samples()") Reset Source Order
+
+                  hr
+                  
+                  button.btn.btn-primary(type='button' ng-click="testXfer()") Complete Transfer
+                  span &nbsp; &nbsp;
+                  hr
+                  b {{ feedback }}
+                  hr
+
+                  //b {{ map }}
+                  b Colour Map:
+
+                  b {{ colours.length }} colours:
+
+                  table.table.table-bordered
+                    tr(ng-repeat="colour in colours") 
+                        td(ng-repeat="hue in colourMap[colour]" style="background-color:#" + "{{hue}}" ) {{ hue }}
+
+                  h3 Angular Transfer / Samples: 
+                  b Transfer: {{ Map.Transfer }}
+                  hr
+                  b Target Colours: {{ Map.TargetColours }} 
+             

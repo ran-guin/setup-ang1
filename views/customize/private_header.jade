@@ -1,15 +1,30 @@
 title BC Generations
+
+- var colour = '#ddd';
+
+- var prodD ;
+- var sessionDB ;
+if sails && sails.config && sails.config.connections && sails.config.connections.productionDB
+	- prodDB = sails.config.connections.productionDB.database
+if session && session.payload && session.payload.db
+	- sessionDB = session.payload.db
+
+if prodDB && prodDB !== sessionDB
+	- colour = '#f44'
+
 .mini-header(style='background-color:#344')
-	h2(style='color:#ddd') 
+	h2(style='color:#{colour}') 
 		a(href='/home')
-			i.fa.fa-home(style='color:#ddd') &nbsp; &nbsp; &nbsp;
+			i.fa.fa-home(style='color:#{colour}') &nbsp; &nbsp; &nbsp;
 		span BC Generations
 		div.navbar-right
-			if session && session.payload
-				span(style='font-size:20px') [ #{session.payload.mode} mode ]  &nbsp; &nbsp; &nbsp;
-				span #{session.payload.user} &nbsp;  &nbsp; &nbsp;
-			a(href='#' onclick="return false;" data-toggle='modal' data-target='#userMenu')
-				i.fa.fa-bars(style='color:#ddd')
+			include searchBox
+				if session && session.payload
+					span #{session.payload.user} &nbsp;  &nbsp; &nbsp;
+				a(href='#' onclick="return false;" data-toggle='modal' data-target='#userMenu')
+					i.fa.fa-bars(style='color:#{colour}')
 
 include userMenu.jade
+
+include subHeader.jade
 

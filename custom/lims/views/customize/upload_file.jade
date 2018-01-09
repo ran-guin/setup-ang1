@@ -1,0 +1,73 @@
+extends privateLayout
+block content
+  div.container
+    h3 File Upload
+
+    - var config = { data: data };
+    - var init = "initialize(" + JSON.stringify(config) + ")";
+
+    div(ng-app='myApp')
+      div(ng-controller="SharedController", ng-init="#{init}")
+        div(ng-controller="UploadController", ng-init="#{init}")
+
+          br 
+          include ./../core/errorMsg.jade
+          br 
+
+          form(role='form' method='post' action="/uploadData" enctype='form-data')
+            table.table
+              tr(ng-show="! validated")
+                td
+                  b Page: &nbsp;
+                td
+                  input(type='number' name='page' ng-model='page' ng-change="initiate_page()")
+                td
+                  b Start on row: 
+                td
+                  input(type='number' ng-model='starting_row' default=1 ng-change="get_block()" size=5) 
+                td
+                  b Start on column: 
+                td  
+                  input(type='number' ng-model='starting_column' ng-change="get_block()") 
+              tr(ng-show="! validated")              
+                td
+                  b Rows: 
+                td
+                  input(type='number' ng-model='rows' default=1 ng-change="get_block()") 
+                td
+                  b Columns: 
+                td  
+                  input(type='number' ng-model='columns' ng-change="get_block()")               
+                td
+                  span &nbsp;
+                td
+                  button.btn.btn-lg.btn-success(type='button', ng-click='validate_data()') Validate
+              tr(ng-show='validated')
+                td(colspan=2)
+                  button.btn.btn.lg.btn-warning(type='button', ng-click='modify()') Modify
+                td(colspan=2)
+                  button.btn.btn.lg.btn-success(type='button' ng-click="upload()") Upload Data
+              tr
+                td
+                  b Data:
+                td(colspan=5)
+                  table.table.table-bordered
+                    tr
+                      td Row
+                      td(ng-repeat="fld in headers track by $index")
+                        input.form-control(id="{{ currentPage.data[header_row-1][$index+starting_column-1] }}" type='text' ng-model='currentPage.data[header_row-1][$index+starting_column-1]' ng-disabled='validated') 
+                    tr(ng-repeat="row in dataBlock track by $index")
+                      td(ng-repeat="cell in row track by $index")
+                        b {{ cell }}
+
+          hr
+
+          div(ng-show="debug")
+            b Headers: {{ headers }}
+            br
+            b Data: {{ dataBlock }}
+            // b Angular Data: {{ data }}
+            p &nbsp;
+            b Angular Page: {{ page }}
+            p &nbsp;
+            b Angular Row: {{ row }}

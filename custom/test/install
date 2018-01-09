@@ -1,0 +1,11 @@
+export PLUGIN='test'
+cp -R ./custom/$PLUGIN/views ./views/$PLUGIN;
+cp -R ./custom/$PLUGIN/images ./assets/images/$PLUGIN;
+cp -R ./custom/$PLUGIN/styles ./assets/images/$PLUGIN;
+cp -R ./custom/$PLUGIN/js ./assets/js/$PLUGIN;
+
+cp -R ./custom/$PLUGIN/data ./config/data/;
+
+cp -R ./custom/$PLUGIN/models ./api/models/;
+cp -R ./custom/$PLUGIN/controllers ./api/controllers/;
+

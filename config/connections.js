@@ -3,7 +3,7 @@
  * (sails.config.connections)
  *
  * `Connections` are like "saved settings" for your adapters.  What's the difference between
- * a connection and an adapter, you might ask?  An adapter (e.g. `sails-mysql`) is generic--
+ * a connection and an adapter, you might ask?  An adapter (e.g. `sails-postgresql`) is generic--
  * it needs some additional information to work (e.g. your database host, password, user, etc.)
  * A `connection` is that additional information.
  *
@@ -37,30 +37,34 @@ module.exports.connections = {
   * MySQL is the world's most popular relational database.                   *
   * http://en.wikipedia.org/wiki/MySQL                                       *
   *                                                                          *
-  * Run: npm install sails-mysql                                             *
+  * Run: npm install sails-postgresql                                             *
   *                                                                          *
   ***************************************************************************/
 
 // use environment variables for external servers 
 // .. otherwise store connections (as below) in config/local.js
 //
-/*
   testDB: {
     adapter: 'sails-mysql',
-    host:     process.env.MYSQL_HOST,
-    user:     process.env.MYSQL_USER,
-    password: process.env.MYSQL_PASSWORD,
-    database: process.env.MYSQL_DATABASE
+    host:     process.env.LITMUS_host,
+    user:     process.env.LITMUS_user,
+    password: process.env.LITMUS_password, 
+    database: process.env.LITMUS_testDB
   },
-  
-  productionDB: {
+  demoDB: {
     adapter: 'sails-mysql',
-    host:     process.env.TEST_MYSQL_HOST,
-    user:     process.env.TEST_MYSQL_USER,
-    password: process.env.TEST_MYSQL_PASSWORD,
-    database: process.env.TEST_MYSQL_DATABASE
+    host:     process.env.LITMUS_host,
+    user:     process.env.LITMUS_user,
+    password: process.env.LITMUS_password, 
+    database: process.env.LITMUS_demoDB
+   },
+   productionDB: {
+    adapter: 'sails-mysql',
+    host:     process.env.LITMUS_host,
+    user:     process.env.LITMUS_user,
+    password: process.env.LITMUS_password, 
+    database: process.env.LITMUS_database
   },
-*/
 
   /***************************************************************************
   *                                                                          *

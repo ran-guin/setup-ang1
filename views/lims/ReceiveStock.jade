@@ -3,128 +3,122 @@ block content
 
   // standard input variables: 
 
-  - var config = { };
-  - var init = "initialize(" + JSON.stringify(config) + ")";
-  
+  - var config = private_config || {};
+  - var init = "initialize_payload(" + JSON.stringify(config) + ")";
   
   p &nbsp;
   div.container
-     div(ng-app='myApp')
+     div(ng-app='myApp' ng-cloak=1)
       div(ng-controller="SharedController")
         div(ng-controller="FancyFormController")
-          div(ng-controller="StockController" ng-init="#{init}")
+         div(ng-controller="LIMSController" ng-init="#{init}")
+          div(ng-controller="StockController")
           
+            h3 Receive Stock Items: {{stockForm}}
+              div.navbar-right
 
-            include ./../core/errorMsg.jade
+                button.btn.btn-primary.btn-xs(type='button' ng-show="!stockForm" ng-click="stockForm=1") Receive More Stock
+  
+                span &nbsp; &nbsp;
+                button.btn.btn-primary.btn-xs(type='button' ng-show="stockForm" ng-click="stockForm=0; injectData('/Stock/received?render=1','rcvdStock')") Previously Received Stock
 
-            h3 Receive Stock Items:
+            hr
+ 
+            include ./../core/errorAngularMsg.jade
+            br
 
-            include ./../core/angularMessages.jade
-
-            div.col-md-8
+            div.col-md-12(ng-show="stockForm")
               
               form(role='form' name='Stock' method='post' action='Stock/receive')
+
+                div(ng-show="form.type && form.type !== 'Reagent' && form.type !=='Equipment'")
+                  div.alert.alert-danger
+                    b  Receipt of {{ form.type }} Stock types have not yet been set up                    
     
                 div.form-group
                   label.input-lg.col-md-2.control-label(for='number_in_batch') Items Received: 
-                  input.input-lg#number_in_batch(type='number' ng-model='number_in_batch' required placeholder='Number in Batch')              
+                  input.input-lg#number_in_batch(type='number' min=1 ng-model='form.number_in_batch' ng-change="validate_stock_form('number_in_batch')" required placeholder='Number in Batch')              
 
                 div.form-group
                   label.input-lg.col-md-2.control-label(for='lot_number') Lot #: 
-                  input.input-lg#lot_number(type='text' ng-model='lot_number' placeholder='Lot Number') 
+                  input.input-lg#lot_number(type='text' ng-model='form.lot_number' placeholder='Lot Number') 
 
                 div.form-group
                   label.input-lg.col-md-2.control-label(for='received') Received: 
-                  div.input-lg.my-datepicker#received(type="text" defaultTo='2016-03-02' ng-model="received")
+                  div.input-lg.my-datepicker#received(type="text" defaultTo='2016-03-02' ng-model="form.received")
+
+                  div.input(type='hidden' ng-model='form.type' value='Reagent')
 
                 div.form-group
                   label.input-lg.col-md-2.control-label(for='type') Type: 
-                  input.input-lg(type='radio' name='type' required ng-model='type' value='Reagent' ng-click="filter_catalog()") 
+                  input.input-lg(type='radio' name='type' required ng-model='form.type' value='Reagent' ng-click="pick_stock_type()") 
                   b &nbsp; Solution / Reagent
-                  input.input-lg(type='radio' name='type' ng-model='type' value='Equipment' ng-click="filter_catalog()") 
+                  input.input-lg(type='radio' name='type' ng-model='form.type' value='Equipment' ng-click="pick_stock_type()") 
                   b &nbsp; Equipment
 
-                div.form-group(ng-show="type")
+                div.form-group(ng-show="form.type")
                   label.input-lg.col-md-2.control-label(for="catalog") Item:
-                  // input.col-md-6#catalog(type='text' ng-model='catalog' required placeholder='Volume')
                   div.col-md-6
-                    my-dropdown#catalog(placeholder="Select from Catalog..." list="MenuList['catalog']" selected="catalog" property="name" ng-init="filter_catalog()")
-                  div.col-md-4 &nbsp;
+                    my-dropdown#catalog(placeholder="Select from Catalog..." list="MenuList['form.catalog']" selected="form.catalog" property="name"  ng-click="pick_catalog_item()" ng-blur="validate_stock_form('catalog')")
+                  div.col-md-4 &nbsp; 
                     // a(href='/record/add/catalog') 
                       button.btn.btn-primary(type='button') Add Item to Catalog
 
-                div(ng-show="type === 'Reagent'")
+                div(ng-show="form.type === 'Reagent'")
                   p &nbsp;
                   div.form-group.input-lg
-                    label.col-md-2.control-label(for='qty') Unit Size: 
-                    // input.col-md-3.input-lg#qty(type='text' ng-model='qty' required placeholder='Volume')
-                    // input.col-md-3.input-lg(type='text' ng-model='qty_units' required placeholder='Volume_Units')
+                    label.col-md-3.control-label(for='qty') Unit Size: 
                     div.col-md-6
                       table
                         tr
                           td(width='100%')                
-                            input.input-lg.form-control.preaddon#qty(type='text' aria-describedBy='qty' placeholder='Qty', ng-model='qty' size='16')
+                            input.input-lg.form-control.preaddon#qty(type='text' aria-describedBy='qty' placeholder='Qty', ng-model='form.qty' size='16' ng-change='validate_stock_form()')
                           td     
-                            my-dropdown.mini-dropdown.addon#qty_units(placeholder='units..' list="MenuList['qty_units']" selected="qty_units" property='name' track='name', ng-init="setup_Menu('qty_units','l,ml,ul,nl')") 
+                            my-dropdown.mini-dropdown.addon#qty_units(placeholder='units..' list="MenuList['form.qty_units']" selected="form.qty_units" property='name' track='name', ng-click="validate_stock_form('qty_units')" ng-init="setup_Menu('form.qty_units','l,ml,g,mg,units')") 
 
-                    div.col-md-4 &nbsp;
+                    div.col-md-3 &nbsp;
 
                   div.form-group.input-lg
                     label.col-md-2.control-label(for='expiry') Expiry: 
                     div.col-md-6
-                      input-lg.form-control.my-datepicker#expiry(type="text" ng-model="expiry")
+                      input-lg.form-control.my-datepicker#expiry(type="text" ng-model="form.expiry")
 
-                  div.form-group.input-lg
-                    label.col-md-2.control-label(for='notes') Notes:
-                    div.col-md-10
-                      input.input-lg.form-control#notes(type='text' ng-model='notes' placeholder='Notes')
-
-                div(ng-if="type === 'Equipment'")
+                div(ng-show="form.type === 'Equipment'")
                   p &nbsp;
+
                   div.form-group.input-lg
-                    label.col-md-2.control-label(for='qty') Quantity: 
+                    label.col-md-2.control-label(for='name') Alias:
                     div.col-md-6
-                      table
-                        tr
-                          td(width='100%')                
-                            input.input-lg.form-control.preaddon#qty(type='text' aria-describedBy='qty' placeholder='Qty', ng-model='qty' size='16')
-                          td     
-                            my-dropdown.mini-dropdown.addon#qty_units(placeholder='units..' list="MenuList['qty_units']" selected="qty_units" property='name' track='name', ng-init="setup_Menu('qty_units','units')") 
-
-                    div.col-md-4 &nbsp;
-
+                      input.input-lg.form-control#name(type='text' ng-model='form.name' ng-disabled='1' placeholder='Name')
+                    div.col-md-4 &nbsp;                    
                   div.form-group.input-lg
-                    label.col-md-2.control-label(for='expiry') Expiry: 
-                    div.col-md-6.input-lg.my-datepicker#expiry(type="text" ng-model="expiry")          
+                    label.col-md-2.control-label(for='name') Serial #:
+                    div.col-md-6
+                      input.input-lg.form-control#serial(type='text' ng-model='form.serial' placeholder='Serial #', ng-change='split_serial()')
+                    div.col-md-4 &nbsp;                    
 
-                  div.form-group.input-lg
-                    label.col-md-2.control-label(for='notes') Notes: 
-                    div.col-md-10
-                      input.input-lg#notes(type='text' ng-model='notes' placeholder='Notes')
-    
+                  // my-dropdown#catalog(placeholder="Loation" list="MenuList['form.catalog']" selected="form.catalog" property="name" ng-init="setup_Menu('location')")
+
+                div.form-group.input-lg
+                  label.col-md-2.control-label(for='notes') Notes:
+                  div.col-md-10
+                    input.input-lg.form-control#notes(type='text' ng-model='form.notes' placeholder='Notes')
                 hr
                 div.form-group.input-lg 
                   div.col-md-offset-2.col-md-10
-                    input.input-lg#barcode(type='checkbox' ng-model='barcode') 
+                    input.input-lg#barcode(type='checkbox' ng-model='form.barcode') 
                     label.control-label.input-lg(for='barcode') Generate Barcodes            
                 div.form-group.input-lg  
                   div.col-md-offset-2.col-md-6
-                    button.btn.btn-lg.btn-primary(type='button' ng-click="save()" ng-disabled="! Stock.$valid") Save New Stock / Reagent Record(s)
+                    button.btn.btn-lg.btn-primary(type='button' ng-click="save()" ng-disabled="! form_validated") Save New Stock / Reagent Record(s)
                   div.col-md-4
                     button.btn.btn-lg.btn-success(type='reset') Reset Form
                 hr
-                div(ng-show="type && type !== 'Reagent'")
+                div(ng-show="form.type && form.type !== 'Reagent' && form.type !=='Equipment'")
                   div.alert.alert-danger
                     b  Receipt of {{ type }} Stock types have not yet been set up
             
-            div.col-md-4
-              button.btn.btn-primary.btn-xs(type='button' ng-show="!injectedAlready('rcvdStock')" ng-click="injectData('/Stock/received?render=1','rcvdStock')") Previously Received Stock
- 
-              hr
-              div(ng-show="type && type !== 'Reagent'")
-                div.alert.alert-danger
-                  b  Receipt of {{ type }} Stock types have not yet been set up
-                  
+            div.col-md-12(ng-show="!stockForm")                 
               div#rcvdStock
 
             if debug

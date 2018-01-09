@@ -1,61 +1,39 @@
 extends privateLayout
 block content
 
+  - var config = private_config || {};
+  - var init = "initialize_payload(" + JSON.stringify(config) + ")";
+  
   div.main.container
-               
-    h3 Dashboard
-      div.navbar-right
-        if sails.config.payload && sails.config.payload.access === 'admin'
-            a(href="/admin")
-              button.btn.btn-danger(type='button') Admin
-            span &nbsp; &nbsp;
-            a(href="/lab_admin")
-              button.btn.btn-danger(type='button') Lab Admin
+     div(ng-app='myApp' ng-cloak=1)
+      div(ng-controller="SharedController")       
+       div(ng-controller="LIMSController" ng-init="#{init}")
+        div(ng-controller="FancyFormController") 
+            h2 Dashboard
+            hr 
 
-        if sails.config.payload && sails.config.payload.access === 'lab admin'
-            a(href="/lab_admin")
-              button.btn.btn-danger(type='button') Lab Admin
+            include ./../core/errorAngularMsg.jade
+            p &nbsp;
 
-    hr 
+            form.form-inline(role='form' method='post' action="#{sails.config.root}/scan-barcode")       
+              div.form-group.has-success.has-feedback
+                //label.control-label(for='barcode') Scan Barcode &nbsp;
+                div.input-group
+                  span.input-group-addon
+                    i.fa.fa-barcode.fa-2x(style='padding:0px; color:#000')
+                  input.form-control.input-lg(type='text' placeholder='-- Scan Barcode Here --' id='barcode' name='barcode' ng-model='barcode')
+                  span.input-group-btn
+                    button.btn.btn-success.btn-lg(type='submit' ng-disabled='!barcode') Submit
 
-    include ./../core/errorMsg.jade
+            // hr 
+            
+            // form.form-inline(role='form' method='post' action="#{sails.config.root}/search")       
+              div.form-group.has-success.has-feedback
+                div.input-group
+                  span.input-group-addon
+                    i.fa.fa-search.fa-2x(style='padding:0px; color:#000')
+                  input.form-control.input-lg(type='text' placeholder='-- Search String --' id='search_string' name='search_string')
+              span &nbsp;
+              button.btn.btn-primary.btn-lg(type='submit') Search
 
-    form.form-inline(role='form' method='post' action="#{sails.config.root}/scan-barcode")       
-      div.form-group.has-success.has-feedback
-        //label.control-label(for='barcode') Scan Barcode &nbsp;
-        div.input-group
-          span.input-group-addon
-            i.fa.fa-barcode.fa-2x(style='padding:0px; color:#000')
-          input.form-control.input-lg(type='text' placeholder='-- Scan Barcode Here --' id='barcode' name='barcode')
-      span &nbsp;
-      button.btn.btn-success.btn-lg(type='submit') Submit
-
-    // hr 
-    
-    // form.form-inline(role='form' method='post' action="#{sails.config.root}/search")       
-      div.form-group.has-success.has-feedback
-        div.input-group
-          span.input-group-addon
-            i.fa.fa-search.fa-2x(style='padding:0px; color:#000')
-          input.form-control.input-lg(type='text' placeholder='-- Search String --' id='search_string' name='search_string')
-      span &nbsp;
-      button.btn.btn-primary.btn-lg(type='submit') Search
-
-    p &nbsp;
-    p &nbsp;
-    p &nbsp; 
-
-    include uploadFile.jade
-
-    hr
-    p &nbsp;
-    p &nbsp;
-    p &nbsp;
-    p &nbsp;
-    p &nbsp;
-      
-    // form.form-inline(role='form' method='post' action='#{sails.config.root}/test')
-      button.btn.btn-primary.btn-lg(type='submit') Test
-      
-    // If link section to the right include line below (and adjust Links.jade file as required) //
-    // include Links
+            include helpModal.jade

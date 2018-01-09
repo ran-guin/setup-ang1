@@ -1,0 +1,114 @@
+// First standardize error/warning/messages into single array
+
+- var msgs = messages || [];
+- var warns = warnings || [];
+- var errs = errors || [];
+
+if message
+  - msgs.push(message)
+
+if warning
+  - warns.push(warning)
+
+if error
+  - errs.push(error)
+
+// include sails messages if applicable ...
+
+if sails && sails.config.messages
+  each msg in sails.config.messages
+    - msgs.push(msg)
+
+if sails && sails.config.warnings
+  each warn in sails.config.warnings
+    - warns.push(warn)
+
+if sails && sails.config.errors
+  each err in sails.config.errors
+    - errs.push(err)
+
+// Generate message / warning /error blocks as required ...
+span#AngularMsgBlock
+  if msgs.length
+    div.alert.alert-success.no-margin
+      a(href="#" onclick="return false;" class="close" data-dismiss="alert" aria-label="close") &times;
+
+      ul
+          each msg in msgs
+            li
+              i.fa.fa-check
+              span &nbsp; 
+              b #{msg}  
+
+      span(ng-if="messages && messages.length")
+        ul    
+          li(ng-repeat="msg in messages track by $index")
+            i.fa.fa-check
+            span &nbsp;
+            b {{msg}}
+  else
+    div.alert.alert-success.no-margin(ng-if="messages && messages.length") 
+      a(href="#" class="close" data-dismiss="alert" aria-label="close") &times;
+      ul    
+        li(ng-repeat="msg in messages track by $index")
+          i.fa.fa-check
+          span &nbsp;
+          b {{msg}}
+
+  if warns.length
+    div.alert.alert-warning.no-margin
+      a(href="#" onclick="return false;" class="close" data-dismiss="alert" aria-label="close") &times;
+
+      u(style='margin: 0px;') 
+        b Warnings: 
+      ul
+          each warn in warns
+            li
+              i.fa.fa-warning
+              span &nbsp; 
+              b #{warn}  
+
+          li(ng-repeat="warn in warnings track by $index")
+            i.fa.fa-warning
+            span &nbsp;
+            b {{warn}}
+
+  else
+    div.alert.alert-warning.no-margin(ng-if="warnings && warnings.length")
+      a(href="#" class="close" data-dismiss="alert" aria-label="close") &times;
+      u(style='margin: 0px;') 
+        b Warnings: 
+      ul    
+        li(ng-repeat="warn in warnings track by $index")
+          i.fa.fa-warning
+          span &nbsp;
+          b {{warn}}
+
+  if errs.length
+    div.alert.alert-danger.no-margin
+      a(href="#" onclick="return false;" class="close" data-dismiss="alert" aria-label="close") &times;
+
+      u.no-margin
+        b Errors: 
+      ul
+          each err in errs
+            li
+              i.fa.fa-warning
+              span &nbsp; 
+              b #{err} 
+
+          li(ng-repeat="err in errors track by $index")
+            i.fa.fa-warning
+            span &nbsp;
+            b {{err}}
+
+  else
+    div.alert.alert-danger.no-margin(ng-if="errors && errors.length")
+      a(href="#" class="close" data-dismiss="alert" aria-label="close") &times;
+      u.no-margin
+        b Errors: 
+      ul    
+        li(ng-repeat="err in errors track by $index")
+          i.fa.fa-warning
+          span &nbsp;
+          b {{err}}

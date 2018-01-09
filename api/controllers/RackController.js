@@ -8,8 +8,43 @@
 var bodyParser = require('body-parser');
 var q = require('q');
 
+var Logger = require('../services/logger');
+
 module.exports = {
 	
+	home : function (req, res) {
+		var body = req.body || {};
+
+		var Rack = body.Rack;
+		var Samples = body.Samples;
+		var backfill_date = body.backfill_date;
+		 
+		return res.render('lims/Rack', { id: Rack, Samples: Samples, backfill_date: backfill_date })
+
+	},
+
+	move : function ( req, res) {
+		var body = req.body || {};
+
+		var ids = body.ids;
+		var parent = body.parent;
+		var names = body.names;
+		var reprint = body.reprint_barcodes;
+		var options = body.options;
+
+		if (reprint) { options.reprint_barcodes = true }
+			
+		var payload= req.session.payload || {};
+
+		Rack.move(ids, parent, body, payload)
+		.then ( function (result) {
+			return res.json(result);
+		})
+		.catch ( function (err) {
+			return res.json(err);
+		});
+	},
+
 	boxData: function (req, res) {
 
 		var body = req.body || {};
@@ -36,11 +71,13 @@ module.exports = {
 			columns: columns,
 		})
 		.then (function (contents) {
-			console.log("Pass along: " + JSON.stringify(contents));
+			// console.log("Pass along: " + JSON.stringify(contents));
 			return res.json(contents);
 			// deferred.resolve(contents);
 		})
 		.catch (function (err) {
+			Logger.error(err, 'problem getting rack contents', 'boxData')
+			return res.json(err);
 			//deferred.reject("Error retrieving box contents: " + JSON.stringify(err));
 		})
 
@@ -62,11 +99,16 @@ module.exports = {
 			parent = Scanned['Rack'][0];
 		}
 
+		var payload= req.session.payload || {};
+
 		console.log("Add daughter to " + parent + ': ' + name + ' = ' + size);
-		Rack.addSlottedBox(parent, name, size)
+		Rack.addSlottedBox(parent, name, size, payload)
 		.then ( function (result) {
 			console.log("Added Slotted Box " + JSON.stringify(result));
-			return res.json({ message : result.message });
+			
+			var boxes = Record.insert_Ids(result.box);
+
+			return res.json({ message : result.message, boxes : boxes });
 /*
 			if (result.box && result.slots) {
 
@@ -84,8 +126,9 @@ module.exports = {
 		})
 		.catch ( function (err) {
 			console.log("Could not add slotted box: " + err);
-
 			var error = Record.parse_standard_error(err);
+			Logger.error(err, error);
+			
 			return res.json({error: error});
 			//return  res.render('customize/private_home'); 
 		})

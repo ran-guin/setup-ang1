@@ -10,12 +10,14 @@ var q = require('q');
 module.exports = {
 
 	tableName: 'Rack',
+  primaryField: 'Rack_ID',
+  
 	// ** LEGACY **/
 	migrate: 'safe',
 	attributes: {
 		Rack_ID : { type : 'integer'},
 		Rack_Name : { type : 'string' },
-		Rack_Alias : { type : 'stirng' },
+		Rack_Alias : { type : 'string' },
 		FK_Equipment__ID : { model : 'equipment'},
 		FKParent_Rack__ID : { model : 'rack'},
     Rack_Type : { 
@@ -27,6 +29,18 @@ module.exports = {
       enum : ['1', '9x9','8x12']
     },
   },
+
+  alias: {
+    'id' : 'Rack_ID',
+    'parent' : 'FKParent_Rack__ID',
+    'name' : 'Rack_Alias',
+  },
+
+	track_history: [
+		'FK_Equipment__ID',
+		'FKParent_Rack__ID',
+    'Rack_Alias',
+	],
 
   subtypes : ['Shelf','Rack','Box','Slot'],
 
@@ -56,27 +70,46 @@ module.exports = {
   },
 
   garbage : function () {
-    return 1; 
+
+    var deferred = q.defer();
+
+    Record.query_promise("Select Rack_ID from Rack where Rack_Name = 'Garbage'" )
+    .then (function (result) {
+      if (result.length == 1) {
+        deferred.resolve(result[0].Rack_ID);
+      }
+      else {
+        deferred.resolve(null);
+      }
+      
+    })
+    .catch ( function (err) {
+      deferred.reject(err);
+    });
+
+    return deferred.promise;
   },
 
-  addSlottedBox : function addSlottedBox (parent, name, size) {
+  addSlottedBox : function addSlottedBox (parent, name, size, payload) {
 
     var deferred = q.defer();
 
     var wells = Rack.wells[size];
     if (! wells || !name || !size) {
-      deferred.reject("not standard size ? " + size);
+      var e = new Error("non standard size ? " + size);
+      deferred.reject(e);
     }
     else {
 
-      Record.query_promise("Select Rack_Alias from Rack where Rack_ID = " + parent)
+      Record.query_promise("Select Rack_Alias,FK_Equipment__ID from Rack where Rack_ID = " + parent)
       .then (function (result) {
         if (result.length == 1) {
           var alias = result[0]['Rack_Alias'];
+          var equip = result[0]['FK_Equipment__ID']
 
-          var boxData = [ { Rack_Name: name, Rack_Alias: alias + ' ' + name, FKParent_Rack__ID : parent, Rack_Type: 'Box', Movable: 'Y', Rack_Full: 'N', Capacity: size }]
+          var boxData = [ { Rack_Name: name, Rack_Alias: alias + ' ' + name, FKParent_Rack__ID : parent, Rack_Type: 'Box', FK_Equipment__ID: equip, Movable: 'Y', Rack_Full: 'N', Capacity: size }]
           
-          Record.createNew('Rack', boxData)
+          Record.createNew('Rack', boxData, {}, payload)
           .then ( function (boxResult) {
             var parent = boxResult.insertId;  
             console.log("Created box " + parent);
@@ -93,36 +126,42 @@ module.exports = {
 
             }
 
-            console.log("Insert slot data: " + JSON.stringify(slotData));
-            Record.createNew('Rack', slotData)
+            // console.log("Insert slot data: " + JSON.stringify(slotData));
+            Record.createNew('Rack', slotData, {}, payload)
             .then ( function (slotResult) {
               var box = boxResult.insertId;
               var slots = slotResult.affectedRows;
               
-              var msg = "Added Box #" + box + " with " + slots + ' Slots'
+              var msg = "Added Box [#" + box + "] with " + slots + ' Slots'
               deferred.resolve({box: boxResult, slots: slotResult, message: msg});
             })
             .catch (function (err) {
+              err.context = 'creating slots';
               deferred.reject(err);
             });
           })
           .catch ( function (err) {
+            err.context = 'creating box';
             deferred.reject(err);
           });
         }
         else {
-          deferred.reject('no rack alias found');
+          var err = new Error;
+          err.message = 'no rack alias found';
+          err.context = 'addSlottedBox';
+          deferred.reject(err);
         }
       })
       .catch ( function (err) {
-        deferred.reject("problem getting parent info");
+        err.context('addSlottedBox');
+        deferred.reject(err);
       });
     }
 
     return deferred.promise;
   },
 
-  add : function add (options) {
+  add : function add (options, payload) {
     if (!options) { options = {} }
 
     var deferred = q.defer();
@@ -148,20 +187,97 @@ module.exports = {
       ids.push(parent);
     }
       
-    Record.clone('rack', ids, reset, { id: 'Rack_ID' })
+    Record.clone('rack', ids, reset, { id: 'Rack_ID' }, payload)
     .then (function (result) {
       console.log("Cloned rack:  " + JSON.stringify(result));
       deferred.resolve(result);
     })
     .catch (function (err) {
-      console.log("Error cloning rack: " + JSON.stringify(err));
+      err.context = 'cloning rack';
       deferred.reject(err);
     });
 
     return deferred.promise;
   },
 
-  transferLocation : function transferLocation (model, ids, target_rack, options) {
+  move : function move (ids, parent, options, payload) {
+    // currently only moving boxes ... 
+    // if extended to move Racks and/or shelvse, progeny must be updated for more than one generation below (separate into separate method to execute recursively)
+    
+    if (!options) { options = {} }
+    var names = options.names || [];
+    var reprint = options.reprint;
+    var timestamp = options.backfill_data || options.timestamp;
+
+    var deferred = q.defer();
+
+    Record.query_promise("Select FK_Equipment__ID as freezer, Rack_Alias as alias from Rack where Rack_ID = " + parent)
+    .then ( function (result) {
+      var parent_alias = result[0].alias;
+      var freezer = result[0].freezer;
+
+      var aliases = names.map( function (name) {
+        return parent_alias + ' ' + name;
+      });
+
+      console.log("update rack alias to point to " + parent_alias);
+
+      Record.update('rack', ids, { FK_Equipment__ID: freezer, FKParent_Rack__ID: parent, Rack_Name: names, Rack_Alias: aliases }, null, payload)
+      .then ( function (result) {
+        console.log("MOVED: " + JSON.stringify(result));
+
+        var promises = [];
+        for (var i=0; i<ids.length; i++) {
+	  var name = "<CASE WHEN Rack_Type != 'Slot' THEN CONCAT( Concat('" + aliases[i] + "',' '), Rack_Name) ";
+          name += " ELSE CONCAT( Concat('" + aliases[i] + "',' '), LOWER(Rack_Name)) END>";
+
+          var condition =  'FKParent_Rack__ID = ' + ids[i];
+          promises.push( Record.update('rack',[], { Rack_Alias : name }, { conditions: [condition] } ) );
+	  console.log("update progeny: " + "UPDATE Rack SET Rack_Alias = " + name + " WHERE FKParent_Rack__ID = " + ids[0] );
+          
+          // var name = "CASE WHEN Rack_Type != 'Slot' THEN CONCAT( Concat('" + aliases[i] + "',' '), Rack_Name) ";
+          // name += " ELSE CONCAT( Concat('" + aliases[i] + "',' '), LOWER(Rack_Name)) END";
+          
+          // promises.push( Record.query_promise("UPDATE Rack SET Rack_Alias = " + name + " WHERE FKParent_Rack__ID = " + ids[0]) );
+        }
+
+        q.all(promises)
+        .then( function (ok) {
+          console.log("Updated progeny names as well");
+          deferred.resolve(result);
+        })
+        .catch ( function (err) {
+          console.log("Error updateing progeny");
+          deferred.reject(err);
+        });
+
+        // Refactor save history ... 
+
+        
+        // Change_history.update_History('rack', ids, { FKParent_Rack__ID: parent, Rack_Name: names})
+        // .then (function (ok) {
+        //   deferred.resolve(result);
+        // })
+        // .catch ( function (err) {
+        //   console.log("Error logging history for rack movement");
+        //   deferred.resolve(result);
+        // });
+
+      })
+      .catch ( function (err) {
+        console.log("Err: " + err);
+        deferred.reject(err);
+      });
+    })
+    .catch ( function (err2) {
+      console.log("Error retrieving parent alias");
+      deferred.reject(err2);
+    });
+
+    return deferred.promise;
+  },
+
+  transferLocation : function transferLocation (model, ids, target_rack, options, payload) {
     // Transfer samples to a new box... similar to moveSamples but with some extra optoions like 'create' flag or target 'wells' array
     var deferred = q.defer();
 
@@ -186,7 +302,7 @@ module.exports = {
             Rack.add({size: create, type: 'Box'})
             .then ( function (added) {
               var target = added.target; // test
-              Rack.moveSamples(model, ids, target, options)
+              Rack.moveSamples(model, ids, target, options,payload)
               .then ( function (res) {
                 deferred.resolve(res);
               })
@@ -201,7 +317,7 @@ module.exports = {
           else {
             // Move to existing target rack 
             var target = target_rack;
-            Rack.moveSamples(model, ids, target, options)
+            Rack.moveSamples(model, ids, target, options, payload)
             .then ( function (res) {
               deferred.resolve(res);
             })
@@ -211,23 +327,26 @@ module.exports = {
           }
         }
         else {
-          deferred.reject("not enough wells available.  Found " + result.available[target_rack].length + ' - need ' + ids.length);
+          var e = new Error("not enough wells available");
+          console.log("Found " + result.available[target_rack].length + ' - need ' + ids.length);
+          deferred.reject(e);
         }
       })
       .catch ( function (err) {
-        console.log("Error retrieving box Contents for Rack: " + target_rack + " : " + err);
+        err.context = 'retrieving box Contents for Rack: ' + target_rack;
         deferred.reject(err);
       });
     }
     else {
-      deferred.reject('non pack not yet set up');
+      var e = new Error('non pack not yet set up');
+      deferred.reject(e);
     }
 
  
     return deferred.promise;
   },
 
-  moveSamples : function moveSamples (model, ids, target_rack, options) {
+  moveSamples : function moveSamples (model, ids, target_rack, options, payload) {
 
     var deferred = q.defer();
 
@@ -241,7 +360,8 @@ module.exports = {
     if (wells && Mod) {
       if (ids.length == wells.length) {
         var promises = [];
-        var idField = Mod.alias('id') || 'id';
+        var idField = Record.alias(model, 'id');
+        
         for (var i=0; i<wells.length; i++) {
           var update =  "Update " + model + ", Rack SET  FK_Rack__ID = Rack.Rack_ID "
             + " WHERE Rack.FKParent_Rack__ID =" + target_rack + " AND Rack_Name = '" + wells[i] 
@@ -261,13 +381,14 @@ module.exports = {
         deferred.resolve({ success: true});        
       }
       else {
-        deferred.reject("different length noticed between well list and id list");
+        var e = new Error("different length noticed between well list and id list");
+        deferred.reject(e);
       }
     }
     else if (mirror) {
       console.log("please supply wells if preserving rack location");
-
-      deferred.reject({success: false});
+      var e = new Error("must supply wells if preserving rack location");
+      deferred.reject(e);
     }
     else if (unsorted) {
       // move all ids into the same location
@@ -278,12 +399,14 @@ module.exports = {
         deferred.resolve({ success: true, result: result});
       })
       .catch ( function (err) {
-        deferred.reject("Error moving samples: " + err)
+        err.context = 'moving samples';
+        deferred.reject(err)
       });
     }
     else {
       console.log("unspecific distribution strategy");
-      deferred.reject("unspecified distribution strategy");
+      var e = new Error('unspecified distribution strategy');
+      deferred.reject(e);
     }
 
     return deferred.promise;
@@ -315,6 +438,11 @@ module.exports = {
     else if (rack_id && rack_id.constructor === String && rack_id.match(/[a-zA-Z]/)) {
       var Scanned = Barcode.parse(rack_id);
       console.log("Scanned: " + JSON.stringify(Scanned));
+      
+      if (Scanned.Errors && Scanned.Errors.length) {
+        deferred.reject(Scanned.Errors);
+      }
+
       rack_ids = Scanned['Rack'];
     }
     else if (rack_id && rack_id.constructor === Array) {
@@ -325,7 +453,6 @@ module.exports = {
     }
     else if (!rack_id) {
       console.log("No Rack ID supplied");
-      // deferred.reject('no rack id');
     }
     else {
       rack_ids = [rack_id];
@@ -356,6 +483,10 @@ module.exports = {
       fields.push('Parent.Rack_Alias as box_alias');
       conditions.push("Parent.Rack_ID=Rack.FKParent_Rack__ID");
       conditions.push("Parent.Rack_Alias = '" + rack_name + "'");      
+    }
+    else {
+      conditions.push('0');
+      deferred.reject("No rack conditions specified");
     }
 
     if (rows) {
@@ -401,7 +532,7 @@ module.exports = {
 
       var contained = {};
       var available = {};
-
+      var boxes = [];
 
       if (data.length) {
         var contentData = {
@@ -410,10 +541,13 @@ module.exports = {
           slot : data[0].slot,
           alias : data[0].box_alias
         };
+        boxes.push( data[0].box_id);
 
         for (var i=0; i<data.length; i++) {
           var boxid = data[i].box_id;
           var id    = data[i].id;
+
+          if (boxes.indexOf(boxid) === -1) { boxes.push(boxid) }
 
           if (!available[boxid]) { available[boxid] = [] }
 
@@ -441,6 +575,11 @@ module.exports = {
         
         contentData['contains'] = contained;
         contentData['available'] = available;
+
+        if (rack_ids && rack_ids.length > 1) {
+          boxes = Record.restore_order(boxes, rack_ids);
+        }
+        contentData['boxes'] = boxes;
 
         deferred.resolve(contentData);
       }

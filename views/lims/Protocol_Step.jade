@@ -3,7 +3,6 @@ extends ./../customize/privateLayout
 block content
 
   div.container
-    include ./../core/errorMsg.jade
     
     // input variables: 
     //    - plate_ids  (array); 
@@ -11,18 +10,25 @@ block content
     //    - Steps      (array of hashes)
     //    - attributes (array of hashes)
 
-    - var configParams = { protocol: protocol, plate_ids: plate_ids, plate_set: plate_set, Samples: Samples, Steps : Steps, Attributes: attributes, last_step: last_step};
-  
-    - var init_options = { distribute : 1 };
-    - var initP = "initialize(" + JSON.stringify(configParams) + ")";    
-    - var initW = "initialize(" + JSON.stringify(configParams) + ',' + JSON.stringify(init_options) + ")";    
+    - var config = private_config || {};
+    - config.protocol = protocol;
+    - config.plate_ids = plate_ids;
+    - config.plate_set = plate_set;
+    - config.Samples = Samples;
+    - config.Steps = Steps;
+    - config.Attributes = attributes;
+    - config.last_step  = last_step;
+    - config.backfill_date = backfill_date;
 
-    //- flds = fields || []; 
-    //- units = { 'solution_qty' : 'solution_qty_units', 'transfer_qty' : 'transfer_qty_units'};
+    - var initP = "initialize(" + JSON.stringify(config) + ")";   
+
+    - config.distribute = 1; 
+    - var initW = "initialize(" + JSON.stringify(config) + ")";    
+
     - aliases = { 'equipment' : 'Equip', 'solution' : 'Sol' }
     - attributes = attributes || {}; // {'Thaw_Time' : 'integer' }
 
-    div(ng-app='myApp')
+    div(ng-app='myApp' ng-cloak=1)
       div(ng-controller="SharedController")
        div(ng-controller="FancyFormController")
         div(ng-controller="LIMSController")
@@ -34,7 +40,8 @@ block content
               include ActiveSamples.jade
               
               br 
-              include ./../core/angularMessages.jade
+              include ./../core/errorAngularMsg.jade
+              br
 
               div(ng-show="protocol.status != 'Completed'")      
                 h2 {{ protocol.name }}
@@ -43,9 +50,18 @@ block content
                   - var Snum = index+1;
              
                     div(ng-show="#{Snum} == step.stepNumber")
-                      - var flds = Step.input_options.split(':');
-                      - var formats = Step.input_format.split(':');
-                      - var defaults = Step.input_defaults.split(':');
+                      - var flds = [];
+                      if (Step.input_options) 
+                        - flds = Step.input_options.split(':')
+
+                      - var formats = [];
+                      if (Step.input_format) 
+                        - formats = Step.input_format.split(':')
+
+                      - var defaults = [];
+                      if (Step.input_defaults) 
+                        - defaults = Step.input_defaults.split(':')
+
                       - var prompted = {};
 
                       div.alert.alert-info(style='opacity:0.9')
@@ -60,6 +76,7 @@ block content
                         h4(style="color:red") &nbsp; &nbsp; #{ Step.message } 
 
                         hr
+                        b.text-warning(ng-show="backfill_prep_date") Note:  Backfilling timestamp to: {{ backfill_prep_date }}
 
                         div(ng-if='errMsg')
                           div.alert.alert-danger(style='opacity:1')
@@ -72,18 +89,22 @@ block content
 
                           div(ng-if="ListTracking#{Snum}")
                             // Show example for handling input lists //
-                            div.form-group
+                            div.form-group.input-lg
                               div.col-sm-2.control-label Expand Lists:
                               div.col-sm-4
                                 label.btn.btn-default(type='radio' ng-model="list_mode#{Snum}" uib-btn-radio = 'serial' ng-click="reset_list_mode('serial')") 
-                                  b &nbsp; Serially &nbsp;
+                                  b(ng-show="list_mode == 'serial'") &nbsp; Serially &nbsp;
+                                  span(ng-show="list_mode !== 'serial'") &nbsp; Serially &nbsp;
                                 label.btn.btn-default(type='radio'  ng-model="list_mode#{Snum}" uib-btn-radio='parallel' ng-click="reset_list_mode('parallel')")
-                                  b &nbsp; In Parallel &nbsp;
+                                  b(ng-show="list_mode == 'parallel'") &nbsp; In Parallel &nbsp;
+                                  span(ng-show="list_mode !== 'parallel'") &nbsp; In Parallel &nbsp;
+                                
+
                               div.col-sm-4
                                 span &nbsp; [ eg : 
-                                  b {{ listExample }}
-                                  span ]
-
+                                  b(ng-show="listExample") {{ listExample }}
+                                  b(ng-show="!listExample") awaiting selection...
+                                  span ]                                      
                           each field,i in flds
                             span &nbsp; 
                             - fld = field.replace('*','');
@@ -98,70 +119,68 @@ block content
                                 - fType = attributes[alias].type || 'text'
                                 if fType === 'Count'
                                   - fType = 'hidden'
-                                // - var attr_index = attributes.indexOf(fld);
 
                               if (fld != field)
                                 - mandatory = true;
                                 - pattern = "^[\\S]{1,}$"; 
 
-                              // - fld = '_' + fld;
-
                               - alias = alias.replace(/\_/g, ' ');
+                              - var execute = "reload(); validate_prep_form('" + fld + Snum + "')";
 
                               if fType === 'hidden' 
-                                input(type='hidden' name='#{fld}#{Snum}' id='#{fld}#{Snum}' ng-model='#{fld}#{Snum}' force=1)
+                                input(type='hidden' name='#{fld}#{Snum}' id='#{fld}#{Snum}' value ='{def}' ng-model='form.#{fld}#{Snum}' force=1)
                               else if fType.match(/ENUM/i)
-                                div.form-group
+                                div.form-group.input-lg.col-sm-12
                                   label.col-sm-2.control-label(for="#{fld}#{Snum}") #{alias}
                                   div.col-sm-6
-                                    my-dropdown(placeholder="#{alias}" list="MenuList['#{fld}#{Snum}']" selected="#{fld}#{Snum}" property="name" track='name' default="#{def}" ng-init="setup_Menu('#{fld}#{Snum}', \"#{fType}\",'','#{def}')")
-                              else 
-                                div.form-group
+                                    my-dropdown(placeholder="#{alias}" list="MenuList['form.#{fld}#{Snum}']" selected="form.#{fld}#{Snum}" property="name" track='name' default="#{def}" ng-click="#{execute}" ng-init="setup_Menu('form.#{fld}#{Snum}', \"#{fType}\",'','#{def}')")
+                                  div.col-sm-4 &nbsp; 
+                              else if fld.match(/^(location|solution|equipment)$/) 
+                                // these input options do not have cut/paste options ... and wait for blur to trigger validation....
+                                div.form-group.input-lg.col-sm-12
                                   label.col-sm-2.control-label(for='#{fld}#{Snum}') #{alias}
                                   div.col-sm-6
-
-                                    - var execute = '';
-                                    if fld === 'location'
-                                      - execute = "distribute();";
+                                    div.input-group
+                                      input.form-control(type='#{fType}' name="#{fld}#{Snum}" ng-required="#{mandatory}" placeholder = "-- Enter #{alias} --" id='#{fld}#{Snum}' ng-model='form.#{fld}#{Snum}' default='#{def}' force=1 data-error="You must enter a valid quantity" ng-blur="update_splitField('#{fld}#{Snum}');" ng-show="!cut.#{fld}#{Snum}" aria-describedby='expand#{fld}#{Snum}')
+                                  div.col-sm-4 &nbsp;
+                              else 
+                                div.form-group.input-lg.col-sm-12
+                                  label.col-sm-2.control-label(for='#{fld}#{Snum}') #{alias}
+                                  div.col-sm-6
+                                    div.input-group
+                                      input.form-control(type='#{fType}' name="#{fld}#{Snum}" ng-required="#{mandatory}" placeholder = "-- Enter #{alias} --" id='#{fld}#{Snum}' ng-model='form.#{fld}#{Snum}' ng-model-options="{debounce : 1000}" default='#{def}' force=1 data-error="You must enter a valid quantity" ng-change="update_splitField('#{fld}#{Snum}');" ng-show="!cut.#{fld}#{Snum}" aria-describedby='expand#{fld}#{Snum}')
                                       
-                                    input.input-lg.form-control(type='#{fType}' name="#{fld}#{Snum}" ng-required="#{mandatory}" placeholder = "-- Enter #{alias} --" id='#{fld}#{Snum}' ng-model='#{fld}#{Snum}' default='#{def}' force=1 data-error="You must enter a valid quantity" ng-blur="splitField('#{fld}#{Snum}'); #{execute}")
+                                      span.input-group-addon(id="expand#{fld}#{Snum}" ng-show="!cut.#{fld}#{Snum}")
+                                        a(href="/" ng-click="cut.#{fld}#{Snum} = 1" onclick="return false" data-toggle='tooltip' title="Expand to enable paste<BR>(eg from excel spreadsheet)" data-html='true')
+                                          i.fa.fa-expand
 
-                                    div.help-block.with-errors(style='color:red' ng-show="form#{Snum}.#{fld}#{Snum}.$invalid" ng-model="#{fld}#{Snum}_errors") #{alias} is Mandatory
+                                    div.input-group
+                                      textarea.form-control( rows="{{N}}" ng-show="cut.#{fld}#{Snum}" placeholder="Paste #{alias}" ng-model="paste.#{fld}#{Snum}" ng-blur="pasteData('#{fld}#{Snum}'); form.#{fld}#{Snum} = cutpaste.#{fld}#{Snum}; splitField('#{fld}#{Snum}')" aria-describedby="compress#{fld}#{Snum}" data-toggle='tooltip' title='paste list of values here<BR><B>One value per line</B>' data-html='true')
+
+                                      span.input-group-addon(id="compress#{fld}#{Snum}" ng-show="cut.#{fld}#{Snum}") &nbsp;
+                                        a(href="/" ng-click="cut.#{fld}#{Snum} = 0" onclick="return false" data-toggle='tooltip' title='convert to comma-delimited list')
+                                          i.fa.fa-compress
+
+                                    //- div.help-block.with-errors(style='color:red' ng-show="form#{Snum}.#{fld}#{Snum}.$invalid" ng-model="form.#{fld}#{Snum}_errors") #{alias} is Mandatory
+                                  
                                   if fld.match(/_qty/)
-                                    div.col-sm-2
+                                    div.col-sm-4
                                       - units = [ { name: 'ml'}, { name: 'ul'}]      
-                                      my-dropdown(placeholder='units..' list="MenuList['#{fld}_units#{Snum}']" selected="#{fld}_units#{Snum}" property='name' track='name', ng-init="setup_Menu('#{fld}_units#{Snum}','ml,ul,nl')") 
-
-                                      // span.lookup(id='Lookup-units' ng-init="loadLookup('units', '::#{fld}_units#{Snum}', 'units','','#{def}')") UNITS  
-                                  // if fld == 'Split'
-                                    div.col-sm-6(ng-show="Split#{Snum} > 1") 
-                                      label
-                                        input(type='radio' value = 'serial' ng-model="split_mode" ng-click="reset_split_mode()") 
-                                        b &nbsp; Serial &nbsp;
-                                      label
-                                        input(type='radio' value = 'parallel' ng-model="split_mode" ng-click="reset_split_mode()")
-                                        b &nbsp; Parallel &nbsp;
-                                      span &nbsp; [ eg : 
-                                        b {{ step.split_mode }} -> {{ step.splitExample }}
-                                        span ]
-                                      br
-                                      label
-                                        b Pack: &nbsp;
-                                        input(type='radio' value=1 ng-model="pack_wells" ng-click="reset_pack_mode()") 
-                                        b &nbsp; Yes &nbsp;
-                                      label
-                                        input(type='radio' value=0 ng-model="pack_wells" ng-click="reset_pack_mode()")
-                                        b &nbsp; No &nbsp;
-                                      span &nbsp; [ eg : 
-                                        b {{ step.pack_wells }} -> {{ step.packExample }}
-                                        span ]
+                                      my-dropdown(id='#{fld}_units#{Snum}' placeholder='units..' list="MenuList['form.#{fld}_units#{Snum}']" selected="form.#{fld}_units#{Snum}" property='name' track='name' ng-click="validate_prep_form('#{fld}_units#{Snum}');" ng-init="setup_Menu('form.#{fld}_units#{Snum}','ml,ul,nl')") 
+                                      
+                                  if ! fld.match(/_qty/)
+                                    div.col-sm-4 &nbsp;
 
                           hr
                           div.form-group
-                            //div.col-sm-2 &nbsp;
-                            label.col-sm-1 ..
+                            div.col-sm-1 &nbsp;
                             div.col-sm-3
-                              button.btn.btn-success(type='submit' ng-click="updateLookups()" ng-disabled="form#{Snum}.$invalid") Completed Step
+
+                              button.btn.btn-success(type='submit' ng-click="updateLookups()" ng-disabled="invalidate_form") Completed Step
+                              span &nbsp;
+                              a(href='#' onclick='return false;')
+                                button.btn.btn-xs(ng-show="invalidate_form" type='button' ng-click="validate_prep_form(null, {force:true})")
+                                  i.fa.fa-warning
                             div.col-sm-2
                               button.btn.btn-warning(type='button' ng-click="complete('Skipped')") Skip Step
                             div.col-sm-2
@@ -170,36 +189,12 @@ block content
                               button.btn.btn-primary(type='button' ng-click="repeat()" ng-disable="Step.Repeatable") Repeat Previous Step
                           hr
                           button.btn.btn-danger(type='button' ng-click="reset_messages(); exitThisProtocol()") Exit Protocol Now             
-
-                          // if Step.transfer_type
-                            div.form-group.alert-warning
-                              p &nbsp;
-                              div.col-sm-4
-                                button.btn.btn-danger(type='button' ng-click="complete('Test')") Check Distribution
-                                p &nbsp;
-                                button.btn.btn-primary(type='button' ng-click="updateLookups()") Update Lookups 
-                              div.col-sm-4
-                                div comment: {{ comments }} = {{ comments#{Snum} }} (dynamic)
-                                div split: {{ Split#{Snum} }} {{ Split }} (dynamic)
-                                div qty  : {{ transfer_qty#{Snum} }} (dynamic)
-                                div units : {{ transfer_qty_units#{Snum} }} {{ transfer_qty_units#{Snum}_id }} = {{ transfer_qty_units#{Snum}_label }} (dynamic)
-                                div pack: {{ pack_wells }} (static)
-                                div distribute: {{ distribution_mode#{Snum} }} (dynamic)
-                              div.col-sm-4
-                                div target_format : {{ Step.Target_format }}
-                                div target_type :   {{ Step.Target_sample }}
-                                div type: {{ Step.transfer_type }}
-                                div focus reset: {{ Step.reset_focus }}
-                            div.form-group
-                              div.col-sm-12
-                                b {{ JSON.stringify(Map) }}
-
                 hr
 
                 div(ng-if="Custom_Options && Custom_Options.transfer_type")
                   
                   div(ng-show="!showMap")
-                    button.btn-lg.btn-primary(type='button' ng-click="showMap=1") Show Distribution Map
+                    button.btn-lg.btn-primary(type='button' ng-click="validate_prep_form(); showMap=1;") Show Distribution Map
 
                   div(ng-show="showMap")
                     button.btn-lg.btn-danger(type='button' ng-click="showMap=0") Hide Distribution Map
@@ -223,7 +218,7 @@ block content
                 br
                 h3 Debugging
 
-                custom: {{ Custom_Options }}
+                b custom: {{ Custom_Options }}
                 hr
                 h5 Step: {{ Step }}
                 hr
@@ -240,8 +235,7 @@ block content
                 h5 Attributes: #{JSON.stringify(attributes)}
 
                 hr
-                b #{sails.config.payload}
-                b #{ JSON.stringify(sails.config.payload) }
+                b Payload: #{config.payload}
 
                 hr
                 b Config Messages:

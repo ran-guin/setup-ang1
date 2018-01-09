@@ -1,0 +1,145 @@
+extends ./../customize/privateLayout
+block content
+
+  if !views
+    - views = [];
+
+   - var config = {};
+    - config.views = views;
+
+  - var init = "initialize(" + JSON.stringify(config) + ")";
+
+  div.container
+    p &nbsp;
+    //- a(href="/reports/new")
+    //-   button.btn.btn-primary(type='button') Add New View Report  
+
+    h3 List of Current Views
+
+    div.container
+       div(ng-app='myApp' ng-cloak=1)
+        div(ng-controller="SharedController")
+         div(ng-controller="LIMSController")
+          div(ng-controller="ViewsController" ng-init="#{init}")
+            input(type='checkbox' ng-model="include_all")
+            b &nbsp; Include inactive views
+            p &nbsp;
+
+            table.table
+
+              - tablesVisible = {}
+
+              each view,index in views
+                - id   = view.id || id;
+                - name = view.name;
+                - table = view.tables;
+                - fields = view.fields;
+                - desc = view.description
+                - active = view.active
+                - picked = view.picked
+                - pick_list = picked.split(',')
+                - search = view.default_search
+                - layer = view.default_layer
+                - custom_name = view.custom_name
+                - last_name = ''
+                if (index)
+                  - last_name = views[index-1].name
+
+                - colour = 'red'
+                if status
+                  - colour = 'blue'
+
+                - tablesVisible[id] = false;
+
+                - flist = []
+                - tlist = []
+                if fields
+                  - flist = fields.split(/\s*,\s*/);
+                if tlist
+                  - tlist = table.split(/\s*,\s*/);
+
+                tr(ng-show="!#{index} || '#{name}' != '#{last_name}'")
+                  td
+                    h3 #{name}
+                  td
+                    div(ng-show="!tablesVisible['#{id}']")
+                        button.btn.btn-success.btn-xs(type='button' onClick='return false;' data-toggle='tooltip' title='open' ng-click="tablesVisible['#{id}']=1")
+                          span tables included &nbsp;
+                            i.fa.fa-expand
+
+                    div(ng-show="tablesVisible['#{id}']")
+                        button.btn.btn-danger.btn-xs(type='button' onClick='return false;' data-toggle='tooltip' title='close' ng-click="tablesVisible['#{id}']=0")
+                          i.fa.fa-close
+                        p &nbsp;
+                          ul
+                            each t in tlist
+                              li 
+                                i.text-danger #{t}
+
+                  td
+                    div(ng-show="!fieldsVisible['#{id}']" colspan=3)
+                        button.btn.btn-success.btn-xs(type='button' onClick='return false;' data-toggle='tooltip' title='open' ng-click="fieldsVisible['#{id}']=1")
+                          span field options &nbsp;
+                            i.fa.fa-expand
+
+                    div(ng-show="fieldsVisible['#{id}']")
+                        button.btn.btn-danger.btn-xs(type='button' onClick='return false;' data-toggle='tooltip' title='close' ng-click="fieldsVisible['#{id}']=0")
+                          i.fa.fa-close
+                        p &nbsp;
+                          ul
+                            - var prefix = ''
+                            each f in flist
+                              if f.match(/ AS /i)
+                                li 
+                                  i.text-danger #{prefix}#{f} 
+                                - prefix = ''
+                              else
+                                - prefix = prefix + f             
+                tr(ng-show="!#{index} || '#{name}' != '#{last_name}'")
+                  th Name
+                  th Active
+                  th Pre-Selected
+                  th Default Condition
+                  th Default Layer
+
+                tr(ng-show="(include_all && Vstatus[#{id}] !== 'delete') || (Vstatus[#{id}] === 'active')") 
+                  td 
+                    a(href="/getReport/#{id}")
+                      b(style='color: #{colour}') #{custom_name}
+                  td
+                    span(ng-show="Vstatus[#{id}] === 'active'")
+                      i.fa.fa-check(style='color: green')
+                      span &nbsp; &nbsp; &nbsp;
+                      button.btn.btn-xs(type='button' ng-click="resetStatus('#{id}','inactive')" data-toggle='tooltip' title='deactivate')
+                        i.fa.fa-close(style='color:red')
+                    span(ng-show="Vstatus[#{id}] === 'inactive'")
+                      i.fa.fa-close(style='color: red')
+                      span &nbsp; &nbsp; &nbsp;
+                      button.btn.btn-xs(type='button' ng-click="resetStatus('#{id}','active')" data-toggle='tooltip' title='reactivate')
+                        i.fa.fa-check(style='color:green')
+                    span &nbsp;
+                    button.btn.btn-sm(type='button' ng-click="resetStatus('#{id}','delete')" data-toggle='tooltip' title='delete')
+                      i.fa.fa-trash
+
+                  td
+                    div(ng-show="!P['#{custom_name}']")
+                      button.btn.btn-success.btn-xs(type='button' onClick='return false;' data-toggle='tooltip' title='open' ng-click="P['#{custom_name}']=1")
+                        b #{pick_list.length - 1} Fields &nbsp;
+                          i.fa.fa-expand
+                    div(ng-show="P['#{custom_name}']")
+                      button.btn.btn-danger.btn-xs(type='button' onClick='return false;' data-toggle='tooltip' title='close' ng-click="P['#{custom_name}']=0")
+                        b #{pick_list.length - 1} Fields &nbsp;
+                          i.fa.fa-close
+                      ul
+                      each pick in pick_list
+                        li(ng-show="'#{pick}'") #{pick}
+                  td
+                    ul
+                    each s in search.split(',')
+                      li(ng-show="'#{s}'") #{s}
+                  td
+                    b #{layer}
+
+
+
+      

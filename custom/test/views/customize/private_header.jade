@@ -1,0 +1,15 @@
+title BC Generations
+.mini-header(style='background-color:#344')
+	h2(style='color:#ddd') 
+		a(href='/home')
+			i.fa.fa-home(style='color:#ddd') &nbsp; &nbsp; &nbsp;
+		span BC Generations
+		div.navbar-right
+			if session && session.payload
+				span(style='font-size:20px') [ #{session.payload.mode} mode ]  &nbsp; &nbsp; &nbsp;
+				span #{session.payload.user} &nbsp;  &nbsp; &nbsp;
+			a(href='#' onclick="return false;" data-toggle='modal' data-target='#userMenu')
+				i.fa.fa-bars(style='color:#ddd')
+
+include userMenu.jade
+

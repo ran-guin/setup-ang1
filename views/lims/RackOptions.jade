@@ -1,0 +1,22 @@
+// standard input variables: 
+//    - plate_ids (array); 
+//    - Samples   (array of hashes)
+
+form(role='form' method='post' action="/Rack/home" enctype='form-data')
+  input(type = 'hidden' id= 'Rack' name='Rack' value='#{ Scanned.Rack }')
+  input(type='hidden' id = 'Samples' name='Samples' value="#{ JSON.stringify(Samples) }")
+
+  table.table
+    tr
+      td(style='width:30%')
+        h2 Move Box(es): 
+        span.input-lg
+          input(type='checkbox' ng-model='backfill_move')
+          b &nbsp; Backfill
+      td(style='width:40%; vertical-align:middle')
+        div(ng-if="backfill_move")
+          br
+          input-lg.form-control.my-datepicker#backfill_move(type="text" name='backfill_date' ng-model="backfill_move_date" placeholder="Backfill Date")
+      td(style='width:30%; vertical-align:middle')
+        button.btn.btn-lg.btn-success(type='submit' ng-disabled=0) Move Box(es) 
+        br

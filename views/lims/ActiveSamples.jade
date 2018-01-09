@@ -9,13 +9,30 @@ div.section-block.bg-info
             i.fa.fa-home(style='color:#eee; background-color:transparent')
         span &nbsp; &nbsp;
 
+    form.form-inline(role='form' method='post' action="load-parents" ng-show='0 && barcode' style='display: inline')
+      span(ng-show='barcode')
+        input(type='hidden' ng-model='plate_ids' name='plate_ids' value="{{active.plate_ids.join(',')}}")
+        button.btn.btn-default(type='submit')
+          a(href='#' data-toggle='tooltip' title='Load Parent Samples')
+            i.fa.fa-arrow-up(style='color:#fc6; background-color:transparent')
+        span &nbsp; &nbsp;
+
+
     b Active Samples: &nbsp; 
-      button.btn.btn-primary.btn-sm(type='button' ng-show="!injectedAlready()" ng-click="injectData('/Container/summary?render=1','', active.plate_ids)") ?
+      button.btn.btn-primary.btn-sm(type='button' ng-show="!injectedAlready()" ng-click="injectData('/Container/summary?render=1','', active.plate_ids)") 
+        a(href='#' data-toggle='tooltip' onclick='return false;' title='View Current Sample Information') 
+          i.fa.fa-question(style='color: #fff')
       button.btn.btn-danger.btn-sm(type='button' ng-show='injectedAlready()' ng-click='uninjectData()') x
       span &nbsp; &nbsp; &nbsp;
-      button.btn.btn-primary.btn-xs(type='button' ng-show="!injectedAlready('storageHistory')" ng-click="injectData('/Container/storage_history?render=1','storageHistory', active.plate_ids)") Storage History
+      button.btn.btn-primary.btn-xs(type='button' ng-show="!injectedAlready('storageHistory')" ng-click="injectData('/Container/storage_history?render=1','storageHistory', active.plate_ids)") 
+        a(href='#' data-toggle='tooltip'  onclick='return false;' title='Retrieve Movement History for current Tube(s)')
+          span(style='color:#fff') Storage History
       button.btn.btn-danger.btn-sm(type='button' ng-show="injectedAlready('storageHistory')" ng-click="uninjectData('storageHistory')") x 
-  
+      span &nbsp; &nbsp; &nbsp;
+      button.btn.btn-primary.btn-xs(type='button' ng-show="active.Samples[0].Container_format != 'Matrix Tube'" ng-click="print_Labels('container', active.plate_ids)")
+        a(href='#' data-toggle='tooltip'  onclick='return false;' title='Print barcodes')
+          i.fa.fa-print(style='color:#fff') 
+
     span.navbar.navbar-right
         button.btn.btn-primary.btn-sm(type='button' ng-show="include_parents && !injectedAlready('injectedHistory')" ng-click="injectData('/Container/history?include_parents=1','injectedHistory', active.plate_ids)") Long History
         button.btn.btn-primary.btn-sm(type='button' ng-show="!include_parents && !injectedAlready('injectedHistory')" ng-click="injectData('/Container/history','injectedHistory', active.plate_ids)") Short History
@@ -27,7 +44,7 @@ div.section-block.bg-info
 
         br
         br
-        div(ng-show="active.Samples && active.Samples[0] && active.Samples[0].last_step")
+        div(ng-show="active.Samples && active.Samples[0] && active.Samples[0].last_step && active.last_step.protocol")
           u Progress: 
           b {{ active.last_step.protocol }} [ {{ active.last_step.status }} ] &nbsp; &nbsp;
           br 
@@ -38,6 +55,8 @@ div.section-block.bg-info
       b {{ cids.length }} x &nbsp;
       b(style='color:red') {{ context }} &nbsp;
       br
+
+br 
 
 div#injectedData
 

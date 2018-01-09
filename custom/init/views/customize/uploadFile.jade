@@ -1,0 +1,16 @@
+// standard input variables: 
+
+form(role='form' method = 'post' action="/uploadFile" enctype="multipart/form-data") 
+  input(type = 'hidden' name='Samples' value='{{ Samples }}')
+  input(type='hidden' id = 'id' name='plate_ids' value="{{plate_ids}}")
+
+  table.table
+    tr
+      td(style='width:30%')
+        h3 Upload Sample Attributes              
+      td(style='width:40%; vertical-align:middle' )
+        span(style='width:100%')
+            input.btn.btn-lg.btn-default(type = 'file' ng-model='file' name='uploadFile' style='display:inline-block')
+            span &nbsp; &nbsp; 
+      td(style='width:30%; vertical-align:middle')   
+        button.btn.btn-lg.btn-success(type='submit', ng-click='get_headers()') Upload

@@ -29,7 +29,7 @@ function wellMapperController ($scope, $rootScope, $http, $q ) {
  
         $scope.map.packExample = $scope.map.packExamples[$scope.map.pack_mode + '-' + $scope.map.split_mode + '-' + $scope.map.fill_by] || '';
 
-	    $scope.mapping_keys = ['split', 'pack', 'fill_by', 'Target_format', 'Target_sample', 'transfer_type', 'reset_focus', 'target_size'];
+	    $scope.mapping_keys = ['split', 'pack', 'load_by', 'fill_by', 'Target_format', 'Target_sample', 'transfer_type', 'reset_focus', 'target_size', 'transfer_qty', 'transfer_qty_units'];
 		for (var i=0; i<$scope.mapping_keys.length; i++) {
 			console.log($scope.mapping_keys[i] + ' = ' + $scope.map[ $scope.mapping_keys[i] ]);
 		}    
@@ -50,7 +50,14 @@ function wellMapperController ($scope, $rootScope, $http, $q ) {
         };
 
         $scope.map.splitExample = $scope.map.splitExamples[$scope.map.split_mode + '-' + $scope.map.fill_by];
- 
+
+        $scope.map.loadExamples = {
+            'row'  : "wells loaded by row : eg A1, A2, A3 ...", 
+            'column' : "wells loaded by column : eg A1, B1, C1 ...",
+            'slot' : "samples copied into same slot they came from (order unimportant)",
+        };                     
+        $scope.map.loadExample = $scope.map.loadExamples[$scope.map.load_by];
+        
         $scope.map.fillExamples = {
             'row'  : "wells filled by row : eg A1, A2, A3 ...", 
             'column' : "wells filled by column : eg A1, B1, C1 ...",
@@ -66,8 +73,65 @@ function wellMapperController ($scope, $rootScope, $http, $q ) {
         };           
     }
 
-    $scope.validate_target = function () {
+    $scope.validate_redistribution_form = function validated_form( options ) {
+        
+        var deferred = $q.defer();
+
+        if (!options) { options = {} }
+
+        if ($scope.map.transfer_type === 'Move') {
+            if ( $scope.map.splitX > 1) {
+                $scope.map.splitX = 1;
+                $scope.redistribute('reset');
+                console.log("reset split to 1... ");
+            }
+            $scope.mandatory_list = [];
+        }
+        else {
+            $scope.mandatory_list = ['target_format', 'transfer_qty'];
+        }
+
+        // if (!$scope.map.target_format) { $scope.validation_error('target_format','Still require format info'); }
+        // else {  $scope.validation_error('target_format', []);  }
+
+        var qs = $scope.map.transfer_qty.split(',');
+        if (qs.length > 1 && $scope.map.splitX > 1) {
+            if (qs.length !== $scope.map.splitX) {
+                $scope.error("multiple transfer volumes (" + qs.length + ") must match split count: " + $scope.map.splitX);
+            }
+        }
+
+        console.log("Validate " + $scope.map.transfer_type);
+        // if (! $scope.map.transfer_qty && $scope.map.transfer_type==='Aliquot') { 
+
+        //     $scope.annotate_element('transfer_qty','missing qty for aliquot', 'error');
+        // }
+ 
+        // else {
+        //     $scope.clear_validations('transfer_qty','error');
+        // }
+
+
+        options.form = $scope.map;
+        options.required = $scope.mandatory_list;
+
+        $scope.validate_form( options )
+        .then ( function (result) {
+            deferred.resolve(result);
+        })
+        .catch ( function (err) {
+            deferred.reject(err);
+        });
+
+        return deferred.promise;
+    }
+
+    $scope.validate_target = function (target_element) {
         console.log("Validate target boxes: " + $scope.map.target_rack);
+        
+        if (!target_element) { target_element = 'target_rack'}
+
+        $scope.visit(target_element);
     }
 
     $scope.loadWells = function (Target, Options) {
@@ -75,12 +139,16 @@ function wellMapperController ($scope, $rootScope, $http, $q ) {
         var deferred = $q.defer();
 
         if (! Options) { Options = {} }
+
         var rack_id = Options.target_rack;
-        var size    = Options.target_size;
-        var fill_by = Options.fill_by;
+        var size    = Options.target_size ||  $scope.map.target_size;
+        var fill_by = Options.fill_by || $scope.map.fill_by;
+        var load_by = Options.load_by || $scope.map.load_by;
 
         var rows    = Options.load_rows || $scope.map.use_rows;
         var cols    = Options.load_columns || $scope.map.use_cols;
+
+        var target_element = Options.target_element || 'target_rack';
 
         if (! rack_id && Options.target_boxes && Options.target_boxes.length) { 
             rack_id = Options.target_boxes;
@@ -89,11 +157,12 @@ function wellMapperController ($scope, $rootScope, $http, $q ) {
         var rack_name;
         if (! rack_id && size ) {
             rack_name = 'B' + size;   // default target box to benchtop rack  ... (standard Box: 'B9x9' and/or 'B8x12' )
+            $scope.warning("Note:  Default benchtop rack: " + rack_name);
         }
 
         console.log("Load rack " + rack_id + ' ' + rack_name);
-        var data = { id: rack_id, name: rack_name, fill_by: fill_by, rows: rows, columns: cols};
-
+        var data = { id: rack_id, name: rack_name, load_by: load_by, fill_by: fill_by, rows: rows, columns: cols};
+        
         console.log("SEND: " + JSON.stringify(data));
 
         if (rack_id || rack_name) {
@@ -102,41 +171,61 @@ function wellMapperController ($scope, $rootScope, $http, $q ) {
             var target_boxes = [];
             var target_rack = '';
 
+
+            // Temporary - combine error checking in block below into api return val including warnings & errors ... 
             console.log("retrieve rack data : " + JSON.stringify(data));
             $http.post("/Rack/boxData", data)
             .then (function (returnData) {
-                console.log("rack data: " + JSON.stringify(returnData));
+                // console.log("rack data: " + JSON.stringify(returnData));
+
+                var rack_messages = [];
+                var rack_warnings = [];
+                var rack_errors   = [];
 
                 available = returnData.data.available || {};
-                console.log("Available: " + JSON.stringify(available));
-                // define target boxes (only handles one for now ... )
-               
-
-                target_boxes = Object.keys(available);
+                target_boxes     = returnData.data.boxes || [];
+                // console.log("Available: " + JSON.stringify(available));               
                 console.log("target boxes: " + target_boxes.join(','));
+                if (Options.target_boxes && target_boxes.length < Options.target_boxes.length) {
+                    // $scope.error("At least one of the scanned boxes is either full or not a box");
+                    rack_errors.push("Invalid target box scanned (may include full boxes)");
+                    // $scope.validation_error(target_element,"Invalid target box scanned (may include full boxes)");
+
+                    console.log("Target boxes ? " + Options.target_boxes);
+                }
 
                 var rack_list = [];
                 for (var i=0; i<target_boxes.length; i++) {
                     var thisBox = target_boxes[i] || '';
 
                     if (available && available[thisBox] && available[thisBox].length) { 
-                        $scope.message(available[thisBox].length + ' wells available in Box #' + thisBox);
-                       rack_list.push(thisBox); // returnData.data.id;
+                        // $scope.message(available[thisBox].length + ' wells available in Box #' + thisBox);
+                        // $scope.message(available[thisBox].length + ' wells available in Box #' + thisBox);
+                        // $scope.validation_message(target_element, available[thisBox].length + ' wells are still available in Box #' + thisBox);                        
+                        rack_messages.push(available[thisBox].length + ' well(s) still available in Box #' + thisBox + ' [' + returnData.data.alias + ']');
+
+                        rack_list.push(thisBox); // returnData.data.id;
                     }
-                    else if (returnData.data.name) { 
-                        $scope.warning("no wells available in " + returnData.data.name )
+                    else if (returnData.data.name) {
+                        // $scope.validation_warning(target_element,"no wells available in " + returnData.data.name + ' [' + returnData.data.alias + ']');
+
+                        rack_warnings.push("no wells available in " + returnData.data.name + ' [' + returnData.data.alias + ']');
+                        // $scope.warning("no wells available in " + returnData.data.name )
                         target_boxes = [];
                     } 
                     else if (! returnData.data.id) {
-                        $scope.error("Invalid Box specified : " + target_rack + " ? ");
+                        // $scope.error("Invalid Box specified : " + target_rack + " ? ");
+                        // $scope.validation_error(target_element,"Invalid Box specified : " + target_rack + " ? ");
+                        rack_errors.push("Invalid Box specified : " + target_rack + " ? ");
                     }
-                }
-                target_rack = rack_list.join(',');
 
+                }
+
+                target_rack = rack_list.join(',');
                 var N_boxes = target_boxes.length;
 
                 if (! target_boxes.length) {
-                    $scope.error("No valid target boxes");
+                    // if ($scope.form_initialized) { $scope.validation_error(target_element,'no valid target boxes') }
                     target_rack = '';
                     target_boxes = [];
                 }
@@ -144,18 +233,27 @@ function wellMapperController ($scope, $rootScope, $http, $q ) {
                 var boxes = [];
                 for (var i=0; i<target_boxes.length; i++) {    
                     if (target_boxes[i] && ! available[target_boxes[i]] || !available[target_boxes[i]].length) { 
-                        $scope.error("No target wells available in Box" + target_boxes[i]);
+                        // $scope.validation_error(target_element,"No target wells available in Box" + target_boxes[i]);
+                        rack_errors.push("No target wells available in Box" + target_boxes[i])
                         target_rack = '';
                     }
                     else {
                         boxes.push(target_boxes[i]);
                     }
                 }
+
+                // $scope.annotate_element(target_element, rack_errors, 'error');
+                // $scope.annotate_element(target_element, rack_warnings,'warning');
+                // $scope.annotate_element(target_element, rack_messages);
+
+                // if (rack_errors.length) { $scope.invalidate(target_element) }
+                // else { $scope.validate(target_element) }
+
                 target_boxes = boxes;   // clear boxes with no available wells .... 
 
                 console.log("Target rack: " + target_rack + '; from ' + JSON.stringify(target_boxes));
 
-                var boxData = {available: available, target_boxes: target_boxes };
+                var boxData = {available: available, target_boxes: target_boxes, errors: rack_errors, warnings: rack_warnings, messages: rack_messages};
 
                 $scope.map.target_boxes = target_boxes;
                 $scope.map.available    = available;
@@ -167,9 +265,9 @@ function wellMapperController ($scope, $rootScope, $http, $q ) {
                 else if (size) {
                     // prompt user for target box 
                     console.log("choose size: " + size);
-                    $http.get('/Rack/wells?size=' + size + '&fill_by=' + fill_by)
+                    $http.get('/Rack/wells?size=' + size + '&fill_by=' + fill_by + '&load_by=' + load_by)
                     .then ( function (wells) {
-                        console.log("loaded wells: " + JSON.stringify(wells));
+                        // console.log("loaded wells: " + JSON.stringify(wells));
                         
                         boxData.available = wells.data;
 
@@ -177,9 +275,9 @@ function wellMapperController ($scope, $rootScope, $http, $q ) {
                         console.log("GOT : " + JSON.stringify(boxData)); 
                         deferred.resolve( boxData );
                     })
-                    .catch ( function (wells) {
+                    .catch ( function (err) {
                         console.log("Error retrieving available wells");
-                        deferred.reject();
+                        deferred.reject(err);
                     });
                 }
                 else {
@@ -192,20 +290,27 @@ function wellMapperController ($scope, $rootScope, $http, $q ) {
                 deferred.reject(err);
             });
         }  
+        else { deferred.resolve() }
 
         return deferred.promise;
     }
 
     $scope.redistribute_Samples = function  (Samples, Target, Options) {
+        
         var deferred = $q.defer();
 
-        if (Options && Options.reset) {
-            $scope.reset_messages();
-            console.log("Redistribute Samples ");
-        }
-        else {
-            console.log("Redistribute Samples (no reset");            
-        }
+        if (!Options) { Options = {} }
+        var target_element = Options.target_element || 'target_rack';
+
+        $scope.reset_messages('redistribute samples');
+        $scope.clear_validations(target_element);
+        $scope.reset_form_validation();
+
+        // $scope.validation_warning(target_element,[]);
+        // $scope.validation_message(target_element,[]);
+
+        $scope.targetMapStatus = 'Pending';
+        $scope.sourceMapStatus = 'Pending';
 
         console.log("Load by " + $scope.map.load_by);
 
@@ -272,9 +377,20 @@ function wellMapperController ($scope, $rootScope, $http, $q ) {
                 };
             }
 
-            Options['target_boxes'] = Loaded.target_boxes;
-            Options['available'] = Loaded.available;  // reset in loadWells...
-            
+            if (Loaded) {
+                $scope.annotate_element(target_element, Loaded.errors, 'error');    
+                $scope.annotate_element(target_element, Loaded.warnings, 'warning');
+                $scope.validation_message(target_element, Loaded.messages);
+
+                if (Loaded.errors.length) { $scope.invalidate(target_element) }
+                else if (Loaded.warnings.length) { $scope.validate_element(target_element, 'pending') }
+                else { $scope.validate(target_element) }
+
+
+                Options['target_boxes'] = Loaded.target_boxes;
+                Options['available'] = Loaded.available;  // reset in loadWells...
+            }
+
             console.log('call distribute using:');
             console.log('Target: ' + JSON.stringify(Target) );
             console.log('Options: ' + JSON.stringify(Options) );
@@ -285,37 +401,27 @@ function wellMapperController ($scope, $rootScope, $http, $q ) {
                 Target,
                 Options
             );
+
+  
+            $scope.annotate_element(target_element, Map.errors, 'error');    
+            $scope.annotate_element(target_element, Map.warnings, 'warning');
+            $scope.annotate_element(target_element, Map.messages);
+            console.log(target_element + ' errors Loaded: ' + JSON.stringify($scope.validation_errors));
             
-            var wells = Map.wells || {};
-            // $scope.map.use_rows = wells.rows;
-            // $scope.map.use_cols = wells.cols;
-            console.log("WELLS: " + JSON.stringify(wells));
+            var wells = Map.wells || {};   
 
-
-            console.log("Samples: " + JSON.stringify(Samples));
-            console.log("NEW MAP: " + JSON.stringify(Map));
- 
-            console.log("NEW CMAP: " + JSON.stringify(Map.CMap));
-            console.log("Source Colour Map: " + JSON.stringify(Map.SourceMap));
-            console.log("Target Colour Map: " + JSON.stringify(Map.TransferMap));           
-
-            if ( Map.warnings && Map.warnings.length ) { 
-                for (var i=0; i<Map.warnings.length; i++ ) {
-                    $scope.warning(Map.warnings[i]);
-                } 
-            }
-
-            if ( Map.errors && Map.errors.length ) { 
-                for (var i=0; i<Map.errors.length; i++ ) {
-                    $scope.error(Map.errors[i]);
-                } 
-            }
+            $scope.validate_redistribution_form();
 
             $scope.Map = Map;
+
+            $scope.targetMapStatus = 'Complete';
+            $scope.sourceMapStatus = 'Complete';
+
             deferred.resolve( { Map : Map, Target: Target, Options: Options, errors: Map.errors} );
         })
         .catch ( function (err) {
             console.log("Error loading wells: " + err);
+            $scope.validate_redistribution_form();
             deferred.reject(err);
         });
 
@@ -378,6 +484,7 @@ function wellMapperController ($scope, $rootScope, $http, $q ) {
     	//   - position
     	//   - batch
     	//
+        console.log("Row -> Load / Fill = " + $scope.map.load_by + ' / ' + $scope.map.fill_by);
 
         $scope.map.load_by = 'row';
         $scope.map.fill_by = $scope.map.fill_by || $scope.map.load_by;
@@ -407,7 +514,9 @@ function wellMapperController ($scope, $rootScope, $http, $q ) {
 
     // Fill for Samples only ... may not be necessary ... 
     $scope.source_by_Col = function source_by_Col (Samples) {
-;
+ 
+        console.log("Col -> Load / Fill = " + $scope.map.load_by + ' / ' + $scope.map.fill_by);
+
         $scope.map.load_by = 'column';
         $scope.map.fill_by = $scope.map.fill_by || $scope.map.load_by;
 

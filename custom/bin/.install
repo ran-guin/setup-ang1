@@ -1,0 +1,11 @@
+cd custom/$PLUGIN;
+ln -s ./../custom/$PLUGIN/views ./../../views/$PLUGIN;
+ln -s $PLUGIN/images ./../../assets/images/$PLUGIN;
+ln -s $PLUGIN/styles ./../../assets/styles/$PLUGIN; 
+ln -s $PLUGIN/templates ./../../assets/templates/$PLUGIN; 
+ln -s $PLUGIN/js/private ./../../assets/js/private/$PLUGIN; 
+ln -s $PLUGIN/js/dependencies ./../../assets/js/dependencies/$PLUGIN; 
+
+ln -s $PLUGIN/api/models/*.js ./../../api/models/
+ln -s $PLUGIN/api/controllers/*.js ./../../api/controllers/
+cd -;

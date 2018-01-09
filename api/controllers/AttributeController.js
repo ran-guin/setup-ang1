@@ -8,6 +8,8 @@
 var q = require('q');
 var bodyParser = require('body-parser');
 
+var Logger = require('../services/logger');
+
 module.exports = {
 	increment : function (req, res ) {
 		var table = req.body.table;
@@ -20,7 +22,7 @@ module.exports = {
 			console.log(JSON.stringify(result));
 		})
 		.catch (function (error) {
-			console.log(':-(');
+			Logger.error(error,'increment problem detected');
 		});
 		return res.send('increment completed');
 	},
@@ -49,6 +51,8 @@ module.exports = {
 
 		var body = req.body;
 
+		var payload = req.session.payload || {};
+	
 		var skip = body['skip'] || 0;
 		var page = body['page'] || 1;
 
@@ -62,16 +66,17 @@ module.exports = {
 		else { console.log("No file supplied ") }
 
 		// querying for headers only 
-		Upload.uploadFile(file, options)
+		Upload.uploadFile(file, options, payload)
 		.then ( function (results) {
+			var grid = results.grid;
 			console.log("Updated custom");
-			return res.render('customize/upload_file', { data : results });
+			return res.render('customize/upload_file', { data : grid});
 		})
 		.catch ( function (err) {
 			var msg = "Error uploading file: " + err;
-			return res.render('customize/private_home', { errorMsg: msg });
+			console.log(msg);
+			Logger.error(err, 'Could not upload file');
+			return res.render('customize/private_home', { errorMsg: msg});
 		});
-
-
 	}
 } 

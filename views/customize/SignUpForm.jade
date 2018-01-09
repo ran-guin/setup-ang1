@@ -6,24 +6,26 @@ div(ng-app='myApp')
           label(for='user')
             i.fa.fa-user
             |  Username
-          input#user.input-lg.form-control(name='user' type='text' required ng-model='user' ng-blur="testUnique('user','user','name')" placeholder='-- Enter Username --' default='' value="" force=1)
-          span.alert-danger(ng-show='user_errors') {{user_errors}}
+          input#name.input-lg.form-control(name='name' type='text' required ng-model='name' ng-blur="validateLogin('name')" placeholder='-- Enter Username --' default='' value="" force=1)
+          span.alert.alert-danger(ng-show='name_errors') {{name_errors}}
         .form-group
           label(for='email')
             i.fa.fa-email
             |  Email
-          input#email.input-lg.form-control(name='email' type='text', ng-model='email' required ng-blur="testUnique('email','user','email')" placeholder='-- Enter Email --' default='' value="" force=1)
-          span.alert-danger(ng-show='email_errors') {{email_errors}}
+          input#email.input-lg.form-control(name='email' type='text', ng-model='email' required ng-blur="validateLogin('email')" placeholder='-- Enter Email --' default='' value="" force=1)
+          span.alert.alert-danger(ng-show='email_errors') {{email_errors}}
         .form-group
-          label(for='pwd')
+          label(for='password')
             i.fa.fa-eye
             |  Password
-          input#pwd.input-lg.form-control(name='password' type='password' ng-model='password' default='' placeholder='-- Enter password --' force=1)
+          input#password.input-lg.form-control(name='password' type='password' ng-model='password' default='' placeholder='-- Enter password --' force=1)
         .form-group
-          label(for='pwd2')
+          label(for='confirm_password')
             i.fa.fa-eye
             |  Confirm Password
-          input#pwd2.input-lg.form-control(name='confirm_password' type='password' ng-model='confirm_password' placeholder='-- Confirm password --')                
-        button.btn.btn-lg.btn-default.btn-success.btn-block(type='submit' ng-disabled="custom_disable")
+          input#confirm_password.input-lg.form-control(name='confirm_password' type='password' ng-model='confirm_password' ng-blur="confirmPassword()" placeholder='-- Confirm password --')
+          span.alert.alert-danger(ng-show='confirm_password_errors') {{confirm_password_errors}}
+
+        button.btn.btn-lg.btn-default.btn-success.btn-block(type='submit' ng-disabled="custom_disabled || !name || !email || !password")
           fa.fa.fa-power-off
           |  Submit 

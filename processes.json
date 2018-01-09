@@ -1,8 +1,25 @@
 {
-  "apps" : [{
-    "name"        : "app",
-    "script"      : "app.js",
-    "ignoreWatch" : [ "node_modules", ".tmp", "views", "assets"],
-    "watch"       : [ "api", "assets"],
-    }]
+  "apps" : [
+  {
+    "exec_mode"   : "fork_mode",
+    "name"        : "litmus_dev",
+    "script"      : "litmus_dev/app.js",
+    "ignoreWatch" : [ "litmus_dev/node_modules", "litmus_dev/.tmp", "litmus_dev/views", "litmus_dev/assets"],
+    "watch"       : [ "litmus_dev/api", "litmus_dev/assets"],
+  },
+  {
+    "exec_mode"   : "fork_mode",
+    "name"        : "litmus_test",
+    "script"      : "litmus_test/app.js",
+    "ignoreWatch" : [ "litmus_test/node_modules", "litmus_test/.tmp", "litmus_test/views", "litmus_test/assets"],
+    "watch"       : [ "litmus_test/api", "litmus_test/assets"],
+  },
+  {
+    "exec_mode"   : "fork_mode",
+    "name"        : "litmus_production",
+    "script"      : "litmus_production/app.js",
+    "ignoreWatch" : [ "litmus_production/node_modules", "litmus_production/.tmp", "litmus_production/views", "litmsu_production/assets"],
+    "watch"       : [ "litmus_production/api", "litmus_production/assets"],
+  },
+]
 }

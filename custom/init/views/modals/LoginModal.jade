@@ -1,0 +1,24 @@
+.container
+  div.modal.fade#LoginModal
+    .modal-dialog
+      // Modal content
+      .modal-content
+        .modal-header
+          button.close(type='button', data-dismiss='modal') ×
+          h2
+            i.fa.fa-lock.fa
+            |  &nbsp; Login
+        .modal-body
+          include LoginForm.jade
+        .modal-footer
+          button.btn.btn-default.btn-danger.pull-left(type='submit', data-dismiss='modal')
+            i.fa.fa-remove
+            |  Cancel
+          p
+            | Not a member? 
+            a(href='#' onclick="return false;" data-dismiss='modal' data-toggle='modal' data-target='#SignUp') Register
+          p
+            | Forgot 
+            a(href='#') Password?
+
+include SignUp.jade

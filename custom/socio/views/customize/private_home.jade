@@ -1,0 +1,26 @@
+extends privateLayout
+block content
+  - var config = { payload: sails.config.payload };
+  - var init = "initialize(" + JSON.stringify(config) + ")";
+
+  div.main.container
+     div(ng-app='myApp')
+      div(ng-controller="SharedController")       
+        div(ng-controller="UserController" ng-init="#{init}") 
+            h3 User Profile
+            div.navbar-right
+              if sails.config.payload && sails.config.payload.access === 'admin'
+                  a(href="/admin")
+                    button.btn.btn-danger(type='button') Admin
+            hr 
+
+            include ./../core/errorMsg.jade
+
+            include ./../socio/Profile.jade
+
+            hr
+            p &nbsp;
+            p &nbsp;
+            p &nbsp;
+            p &nbsp;
+            p &nbsp;

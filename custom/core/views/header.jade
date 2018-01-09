@@ -1,0 +1,15 @@
+head
+    meta(name='viewport', content='width=device-width, initial-scale=1, maximum-scale=1')
+
+    base(href=req.baseUrl) 
+
+    include css.jade
+    
+    // Added this so the client has access to the csrf tag and it's grabbed first service side on every page
+    //script(type='text/javascript').
+    //  window.overlord = { csrf: "<%= _csrf %>" };
+    
+    // The sound file tht will play on activity events
+      source(src='/sounds/notify.ogg', type='audio/ogg')
+      source(src='/sounds/notify.mp3', type='audio/mpeg')
+      source(src='/sounds/notify.wav', type='audio/wav')

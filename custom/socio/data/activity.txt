@@ -1,0 +1,5 @@
+id	name	parent	status
+1	Cultural	NULL	active
+2	Networking	NULL	active
+3	Sport	NULL	active
+4	Climbing	3	active

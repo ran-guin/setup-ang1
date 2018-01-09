@@ -11,15 +11,39 @@ var _ = require('underscore-node');
 module.exports = {
 
 	tableName: 'Plate',
+	primaryField: 'Plate_ID',
 	migrate: 'safe',
+
+	// Record.createNew triggers creation of meta records containing data as follows:	
+	metaRecord: {
+		'Tube' : { 
+			'FK_Plate__ID' : '<ID>' 
+		}
+	},
+
 	attributes: {
+		FK_Plate_Format__ID: { model: 'container_format'},
+		FK_Sample_Type__ID: { model: 'sample_type' },
+		FK_Rack__ID: { model: 'rack'},
+		// FK_Pipeline__ID: { model: 'pipeline'},
+		FK_Employee__ID: { model: 'employee'},
+		Plate_Comments: { type: 'string'},
+		Plate_Status: { 
+			type: 'string', 
+			enum: ['Active','Pre-Printed','Reserved','Temporary','Failed','Thrown Out','Exported','Archived','On Hold']
+		}
 
 	},
 
-	alias: function (name) {
-		// enable customization of field names if non-standard //
-		var alias = { 
+    related: {
+            table: 'Tube',
+            fk: 'FK_Plate__ID',
+            custom: {}
+    },
+
+	alias: {
 			'id' : 'Plate_ID',
+			'BCG_id' : 'Plate_ID',
 			'Parent' : 'FKParent_Plate__ID',
 			'qty' : 'Current_Volume',
 			'qty_units' : 'Current_Volume_Units',
@@ -29,86 +53,146 @@ module.exports = {
 			'location' : 'FK_Rack__ID',
 			'target_format' : 'FK_Plate_Format__ID',
 			'target_sample' : 'FK_Sample_Type__ID',
-		}
-
-		var field = alias[name];
-		return field;  // return null if no alias defined... 
+			'comments' : 'Plate_Comments',
 	},
 
 	track_history: [
 		'FK_Rack__ID',
 	],
 
-	barcode : function (id, count) {
-
-		console.log(count + " Container Barcodes Printed.  from " + id);
-		return 1;
-	},
-
-	saveLastPrep : function (plates, prep_id) {
+	saveLastPrep : function (plates, prep_id, payload) {
 			var deferred = q.defer();
 			
 			var list = plates.join(',');
 				
-			Record.update('container', plates, {'FKLast_Prep__ID' : prep_id } )
+			Record.update('container', plates, {'FKLast_Prep__ID' : prep_id }, null, payload)
 			.then (function (result) {
 					console.log("set last prep id to " + prep_id + ' for ' + list);
 					deferred.resolve(result);
 			})
 			.catch ( function (err) {
-				deferred.reject("Error updating last prep id: " + err)
+				err.context = "updating last prep id";
+				deferred.reject(err);
 			});
 
 			return deferred.promise;
 	},
 
-	loadData : function (ids, condition) {
+	loadViewData : function (ids, condition, options) {			
+		var deferred = q.defer();
+
+		Container.loadData(ids, condition, options)
+		.then (function (data) {
+			console.log("loaded data " + JSON.stringify(data));
+			
+			var sampleList = [];
+
+			for (var i=0; i<data.length; i++) {
+				sampleList.push(data[i].id);
+			}
+
+			console.log("g1");
+			var get_last_step = {}; // Protocol_step.parse_last_step(data);  
+
+			var last_step = get_last_step.last_step;
+			console.log("g1");
+
+			if (get_last_step.warning) { warnings.push(get_last_step.warning) }
+			console.log("g2");
+
+			var viewData = {
+			    plate_ids: ids.join(','), 
+			    last_step : last_step, 
+			    Samples: data , 
+			};
+
+			// console.log("returned viewData " + JSON.stringify(viewData));
+			deferred.resolve(viewData);
+		})
+		.catch ( function (err) {
+			console.log("error retrieving plate data");
+			deferred.reject();
+		});
+
+		return deferred.promise;
+	},
+
+	loadData : function (ids, condition, options) {
+
+		if (! options) { options = {} }
 
 		var include = 'prep, position, attributes';
-
 		var deferred = q.defer();
-			
+		var box_order = options.box_order;
+
+		console.log("ordering options: " + JSON.stringify(options));
+		console.log("box order " + JSON.stringify(box_order));
+		console.log('ids: ' + ids);
+
 		ids = Record.cast_to(ids, 'array');
 
 		//var fields = 'Plate_ID as id, Sample_Type as sample_type, Plate_Format_Type as container_format';
 		//var query = 'SELECT ' + fields + " FROM Plate LEFT JOIN Sample_Type ON FK_Sample_Type__ID=Sample_Type_ID LEFT JOIN Plate_Format ON FK_Plate_Format__ID=Plate_Format_ID WHERE Plate_ID IN (" + id_list + ')';
 		
-		var tables = ['Plate'];
+		var tables = options.tables || ['Plate'];
 
-		var fields = [
-			'Plate_ID as id', 
+		var fields = options.fields || [
+			'Plate.Plate_ID as id', 
 			'Sample_Type.Sample_Type as sample_type', 
-			'Sample_Type_ID as sample_type_id', 
-			'Plate_Format_Type as container_format', 
-			'Plate_Format_ID as container_format_id',
-			'Current_Volume as qty',
-			'Current_Volume_Units as qty_units',
-			'FKParent_Plate__ID as Parent',
+			'Sample_Type.Sample_Type_ID as sample_type_id', 
+			'Plate_Format.Plate_Format_Type as container_format', 
+			'Plate_Format.Plate_Format_ID as container_format_id',
+			'Plate.Current_Volume as qty',
+			'Plate.Current_Volume_Units as qty_units',
+			'Plate.FKParent_Plate__ID as Parent',
+			'Plate.Plate_Created as created'
 		];
 
-		var left_joins = [
-			'Sample_Type ON FK_Sample_Type__ID=Sample_Type_ID',
-			'Plate_Format ON FK_Plate_Format__ID=Plate_Format_ID',
+		var left_joins = options.left_joins || [
+			'Sample_Type ON Plate.FK_Sample_Type__ID=Sample_Type.Sample_Type_ID',
+			'Plate_Format ON Plate.FK_Plate_Format__ID=Plate_Format.Plate_Format_ID',
 		];
 
 		console.log('generate conditions');
 		var conditions = [];
 		if (condition) { conditions.push(condition) }
 
+		if (options.add_fields) { 
+			for (var i=0; i<options.add_fields.length; i++) {
+				fields.push(options.add_fields[i]);
+			}
+		}
+
+		if (options.add_left_joins) {
+			for (var i=0; i<options.add_left_joins.length; i++) {
+				left_joins.push(options.add_left_joins[i]);
+			}			
+		}
+
+		if (options.add_tables) {
+			for (var i=0; i<options.add_tables.length; i++) {
+				tables.push(options.add_tables[i]);
+			}
+		}
+
+
 		if (ids && ids.length) {
 			var id_list = ids.join(',');
-			conditions.push('Plate_ID IN (' + id_list + ')');
+			conditions.push('Plate.Plate_ID IN (' + id_list + ')');
 		}
 
 		console.log("Conditions: " + conditions.join(' AND '));
 		if (! conditions.length) {
-			console.log('no conditions');
-			deferred.reject("no conditions ...");
+			var e = new Error('no conditions');
+			console.log('e');
+			e.context = 'container.loadData';
+			console.log('rejecting ' + e.context);
+			deferred.reject(e);
 		}
 		else {	
 			console.log("continue..");
 			if ( include.match(/prep/) ) {
-				left_joins.push('Prep ON FKLast_Prep__ID=Prep_ID');
+				left_joins.push('Prep ON Plate.FKLast_Prep__ID=Prep_ID');
 				left_joins.push('lab_protocol ON Prep.FK_Lab_Protocol__ID=lab_protocol.id');
 				left_joins.push('protocol_step ON protocol_step.Lab_protocol=lab_protocol.id AND Prep_Name=protocol_step.name');
 
@@ -117,6 +201,7 @@ module.exports = {
 				fields.push("MAX(protocol_step.step_number) as last_step_number");
 				fields.push("Prep.Prep_Name as last_step");
 				fields.push("CASE WHEN Prep.Prep_Name like 'Completed %' THEN 'Completed' WHEN Prep.Prep_Name IS NULL THEN 'N/A' ELSE 'In Process' END as protocol_status");
+				fields.push('GROUP_CONCAT(DISTINCT custom_settings) as transfer_settings');
 			}
 
 			if ( include.match(/position/) ) {
@@ -124,37 +209,60 @@ module.exports = {
 				left_joins.push('Rack AS Box ON Rack.FKParent_Rack__ID=Box.Rack_ID');
 				fields.push ("case WHEN Box.Rack_Type='Box' THEN Box.Rack_ID ELSE NULL END as box_id");
 				fields.push ("case WHEN Box.Rack_Type='Box' THEN Box.Capacity ELSE NULL END as box_size");
-				fields.push ("case WHEN Rack.Rack_Type='Slot' THEN Rack.Rack_Name ELSE NULL END as position");
+				fields.push ("Rack.Rack_Name as position");
 			}
 
 			if ( include.match(/attribute/) ) {
 				fields.push("GROUP_CONCAT( CONCAT(Attribute_Name,'=',Attribute_Value) SEPARATOR ';<BR>') as attributes");
-				left_joins.push('Plate_Attribute ON Plate_Attribute.FK_Plate__ID=Plate_ID');
+				left_joins.push('Plate_Attribute ON Plate_Attribute.FK_Plate__ID=Plate.Plate_ID');
 				left_joins.push('Attribute ON Plate_Attribute.FK_Attribute__ID=Attribute_ID');
 			}
 
-			var query = Record.build_query({tables: tables, fields: fields, left_joins: left_joins, conditions: conditions, group: ['Plate_ID'], debug: true })
+			var query = Record.build_query({tables: tables, fields: fields, left_joins: left_joins, conditions: conditions, group: ['Plate.Plate_ID'] })
 
+			console.log("* Q: " + query);
 		    Record.query(query, function (err, result) {
 		    	if (err) {
-		    		console.log("error: " + err);
-		    		deferred.reject("Error: " + err);
+		    		console.log("Error with query ? " + err);
+		    		console.log(query);
+		    		deferred.reject(err);
 		    	}
 		    	else {
 
 		    		for (var i=0; i<result.length; i++) {
+
+		    			if (result[i].transfer_settings && result[i].transfer_settings.match('transfer_type') ) {
+
+		    				var transfer_settings = JSON.parse(result[i].transfer_settings);
+		    				result[i].last_step_transfer_type = transfer_settings.transfer_type;
+		    				result[i].last_step_was_transfer = true;
+		    				result[i].last_step_transfer_settings = transfer_settings;
+		    			}
+		    			else { result[i].transfer_step = false}
+		    				
 		    			if (
-		    				result[i].protocol_status == 'In Process' 
-		    				&& result[i].last_step && result[i].last_step.constructor === String 
-		    				&&  result[i].last_step.match(/^(Aliquot|Extract|Transfer|Pre-Print) /)
-		    				&& ! result[i].last_step.match(/ out to /) 
+		    				result[i].protocol_status == 'In Process' && result[i].transfer_step
+		    				// && result[i].last_step && result[i].last_step.constructor === String 
+		    				// &&  result[i].last_step.match(/^(Aliquot|Extract|Transfer|Pre-Print) /)
+		    				// && ! result[i].last_step.match(/ out to /) 
 		    				) {
 		    					// differentiate internal transfer steps from later (inapplicable) steps 
 		    					result[i].protocol_status = 'Completed Transfer';
 		    			}
 		    		}
+
+		    		var sorted_results
+		    		if (box_order) {
+		    			console.log("sorted by box " + box_order.join(','));
+		    			sorted_results = Record.restore_order(result,box_order,'box_id');
+		    		}
+		    		else {
+		    			sorted_results = Record.restore_order(result, ids, 'id');
+		    			console.log("restore scanned order to id order: " + JSON.stringify(ids));
+		    		}
+
 		    		// console.log("Loaded DATA: " + JSON.stringify(result));
-		    		deferred.resolve(result);
+		    		deferred.resolve(sorted_results);
 		    	}
 
 		    });
@@ -164,12 +272,12 @@ module.exports = {
 		
 	},
 
-	target_specs: function (format_id, prep_id) {
+	target_specs: function (format_id, prep_id, payload) {
 		// fields to be reset when item is cloned from an existing container (eg standard transfer)
 		var fields = {
 			FK_Plate_Format__ID : format_id,
 			Plate_Created       : now(),
-			FK_Employee__ID     : sails.config.payload.alDenteID,
+			FK_Employee__ID     : payload.external_ID,
 			FKLast_Prep__ID     : prep_id,	
 		}
 
@@ -181,7 +289,7 @@ module.exports = {
 
 	},
 
-	transfer_Location : function (ids, Transfer) {
+	transfer_Location : function (ids, Transfer, Options, payload) {
 		// relocate using WellMapper information (from Transfer hash)
 		// Transfer = [{ batch: 0, target_position: "A2", target_box: '' }, { }]
 
@@ -194,8 +302,10 @@ module.exports = {
 		console.log("\n** NEW IDS: " + ids);
 		console.log("\n** Target slots: " + target_slots.join(','));
 
+		var update_options = {};
+
 		if (target_slots && ids && target_slots.length === ids.length) {
-			Record.update('container', ids, { 'FK_Rack__ID' : target_slots })
+			Record.update('container', ids, { 'FK_Rack__ID' : target_slots }, Options, payload)
 			.then ( function (result) {
 				deferred.resolve(result);
 			})
@@ -210,7 +320,7 @@ module.exports = {
 		return deferred.promise;
 	},
 
-	execute_transfer : function (ids, Transfer, Options) {
+	execute_transfer : function (ids, Transfer, Options, payload) {
 		//
 		// Input: 
 		//
@@ -251,16 +361,50 @@ module.exports = {
 		// 
 		// Returns: create data hash for new Plates.... (need to be able to reset samples attribute within Protocol controller (angular)
 
-		console.log("Executing Container Transfer ... " + Options.transfer_type);
 		var deferred = q.defer();
 
 		if (ids && Transfer && Options.transfer_type === 'Move') {
 			console.log("only relocating samples");
 
-			Container.transfer_Location(ids, Transfer)
+			Container.transfer_Location(ids, Transfer, Options, payload)
 			.then (function (result) {
 				console.log("Transferred : " + ids.join(','));
-				deferred.resolve( { plate_ids: ids });
+
+
+				/** add Prep record for transfer (in get_target_ids for transfer/aliquot **/
+
+				var standard_lp = 1;
+				var timestamp = Options.timestamp || '<NOW>';
+				var transfer_type = Options.transfer_type || 'Relocate';
+
+				var prep_data = {
+					Prep_Name: transfer_type + ' Sample(s)',
+					Prep_Action: 'Completed',
+					Prep_DateTime: timestamp,
+					FK_Employee__ID: '<USER>',
+					FK_Lab_Protocol__ID: standard_lp,
+				}
+
+				var plate_data = [];
+				var qtyField = Container.alias.qty;
+				var qtyUnits = Container.alias.qty_units;
+				var plate_set = Options.plate_set;
+
+				for (var i=0; i<ids.length; i++) {
+					plate_data.push({
+						FK_Plate__ID : ids[i],
+						FK_Plate_Set__Number : plate_set,
+					});
+				}
+				Prep.save_Prep(prep_data, plate_data, payload)
+				.then ( function (r) {
+					deferred.resolve( { plate_ids: ids });
+				})
+				.catch ( function (err) {
+					console.log("Error saving relocation prep");
+					deferred.resolve( { plate_ids: ids }); // non fatal;
+				})
+
 			})
 			.catch (function (err) {
 				console.log("Error relocating samples");
@@ -276,11 +420,11 @@ module.exports = {
 
 			console.log("\n*** Container.execute_transfer: ***")
 			console.log("input IDS:" + JSON.stringify(ids));
-			console.log("input Target: " + JSON.stringify(Transfer));
+			console.log("input Transfer: " + JSON.stringify(Transfer));
 			console.log("input Options: " + JSON.stringify(Options));
 			// if (CustomData) { console.log("input CustomData: " + JSON.stringify(CustomData[0]) + '...') }
 
-			Container.get_target_ids(ids, Transfer, Options)
+			Container.get_target_ids(ids, Transfer, Options, payload)
 			.then (function (target_ids) {
 
 				console.log("post transfer updates to " + JSON.stringify(target_ids));
@@ -288,7 +432,7 @@ module.exports = {
 				.then (function (finalResponse) {
 					console.log("completed transfer");
 
-					Container.transfer_Location(target_ids, Transfer)
+					Container.transfer_Location(target_ids, Transfer, Options, payload)
 					.then (function (result) {
 						deferred.resolve( finalResponse );
 					})
@@ -298,14 +442,13 @@ module.exports = {
 					});
 				})
 				.catch ( function (err) {
-					var msg = "problem with post transfer updates ? " + JSON.stringify(err);
-					console.log(msg);
-					deferred.reject(msg); 
+					err.context = 'post transfer update';
+					deferred.reject(err); 
 				});
 			})
 			.catch ( function (err) {
-				console.log("problem getting target ids ? " + err);
-				deferred.reject("problem getting target ids: " + err);
+				err.context = "get_target_ids";
+				deferred.reject(err);
 			});
 		}
 		else {
@@ -335,13 +478,16 @@ module.exports = {
 		
 		var resetSource = {};
 		var resetTarget = {};
+		var resetSolution = {};
+
+		var creation_date = Options.timestamp || '<now>';
 
 		var resetClone = {
 			'Plate_ID' : null,
 			'Plate_Status' : 'Active',
 			'FKParent_Plate__ID' : '<id>',
 			'FK_Rack__ID' : '<NULL>',
-			'Plate_Created' : '<now>',
+			'Plate_Created' : creation_date,
 			'FK_Employee__ID' : '<user>' 
 		};
 
@@ -356,14 +502,19 @@ module.exports = {
 		}
 		else if (Options.transfer_type === 'Transfer' ) {
 			resetSource['Plate_Status'] = 'Thrown Out';
+			// set location to garbage below (since it requires promise)
 		}
 
-		var qtyField = Container.alias('qty');
-		var qtyUnits = Container.alias('qty_units');
+		var qtyField = Container.alias.qty;
+		var qtyUnits = Container.alias.qty_units;
 
 		if ( ! Options.solution_qty ) { Options.solution_qty = 0 }
+
+		if (Options.solution_qty && Options.solution_qty.constructor === String) {
+			Options.solution_qty = parseFloat(Options.solution_qty);
+		}
 		
-		if (Transfer[0].qty && Options.transfer_type !== 'Pre-Print') {
+		if (Options.transfer_type !== 'Pre-Print') {              // && Transfer[0].qty &&    ... need to allow for 0 qt... 
 			resetTarget[qtyUnits] = Transfer[0].qty_units || Options.transfer_qty_units;
 			var quantities = [];
 			var adjustments = [];
@@ -371,6 +522,10 @@ module.exports = {
 			for (var i=0; i<Transfer.length; i++) {		
 				
 				var target_qty = Transfer[i].qty;
+				if (target_qty && target_qty.constructor === String && target_qty.length) {   // need to allow for 0ml transfer (eg DNA extraction)
+					target_qty = parseFloat(target_qty);
+				}
+				
 				if (Options.solution_qty) {
 					var add_qty = Options.solution_qty[i];
 					if (add_qty && add_qty.constructor === String) {
@@ -386,7 +541,15 @@ module.exports = {
 					adjustments.push(0);
 				}
 				else {	
-					adjustments.push("<" + qtyField + " - " + Transfer[i].qty + ">");		
+					var F = qtyField;
+					var V = Transfer[i].qty;
+
+					var rounded = "<CASE WHEN " + F + ' - ' + V + ' < ' + F + ' /1000 THEN 0 ELSE ' + F + ' - ' + V + " END>";
+					// This prevents volumes reaching extremely low non-zero values due to floating point rouunding errors.
+					adjustments.push(rounded);
+
+					console.log(rounded);
+					console.log(qtyField + ' - ' + Transfer[i].qty);
 				}
 			}
 			resetTarget[qtyField] = quantities;
@@ -394,6 +557,8 @@ module.exports = {
 		}
 		else if (Options.solution_qty) {
 			resetTarget[qtyField] = Options.solution_qty;
+			resetSolution['qty'] = Options.solution_qty;
+			resetSolution['qty_units'] = Transfer[0].qty_units || Options.transfer_qty_units;
 		}
 
 		// Target options 
@@ -410,14 +575,33 @@ module.exports = {
 
 		}
 
-		var reset = { target: resetTarget, clone: resetClone, source: resetSource}
-		deferred.resolve(reset);
+		var reset = { target: resetTarget, clone: resetClone, source: resetSource, solution: resetSolution};
 
-		console.log('Reset:  ' + JSON.stringify(reset));
+		if (Options.transfer_type === 'Transfer' ) {
+			Rack.garbage()
+			.then (function (id) {
+				resetSource['FK_Rack__ID'] = id;
+				reset.source = resetSource;
+
+				console.log('Reset:  ' + JSON.stringify(reset));
+				deferred.resolve(reset);
+			})
+			.catch ( function (err) {
+				console.log('Error retrieving garbage location');
+				console.log('Reset:  ' + JSON.stringify(reset));
+
+				deferred.resolve(reset);			
+			});
+		}
+		else {
+			console.log('Reset:  ' + JSON.stringify(reset));
+			deferred.resolve(reset);
+		}
+
 		return deferred.promise;
 	},
 
-	get_target_ids: function (ids, Transfer, Options) {
+	get_target_ids: function (ids, Transfer, Options, payload) {
 
 		var deferred = q.defer();
 		console.log("get target ids from " + JSON.stringify(ids));
@@ -427,6 +611,7 @@ module.exports = {
 			var resetTarget = result.target;
 			var resetSource = result.source;
 			var resetClone  = result.clone;
+			var resetSolution = result.solution;
 
 			console.log("\n*** Reset Values: " + JSON.stringify(result));
 
@@ -444,10 +629,10 @@ module.exports = {
 					
 					var updates = [];
 					
-					updates.push( Record.update('container', current_ids, resetTarget ) );
+					updates.push( Record.update('container', current_ids, resetTarget, Options, payload) );
 
 					if (resetSource && Object.keys(resetSource).length) {
-						updates.push(Record.update('container', parents, resetSource));
+						updates.push(Record.update('container', parents, resetSource, Options, payload));
 					}
 
 					console.log("run updates for retrieved samples");
@@ -458,16 +643,18 @@ module.exports = {
 					})
 					.catch ( function (err) {
 						console.log('error making updates on retrieved samples');
-						deferred.resolve(current_ids);
+						console.log(current_ids);
+						deferred.resolve(err, 'error updating samples');
 					});
 				}
 				else {
 					// clone new plates 
 					// Add new records to Database //
 					var clone_ids = _.pluck(Transfer,'source_id');
-					Options['id'] = Container.alias('id');
+					Options['id'] = Container.alias.id;
+
 					console.log("Clone Plates: " + clone_ids.join(','));
-					Record.clone('container', clone_ids, _.extend(resetTarget, resetClone), Options)
+					Record.clone('container', clone_ids, _.extend(resetTarget, resetClone), Options, payload)
 					.then ( function (cloneData) {
 						console.log("Cloned Plates.");
 
@@ -475,7 +662,7 @@ module.exports = {
 
 						if (resetSource && Object.keys(resetSource).length) {
 							console.log("Update Source: " + JSON.stringify(resetSource));
-							updates.push( Record.update('container', clone_ids, resetSource) );
+							updates.push( Record.update('container', clone_ids, resetSource, Options, payload) );
 						}
 
 						if (cloneData.data) {
@@ -486,6 +673,37 @@ module.exports = {
 						console.log("Print labels for " + JSON.stringify(newIds) );
 
 						console.log("run updates for target samples");
+						
+
+						/** add Prep record for transfer **/
+
+						var standard_lp = 1;
+						var timestamp = Options.timestamp || '<NOW>';
+						var transfer_type = Options.transfer_type || 'Relocate';
+
+						var prep_data = {
+							Prep_Name: transfer_type + ' Sample(s)',
+							Prep_Action: 'Completed',
+							Prep_DateTime: timestamp,
+							FK_Employee__ID: '<USER>',
+							FK_Lab_Protocol__ID: standard_lp,
+						}
+
+						var plate_data = [];
+						var qtyField = Container.alias.qty;
+						var qtyUnits = Container.alias.qty_units;
+						var plate_set = Options.plate_set;
+
+						for (var i=0; i<clone_ids.length; i++) {
+							plate_data.push({
+								FK_Plate__ID : clone_ids[i],
+								Transfer_Quantity : resetTarget[qtyField][i],
+								Transfer_Quantity_Units :  resetTarget[qtyUnits],
+								FK_Plate_Set__Number : plate_set,
+							});
+						}
+						updates.push(Prep.save_Prep(prep_data, plate_data, payload));
+
 						q.all(updates)
 						.then (function (results) {
 
@@ -500,19 +718,19 @@ module.exports = {
 						
 					})
 					.catch ( function (err) {
-						console.log("Cloning Error: " + JSON.stringify(cloneError));
-						deferred.reject( err );						
+						err.context='Cloning container';
+						deferred.reject(err);						
 					});
 				}
 			})
 			.catch ( function (err) {
 				console.log("Error checking for pre-printed plates: " + err);
-				deferred.reject( err );
+				deferred.reject(err);
 			});
 		})
 		.catch ( function (err) {
-			deferred.reject("Error generating reset data: " + err); 
-			//return res.render('lims/WellMap', { sources: Sources, errorMsg: "cloning Error"});
+			err.context='resetting data';
+			deferred.reject(err); 
 		});
 
 		return deferred.promise;
@@ -563,9 +781,8 @@ module.exports = {
 			deferred.resolve(returnVal);
 		})
 		.catch ( function (err) {
-			console.log("encountered non-fatal error executing Container Promises: " + JSON.stringify(err));
-			returnVal['Error'] = 'Promise errors: ' + JSON.stringify(err);
-			deferred.reject(returnVal); 
+			err.context = "executing Container Promises";
+			deferred.reject(err); 
 		});
 
 		return deferred.promise;
@@ -618,17 +835,17 @@ module.exports = {
 		return ;
 	},
 
-	create_daughter : function (id, target_format_id, prep_id) {
-		Record.clone( id, Container.target_specs(target_format_id));
+	create_daughter : function (id, target_format_id, prep_id, payload) {
+		Record.clone('container', id, Container.target_specs(target_format_id), null, payload);
 		return;
 	},
 
-	relocate : function (ids, target) {
+	relocate : function (ids, target, payload) {
 		
 		var deferred = q.defer();
 
 		if (ids.length && ( target.length == 1 || target.length == ids.length) ) {
-			Record.update('container', ids, { 'FK_Rack__ID' : target })
+			Record.update('container', ids, { 'FK_Rack__ID' : target }, null, payload)
 			.then (function (ok) {
 				deferred.resolve(ok);
 			})
@@ -638,11 +855,15 @@ module.exports = {
 		}
 		else {
 			if (ids.length) {
-				var msg = "List of Target locations doesn't match length of ids " + JSON.stringify(target);
-				deferred.reject(msg);
+
+				var e = new Error("List of Target locations doesn't match length of ids ");
+				e.context = 'relocate';
+				deferred.reject(e);
 			}
 			else {
-				deferred.reject("No ids to move... ");
+				var e = new Error('no ids to move');
+				e.context = 'relocate';
+				deferred.reject(e);
 			}
 		}
 		

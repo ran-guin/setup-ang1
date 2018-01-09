@@ -13,14 +13,19 @@ module.exports = {
 	migrate: 'safe',
 	
 	tableName: 'Attribute',
+	idField : 'Attribute_ID',
+	nameField: 'Attribute_Name',
+
 	attributes: {
 
 	},
 
 	models : [ 'container', 'prep' ],  // models with attributes...
 
-	insertHash : function (model, id, att_id, value) {
+	insertHash : function (model, id, att_id, value, user, timestamp) {
 		var hash = {};
+
+		if (!timestamp) { timestamp = 'CURDATE()' }
 
 		var Mod = sails.models[model];
 
@@ -30,7 +35,9 @@ module.exports = {
 
 		var hash = {
 			FK_Attribute__ID : att_id,
-			Attribute_Value : value
+			Attribute_Value : value,
+			FK_Employee__ID : user,
+			Set_DateTime : timestamp
 		};
 
 		hash[field] = id;
@@ -72,22 +79,23 @@ module.exports = {
 
 	},
 
-	clone : function (model, sources, targets, resetData, options) {
+	clone : function (model, sources, targets, resetData, options, payload) {
 		var split = options.split || 1;
 		var deferred = q.defer();
 
 		var Mod = sails.models[model] || {};
 		var table = Mod.tableName || model;
-
-		if ( Attribute.models.indexOf(model) ) {
+		var att_table = table + '_Attribute';
+		
+		if ( Attribute.models.indexOf(model) >= 0) {
 			console.log('clone attributes for ' + table + ' Record(s): ' + targets.join(',' ));
 
 			var source_list = sources.join(',');
 			var fields = 'FK_' + table + '__ID as reference_id, FK_Attribute__ID as id, Attribute_Name name, Attribute_Type type, Attribute_Value as value';
-			var query = "SELECT " + fields + " FROM " + table + '_Attribute, Attribute'
+			var query = "SELECT " + fields + " FROM " + att_table + ', Attribute'
 				+ " WHERE FK_Attribute__ID=Attribute_ID AND Inherited='Yes' AND FK_" + table + '__ID IN (' + source_list + ')';
 
-			var insertPrefix = "INSERT INTO " + table + '_Attribute (FK_' + table + '__ID, FK_Attribute__ID, Attribute_Value) VALUES ';
+			// var insertPrefix = "INSERT INTO " + att_table + ' (FK_' + table + '__ID, FK_Attribute__ID, Attribute_Value) VALUES ';
 
 			var Map = {};
 			var split_index = {};
@@ -105,39 +113,49 @@ module.exports = {
 
 			console.log("Map: " + JSON.stringify(Map));
 
-			Record.query(query, function (err, attributeData){
-				
-				if (err) { deferred.reject("Error retrieving attributes: " + err) }
-				else {
-					if (attributeData.length) {
-						console.log("Attribute Data: " + JSON.stringify(attributeData[0]) + '...');
-						var insert = [];
-						for (j=0; j< split; j++) {
-							for (var i=0; i<attributeData.length; i++) {
-								var att = attributeData[i];
-								var target = Map[att.reference_id][j];
-											
-								var insertion = '(' + target + ',' + att.id + ",'" + att.value + "')"; 
-								insert.push(insertion);	
-							}
-						}
-						var sqlInsert = insertPrefix + insert.join(',');
+			Record.query_promise(query)
+			.then ( function (attributeData) {
+				if (attributeData.length) {
+					var addAttributes = [];
+					console.log("Attribute Data: " + JSON.stringify(attributeData) + '...');
+					// var insert = [];
+					for (var i=0; i<attributeData.length; i++) {
+						var att = attributeData[i];
+						for (j=0; j<Map[att.reference_id].length; j++) {
+							var target = Map[att.reference_id][j];
+									
+							// var insertion = '(' + target + ',' + att.id + ',"' + att.value + '")'; 
+							// insert.push(insertion);	
 
-						Record.query(sqlInsert, function (insertError, attUpdate){
-							if (insertError) { 
-								var parsed_error = Record.parse_standard_error(insertError);
-								deferred.reject("error updating attributes: " + parsed_error) 
-							}
-							else {
-								deferred.resolve({attributes: attUpdate});
-							}
-						});
+							var newAttData = {};
+							newAttData['FK_' + table + '__ID'] = target;
+							newAttData['FK_Attribute__ID'] = att.id;
+							newAttData['Attribute_Value'] = att.value;
+
+							addAttributes.push(newAttData);
+						}
 					}
-					else {
-						console.log("no attributes to transfer");
-						deferred.resolve({attributes: {} });
-					}
+
+					// var sqlInsert = insertPrefix + insert.join(',');
+					console.log("* NEW ATT " + JSON.stringify(addAttributes));
+
+					Record.createNew(att_table, addAttributes, {}, payload)
+					.then (function (result) {
+						console.log("created new attribute records");
+						deferred.resolve({attributes: result});
+					})
+					.catch (function (err){
+						console.log("Error creating attribute clones");
+						deferred.reject(err);
+					});
 				}
+				else {
+					console.log("no attributes to transfer");
+					deferred.resolve({attributes: {} });
+				}				
+			})
+			.catch ( function (err) {
+				deferred.reject("Error retrieving attributes from originals: " + err);
 			});
 		}
 		else {
@@ -151,31 +169,13 @@ module.exports = {
 	increment : function (table, ids, attributes) {
 		
 		var deferred = q.defer();
-		/*
-		var increments = [];
-		if (att.type == 'Count') {
-			// after copying existing increment attributes, update them if applicable //
-			increments.push(insertion);
-		}
-		if (increments.length) {
-			console.log("Update increment attributes " + increments.join('; '));
 
-			var addInc = insertPrefix + increments.join(',')
-				+ ' ON DUPLICATE KEY UPDATE Attribute_Value=Attribute_Value+1'; 
-
-			console.log("Increments: " + addInc)
-			Record.query(addInc, function (incrementError, incUpdate){
-				if (incrementError) { deferred.reject("Error with increment attribute(s): " + incrementError) }
-				else { deferred.resolve({attributes: attUpdate, increments: incUpdate}) }
-			})
-		}
-		*/
 		deferred.resolve( 'okay' ); //{ table: table, ids: ids, attributes: attributes});
 		return deferred.promise;
 
 	},
 
-	'save' : function ( model, ids, data, options) {
+	'save' : function ( model, ids, data, options, payload) {
 		var deferred = q.defer();
 
         if (! options) { options = {} }
@@ -211,7 +211,7 @@ module.exports = {
 
 					insertData['FK_' + model + '__ID'] = ids[j];
 					insertData['Set_DateTime'] = "<now>";
-					insertData['FK_Employee__ID'] = sails.config.payload.alDenteID;
+					insertData['FK_Employee__ID'] = payload.external_ID;
 
 					if (val.match(/<increment>/)) {
 						if (! increments[atts[i]]) { increments[atts[i]] = [] }
@@ -228,7 +228,7 @@ module.exports = {
             var promises = [];
 			if (add.length) { 
                 var options = { onDuplicate : 'REPLACE' };
-                promises.push( Record.createNew(attModel, add, options) );
+                promises.push( Record.createNew(attModel, add, options, payload) );
                 console.log(model + " Att data: " + JSON.stringify(add[0]) + '...');
             }
 
@@ -236,7 +236,7 @@ module.exports = {
 			for (var i=0; i<extras.length; i++) {
                 var datai =  increments[extras[i]];
                 var options = { onDuplicate : "UPDATE Attribute_Value=Attribute_Value+1" }
-				promises.push( Record.createNew(attModel, datai, options) );
+				promises.push( Record.createNew(attModel, datai, options, payload) );
                 console.log("Separately add: " + JSON.stringify(datai));
 			}
 
@@ -254,7 +254,7 @@ module.exports = {
 		return deferred.promise;
 	},
 
-	uploadAttributes : function (model, attribute, data) {
+	uploadAttributes : function (model, attribute, data, payload) {
 		/*
 		var ids = data['ids'];
 		var map = data['map'];
@@ -273,13 +273,13 @@ module.exports = {
 			upload[i]['FK_' + model + '__ID'] = data[i][0];
 			upload[i]['Attribute_Value'] = data[i][1];
 			upload[i]['FK_Attribute__ID'] = attribute;
-			upload[i]['FK_Employee__ID'] = sails.config.payload.alDenteID;
+			upload[i]['FK_Employee__ID'] = payload.external_ID;
 			upload[i]['Set_DateTime'] = '<now>';
 		}
 
 		console.log("upload: " + JSON.stringify(upload[0]) + '...');
 
-		Record.createNew( table, upload )
+		Record.createNew( table, upload, null, payload)
 		.then ( function (result) {
 			console.log("\nuploaded attributes: " + JSON.stringify(result));
 			deferred.resolve(result);			

@@ -5,34 +5,40 @@ block content
   //    - plate_ids (array); 
   //    - Samples   (array of hashes)
 
-  - var config = { plate_ids: plate_ids, Samples: Samples, payload: sails.config.payload};
+  - var config = private_config || {};
+  - config.plate_ids = plate_ids;
+  - config.Samples = Samples;
   - var init = "initialize(" + JSON.stringify(config) + ")";
+
   - var sampleList
   if plate_ids 
     - sampleList = plate_ids.split(/\s*,\s*/);
   
-  p &nbsp;
   div.container
-     div(ng-app='myApp')
+     div(ng-app='myApp' ng-cloak=1)
       div(ng-controller="SharedController")       
        div(ng-controller="LIMSController")
         div(ng-controller="FancyFormController")
           div(ng-controller="ProtocolController" ng-init="#{init}")
-          
-            include ./../core/errorMsg.jade
 
             if Samples.length
               
               include ActiveSamples.jade
 
-              include ./../core/angularMessages.jade
+              include ./../core/errorAngularMsg.jade
+
+              br 
 
               include ContainerOptions.jade 
+  
+              if (Scanned && Scanned.Rack && Scanned.Rack.length)
+                br
+                include RackOptions
 
-              include uploadMatrix.jade
-
-            hr
-            button(type='button' ng-model='print' ng-click="print_Labels('Plate','55')") Test Barcode Printing (BCG55)
+              div(ng-if="!errors || !errors.length")
+                include uploadMatrix.jade
+              div.alert.alert-danger(ng-if="errors && errors.length")
+                b Matrix File cannot be linked to samples with pending errors
 
             if ! debug
               p &nbsp;

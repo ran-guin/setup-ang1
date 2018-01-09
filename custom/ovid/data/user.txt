@@ -1,0 +1,7 @@
+name	access	email	encryptedPassword	status	lastLoggedIn	gravatarUrl	id	createdAt	updatedAt
+Admin	public	admin@cosinesystems.org	$2a$10$6HoxBzpBRq9uOXEHn39uy.d1xmAP5kvYWd7P/vr.nQXsm3GYrNdZW	pending	2017-04-25	http://www.gravatar.com/avatar/dbb2b38dd45817acf34ef12668adc342?	1	2017-04-25 16:11:04	2017-04-25 16:11:04
+Guest	public	guest@cosinesystems.org	$2a$10$AZeATpY0q./TxjyV2zfhPOTfLkkxm8Prf0qqw3LQTQxyQCTXFFHlK	pending	2017-04-25	http://www.gravatar.com/avatar/964025e60f40ede4d6405b68fffaae0c?	2	2017-04-25 16:10:38	2017-04-25 16:10:38
+Demo	public	demo@cosinesystems.org	$2a$10$GbqPMyED13bhXbxuhotikecufsBeGIIAwaz9YynuXvCb1V8q6W5ee	pending	2017-04-25	http://www.gravatar.com/avatar/c9f3ceb650788c1b047b4a53a5ef3dc2?	3	2017-04-25 16:07:35	2017-04-25 16:07:35
+Ran	admin	ran.guin@gmail.com	$2a$10$Czox63sN3IfcJlUZtGALDePMLz/bs88B0umDFJHQN.2uy72.9Stzi	NULL	2016-08-03	http://www.gravatar.com/avatar/e1974155800a61bd008be54b09821a42?	4	2016-08-03 11:23:31	2016-08-03 11:23:31
+Tester	public	tester@cosinesystems.org	$2a$10$fOQ0U9lw1DUhSJvMHFqvJ.3ZJuks/fG4ZgYqNwt1UGihdEuKzEufy	pending	2017-04-25	http://www.gravatar.com/avatar/dca65c1f5bd2e062ff73c7d8a6fd63f9?	5	2017-04-25 15:56:29	2017-04-25 15:56:29
+Viewer	public	viewer@cosinesystems.org	$2a$10$yzStxe7Y/5diQa4kHxZZR.itZ54ahC74uSFlAClPqMDk0ASSimXAC	pending	2017-04-25	http://www.gravatar.com/avatar/d545828f9e7bf7265d1468e7c0b68e21?	6	2017-04-25 16:03:17	2017-04-25 16:03:17

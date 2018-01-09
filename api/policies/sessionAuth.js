@@ -17,7 +17,7 @@ module.exports = function(req, res, next) {
     sails.config.warnings = [];  // clear messages 
     sails.config.errors = [];  // clear messages 
     console.log('clear messages...');
-    console.log("Payload: " + JSON.stringify(req.session.payload));
+    console.log("Auth Payload: " + JSON.stringify(req.session.payload));
     return next();
   }
   else {

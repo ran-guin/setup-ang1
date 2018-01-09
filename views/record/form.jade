@@ -9,7 +9,7 @@ block content
         div.container(ng-controller="SharedController" style="background-color:#ddd")
             div.container(ng-controller="FancyFormController" style="background-color:#ddd")
 
-                include ./../core/errorMsg.jade
+                include ./../core/errorAngularMsg.jade
                 p &nbsp;
                 form.form-horizontal(role='form' action='#{sails.config.root}/record/save', method='POST')
 

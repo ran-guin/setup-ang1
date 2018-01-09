@@ -1,0 +1,47 @@
+.body {
+    background: url(/images/lims/bcg-background.png);
+}
+
+.modal-header {
+    background-color: grey;
+    color: #fff;
+}
+
+.modal-footer {
+    background-color: lightgrey
+}
+
+.popover {
+	max-width: 100%
+}
+
+div.header {
+    -webkit-transition: 16s;
+    -moz-transition: 16s;
+    -o-transition: 16s;
+    transition: 16s;
+    background: rgba(255, 255, 255, 0.89) url(/images/lims/BCG-transparent.png) no-repeat 42% bottom; 
+    padding: 90px 50px 100px 100px;
+}
+
+div.mini-header {
+    -webkit-transition: 16s;
+    -moz-transition: 16s;
+    -o-transition: 16s;
+    transition: 16s;
+    background: rgba(255, 255, 255, 0.89) url(/images/lims/BCG-transparent-64x64.png) no-repeat 42% bottom; 
+    padding: 5px 50px 5px 100px;
+}
+
+div.grow-header {
+    -webkit-transition: 16s;
+    -moz-transition: 16s;
+    -o-transition: 16s;
+    transition: 16s;
+    background: rgba(255, 255, 255, 0.89) url(/images/lims/BCG-transparent.png) no-repeat 42% bottom; 
+    padding: 5px;
+}
+
+.section-block {
+    padding: 20px;
+}

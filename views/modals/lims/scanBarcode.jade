@@ -1,0 +1,28 @@
+.container
+  div.modal.fade#scanBarcode
+    .modal-dialog
+      // Modal content
+      .modal-content
+        .modal-header
+          button.close(type='button', data-dismiss='modal') ×
+          h2
+            i.fa.fa-lock.fa
+            |  &nbsp; Register
+        .modal-body
+            form.form-inline(role='form' method='post' action="#{sails.config.root}/scan-barcode")       
+              div.form-group.has-success.has-feedback
+                //label.control-label(for='barcode') Scan Barcode &nbsp;
+                div.input-group
+                  span.input-group-addon
+                    i.fa.fa-barcode.fa-2x(style='padding:0px; color:#000')
+                  input.form-control.input-lg(type='text' placeholder='-- Scan Barcode Here --' id='barcode' name='barcode' ng-model='barcode')
+              span &nbsp;
+              button.btn.btn-success.btn-lg(type='submit' ng-disabled='!barcode') Submit Scan
+        .modal-footer
+          button.btn.btn-default.btn-danger.pull-left(type='submit', data-dismiss='modal')
+            i.fa.fa-remove
+            |  Cancel
+          p
+            | Questions ? 
+            a(href='#') Contact Us
+

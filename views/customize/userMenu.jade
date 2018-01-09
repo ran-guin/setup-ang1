@@ -1,34 +1,33 @@
 .container
 
-	if session.payload
-		// assume payload included ... 
-	else
-		- session.payload = { user: '', access : 'TBD'}
-	
+	- var payload = {};
+	if session && session.payload
+		- payload = session.payload;
+
+	- var show = ['userid', 'host', 'db', 'db_user', 'access', 'external_ID', 'printer_group'];
+
 	div.modal.fade#userMenu
 		div.modal-dialog
 			div.modal-content
 				div.modal-header
 					button.close(type="button" class="close" data-dismiss="modal" aria-label="Close")
 						span(aria-hidden="true") &times;
-					h4.modal-title #{ session.payload.user }
+					h4.modal-title User Profile
 				div.modal-body
-					h3 User: #{ session.payload.user }
+					h3 Name: #{ payload.user }
 					hr
-					h4 Connection Mode: #{session.payload.mode}
-					ul
-						li Database: 
-							b #{session.payload.db }@#{session.payload.host}
-						li Connected as: 
-							b #{session.payload.db_user}
-						li Access: 
-							b #{ session.payload.access }
-						li alDente ID: 
-							b #{ session.payload.alDenteID }
+					h4 Connection Mode: #{payload.mode}
+					table
+						each key in show
+							tr
+								- var val = payload[key];
+								td #{key}: &nbsp; &nbsp;
+								td 
+									b #{val} 
+								
 					hr
 					a(href="#{sails.config.root}/logout")
 						button.btn.btn-danger(type="submit") Logout
 					div#insideModal
 				div.modal-footer
 					button.btn.btn-default(type="button button-danger" data-dismiss="modal") Close
-					//#{ JSON.stringify(session.payload) }

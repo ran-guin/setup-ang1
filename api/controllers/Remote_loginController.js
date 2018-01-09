@@ -9,24 +9,35 @@ var bodyParser = require('body-parser');
 var q = require('q');
 var request = require('request');
 
+var Logger = require('../services/logger');
+
 module.exports = {
 
 	validate: function (req, res) {
-		var table = req.param('model');	
-		var test  = req.param('test') || 'Count(*) as count';
-		var value = req.param('value') || '';
-		var field = req.param('field') || 'name';
+		// login validations only ...
+		var body = req.body || {}; 
+		var model = body.model || req.param('model') || 'user';	
+		var value = body.value || req.param('value') || '';
+		var field = body.field || req.param('field') || 'name';
 
-		var query = "SELECT " + test + " FROM " + table + " WHERE " + field + " LIKE '" + value + "'";
-		console.log("Query: " + query);
-			Record.query_promise(query)
-			.then ( function (result) {
-				return res.json(result);
-			})
-			.catch (function (err) {
-				console.log(err);
-				return res.json(err);
-			});	
+		console.log(JSON.stringify(body));
+		
+		var Mod = sails.models[model] || {};
+		var table = Mod.tableName || model;
+
+		var query = 'SELECT ' + field + ' FROM ' + table;	
+		query += ' WHERE ' + field + " LIKE '" + value + "'";
+
+		console.log(query);
+		Record.query_promise(query)
+		.then (function (result) {
+			console.log(result);
+			return res.json(result);
+		})
+		.catch ( function (err) {
+			console.log("validation error");
+			return res.json(err);
+		});
 	},
 
 	test : function ( req, res ) {
@@ -34,24 +45,27 @@ module.exports = {
 			var user = { id: 3, name: 'Ran'};
 			
           console.log("access granted: ");
-          var payload = User.payload(user);
-          
-          if ( req.param('Debug') ) { payload['Debug'] = true; }
+          User.payload(user)
+          .then ( function (payload) {
+	          if ( req.param('Debug') ) { payload['Debug'] = true; }
 
-          // session authorization
-          req.session.authenticated = true;
-          req.session.payload = payload;
+	          // session authorization
+	          req.session.authenticated = true;
+	          req.session.payload = payload;
 
-          // token authorization 
-          payload['token'] = jwToken.issueToken(payload); 
-          req.headers.authorization = "Bearer [" + payload['token'] + ']';
+	          // token authorization 
+	          payload['token'] = jwToken.issueToken(payload); 
+	          req.headers.authorization = "Bearer [" + payload['token'] + ']';
 
-          sails.config.payload = payload;
-          sails.config.messages = [];
-          sails.config.warnings = [];
-          sails.config.errors   = [];
+	          return res.render('customize/private_home', payload);
+          })
+          .catch (function (err) {
+          	Logger.error(err, 'payload generation error', 'test');
 
-          return res.render('customize/private_home', payload);
+          	console.log("error generating payload");
+          	return res.render('customize/private_home');
+          })
+	
 	},
 
 	protocol : function ( req, res) {
@@ -60,10 +74,10 @@ module.exports = {
 		var body = {};
 		if (req.body) { body = req.body }
 
-		var session = body.alDente_session;
+		var session = body.alDente_session;  // change to more generic name .. external_session (in alDente... )
 		console.log("Check session: " + session);
 
-		User.alDente_verification(session)
+		User.remote_session_payload(session)
 		.then ( function (payload) {
 			payload['token'] = jwToken.issueToken(payload); 
 			console.log("\n** alDente Session Info: " + JSON.stringify(payload));
@@ -109,11 +123,13 @@ module.exports = {
 					})
 				    .catch ( function (err) {
 				    	console.log("ERROR: " + err);
+				    	Logger.error(err, 'error loading steps', 'protocol');
 				    	return res.json({ error : 'Error encountered: ' + err});
 				    });							
 				})
 				.catch ( function (err) {
 					var msg = "Error loading ids: " + ids;
+					Logger.error(err, msg);
 					return res.json({ error : msg })
 				});
 			}
@@ -140,6 +156,7 @@ module.exports = {
 		})
 		.catch ( function (err) {
 			console.log('verification error: ' + err);
+			Logger.warning(err, 'verification error', 'protocol' )
 			return res.json({body: body, error: err});
 		});
 
@@ -156,7 +173,9 @@ module.exports = {
 			deferred.resolve({url : url });
 		})
 		.catch ( function (err) {
-			deferred.reject({ message : 'failed to find remote login record for user: ' + userid });
+			err.context = 'connect';
+			err.message = 'failed to find remote login record for user: ' + userid;
+			deferred.reject(err);
 		})
 
 		return deferred.promise;

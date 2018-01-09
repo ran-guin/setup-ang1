@@ -8,10 +8,14 @@
 module.exports = {
 
 	tableName: 'Sample_Type',
+	primaryField: 'Sample_Type_ID',
+	
 	migrate: 'safe',
 	/* LEGACY */
 
 	attributes: {
+		Sample_Type_ID: { type: 'integer'},
+		Sample_Type: { type: 'string'}
 		//
 	},
 

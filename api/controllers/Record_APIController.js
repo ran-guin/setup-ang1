@@ -7,6 +7,8 @@
 
 var q = require('q');
 
+var Logger = require('../services/logger');
+
 module.exports = {
 
 
@@ -22,72 +24,109 @@ module.exports = {
 			return res.json(result);
 		})
 		.catch ( function (err) {
+			Logger.error(err, 'query error', 'remoteQuery');
 			console.log("Error: " + err);
 			return res.json(err);
 		});
 	},
 
-	search : function (req, res) {
+	fields: function (req, res) {
+		var body = req.body || {};
 
+		var table = body.table || req.param('table');
+
+		if (table) {
+			Record.query_promise("SELECT Field_Name as name, Field_Type as type from DBField where Field_Table='" + table + "'")
+			.then (function (result) {
+				return res.json(result);
+			})
+			.catch ( function (err) {
+				console.log("Error in search: " + err);
+				return res.json(err);
+			});
+		}
+		else {
+			return res.json();
+		}
+	},
+
+	search : function (req, res) {
 		var body = req.body || {};
 		console.log("Search API");
 
-		var string = body.search;
 		var scope = body.scope;
-		var condition = body.condition || {};
-		var search    = body.search || '';
+		var condition = body.condition || req.param('condition') || 1;  // may be string or object with scope table as keys 
+		var group     = body.group;
+		var search    = body.search || req.param('search');
+		var idField   = body.idField || '';
+		var table = body.table || req.param('table');
+		var link = body.link || req.param('link');
 
 		if (! scope ) {
 			// Generic Search 
 			scope = { 
-				'user' : ['email', 'username'] 
+				'user' : ['email', 'name'],
+				'staff' : ['alias', 'role'],
+				'container' : ['comments'],
+				'equipment' : ['name', 'serial_number'],
+				'stock' : [ 'PO_Number', 'notes', 'Requisition_Number', 'lot_number'],
+				'prep'  : [ 'comments'],
+				'shipment' : ['waybill_number', 'comments'],
+				'lab_protocol' : ['name'],
+				'protocol_step' : ['name', 'message'],
+				'disease' : ['name'],
+				'vaccine' : ['name','code'],
+				'custom_view' : ['custom_name'],
+				'country' : ['name', 'country', 'region', 'subregion'],
+				'coverage': ['vaccine', 'code', 'coverage']
 			};
 		}
 
-		console.log("Condition: " + JSON.stringify(condition));
-
-		var promises = [];
-
-		var tables = Object.keys(scope);
-		for (var i=0; i< tables.length; i++) {
-			var fields = scope[tables[i]];
-			var query = "SELECT " + fields.join(',') + " FROM " + tables[i];
+		if (table && scope[table]) {
+			var newscope = {};
+			newscope[table] = scope[table];
 			
-			var search_condition = '';
-			if (search) {
-				var add_condition = [];
-				for (var i=0; i<fields.length; i++) {
-					add_condition.push(fields[i] + " LIKE '%" + search + "%'");
+			var conditions = [];
+			if (condition) { conditions.push(condition) }
+
+			if (link && scope[link]) {
+				for (var i=0; i<scope[link].length; i++) {
+					var fld = scope[link][i];
+					newscope[table].push(fld);
 				}
-				search_condition = '(' + add_condition.join(' OR ') + ')';
 			}
 
-			if (condition &&  condition.constructor === Object && condition[tables[i]] )  { query = query + " WHERE " + condition[tables[i]] }
-			else if (condition && condition.constructor === String) { query = query + " WHERE " + condition }
-			else { query = query + " WHERE 1"}
+			console.log('check for ' + table + ' conditions');
+			for (var i=0; i<scope[table].length; i++) {
+				var fld = scope[table][i];
+				var test = body[fld] || body[table + '.' + fld] || req.param(fld) || req.param(table + '.' + fld);
+				console.log(fld + ' ? : ' + test);
+				if (test) {
+					test = test.replace('*','%');
+					conditions.push(table + '.' + scope[table][i] + " LIKE '" + test + "%'");
+				}
+			}
 
-			if (search_condition) { query = query + " AND " + search_condition }
-			console.log("\n** Search: " + query);
-			promises.push( Record.query_promise(query));
+			condition = conditions.join(' AND ');
+
+			scope = newscope;
+			console.log("SCOPE IS" + JSON.stringify(scope));
+			console.log('and ' + link + ' and ' + JSON.stringify(newscope))
+		
+			console.log("Condition: " + condition);
+
+			Record.search({scope : scope, link: link, search : search, condition: condition, group: group, idField: idField})
+			.then (function (result) {
+				return res.json(result);
+			})
+			.catch ( function (err) {
+				console.log("Error in search: " + err);
+				return res.render({})
+			});
 		}
-
-		var returnval = { search: search };
-
-		q.all(promises) 
-		.then ( function ( results ) {
-			for (var i=0; i<results.length; i++) {
-				console.log(i + ': ' + JSON.stringify(results[i]));
-			}
-			if (tables.length === 1) { returnval.results = results[0] }
-			else { returnval.results = results }
-
-			return res.json(returnval);
-		})
-		.catch ( function (err) {
-			console.log("Error searching tables: " + err);
-			return res.json(err);
-		});
-
+		else {
+			return res.json({error: 'Scope restricted'});
+		}
 	},
 
 	parseMetaFields : function (req, res) {
@@ -106,22 +145,29 @@ module.exports = {
 		})
 		.catch ( function (err) {
 			console.log("ERROR PARSING: " + err);
+			Logger.error(err, 'parsing error', 'remote parse')
 			return res.json(err);
 		});
 	},
 
 
 	save : function (req, res) {
-		var body = req.body;
+		var body = req.body || {};
 
-		var model = req.param('model') || body.model;
+		var model = body.model || req.param('model');
 		var data  = body.data;
 
-		Record.createNew(model, data)
+		var payload= req.session.payload || {};
+
+		console.log("Remote create " + model);
+		console.log(JSON.stringify(data));
+
+		Record.createNew(model, data, null, payload)
 		.then ( function (result ) {
 			return res.json(result);
 		})
 		.catch ( function (err) {
+			Logger.error(err, 'error creating ' + model, 'remote save')
 			return res.json(err);
 		});
 	},
@@ -129,24 +175,18 @@ module.exports = {
 	uploadData : function (req, res) {
 		var body = req.body;
 
-		var model   = body.model;
-		var headers = body.headers;
-		var data    = body.data;
-		var reference = body.reference;
+		var payload= req.session.payload || {};
 
-		console.log("UPLOAD DATA");
-		console.log("model : " + model);
-		console.log("headers: " + JSON.stringify(headers));
-		console.log("data: " + JSON.stringify(data));
-
-		Record.uploadData(model, headers, data, reference)
+		Record.uploadData(body, payload)
 		.then ( function (result) {
 			sails.config.messages.push("uploaded");
 			console.log("Uploaded");
+			console.log(JSON.stringify(result));
 			return res.json(result);
 		})
 		.catch (function (err) {
 			console.log("Error uploading: " + err);
+			Logger.error(err, 'upload error', 'remote uploadData');
 			return res.json({error: err});
 			// sails.config.errors.push(err);
 			// return res.render('customize/private_home');
@@ -202,19 +242,20 @@ module.exports = {
 		var condition = req.param('condition') || 1;
 		var defaultTo = req.param('default') || 'ml';
 		var field     = req.param('field');
-		var label     = req.param('labal');
+		var label     = req.param('label');
 		var table = req.param('table');
 		var render = req.param('render') || false;
-
-		var idField = 'id';
-		var nameField = 'name';
-		var identifier = model;
 
 		var select;
 		
 		var Mod = sails.models[model] || {};
 		
 		table = table || Mod.tableName || model;
+
+		var idField = Mod.idField || 'id';
+		var nameField = Mod.nameField || 'name';
+		var identifier = model;
+
 
 		if (Mod.lookupCondition) {
 			condition = condition + ' AND ' + Mod.lookupCondition;
@@ -278,6 +319,45 @@ module.exports = {
 			else {
 				return res.json(result);
 			}
+		});
+	},
+
+	validate: function (req, res) {
+		var body = req.body || {};
+
+		var barcode = body.barcode || req.param('barcode');
+
+		var model = body.model || req.param('model');	
+		var select = body.select || req.param('select') || 'id';
+		var value = body.value || req.param('value') || '';
+		var field = body.field || req.param('field') || 'id'; // use name to validate based on name
+		var list = body.list || req.param('list') || '';
+		var prefix = body.prefix || req.param('prefix');   // strip id prefix (optional)
+		var reference = body.reference || req.param('reference');  // validate via attribute identifier
+		var grid = body.grid;
+
+		if (list.constructor === String) {
+			list = list.split(/,\s*/);
+		}
+
+		var specs = {
+			ids: list,
+			grid: grid,
+			field: field,
+			barcode: barcode,
+			attribute: reference
+		};
+
+		console.log("*** Record validation...");
+		console.log(model + ': ' + JSON.stringify(specs));
+		
+		Record.validate(model, specs)
+		.then (function (result) {
+			return res.json(result);
+		})
+		.catch ( function (err) {
+			console.log("encountered validation error");
+			return res.json(err);
 		});
 	},
 

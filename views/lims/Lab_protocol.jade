@@ -1,17 +1,87 @@
 extends ./../customize/privateLayout
 block content
 
+
   div.container
-    h3 Protocol Steps:
-    ul
-      each step,i in steps
-        - name = step.name;
-        - id   = step.id;
-        - num = step.step_number
-        - message = step.message;
-        
-        li 
-          a(href="/protocol_step/edit/#{id}") #{num} - #{name} 
-            i [ #{message} ] 
+    p &nbsp;
+    a(href="/lab_protocol/edit/#{Steps[0].Lab_protocol}" ) 
+        button.btn.btn-primary(type='button') Edit Protocol
+
+    span &nbsp; &nbsp;
+  
+    a(href="/lab_protocol/list" ) 
+        button.btn.btn-danger(type='button') Return to List of Protocols
+
+    hr 
+
+    - max_step = 1;
+
+    form.form-horizontal(role='form' width='100%')
+    div(ng-app='myApp' ng-cloak=1)
+        div(ng-controller="SharedController" ng-init="include_all=1")
+            input(type='checkbox' name='include_all' checked=1 ng-model="include_all")
+            b &nbsp; Include unprompted steps a = {{include_all}}
+            
+            h3 
+                u Protocol Steps:  
+                span.small # Title [ Message ]
+            ul
+              each step,i in Steps
+                - name = step.name;
+                - id   = step.id;
+                - num = step.step_number
+                - message = step.message;
+
+                if num > max_step
+                    - max_step = num;
+
+
+                - colour = 'blue'
+                if ! step.prompt
+                    - colour = 'red'
+
+                li(ng-show="include_all || #{step.prompt}" ) 
+                    hr
+                    h4 
+                        if step.input_options || step.custom_settings
+                            button.btn.btn-primary.btn-xs(ng-show='!showDetails#{i}' ng-click="showDetails#{i}=1" data-toggle='tooltip' title="Show Input options and Custom settings")
+                                i.fa.fa-expand
+                            button.btn.btn-danger.btn-xs(ng-show='showDetails#{i}' ng-click="showDetails#{i}=0" data-toggle='tooltip' title="Hide Input options and Custom settings")
+                                i.fa.fa-close
+
+                        a(href="/protocol_step/edit/#{id}" style='color:#{colour}' data-toggle='tooltip' title='Click to Edit this Step') &nbsp; #{num} - #{name} 
+                                &nbsp; [ #{message} ] &nbsp; &nbsp;
+
+                        a(href="/Lab_protocol/addStep/#{Steps[0].Lab_protocol}/#{num-1}" data-toggle='tooltip' title='Add Step Before') 
+                            button.btn.btn-xs.btn-primary
+                                i.fa.fa-caret-up
+
+                        a(href="/Lab_protocol/addStep/#{Steps[0].Lab_protocol}/#{num}" data-toggle='tooltip' title='Add Step After') 
+                            button.btn.btn-xs.btn-primary 
+                                i.fa.fa-caret-down
+
+                    div(id='details#{i}' ng-show='showDetails#{i}')
+                        table
+                            tr
+                                td(valign='top')
+                                    if step.input_options
+                                        - input = step.input_options.split(':')
+                                        - input.length
+                                        b Input: 
+                                        ul
+                                            each enter,j in input
+                                                li #{enter}
+                                td(valign='top')
+
+                                    if step.custom_settings
+                                        - var custom = JSON.parse(step.custom_settings)
+                                            b Custom:
+                                            ul
+                                                each val, index in custom
+                                                    li #{index} = #{val} 
+    hr
+
+    a(href="/Lab_protocol/addStep/#{Steps[0].Lab_protocol}/#{max_step}" data-toggle='tooltip' title="Add An Additional Step") 
+        button.btn.btn-sm.btn-primary Add Step
 
       

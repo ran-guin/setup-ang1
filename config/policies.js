@@ -31,6 +31,10 @@ module.exports.policies = {
     '*' : true
   },
   
+  'public_API' : {
+    '*' : true
+  },
+
   'main' : {
     'showDemoPage' : true
   }, 
@@ -47,6 +51,10 @@ module.exports.policies = {
     'wells' : true, 
   }, 
 
+  'barcode' : {
+    'print_Labels' : true,
+  },
+
   /*
   session: {
       'create' : true,
@@ -57,12 +65,17 @@ module.exports.policies = {
     'lookup' : true,
     'enum'   : 'reset',
     'search' : true,
+    'validate' : true,
   },
 
   record: {
       '*' : true, 
       'lookup' : true,
       'enum' : 'reset',
+  },
+
+  record_API: {
+    '*' : true,
   },
 
   user: {
@@ -74,6 +87,7 @@ module.exports.policies = {
 	     'dashboard'	: "sessionAuth",
        'getNewPassword' : 'reset',	
 //      '*' : "sessionAuth"
+      'activate' : 'tokenAuthorized',
   },
   
   'rack' : {
@@ -106,7 +120,10 @@ module.exports.policies = {
   'container': {
     'history' : true,
     'summary' : true,
-  }
+    'storage_history' : true,
+  },
+
+  view: { '*' : true }
 
   /***************************************************************************
   *                                                                          *

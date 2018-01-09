@@ -62,6 +62,8 @@ module.exports.routes = {
 
   'GET /logout': 'UserController.logout',
 
+  'POST /log/:level' : 'LoggerController.log',
+
   'GET /demo' : 'MainController.showDemoPage',
 
   // Home page 
@@ -70,12 +72,14 @@ module.exports.routes = {
   // Default User pages 
   'GET /user/dashboard/:id': 'UserController.dashboard',
   //'GET /user/:id': 'UserController.dashboard',  // reserve for waterline standard 
-
+  'GET /user/changePrinters' : 'UserController.changePrinters',
 
   'GET /': { view: 'customize/public_home' },
   'GET /home': 'UserController.home',
 
   /* Generic Record control options */
+
+  'GET /rebuildFK' : 'RecordController.build_FK',
 
   'GET /record/list/:model' : 'RecordController.list',   
   'POST /record/list' : 'RecordController.list',    
@@ -83,7 +87,10 @@ module.exports.routes = {
   
   'GET /record/edit/:model/:id': 'RecordController.form',
   'POST /record/edit/:model/:id': 'RecordController.update',
-
+  'POST /record/update/:model/:id': 'RecordController.update',
+  // limited access ...
+  'GET /record/dump/:model': 'RecordController.record_dump',
+  'POST /record/dump': 'RecordController.record_dump',
 
   'GET /attribute/:model/:attribute' : 'AttributeController.prompt',
 
@@ -105,6 +112,9 @@ module.exports.routes = {
   'GET /record/add/:model': 'RecordController.form',
 
 // API routes 
+  'GET /validate/:model' : 'Record_APIController.validate',
+  'POST /validate' : 'Record_APIController.validate',  
+
   'GET /lookup/:model/:label' : 'Record_APIController.lookup',
   'GET /lookup/:model' : 'Record_APIController.lookup',
 
@@ -113,8 +123,11 @@ module.exports.routes = {
 
   'POST /remoteQuery': 'Record_APIController.remoteQuery',
 
-  'POST /Record/search' : 'Record_APIController.search',
-  'GET /Record/search' : 'Record_APIController.search',
+  'POST /Record_API/search' : 'Record_APIController.search',
+  'GET /Record_API/search' : 'Record_APIController.search',
+
+  'POST /Record/search' : 'RecordController.search',
+  'GET /Record/search' : 'RecordController.search',
 
   'POST /record/add/:model': 'Record_APIController.save',
   'POST /record/save' : 'Record_APIController.save',
@@ -125,6 +138,27 @@ module.exports.routes = {
   'POST /parseMetaFields' : 'Record_APIController.parseMetaFields',
 
   'POST /uploadData' : 'Record_APIController.uploadData',
+
+  'GET /View/edit/:id' : 'ViewController.edit',
+  'POST /View/edit' : 'ViewController.edit',
+
+  'GET /getReport/:id' : 'ViewController.build',
+  'POST /getReport' : 'ViewController.build',
+  'GET /reports' : 'ViewController.views',
+  'POST /reports' : 'ViewController.views',
+  'GET /getReport/run' : 'ViewController.generate',
+  'POST /getReport/run' : 'ViewController.generate',
+  'POST /resetReportStatus' : 'ViewController.reset_status',
+  
+  'POST /saveReport' : 'ViewController.save',
+
+  'GET /download' : 'ViewController.download',
+  'POST /download' : 'ViewController.download',
+  
+  'GET /help/:string' : 'HelpController.find',
+  'POST /help' : 'HelpController.find',
+
+  'POST /remote_log' : 'Custom_API.remote_log',
 
   'GET /test' : 'TestController.test',
   /***************************************************************************
@@ -138,7 +172,7 @@ module.exports.routes = {
   ***************************************************************************/
   'POST /uploadMatrix' : 'ContainerController.uploadMatrix',
 
-  'POST /alDente_protocol' : 'Remote_login.protocol',
+  'POST /alDente_protocol' : 'Remote_login.protocol',  // used ?? 
   
   'POST /uploadFile' : 'AttributeController.uploadAttributes',
 
@@ -150,8 +184,12 @@ module.exports.routes = {
   'GET /Container/history' : 'ContainerController.history',
   'GET /Container/summary' : 'ContainerController.summary',
 
+  'POST /plate_set/save' : 'Plate_setController.save_next_set',
+
   'POST /Rack/newBox'  : 'RackController.createBox',
   'POST /Rack/boxData' : 'RackController.boxData',
+  'POST /Rack/home'    : 'RackController.home',
+  'POST /Rack/move'    : 'RackController.move',
 
   'POST /Stock/receive' : 'StockController.receive',
   'GET /Stock/receive' : 'StockController.receiveForm',
@@ -161,7 +199,13 @@ module.exports.routes = {
   // Custom Pages 
 
   'GET /demo/protocol': 'DemoController.protocol',
-  'GET /protocol_step/edit/:id' : 'Lab_protocolController.edit',
+  'GET /protocol_step/edit/:id' : 'Lab_protocolController.edit_step',
+  'GET /lab_protocol/edit/:id' : 'Lab_protocolController.edit',
+  'POST /protocol_step/update'  : 'Lab_protocolController.update_step',
+  'POST /lab_protocol/update'  : 'Lab_protocolController.update',
+
+  'GET /Lab_protocol/addStep/:id/:step'    : 'Custom_APIController.add_step',
+
 
   // Demo Pages 
   'GET /demo/test': 'DemoController.test',
@@ -183,6 +227,7 @@ module.exports.routes = {
 
   'POST /scan-barcode' : 'BarcodeController.scan',
   'GET /scan-barcode' : 'BarcodeController.scan',
+  // 'POST /load-parents' : 'ContainerController.load_parents',
 
   //'POST /completed-step' : 'Lab_protocolController.complete',
 

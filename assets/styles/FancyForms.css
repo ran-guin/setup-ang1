@@ -1,16 +1,16 @@
-select.centred {
-	text-align: center;
-	-webkit-appearance: button;
-    -moz-appearance: button;
-
-}
-
 @height:40px;
 @spacing:10px;
 @placeholder-colour:#AAA;
 @select-colour:#2875C7;
 @font-size:14px;
 @border-colour:#DDD;
+
+select.centred {
+	text-align: center;
+	-webkit-appearance: button;
+    -moz-appearance: button;
+
+}
 
 .vertical-centre (@height) {
 	height:@height;
@@ -22,3 +22,16 @@ select.centred {
 input.mandatory {
 	border: 1px solid red !important;
 }
+
+input.failed-mandatory {
+	border: 3px solid red !important;
+}
+
+input.validated-mandatory {
+	border: 3px solid green !important;
+}
+
+input.pending-mandatory {
+	border: 3px solid orange !important;
+}
+

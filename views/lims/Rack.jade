@@ -1,0 +1,85 @@
+extends ./../customize/privateLayout
+block content
+
+  // standard input variables: 
+  //    - id  ( rack id(s) ) 
+  //    - Samples   (array of hashes)
+  
+  - var config = private_config || {};
+  - config.rack_ids = id
+  - config.Samples = Samples
+  - config.backfill_date = backfill_date;
+
+  - var init = "initialize(" + JSON.stringify(config) + ")";
+
+  - var rackList = [];
+  if id 
+    - rackList = id.split(/\s*,\s*/);
+  
+  - var list = rackList.join(',');
+
+  p &nbsp;
+  div.container
+     div(ng-app='myApp' ng-cloak=1)
+      div(ng-controller="SharedController")       
+       div(ng-controller="LIMSController")
+        div(ng-controller="FancyFormController")
+          div(ng-controller="RackController" ng-init="#{init}")
+             
+            include ActiveSamples.jade
+
+            include ./../core/errorAngularMsg.jade
+
+            h4.text-warning(ng-show="backfill_move_date") [Backfilling Move to: {{ backfill_move_date }}]
+            hr
+
+            h3 Move Box(es) to: &nbsp; &nbsp;
+              input.input-lg.mandatory#parent(type='text' name = 'parent' ng-model='parent' ng-blur="validate_parent(#{rackList.length})" required placeholder ='-- Scan Parent Rack --')
+              span.input-lg
+                input(type='checkbox' ng-model='fill_missing_numbers' ng-click="validate_parent(#{rackList.length})" checked=false)
+                span &nbsp; Re-use missing numbers
+            
+            hr
+            table
+              tr
+                td
+                  h4 Initial Location(s):                  
+                td &nbsp;
+                td
+                  h4 Pending Target Location(s):
+              each box, i in rackList
+                tr
+                  td
+                    b Loc#{box} : &nbsp; &nbsp;
+                    b.text-danger {{AliasMap[ #{box} ]}}
+                  td(style='text-align: center') 
+                    b &nbsp; -> &nbsp;
+                  td(style='text-align: left') 
+                    span(ng-show="AliasMap && target_names && target_names[#{i}] ")
+                      //- b {{ target }}
+                      span.text-success {{ AliasMap[parent_id] }} 
+                        b {{ target_names[#{i}] }}
+            // hr
+            // b Map {{ AliasMap }}
+            hr
+            button.btn.btn-primary.btn-lg(-type='button' ng-disabled="!target_names[0]" ng-click="move_boxes()" ) Move Box(es) to New Location
+            span.input-lg
+              input(type='checkbox' ng-model='print_new_barcodes' ng-click="set_default_name('Box', 'target', #{rackList.length})" checked=false)
+              span &nbsp; Print new barcodes         
+  
+
+            if ! debug
+              p &nbsp;
+              p &nbsp;
+              p &nbsp;
+              
+            if debug || 1
+              hr
+              h2.alert.alert-warning Debugging Information:  (hidden in production)
+              b session: #{JSON.stringify(session)} 
+              BR
+              b Samples: #{JSON.stringify(Samples)}
+              BR
+              b IDs: #{JSON.stringify(id)}
+              BR
+            

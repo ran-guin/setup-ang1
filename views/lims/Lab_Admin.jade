@@ -1,68 +1,70 @@
 extends ./../customize/privateLayout
 block content
+  
+  - var config = private_config || {};
+  - var init = "initialize(" + JSON.stringify(config) + ")";
 
   - lookups = ['Plate_Format', 'Sample_Type'];
 
   div.container
     h2  Lab Admin Page
       div.navbar-right
-        if sails.config.payload && sails.config.payload.access === 'admin'
+        if access === 'admin'
             a(href="/admin")
               button.btn.btn-danger(type='button') Admin
-
     hr
 
-    div(ng-app='myApp')
+    div(ng-app='myApp' ng-cloak=1)
       div(ng-controller="SharedController")
         div(ng-controller="FancyFormController")
-         div(ng-controller="LIMSController")
-          div(ng-controller="AdminController")
+         div(ng-controller="LIMSController") 
+          div(ng-controller="AdminController" )
+            div(ng-controller='RackController' ng-init='#{init}')    
+              include ./../core/errorAngularMsg.jade
               
-            include ./../core/errorMsg.jade
+              br
 
-            include ./../core/angularMessages.jade
+              div(ng-show="MenuList['limsuser'].length")
+                div.alert.alert-warning
+                  b {{ MenuList['limsuser'].length }} User(s) Pending activation 
+              form.form-horizontal#adminForm(role='form' name='adminForm' enctype='form-data')
+                div.form-group
+                  label.input-lg.col-sm-2() Lookup Tables:
+                  div.col-sm-4#table
+                    my-dropdown(placeholder="Select Table ..." track='name' list="MenuList['table']" selected='table' ng-init="setup_Menu('table', 'Plate_Format,Sample_Type,Attribute')" property='name')
+                
+                  - var options = JSON.stringify({ iconify : { 'Attribute_Description' : 'expand' }});
+                  div.col-sm-4
+                    button.btn.btn-primary.btn-lg(type='button' ng-disabled="!table" ng-click="reset_messages(); injectData('/record/list','injectedList', table, 'table', '#{options}')") View
+                  div.col-sm-2 &nbsp;
 
-            div(ng-show="MenuList['limsuser'].length")
-              div.alert.alert-warning
-                b {{ MenuList['limsuser'].length }} User(s) Pending activation 
-            form.form-horizontal#adminForm(role='form' name='adminForm' enctype='form-data')
-              div.form-group
-                label.input-lg.col-sm-2() Lookup Tables:
-                div.col-sm-4#table
-                  my-dropdown(placeholder="Select Table ..." track='name' list="MenuList['table']" selected='table' ng-init="setup_Menu('table', 'Plate_Format,Sample_Type,Attribute')" property='name')
-              
-                - var options = JSON.stringify({ iconify : { 'Attribute_Description' : 'expand' }});
-                div.col-sm-4
-                  button.btn.btn-primary.btn-lg(type='button' ng-disabled="!table" ng-click="reset_messages(); injectData('/record/list','injectedList', table, 'table', '#{options}')") View
-                div.col-sm-2 &nbsp;
+                div#injectedList
 
-              div#injectedList
+                hr
 
+                div.form-group
+                  label.input-lg.col-sm-2(for='stock') Stock:
+                  div.col-sm-4#stock
+                    a(href='/Stock/receive' data-toggle='tooltip' title='Receive Reagents or Equipment')
+                      button.btn.btn-primary(type='button') Receive Stock
+                  div.col-sm-6 &nbsp;
+
+              p &nbsp;
               hr
 
-              div.form-group
-                label.input-lg.col-sm-2(for='stock') Stock:
-                div.col-sm-4#stock
-                  a(href='/Stock/receive')
-                    button.btn.btn-primary(type='button') Receive Reagents
-                div.col-sm-6 &nbsp;
+              form.form-inline(role='form' name='adminForm' method='post' action="#{sails.config.root}/Rack/newBox" enctype='form-data')
 
-            p &nbsp;
-            hr
-
-            form.form-inline(role='form' name='adminForm' method='post' action="#{sails.config.root}/Rack/newBox" enctype='form-data')
-
-              h3 Create Slotted Box:
-              div.form-group
-                label(for='parent') &nbsp; On Rack: &nbsp;
-                input.input-lg.form-control.mandatory#parent(type='text' name = 'parent' ng-model='parent' ng-blur='set_default_name()' required placeholder ='-- Scan Parent Rack --')
-              div.form-group
-                label(for='name') &nbsp; &nbsp; Name: &nbsp;
-                input.input-lg.form-control#name(type='text' name = 'name' ng-model='name' ng-blur="validate_boxname()" placeholder='-- Name (eg B3) -- ')
-              div.form-group
-                label.col-sm-2(for='size') &nbsp; Size: &nbsp;
-                span#size
-                  my-dropdown.mandatory(placeholder='-- Choose Size --' required ng-init="setup_Menu('size','9x9,8x12')" list="MenuList['size']" property='name' track='name' selected='size')
-              span &nbsp; &nbsp;             
-              button.btn.btn-lg.btn-primary(type='button' ng-click="newSlottedBox();" ng-disabled="!name || !parent || !size || disabled") Create it
-     
+                h3 Create Slotted Box:
+                div.form-group
+                  label(for='parent') &nbsp; On Rack: &nbsp;
+                  input.input-lg.form-control.mandatory#parent(type='text' name = 'parent' ng-model='parent' ng-blur='set_default_name()' required placeholder ='-- Scan Parent Rack --')
+                div.form-group
+                  label(for='name') &nbsp; &nbsp; Name: &nbsp;
+                  input.input-lg.form-control#name(type='text' name = 'name' ng-model='name' ng-blur="validate_boxname()" placeholder='-- Name (eg B3) -- ')
+                div.form-group
+                  label.col-sm-2(for='size') &nbsp; Size: &nbsp;
+                  span#size
+                    my-dropdown.mandatory(placeholder='-- Choose Size --' required ng-init="setup_Menu('size','9x9,8x12')" list="MenuList['size']" property='name' track='name' selected='size')
+                span &nbsp; &nbsp;             
+                button.btn.btn-lg.btn-primary(type='button' ng-click="newSlottedBox();" ng-disabled="!name || !parent || !size || disabled") Create it
+       
